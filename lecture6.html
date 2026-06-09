@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lecture 6 · Requests and APIs · CS 2316</title>
+<style>
+:root{
+  --bg:#0a0e16; --surface:#111824; --surface2:#0c121d; --elevated:#16202e;
+  --border:#22304a; --border2:#2c3d5c;
+  --text:#dde6f3; --muted:#8190ab; --faint:#5a6987;
+  --cyan:#54c7ff; --cyan-dim:#2a7fb8;
+  --amber:#f6c454; --amber-dim:#7d611f;
+  --green:#4fd47a; --red:#ff7a7a; --purple:#b18cff;
+  --mono: ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+  --sans: -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:radial-gradient(1200px 600px at 80% -10%,#13203200,#0a0e16),var(--bg);
+  color:var(--text); font-family:var(--sans); line-height:1.6; font-size:16px;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:920px; margin:0 auto; padding:0 18px 90px}
+a{color:var(--cyan)}
+::selection{background:#54c7ff44}
+
+/* header */
+.hdr{padding:38px 0 18px}
+.eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:.28em; text-transform:uppercase; color:var(--amber); margin:0 0 10px}
+h1{font-size:clamp(28px,5vw,42px); margin:0; line-height:1.1; letter-spacing:-.01em; font-weight:800}
+.sub{color:var(--muted); margin:14px 0 0; max-width:60ch}
+.prompt{font-family:var(--mono); color:var(--green); font-size:13px; margin-top:16px}
+.cursor{display:inline-block; width:8px; height:15px; background:var(--green); vertical-align:-2px; margin-left:2px; animation:blink 1.1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+
+/* tabs */
+.tabs{position:sticky; top:0; z-index:30; display:flex; flex-wrap:wrap; gap:6px;
+  padding:10px 0; margin:8px 0 26px; background:linear-gradient(var(--bg),var(--bg) 70%,#0a0e1600);
+  border-bottom:1px solid var(--border)}
+.tab-btn{font-family:var(--mono); font-size:12.5px; letter-spacing:.02em; color:var(--muted);
+  background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:8px 12px;
+  cursor:pointer; transition:.15s}
+.tab-btn:hover{color:var(--text); border-color:var(--border2)}
+.tab-btn.active{color:#06121d; background:var(--cyan); border-color:var(--cyan); font-weight:600}
+.tab-btn .n{color:var(--faint); margin-right:7px}
+.tab-btn.active .n{color:#0a3450}
+
+/* panels */
+.panel{display:none}
+.panel.active{display:block; animation:fade .28s ease}
+@keyframes fade{from{opacity:0; transform:translateY(6px)}to{opacity:1; transform:none}}
+
+.block{margin:0 0 30px}
+.label{font-family:var(--mono); font-size:11.5px; letter-spacing:.22em; text-transform:uppercase; color:var(--cyan); margin:0 0 8px}
+h2{font-size:24px; margin:6px 0 12px; letter-spacing:-.01em}
+h3{font-size:17px; margin:24px 0 8px; color:#eef3fb}
+p{margin:10px 0}
+ul,ol{margin:10px 0; padding-left:22px}
+li{margin:5px 0}
+.muted{color:var(--muted)}
+code{font-family:var(--mono); font-size:.9em; background:#1a2433; border:1px solid var(--border); border-radius:5px; padding:1px 6px; color:#cfe6ff}
+
+/* code cells */
+.cell{background:var(--surface2); border:1px solid var(--border); border-radius:11px; overflow:hidden; margin:14px 0}
+.cell-head{display:flex; align-items:center; gap:8px; padding:9px 13px; background:#0e1622; border-bottom:1px solid var(--border)}
+.dots{display:flex; gap:6px}
+.dot{width:11px; height:11px; border-radius:50%}
+.d1{background:#ff5f57}.d2{background:#febc2e}.d3{background:#28c840}
+.cell-name{font-family:var(--mono); font-size:12px; color:var(--faint); margin-left:4px}
+.run{margin-left:auto; font-family:var(--mono); font-size:12.5px; font-weight:600; color:#06180d;
+  background:var(--green); border:0; border-radius:7px; padding:6px 13px; cursor:pointer; transition:.15s}
+.run:hover{filter:brightness(1.08)}
+.run:active{transform:translateY(1px)}
+.cell textarea{width:100%; border:0; resize:vertical; background:transparent; color:#e8f0fb;
+  font-family:var(--mono); font-size:13.5px; line-height:1.65; padding:14px; display:block; outline:none; tab-size:4}
+.output{margin:0; border-top:1px dashed var(--border); padding:12px 14px; font-family:var(--mono);
+  font-size:13px; white-space:pre-wrap; word-break:break-word; color:#a9e6c0; background:#0a1119}
+.output.err{color:#ffb4b4}
+
+/* callouts */
+.callout{border-radius:11px; padding:14px 16px; margin:16px 0; border:1px solid; font-size:14.5px}
+.callout .ct{font-family:var(--mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase; margin:0 0 6px; font-weight:700}
+.warn{background:#1c140a; border-color:var(--amber-dim)} .warn .ct{color:var(--amber)}
+.tip{background:#0c1822; border-color:var(--cyan-dim)} .tip .ct{color:var(--cyan)}
+.callout p{margin:6px 0}
+
+/* activity + solution */
+.activity{border:1px solid var(--border); border-left:3px solid var(--purple); border-radius:11px; padding:15px 17px; margin:18px 0; background:#10131f}
+.act-label{font-family:var(--mono); font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--purple); margin:0 0 8px; font-weight:700}
+.sol-btn{font-family:var(--mono); font-size:12.5px; color:var(--cyan); background:#0d1a26; border:1px solid var(--cyan-dim); border-radius:7px; padding:7px 13px; cursor:pointer; margin-top:6px; transition:.15s}
+.sol-btn:hover{background:#10212f}
+.solution{display:none; margin-top:12px; padding-top:12px; border-top:1px dashed var(--border)}
+.solution.open{display:block; animation:fade .2s ease}
+
+/* mcq */
+.mcq{border:1px solid var(--border); border-radius:11px; padding:15px 17px; margin:16px 0; background:#10131f}
+.mcq .q{font-weight:600; margin:0 0 10px}
+.opts{list-style:none; padding:0; margin:0 0 8px}
+.opts li{font-family:var(--mono); font-size:13.5px; padding:8px 12px; margin:6px 0; background:#0d1420; border:1px solid var(--border); border-radius:7px}
+.opts li .lt{color:var(--cyan); margin-right:9px; font-weight:700}
+
+/* flow diagram */
+.flow{display:flex; flex-wrap:wrap; align-items:center; gap:9px; margin:18px 0; padding:16px; background:var(--surface2); border:1px solid var(--border); border-radius:11px}
+.node{font-family:var(--mono); font-size:12.5px; padding:9px 12px; border-radius:8px; border:1px solid var(--border2); background:#13202f; color:#dceaff; text-align:center}
+.node b{color:var(--cyan)}
+.arrow{font-family:var(--mono); color:var(--amber); font-size:15px}
+
+/* tables */
+.ref-table{width:100%; border-collapse:collapse; margin:14px 0; font-size:14px}
+.ref-table th,.ref-table td{border:1px solid var(--border); padding:9px 12px; text-align:left; vertical-align:top}
+.ref-table th{background:#13202f; color:var(--cyan); font-family:var(--mono); font-size:12px; letter-spacing:.05em; text-transform:uppercase}
+.ref-table td code, .ref-table td:first-child{font-family:var(--mono)}
+.ref-table tr:nth-child(even) td{background:#0d1420}
+
+/* cheat sheet */
+.sheet-card{border-radius:13px; padding:18px 20px; margin:16px 0; border:1px solid}
+.given{background:#1a140a; border-color:var(--amber-dim)}
+.memorize{background:#0c1822; border-color:var(--cyan-dim)}
+.sheet-card h3{margin-top:0; display:flex; align-items:center; gap:9px}
+.tag{font-family:var(--mono); font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; padding:3px 8px; border-radius:20px; font-weight:700}
+.tag.g{background:var(--amber); color:#1a1304}
+.tag.m{background:var(--cyan); color:#06121d}
+.sheet-card pre{font-family:var(--mono); font-size:13px; background:#0a1019; border:1px solid var(--border); border-radius:8px; padding:13px; overflow-x:auto; white-space:pre; color:#cfe6ff; line-height:1.6}
+
+/* checklist */
+.chk{display:flex; gap:11px; align-items:flex-start; padding:11px 14px; margin:8px 0; background:#10131f; border:1px solid var(--border); border-radius:9px; cursor:pointer; font-size:14.5px}
+.chk input{margin-top:3px; width:17px; height:17px; accent-color:var(--green); flex:none}
+.chk:hover{border-color:var(--border2)}
+
+footer{color:var(--faint); font-family:var(--mono); font-size:12px; text-align:center; margin-top:40px; padding-top:18px; border-top:1px solid var(--border)}
+
+@media (max-width:600px){
+  body{font-size:15px}
+  h2{font-size:21px}
+  .tab-btn{font-size:11.5px; padding:7px 9px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important; transition:none!important; scroll-behavior:auto!important}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hdr">
+    <p class="eyebrow">CS 2316 · Exam 1 Prep</p>
+    <h1>Lecture 6: Requests and APIs</h1>
+    <p class="sub">Pulling data off the web with Python, and turning a server's response into something you can actually use in your code.</p>
+    <p class="prompt">&gt;&gt;&gt; import requests<span class="cursor"></span></p>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab-btn active" data-t="t1" onclick="showTab(this)"><span class="n">00</span>Start here</button>
+    <button class="tab-btn" data-t="t2" onclick="showTab(this)"><span class="n">01</span>HTTP &amp; status codes</button>
+    <button class="tab-btn" data-t="t3" onclick="showTab(this)"><span class="n">02</span>The requests module</button>
+    <button class="tab-btn" data-t="t4" onclick="showTab(this)"><span class="n">03</span>APIs &amp; the Ghibli example</button>
+    <button class="tab-btn" data-t="t5" onclick="showTab(this)"><span class="n">04</span>Common gotchas</button>
+    <button class="tab-btn" data-t="t6" onclick="showTab(this)"><span class="n">05</span>Exam drill</button>
+    <button class="tab-btn" data-t="t7" onclick="showTab(this)"><span class="n">06</span>Cheat sheet</button>
+    <button class="tab-btn" data-t="t8" onclick="showTab(this)"><span class="n">07</span>Checklist</button>
+  </nav>
+
+  <!-- ===================== TAB 1 ===================== -->
+  <section id="t1" class="panel active">
+    <div class="block">
+      <p class="label">Where we're headed</p>
+      <h2>What you'll be able to do</h2>
+      <p>So far you have been working with files that already live on your computer. In this lecture we go out and grab data from the internet instead. By the end you will be able to:</p>
+      <ul>
+        <li>Send a request to a web server with one line of Python.</li>
+        <li>Read what comes back, the text, the status code, and the data.</li>
+        <li>Pull exactly the piece you want out of an API response.</li>
+        <li>Recognize the handful of things the exam loves to ask about this material.</li>
+      </ul>
+      <p>The whole idea is one back-and-forth conversation:</p>
+      <div class="flow">
+        <div class="node">Your <b>Python</b></div>
+        <div class="arrow">&rarr;</div>
+        <div class="node">GET request</div>
+        <div class="arrow">&rarr;</div>
+        <div class="node"><b>Server</b></div>
+        <div class="arrow">&rarr;</div>
+        <div class="node">Response</div>
+        <div class="arrow">&rarr;</div>
+        <div class="node"><b>Data</b> you use</div>
+      </div>
+    </div>
+    <div class="block">
+      <p class="label">How to use this page</p>
+      <h3>Three things to know</h3>
+      <ul>
+        <li><b>The tabs across the top</b> follow the lecture in order. Work left to right.</li>
+        <li><b>The green Run buttons run real Python</b> right in your browser. The very first time you click Run, it loads the Python engine, so give it a few seconds. After that it is instant. Edit the code and run it again to experiment.</li>
+        <li><b>Show solution buttons</b> sit under every activity. Try the problem first, then reveal it.</li>
+      </ul>
+      <div class="callout tip"><p class="ct">Source of truth</p><p>The <b>Cheat sheet</b> tab is your one-page summary for the exam, and the <b>Checklist</b> tab lets you test yourself the night before. Start there when you review.</p></div>
+    </div>
+  </section>
+
+  <!-- ===================== TAB 2 ===================== -->
+  <section id="t2" class="panel">
+    <div class="block">
+      <p class="label">The protocol</p>
+      <h2>HTTP, the language of the web</h2>
+      <p>HTTP stands for HyperText Transfer Protocol. It is just the set of rules browsers and servers use to talk. You ask for something (a <b>request</b>), and the server answers (a <b>response</b>). When you type a URL into a browser, that is an HTTP request under the hood asking the server to send back the page.</p>
+      <p>A <b>get request</b> asks a server to hand you data. Along with the data, the server sends a <b>status code</b>, a three digit number that tells you how the request went.</p>
+    </div>
+
+    <div class="block">
+      <p class="label">Status codes</p>
+      <h2>The four families</h2>
+      <p>You do not memorize hundreds of codes. You memorize four families by their first digit, plus a few specific ones.</p>
+      <table class="ref-table">
+        <tr><th>Family</th><th>Meaning</th><th>Plain English</th></tr>
+        <tr><td>2xx</td><td>Success</td><td>It worked.</td></tr>
+        <tr><td>3xx</td><td>Redirection</td><td>It moved, look elsewhere.</td></tr>
+        <tr><td>4xx</td><td>Client error</td><td>Your request was wrong.</td></tr>
+        <tr><td>5xx</td><td>Server error</td><td>The server broke, not you.</td></tr>
+      </table>
+      <h3>The specific codes worth knowing</h3>
+      <table class="ref-table">
+        <tr><th>Code</th><th>Means</th></tr>
+        <tr><td>200 OK</td><td>Request succeeded</td></tr>
+        <tr><td>301 Moved Permanently</td><td>The resource lives at a new URL now</td></tr>
+        <tr><td>401 Unauthorized</td><td>You need to log in</td></tr>
+        <tr><td>403 Forbidden</td><td>You are not allowed in</td></tr>
+        <tr><td>404 Not Found</td><td>No such page</td></tr>
+        <tr><td>500 Internal Server Error</td><td>Something failed on the server</td></tr>
+        <tr><td>503 Service Unavailable</td><td>Server is overloaded or down for now</td></tr>
+      </table>
+      <div class="callout tip"><p class="ct">Memory hook</p><p>4 is for "your fault" (you asked for the wrong thing, like a typo'd URL giving a 404). 5 is for "their fault" (the server fell over). 2 means smooth sailing.</p></div>
+    </div>
+
+    <div class="block">
+      <p class="label">Bots</p>
+      <h2>Bots and robots.txt</h2>
+      <p>A <b>bot</b> is a program that visits websites automatically instead of a human clicking around. A <b>robots.txt</b> file is a little note some sites post saying which parts a bot is allowed to visit. Google runs a bot called Googlebot to read the web and feed its search engine. You will use this idea again when we get to web scraping in Lecture 9.</p>
+    </div>
+
+    <div class="block">
+      <p class="label">Quick check</p>
+      <h2>Test yourself</h2>
+      <div class="mcq">
+        <p class="q">A request to a page that does not exist comes back with which code?</p>
+        <ul class="opts">
+          <li><span class="lt">A</span>200</li>
+          <li><span class="lt">B</span>301</li>
+          <li><span class="lt">C</span>404</li>
+          <li><span class="lt">D</span>500</li>
+        </ul>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show answer</button>
+        <div class="solution"><p><b>C, 404 Not Found.</b> The page is missing, and a missing resource is a 4xx client error. A 500 would mean the server itself crashed, which is a different situation.</p></div>
+      </div>
+      <div class="mcq">
+        <p class="q">The server is temporarily overloaded and cannot respond. Which family does that code fall in?</p>
+        <ul class="opts">
+          <li><span class="lt">A</span>2xx</li>
+          <li><span class="lt">B</span>3xx</li>
+          <li><span class="lt">C</span>4xx</li>
+          <li><span class="lt">D</span>5xx</li>
+        </ul>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show answer</button>
+        <div class="solution"><p><b>D, 5xx.</b> Anything that goes wrong on the server's side is a 5xx (this exact case is 503). It is not your request that is wrong, so it is not a 4xx.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== TAB 3 ===================== -->
+  <section id="t3" class="panel">
+    <div class="block">
+      <p class="label">The module</p>
+      <h2>requests in four lines</h2>
+      <p>The <code>requests</code> module is how Python sends HTTP requests. Almost everything you do starts with these four lines:</p>
+      <table class="ref-table">
+        <tr><th>Line</th><th>What it does</th></tr>
+        <tr><td>import requests</td><td>Brings in the module</td></tr>
+        <tr><td>r = requests.get(url)</td><td>Sends a get request, hands back a response object</td></tr>
+        <tr><td>r.status_code</td><td>The status code, as a number (an attribute, no parentheses)</td></tr>
+        <tr><td>r.text</td><td>The raw body of the response, always a string (an attribute)</td></tr>
+        <tr><td>r.json()</td><td>The body converted into Python, only if it was JSON (a method, has parentheses)</td></tr>
+      </table>
+      <div class="flow">
+        <div class="node">requests.get(url)</div>
+        <div class="arrow">&rarr;</div>
+        <div class="node"><b>response</b> object <code>r</code></div>
+        <div class="arrow">&rarr;</div>
+        <div class="node">r.status_code<br>r.text<br>r.json()</div>
+      </div>
+    </div>
+
+    <div class="block">
+      <p class="label">See it run</p>
+      <h2>A real request</h2>
+      <p>Run this. We are asking the Studio Ghibli API for its list of films. Notice what <code>print(r)</code> actually shows you.</p>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">basic_request.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="9">import requests
+
+r = requests.get("https://ghibliapi.vercel.app/films")
+
+print(r)               # the response object, NOT the data
+print(r.status_code)   # just the number
+print(type(r.text))    # the body is a string
+print(r.text[:90])     # first 90 characters of that string</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+      <div class="callout warn"><p class="ct">Exam trap</p><p>Look closely at the first line of output. <code>print(r)</code> does not print the data. It prints <code>&lt;Response [200]&gt;</code>, which is just the object's label showing the status code. To see the actual data you need <code>r.text</code> or <code>r.json()</code>. This shows up on the exam constantly.</p></div>
+    </div>
+  </section>
+
+  <!-- ===================== TAB 4 ===================== -->
+  <section id="t4" class="panel">
+    <div class="block">
+      <p class="label">What an API is</p>
+      <h2>APIs hand you clean data</h2>
+      <p>An <b>API</b> (Application Programming Interface) is a data endpoint built for programs, not for human eyes. Instead of a pretty web page, it returns structured data, almost always <b>JSON</b>. That is exactly what you want, because JSON drops straight into Python as lists and dictionaries.</p>
+      <p>Why reach for an API instead of scraping a web page? It is structured, it is stable, and it was built for this purpose. The tradeoff is that many APIs make you sign up for an <b>API key</b> so they know who is using their data. The Ghibli API is friendly and needs no key, which is why we use it here.</p>
+    </div>
+
+    <div class="block">
+      <p class="label">The pattern</p>
+      <h2>From response to Python</h2>
+      <p>When the body is JSON, <code>r.json()</code> converts it for you. The Ghibli films come back as a <b>list of dictionaries</b>, one dictionary per film. Run this to see the shape.</p>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">explore_json.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="9">import requests
+
+r = requests.get("https://ghibliapi.vercel.app/films")
+data = r.json()          # a list of dictionaries
+
+print(type(data))        # list
+print(len(data))         # how many films
+print(data[0]["title"])  # the first film's title
+print(list(data[0].keys()))   # what info each film has</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+      <div class="callout tip"><p class="ct">Heads up</p><p>The numbers like <code>rt_score</code> and <code>running_time</code> arrive as <b>strings</b>, for example <code>"95"</code>, not <code>95</code>. If you want to compare them as numbers, wrap them in <code>int(...)</code> first. Watch for this in the activities below.</p></div>
+    </div>
+
+    <div class="block">
+      <p class="label">Your turn</p>
+      <h2>Three activities</h2>
+
+      <div class="activity">
+        <p class="act-label">Activity 1 · sorting</p>
+        <p>Print the film titles in alphabetical order, but ignore a leading "A", "An", or "The" when sorting (so "The Wind Rises" sorts under W, not T). Try it in the cell, then reveal one clean approach.</p>
+        <div class="cell">
+          <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">activity1.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+          <textarea spellcheck="false" rows="7">import requests
+data = requests.get("https://ghibliapi.vercel.app/films").json()
+titles = [f["title"] for f in data]
+
+# your code here
+</textarea>
+          <pre class="output" style="display:none"></pre>
+        </div>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution">
+          <p>Write a key function that strips the leading article, then sort by it:</p>
+          <div class="cell">
+            <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">activity1_solution.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+            <textarea spellcheck="false" rows="11">import requests
+data = requests.get("https://ghibliapi.vercel.app/films").json()
+titles = [f["title"] for f in data]
+
+def sort_key(t):
+    words = t.split()
+    if words[0].lower() in ("a", "an", "the"):
+        return " ".join(words[1:]).lower()
+    return t.lower()
+
+for t in sorted(titles, key=sort_key):
+    print(t)</textarea>
+            <pre class="output" style="display:none"></pre>
+          </div>
+          <p class="muted">The key function runs on each title to decide its sort position. We never change the titles themselves, we only change what we sort <em>by</em>.</p>
+        </div>
+      </div>
+
+      <div class="activity">
+        <p class="act-label">Activity 2 · highest score, with a tiebreaker</p>
+        <p>Find the title of the film with the highest <code>rt_score</code>. If two films tie, return the one with the longest title. (Two films really do tie at 100 here, so your tiebreaker matters.)</p>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution">
+          <p>Sort by a tuple, score first then title length, and take the last item. Bigger tuples sort to the end, so the last one is the highest score, and among ties the longest title:</p>
+          <div class="cell">
+            <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">activity2_solution.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+            <textarea spellcheck="false" rows="7">import requests
+data = requests.get("https://ghibliapi.vercel.app/films").json()
+
+best = sorted(data, key=lambda f: (int(f["rt_score"]), len(f["title"])))[-1]
+print(best["title"], "with score", best["rt_score"])</textarea>
+            <pre class="output" style="display:none"></pre>
+          </div>
+          <p class="muted">Note the <code>int(f["rt_score"])</code>. Without it you would be comparing the strings "100" and "97", and "100" sorts <em>before</em> "97" as text because it starts with "1". Converting to a number fixes that.</p>
+        </div>
+      </div>
+
+      <div class="activity">
+        <p class="act-label">Activity 3 · the lecture coding exercise</p>
+        <p>Answer all three using the API data: (1) How many films are there? (2) Who directed <em>Princess Mononoke</em>? (3) What is the shortest film by running time?</p>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution">
+          <div class="cell">
+            <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">activity3_solution.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+            <textarea spellcheck="false" rows="13">import requests
+data = requests.get("https://ghibliapi.vercel.app/films").json()
+
+# 1. count
+print(len(data))
+
+# 2. director of a specific film
+director = next(f["director"] for f in data if f["title"] == "Princess Mononoke")
+print(director)
+
+# 3. shortest by running time (convert the string to int)
+shortest = min(data, key=lambda f: int(f["running_time"]))
+print(shortest["title"], shortest["running_time"], "min")</textarea>
+            <pre class="output" style="display:none"></pre>
+          </div>
+          <p class="muted"><code>min(..., key=...)</code> walks every film and keeps the one with the smallest running time. <code>next(... for ... if ...)</code> grabs the first match and stops, which is perfect when you expect exactly one.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== TAB 5 ===================== -->
+  <section id="t5" class="panel">
+    <div class="block">
+      <p class="label">The classic mistake</p>
+      <h2>The decoder error</h2>
+      <p><code>r.json()</code> only works when the body is actually JSON. If you call it on a normal web page, which is HTML, Python cannot parse it and throws an error. Run this and read the error, it is a good one to recognize.</p>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">decoder_error.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="8">import requests
+
+r = requests.get("http://cc.gatech.edu")   # a normal HTML page, not JSON
+print(r.status_code)        # this is fine, the request worked
+print(r.text[:60])          # this is fine, it is just a string
+
+data = r.json()             # this line breaks, the page is not JSON</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+      <div class="callout warn"><p class="ct">Why it happens</p><p>The request itself succeeded (status 200), and <code>r.text</code> happily gives you the HTML as a string. The error only appears at <code>r.json()</code>, because there is no JSON to convert. <code>.json()</code> is not magic, it only works on JSON bodies.</p></div>
+    </div>
+
+    <div class="block">
+      <p class="label">Three facts that trip people up</p>
+      <h2>Keep these straight</h2>
+      <ul>
+        <li><b>print(r) shows <code>&lt;Response [200]&gt;</code>, not the data.</b> It is the object label with the status code inside.</li>
+        <li><b>r.text is always a string.</b> Even if the server sent numbers or JSON, <code>.text</code> hands you raw text. Use <code>.json()</code> to turn JSON text into real Python.</li>
+        <li><b>An HTML page starts with <code>&lt;</code> and usually ends with <code>&gt;</code>.</b> So for an HTML page, <code>r.text[0]</code> is <code>"&lt;"</code> (the start of <code>&lt;!DOCTYPE&gt;</code> or <code>&lt;html&gt;</code>) and <code>r.text[-1]</code> is <code>"&gt;"</code> (the end of <code>&lt;/html&gt;</code>). The exam asks this directly.</li>
+      </ul>
+      <div class="callout tip"><p class="ct">Looking ahead</p><p>When a site has no API and you have to read the page's HTML yourself, that is web scraping, and you do it politely (check robots.txt, do not hammer the server). That is Lecture 9.</p></div>
+    </div>
+  </section>
+
+  <!-- ===================== TAB 6 ===================== -->
+  <section id="t6" class="panel">
+    <div class="block">
+      <p class="label">Exam practice</p>
+      <h2>The questions this lecture gets asked</h2>
+      <p>These are rebuilt in the exact style of past CS 2316 exams, with the same traps but fresh wording. Pick your answer, then reveal the reasoning. When you want a full timed run, do the real past papers.</p>
+
+      <div class="mcq">
+        <p class="q">Which statement about APIs is FALSE?</p>
+        <ul class="opts">
+          <li><span class="lt">A</span>They let programs exchange data with each other.</li>
+          <li><span class="lt">B</span>They define rules for interacting with a service.</li>
+          <li><span class="lt">C</span>They are mainly for reading and writing local files.</li>
+          <li><span class="lt">D</span>They can return data from remote servers.</li>
+        </ul>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show answer</button>
+        <div class="solution"><p><b>C is the false one.</b> APIs are about talking to remote services over the web, not about local files on your disk. The other three all describe what an API genuinely does.</p></div>
+      </div>
+
+      <div class="mcq">
+        <p class="q">What is the difference between using an API and web scraping?</p>
+        <ul class="opts">
+          <li><span class="lt">A</span>An API edits a site, scraping edits an interface.</li>
+          <li><span class="lt">B</span>An API stores data, scraping stores interface state.</li>
+          <li><span class="lt">C</span>An API is a built endpoint for data, scraping reads the raw HTML.</li>
+          <li><span class="lt">D</span>An API reads raw HTML, scraping is a built endpoint.</li>
+        </ul>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show answer</button>
+        <div class="solution"><p><b>C.</b> An API is set up by developers to serve clean data through a defined endpoint. Web scraping means there is no such endpoint, so you pull the data straight out of the page's HTML yourself. D has the two reversed.</p></div>
+      </div>
+
+      <div class="mcq">
+        <p class="q">Assuming the request succeeds, what does <code>print(requests.get(url))</code> output?</p>
+        <ul class="opts">
+          <li><span class="lt">A</span>&lt;Response [404]&gt;</li>
+          <li><span class="lt">B</span>&lt;Response [200]&gt;</li>
+          <li><span class="lt">C</span>the JSON data as a dictionary</li>
+          <li><span class="lt">D</span>the page's HTML</li>
+        </ul>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show answer</button>
+        <div class="solution"><p><b>B, <code>&lt;Response [200]&gt;</code>.</b> Printing the response object shows its label with the status code, and a successful request is 200. It never prints the data itself, you would need <code>.text</code> or <code>.json()</code> for that.</p></div>
+      </div>
+
+      <div class="mcq">
+        <p class="q">What does <code>print(requests.get(url).status_code)</code> output on a successful request?</p>
+        <ul class="opts">
+          <li><span class="lt">A</span>&lt;Response [200]&gt;</li>
+          <li><span class="lt">B</span>200</li>
+          <li><span class="lt">C</span>OK</li>
+          <li><span class="lt">D</span>True</li>
+        </ul>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show answer</button>
+        <div class="solution"><p><b>B, just <code>200</code>.</b> <code>.status_code</code> is the number on its own. The angle-bracket form is what you get from printing the whole response object, not from <code>.status_code</code>.</p></div>
+      </div>
+
+      <div class="mcq">
+        <p class="q">For a valid HTML web page, what is <code>requests.get(url).text[0]</code>?</p>
+        <ul class="opts">
+          <li><span class="lt">A</span>a curly brace <code>{</code></li>
+          <li><span class="lt">B</span>a square bracket <code>[</code></li>
+          <li><span class="lt">C</span>the letter i</li>
+          <li><span class="lt">D</span>an angle bracket <code>&lt;</code></li>
+        </ul>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show answer</button>
+        <div class="solution"><p><b>D, <code>&lt;</code>.</b> HTML pages open with a tag like <code>&lt;!DOCTYPE html&gt;</code> or <code>&lt;html&gt;</code>, so the first character is an angle bracket. A curly brace or square bracket would be the start of JSON, not HTML.</p></div>
+      </div>
+
+      <div class="mcq">
+        <p class="q">For that same HTML page, what is <code>requests.get(url).text[-1]</code>?</p>
+        <ul class="opts">
+          <li><span class="lt">A</span>an angle bracket <code>&lt;</code></li>
+          <li><span class="lt">B</span>a newline <code>\n</code></li>
+          <li><span class="lt">C</span>an angle bracket <code>&gt;</code></li>
+          <li><span class="lt">D</span>a curly brace <code>}</code></li>
+        </ul>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show answer</button>
+        <div class="solution"><p><b>C, <code>&gt;</code>.</b> An HTML document ends with its closing tag <code>&lt;/html&gt;</code>, so the last character is the closing angle bracket. The trap is choosing <code>&lt;</code>, which is the <em>first</em> character, not the last.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== TAB 7 ===================== -->
+  <section id="t7" class="panel">
+    <div class="block">
+      <p class="label">Your source of truth</p>
+      <h2>Lecture 6 cheat sheet</h2>
+      <p>Two parts. First, what the exam already gives you. Second, everything you need to carry in your own head or on your handwritten sheet.</p>
+
+      <div class="sheet-card given">
+        <h3><span class="tag g">Given</span> On the exam reference sheet</h3>
+        <p>The reference sheet they hand you covers <b>regular expressions only</b>, the character class table and the meta-character table. It has <b>nothing</b> about requests, APIs, or status codes. So for this entire lecture, assume you are working from memory. That is exactly why the section below matters.</p>
+      </div>
+
+      <div class="sheet-card memorize">
+        <h3><span class="tag m">Memorize</span> Put this on your crib sheet</h3>
+        <p><b>The four lines:</b></p>
+        <pre>import requests
+r = requests.get(url)     # send the request
+r.status_code             # the number (attribute)
+r.text                    # the body as a STRING (attribute)
+r.json()                  # body as Python, JSON only (method)</pre>
+        <p><b>Status codes:</b> 2xx success, 3xx redirect, 4xx your fault, 5xx server fault. Know 200, 403, 404, 500.</p>
+        <p><b>The API pattern</b> (response to usable data):</p>
+        <pre>data = requests.get(url).json()   # list of dicts, usually
+data[0]["title"]                  # reach into one record</pre>
+        <p><b>Facts the exam tests directly:</b></p>
+        <pre>print(r)        ->  &lt;Response [200]&gt;   (label, not data)
+r.text          ->  always a string
+r.json()        ->  errors if the body is not JSON
+HTML page:  r.text[0] is "&lt;"   r.text[-1] is "&gt;"
+API values like rt_score arrive as strings, use int()</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== TAB 8 ===================== -->
+  <section id="t8" class="panel">
+    <div class="block">
+      <p class="label">Self-test</p>
+      <h2>Before the exam, can you...</h2>
+      <p>Tick each one only when you could do it on paper with no notes. Anything left unchecked is what to review.</p>
+      <label class="chk"><input type="checkbox"> Write a get request with <code>requests.get(url)</code> and store the response.</label>
+      <label class="chk"><input type="checkbox"> Say what <code>r.status_code</code>, <code>r.text</code>, and <code>r.json()</code> each give you.</label>
+      <label class="chk"><input type="checkbox"> Say exactly what <code>print(r)</code> prints, and why it is not the data.</label>
+      <label class="chk"><input type="checkbox"> Explain the difference between an API and web scraping.</label>
+      <label class="chk"><input type="checkbox"> Name the four status-code families and what 200, 403, 404, 500 mean.</label>
+      <label class="chk"><input type="checkbox"> Explain why <code>r.json()</code> can throw an error on a web page.</label>
+      <label class="chk"><input type="checkbox"> Pull a specific value out of a list of dictionaries returned by an API.</label>
+      <label class="chk"><input type="checkbox"> Say what the first and last characters of an HTML page are.</label>
+    </div>
+  </section>
+
+  <footer>CS 2316 · Lecture 6 · Requests and APIs · run the cells, break them, fix them</footer>
+</div>
+
+<!-- real Ghibli API data, embedded so the cells run offline -->
+<script id="films-data" type="application/json">[{"title": "Castle in the Sky", "director": "Hayao Miyazaki", "producer": "Isao Takahata", "release_date": "1986", "running_time": "124", "rt_score": "95", "description": "The orphan Sheeta inherited a mysterious crystal that links her to the mythical sky-kin..."}, {"title": "Grave of the Fireflies", "director": "Isao Takahata", "producer": "Toru Hara", "release_date": "1988", "running_time": "89", "rt_score": "97", "description": "In the latter part of World War II, a boy and his sister, orphaned when their mother is..."}, {"title": "My Neighbor Totoro", "director": "Hayao Miyazaki", "producer": "Hayao Miyazaki", "release_date": "1988", "running_time": "86", "rt_score": "93", "description": "Two sisters move to the country with their father in order to be closer to their hospit..."}, {"title": "Kiki's Delivery Service", "director": "Hayao Miyazaki", "producer": "Hayao Miyazaki", "release_date": "1989", "running_time": "102", "rt_score": "96", "description": "A young witch, on her mandatory year of independent life, finds fitting into a new comm..."}, {"title": "Only Yesterday", "director": "Isao Takahata", "producer": "Toshio Suzuki", "release_date": "1991", "running_time": "118", "rt_score": "100", "description": "It\u2019s 1982, and Taeko is 27 years old, unmarried, and has lived her whole life in Tokyo"}, {"title": "Porco Rosso", "director": "Hayao Miyazaki", "producer": "Toshio Suzuki", "release_date": "1992", "running_time": "93", "rt_score": "94", "description": "Porco Rosso, known in Japan as Crimson Pig (Kurenai no Buta) is the sixth animated film..."}, {"title": "Pom Poko", "director": "Isao Takahata", "producer": "Toshio Suzuki", "release_date": "1994", "running_time": "119", "rt_score": "78", "description": "As the human city development encroaches on the raccoon population's forest and meadow..."}, {"title": "Whisper of the Heart", "director": "Yoshifumi Kond\u014d", "producer": "Toshio Suzuki", "release_date": "1995", "running_time": "111", "rt_score": "91", "description": "Shizuku lives a simple life, dominated by her love for stories and writing"}, {"title": "Princess Mononoke", "director": "Hayao Miyazaki", "producer": "Toshio Suzuki", "release_date": "1997", "running_time": "134", "rt_score": "92", "description": "Ashitaka, a prince of the disappearing Ainu tribe, is cursed by a demonized boar god an..."}, {"title": "My Neighbors the Yamadas", "director": "Isao Takahata", "producer": "Toshio Suzuki", "release_date": "1999", "running_time": "104", "rt_score": "75", "description": "The Yamadas are a typical middle class Japanese family in urban Tokyo and this film sho..."}, {"title": "Spirited Away", "director": "Hayao Miyazaki", "producer": "Toshio Suzuki", "release_date": "2001", "running_time": "124", "rt_score": "97", "description": "Spirited Away is an Oscar winning Japanese animated film about a ten year old girl who..."}, {"title": "The Cat Returns", "director": "Hiroyuki Morita", "producer": "Toshio Suzuki", "release_date": "2002", "running_time": "75", "rt_score": "89", "description": "Haru, a schoolgirl bored by her ordinary routine, saves the life of an unusual cat and..."}, {"title": "Howl's Moving Castle", "director": "Hayao Miyazaki", "producer": "Toshio Suzuki", "release_date": "2004", "running_time": "119", "rt_score": "87", "description": "When Sophie, a shy young woman, is cursed with an old body by a spiteful witch, her onl..."}, {"title": "Tales from Earthsea", "director": "Gor\u014d Miyazaki", "producer": "Toshio Suzuki", "release_date": "2006", "running_time": "116", "rt_score": "41", "description": "Something bizarre has come over the land"}, {"title": "Ponyo", "director": "Hayao Miyazaki", "producer": "Toshio Suzuki", "release_date": "2008", "running_time": "100", "rt_score": "92", "description": "The son of a sailor, 5-year old Sosuke lives a quiet life on an oceanside cliff with hi..."}, {"title": "Arrietty", "director": "Hiromasa Yonebayashi", "producer": "Toshio Suzuki", "release_date": "2010", "running_time": "94", "rt_score": "95", "description": "14-year-old Arrietty and the rest of the Clock family live in peaceful anonymity as the..."}, {"title": "From Up on Poppy Hill", "director": "Gor\u014d Miyazaki", "producer": "Toshio Suzuki", "release_date": "2011", "running_time": "91", "rt_score": "83", "description": "The story is set in 1963 in Yokohama"}, {"title": "The Wind Rises", "director": "Hayao Miyazaki", "producer": "Toshio Suzuki", "release_date": "2013", "running_time": "126", "rt_score": "89", "description": "A lifelong love of flight inspires Japanese aviation engineer Jiro Horikoshi, whose sto..."}, {"title": "The Tale of the Princess Kaguya", "director": "Isao Takahata", "producer": "Yoshiaki Nishimura", "release_date": "2013", "running_time": "137", "rt_score": "100", "description": "A bamboo cutter named Sanuki no Miyatsuko discovers a miniature girl inside a glowing b..."}, {"title": "When Marnie Was There", "director": "Hiromasa Yonebayashi", "producer": "Yoshiaki Nishimura", "release_date": "2014", "running_time": "103", "rt_score": "92", "description": "The film follows Anna Sasaki living with her relatives in the seaside town"}, {"title": "The Red Turtle", "director": "Micha\u00ebl Dudok de Wit", "producer": "Toshio Suzuki, Isao Takahata, Vincent Maraval, Pascal Caucheteux, Gr\u00e9goire Sorlat", "release_date": "2016", "running_time": "80", "rt_score": "93", "description": "A man set adrift by a storm wakes up on a beach"}, {"title": "Earwig and the Witch", "director": "Gor\u014d Miyazaki", "producer": "Toshio Suzuki", "release_date": "2021", "running_time": "82", "rt_score": "30", "description": "An orphan girl, Earwig, is adopted by a witch and comes home to a spooky house filled w..."}]</script>
+
+<script>
+/* ---------- tabs ---------- */
+function showTab(btn){
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+  var id = btn.dataset.t;
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === id));
+  window.scrollTo({top:0});
+}
+
+/* ---------- show / hide solutions ---------- */
+function toggleSol(btn){
+  var sol = btn.nextElementSibling;
+  var open = sol.classList.toggle('open');
+  btn.innerHTML = (open ? '&#9652; Hide' : '&#9662; Show') + (btn.textContent.indexOf('answer') > -1 ? ' answer' : ' solution');
+}
+
+/* ---------- Pyodide + a requests shim backed by the embedded data ---------- */
+var PY_INIT = `
+import json, sys, types
+
+_data = json.loads(_films_json)
+
+_HTML_SAMPLE = """<!DOCTYPE html>
+<html>
+  <head><title>Georgia Tech College of Computing</title></head>
+  <body>
+    <h1>College of Computing</h1>
+    <p>Welcome to the College of Computing.</p>
+  </body>
+</html>"""
+
+class Response:
+    def __init__(self, text, status_code=200):
+        self.text = text
+        self.status_code = status_code
+    def __repr__(self):
+        return "<Response [" + str(self.status_code) + "]>"
+    def json(self):
+        return json.loads(self.text)
+
+def _get(url, *args, **kwargs):
+    u = str(url).lower()
+    if "ghibli" in u and "films" in u:
+        return Response(json.dumps(_data), 200)
+    if "ghibli" in u:
+        return Response(json.dumps(_data), 200)
+    return Response(_HTML_SAMPLE, 200)
+
+requests = types.ModuleType("requests")
+requests.get = _get
+requests.Response = Response
+sys.modules["requests"] = requests
+`;
+
+var _pyPromise = null;
+function ensurePyodide(){
+  if(_pyPromise) return _pyPromise;
+  _pyPromise = (async function(){
+    if(typeof loadPyodide === 'undefined'){
+      await new Promise(function(resolve, reject){
+        var s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js';
+        s.onload = resolve;
+        s.onerror = function(){ reject(new Error('Could not load the Python engine. Check your internet connection, then try Run again.')); };
+        document.head.appendChild(s);
+      });
+    }
+    var py = await loadPyodide();
+    py.globals.set('_films_json', document.getElementById('films-data').textContent);
+    await py.runPythonAsync(PY_INIT);
+    return py;
+  })();
+  return _pyPromise;
+}
+
+async function runCell(btn){
+  var cell = btn.closest('.cell');
+  var ta = cell.querySelector('textarea');
+  var out = cell.querySelector('.output');
+  out.style.display = 'block';
+  out.classList.remove('err');
+  out.textContent = 'Loading Python and running...';
+  var py;
+  try{ py = await ensurePyodide(); }
+  catch(e){ out.classList.add('err'); out.textContent = String(e.message || e); return; }
+  py.runPython("import sys, io\n_buf = io.StringIO()\nsys.stdout = _buf\nsys.stderr = _buf");
+  var errText = '';
+  try{ py.runPython(ta.value); }
+  catch(e){ errText = String(e.message || e); }
+  var res = '';
+  try{ res = py.runPython("sys.stdout = sys.__stdout__\nsys.stderr = sys.__stderr__\n_buf.getvalue()"); }
+  catch(e){}
+  if(!res && !errText){ out.textContent = '(ran with no printed output)'; return; }
+  out.textContent = (res || '') + (errText ? ((res ? '\n' : '') + errText) : '');
+  if(errText) out.classList.add('err');
+}
+</script>
+</body>
+</html>
