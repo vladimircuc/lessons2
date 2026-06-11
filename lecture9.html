@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lecture 9 · Web Scraping with BeautifulSoup · CS 2316</title>
+<style>
+:root{
+  --bg:#0a0e16; --surface:#111824; --surface2:#0c121d; --elevated:#16202e;
+  --border:#22304a; --border2:#2c3d5c;
+  --text:#dde6f3; --muted:#8190ab; --faint:#5a6987;
+  --cyan:#54c7ff; --cyan-dim:#2a7fb8;
+  --amber:#f6c454; --amber-dim:#7d611f;
+  --green:#4fd47a; --red:#ff7a7a; --purple:#b18cff;
+  --mono: ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+  --sans: -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0; background:radial-gradient(1200px 600px at 80% -10%,#13203200,#0a0e16),var(--bg);
+  color:var(--text); font-family:var(--sans); line-height:1.65; font-size:16px; -webkit-font-smoothing:antialiased}
+.wrap{max-width:920px; margin:0 auto; padding:0 18px 90px}
+a{color:var(--cyan)}
+::selection{background:#54c7ff44}
+.hdr{padding:38px 0 18px}
+.eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:.28em; text-transform:uppercase; color:var(--amber); margin:0 0 10px}
+h1{font-size:clamp(28px,5vw,42px); margin:0; line-height:1.1; letter-spacing:-.01em; font-weight:800}
+.sub{color:var(--muted); margin:14px 0 0; max-width:62ch}
+.prompt{font-family:var(--mono); color:var(--green); font-size:13px; margin-top:16px}
+.cursor{display:inline-block; width:8px; height:15px; background:var(--green); vertical-align:-2px; margin-left:2px; animation:blink 1.1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.tabs{position:sticky; top:0; z-index:30; display:flex; flex-wrap:wrap; gap:6px; padding:10px 0; margin:8px 0 26px; background:linear-gradient(var(--bg),var(--bg) 70%,#0a0e1600); border-bottom:1px solid var(--border)}
+.tab-btn{font-family:var(--mono); font-size:12.5px; letter-spacing:.02em; color:var(--muted); background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:8px 12px; cursor:pointer; transition:.15s}
+.tab-btn:hover{color:var(--text); border-color:var(--border2)}
+.tab-btn.active{color:#06121d; background:var(--cyan); border-color:var(--cyan); font-weight:600}
+.tab-btn .n{color:var(--faint); margin-right:7px}
+.tab-btn.active .n{color:#0a3450}
+.panel{display:none}
+.panel.active{display:block; animation:fade .28s ease}
+@keyframes fade{from{opacity:0; transform:translateY(6px)}to{opacity:1; transform:none}}
+.block{margin:0 0 30px}
+.label{font-family:var(--mono); font-size:11.5px; letter-spacing:.22em; text-transform:uppercase; color:var(--cyan); margin:0 0 8px}
+h2{font-size:24px; margin:6px 0 12px; letter-spacing:-.01em}
+h3{font-size:17px; margin:24px 0 8px; color:#eef3fb}
+p{margin:11px 0}
+ul,ol{margin:11px 0; padding-left:22px}
+li{margin:6px 0}
+.muted{color:var(--muted)}
+code{font-family:var(--mono); font-size:.9em; background:#1a2433; border:1px solid var(--border); border-radius:5px; padding:1px 6px; color:#cfe6ff}
+.read{background:#10131f; border:1px solid var(--border); border-left:3px solid var(--cyan); border-radius:9px; padding:12px 15px; margin:14px 0}
+.read .rl{font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--cyan); margin:0 0 6px; font-weight:700}
+.read p{margin:5px 0}
+.cell{background:var(--surface2); border:1px solid var(--border); border-radius:11px; overflow:hidden; margin:14px 0}
+.cell-head{display:flex; align-items:center; gap:8px; padding:9px 13px; background:#0e1622; border-bottom:1px solid var(--border)}
+.dots{display:flex; gap:6px}
+.dot{width:11px; height:11px; border-radius:50%}
+.d1{background:#ff5f57}.d2{background:#febc2e}.d3{background:#28c840}
+.cell-name{font-family:var(--mono); font-size:12px; color:var(--faint); margin-left:4px}
+.run{margin-left:auto; font-family:var(--mono); font-size:12.5px; font-weight:600; color:#06180d; background:var(--green); border:0; border-radius:7px; padding:6px 13px; cursor:pointer; transition:.15s}
+.run:hover{filter:brightness(1.08)}
+.run:active{transform:translateY(1px)}
+.cell textarea{width:100%; border:0; resize:vertical; background:transparent; color:#e8f0fb; font-family:var(--mono); font-size:13.5px; line-height:1.65; padding:14px; display:block; outline:none; tab-size:4}
+.output{margin:0; border-top:1px dashed var(--border); padding:12px 14px; font-family:var(--mono); font-size:13px; white-space:pre-wrap; word-break:break-word; color:#a9e6c0; background:#0a1119}
+.output.err{color:#ffb4b4}
+.callout{border-radius:11px; padding:14px 16px; margin:16px 0; border:1px solid; font-size:14.5px}
+.callout .ct{font-family:var(--mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase; margin:0 0 6px; font-weight:700}
+.warn{background:#1c140a; border-color:var(--amber-dim)} .warn .ct{color:var(--amber)}
+.tip{background:#0c1822; border-color:var(--cyan-dim)} .tip .ct{color:var(--cyan)}
+.callout p{margin:6px 0}
+.activity{border:1px solid var(--border); border-left:3px solid var(--purple); border-radius:11px; padding:15px 17px; margin:18px 0; background:#10131f}
+.act-label{font-family:var(--mono); font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--purple); margin:0 0 8px; font-weight:700}
+.sol-btn{font-family:var(--mono); font-size:12.5px; color:var(--cyan); background:#0d1a26; border:1px solid var(--cyan-dim); border-radius:7px; padding:7px 13px; cursor:pointer; margin-top:6px; transition:.15s}
+.sol-btn:hover{background:#10212f}
+.solution{display:none; margin-top:12px; padding-top:12px; border-top:1px dashed var(--border)}
+.solution.open{display:block; animation:fade .2s ease}
+.mcq{border:1px solid var(--border); border-radius:11px; padding:15px 17px; margin:16px 0; background:#10131f}
+.mcq .q{font-weight:600; margin:0 0 10px}
+.opts{list-style:none; padding:0; margin:0 0 8px}
+.opts li{font-family:var(--mono); font-size:13.5px; padding:8px 12px; margin:6px 0; background:#0d1420; border:1px solid var(--border); border-radius:7px}
+.opts li .lt{color:var(--cyan); margin-right:9px; font-weight:700}
+.ref-table{width:100%; border-collapse:collapse; margin:14px 0; font-size:14px}
+.ref-table th,.ref-table td{border:1px solid var(--border); padding:9px 12px; text-align:left; vertical-align:top}
+.ref-table th{background:#13202f; color:var(--cyan); font-family:var(--mono); font-size:12px; letter-spacing:.05em; text-transform:uppercase}
+.ref-table td:first-child{font-family:var(--mono); color:#cfe6ff; white-space:nowrap}
+.ref-table tr:nth-child(even) td{background:#0d1420}
+.sheet-card{border-radius:13px; padding:18px 20px; margin:16px 0; border:1px solid}
+.given{background:#1a140a; border-color:var(--amber-dim)}
+.memorize{background:#0c1822; border-color:var(--cyan-dim)}
+.sheet-card h3{margin-top:0; display:flex; align-items:center; gap:9px}
+.tag{font-family:var(--mono); font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; padding:3px 8px; border-radius:20px; font-weight:700}
+.tag.g{background:var(--amber); color:#1a1304}
+.tag.m{background:var(--cyan); color:#06121d}
+.sheet-card pre{font-family:var(--mono); font-size:13px; background:#0a1019; border:1px solid var(--border); border-radius:8px; padding:13px; overflow-x:auto; white-space:pre; color:#cfe6ff; line-height:1.6}
+.htmlbox{font-family:var(--mono); font-size:12.5px; background:#0a1019; border:1px solid var(--border); border-radius:9px; padding:14px; overflow-x:auto; white-space:pre; color:#b9cbe6; line-height:1.55}
+.chk{display:flex; gap:11px; align-items:flex-start; padding:11px 14px; margin:8px 0; background:#10131f; border:1px solid var(--border); border-radius:9px; cursor:pointer; font-size:14.5px}
+.chk input{margin-top:3px; width:17px; height:17px; accent-color:var(--green); flex:none}
+.chk:hover{border-color:var(--border2)}
+footer{color:var(--faint); font-family:var(--mono); font-size:12px; text-align:center; margin-top:40px; padding-top:18px; border-top:1px solid var(--border)}
+@media (max-width:600px){ body{font-size:15px} h2{font-size:21px} .tab-btn{font-size:11.5px; padding:7px 9px} }
+@media (prefers-reduced-motion:reduce){ *{animation:none!important; transition:none!important; scroll-behavior:auto!important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hdr">
+    <p class="eyebrow">CS 2316 · Exam 1 Prep</p>
+    <h1>Lecture 9: Web Scraping with BeautifulSoup</h1>
+    <p class="sub">When a website has no API, you pull the data out of its HTML yourself. BeautifulSoup turns a messy page into something you can search. We build it up from zero.</p>
+    <p class="prompt">&gt;&gt;&gt; from bs4 import BeautifulSoup<span class="cursor"></span></p>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab-btn active" data-t="t1" onclick="showTab(this)"><span class="n">00</span>Start here</button>
+    <button class="tab-btn" data-t="t2" onclick="showTab(this)"><span class="n">01</span>A quick look at HTML</button>
+    <button class="tab-btn" data-t="t3" onclick="showTab(this)"><span class="n">02</span>Making soup</button>
+    <button class="tab-btn" data-t="t4" onclick="showTab(this)"><span class="n">03</span>find &amp; find_all</button>
+    <button class="tab-btn" data-t="t5" onclick="showTab(this)"><span class="n">04</span>Text &amp; attributes</button>
+    <button class="tab-btn" data-t="t6" onclick="showTab(this)"><span class="n">05</span>Scraping a table</button>
+    <button class="tab-btn" data-t="t7" onclick="showTab(this)"><span class="n">06</span>Exam drill</button>
+    <button class="tab-btn" data-t="t8" onclick="showTab(this)"><span class="n">07</span>Cheat sheet</button>
+    <button class="tab-btn" data-t="t9" onclick="showTab(this)"><span class="n">08</span>Checklist</button>
+  </nav>
+
+  <!-- TAB 1 -->
+  <section id="t1" class="panel active">
+    <div class="block">
+      <p class="label">Why we scrape</p>
+      <h2>When there is no API</h2>
+      <p>Back in Lecture 6 you saw that an API hands you clean, ready-to-use data. That is the easy case. But plenty of websites have no API at all. They only have the web page itself. <b>Web scraping</b> is what you do then: you download the page's HTML and dig the data out of it yourself.</p>
+      <p>The plan is two steps:</p>
+      <ol>
+        <li><b>Get the page's HTML as a string.</b> You already know how, from Lecture 6: <code>requests.get(url).text</code> hands you the whole page as text.</li>
+        <li><b>Parse that HTML with BeautifulSoup.</b> Raw HTML is an awkward wall of text. BeautifulSoup turns it into something you can search and navigate, so you can ask for "all the table rows" or "the first link" without hunting through the text by hand.</li>
+      </ol>
+      <div class="callout tip"><p class="ct">Scrape politely</p><p>Same manners as Lecture 6. Check the site's robots.txt to see what it allows, and do not hammer a server with rapid-fire requests. Scraping is powerful, so use it considerately.</p></div>
+    </div>
+    <div class="block">
+      <p class="label">How to use this page</p>
+      <h3>Three things to know</h3>
+      <ul>
+        <li><b>Read the tabs in order.</b> Each one builds on the last.</li>
+        <li><b>The green Run buttons run real Python with real BeautifulSoup.</b> The first click loads the engine and the library, so it takes a few extra seconds the first time, then it is quick.</li>
+        <li><b>One sample page is loaded for you</b> in a variable called <code>html</code>, so every example works without any setup. You will meet that page in the next tab.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- TAB 2 -->
+  <section id="t2" class="panel">
+    <div class="block">
+      <p class="label">What you are digging through</p>
+      <h2>HTML in a few minutes</h2>
+      <p>To pull data out of a page you need to recognize its shape. HTML is built out of <b>tags</b>.</p>
+      <p>A tag wraps a piece of content. <code>&lt;td&gt;Everest&lt;/td&gt;</code> has an opening tag <code>&lt;td&gt;</code>, the content <code>Everest</code>, and a closing tag <code>&lt;/td&gt;</code>. The three together are called an <b>element</b>.</p>
+      <p>Tags <b>nest</b> inside each other. A table row, <code>&lt;tr&gt;</code>, holds several cells, <code>&lt;td&gt;</code>. A whole table, <code>&lt;table&gt;</code>, holds several rows. So the page is a tree of tags inside tags.</p>
+      <p><b>Attributes</b> are extra labels written inside the opening tag, as <code>name="value"</code> pairs. For example <code>&lt;td class="name"&gt;</code> gives that cell a class of "name", and <code>&lt;a href="https://..."&gt;</code> gives a link its web address. Attributes are how you tell similar tags apart.</p>
+    </div>
+    <div class="block">
+      <p class="label">Our page</p>
+      <h2>The sample we will scrape all lecture</h2>
+      <p>This is the HTML loaded for you in the <code>html</code> variable. Read it slowly: it is a table with three rows, each row has three cells (a name, a height, a country), and there is one link at the bottom.</p>
+      <div class="htmlbox">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;&lt;title&gt;Tallest Mountains&lt;/title&gt;&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;Tallest Mountains&lt;/h1&gt;
+  &lt;table&gt;
+    &lt;tr&gt;
+      &lt;td class="name"&gt;Everest&lt;/td&gt;
+      &lt;td class="height"&gt;8849&lt;/td&gt;
+      &lt;td class="country"&gt;Nepal&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td class="name"&gt;K2&lt;/td&gt;
+      &lt;td class="height"&gt;8611&lt;/td&gt;
+      &lt;td class="country"&gt;Pakistan&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td class="name"&gt;Kangchenjunga&lt;/td&gt;
+      &lt;td class="height"&gt;8586&lt;/td&gt;
+      &lt;td class="country"&gt;India&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/table&gt;
+  &lt;a href="https://example.com/more"&gt;More mountains&lt;/a&gt;
+&lt;/body&gt;
+&lt;/html&gt;</div>
+      <p>The tags that matter most for tables: <code>&lt;table&gt;</code> wraps everything, <code>&lt;tr&gt;</code> is a row, <code>&lt;td&gt;</code> is a cell, and <code>&lt;a&gt;</code> with its <code>href</code> is a link.</p>
+    </div>
+  </section>
+
+  <!-- TAB 3 -->
+  <section id="t3" class="panel">
+    <div class="block">
+      <p class="label">Step one</p>
+      <h2>Turning HTML into soup</h2>
+      <p>You start by handing the HTML to BeautifulSoup. Two lines:</p>
+      <div class="read"><p class="rl">from bs4 import BeautifulSoup<br>soup = BeautifulSoup(html, "html.parser")</p><p>Import the tool, then build a soup object from your HTML. The second argument, <code>"html.parser"</code>, names the engine that reads the HTML. It is built into Python, so it always works.</p></div>
+      <p>That word "soup" is just BeautifulSoup's name for the parsed page. Once you have it, you can search the page instead of scanning raw text. The <code>html</code> here is the page's HTML as a string. In a real program you would fetch it first with <code>requests.get(url).text</code> from Lecture 6, but on this page it is already loaded for you.</p>
+      <p>A first taste: <code>soup.title.text</code> reaches into the <code>&lt;title&gt;</code> tag and pulls out its text.</p>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">making_soup.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="5">from bs4 import BeautifulSoup
+
+soup = BeautifulSoup(html, "html.parser")
+print(soup.title.text)      # 'Tallest Mountains'</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+      <p class="muted">The first run loads BeautifulSoup, so give it a few seconds. After that, every cell on this page is quick.</p>
+    </div>
+  </section>
+
+  <!-- TAB 4 -->
+  <section id="t4" class="panel">
+    <div class="block">
+      <p class="label">The two workhorses</p>
+      <h2>find and find_all</h2>
+      <p>Almost all scraping comes down to these two methods, and the difference is simple.</p>
+      <table class="ref-table">
+        <tr><th>Method</th><th>Returns</th></tr>
+        <tr><td>soup.find("td")</td><td>the FIRST matching tag, or None if there are none</td></tr>
+        <tr><td>soup.find_all("td")</td><td>a LIST of every matching tag</td></tr>
+      </table>
+      <p>It is the same one-versus-all idea you saw with <code>search</code> and <code>findall</code> in regex. Use <code>find</code> when you want one thing, <code>find_all</code> when you want all of them.</p>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">find.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="8">from bs4 import BeautifulSoup
+soup = BeautifulSoup(html, "html.parser")
+
+print(soup.find("td").text)        # 'Everest'  (the first cell)
+print(len(soup.find_all("td")))    # 9          (nine cells total)
+print(len(soup.find_all("tr")))    # 3          (three rows)</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+      <div class="callout tip"><p class="ct">Searching by class</p><p>To find tags with a certain class, pass <code>class_</code> with an underscore, like <code>soup.find_all("td", class_="name")</code>. The underscore is there because <code>class</code> on its own is a reserved word in Python, so BeautifulSoup uses <code>class_</code> instead.</p></div>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">find_by_class.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="6">from bs4 import BeautifulSoup
+soup = BeautifulSoup(html, "html.parser")
+
+names = soup.find_all("td", class_="name")
+print([cell.text for cell in names])   # ['Everest', 'K2', 'Kangchenjunga']</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+
+      <div class="activity">
+        <p class="act-label">Your turn</p>
+        <p>Print how many <code>&lt;td&gt;</code> cells have the class <code>"country"</code>.</p>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution">
+          <div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">solution.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="4">from bs4 import BeautifulSoup
+soup = BeautifulSoup(html, "html.parser")
+print(len(soup.find_all("td", class_="country")))</textarea><pre class="output" style="display:none"></pre></div>
+          <p class="muted">You get 3, one country cell per row. <code>find_all</code> with <code>class_="country"</code> returns the list, and <code>len</code> counts it.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 5 -->
+  <section id="t5" class="panel">
+    <div class="block">
+      <p class="label">Getting the data out</p>
+      <h2>Text and attributes</h2>
+      <p>Once you have a tag, there are two things you usually want from it: the text inside it, and its attributes.</p>
+      <p><b>Text:</b> <code>.text</code> (you may also see <code>.get_text()</code>) gives you the visible text inside a tag, with the surrounding tags stripped away. So a name cell's <code>.text</code> is just the name.</p>
+      <p><b>Attributes:</b> to read an attribute, treat the tag like a dictionary and look it up by name. <code>tag["href"]</code> gives a link's web address, <code>tag["class"]</code> gives its class. Same square-bracket lookup you already use for dictionaries.</p>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">text_and_attrs.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="7">from bs4 import BeautifulSoup
+soup = BeautifulSoup(html, "html.parser")
+
+link = soup.find("a")
+print(link.text)        # 'More mountains'   the visible text
+print(link["href"])     # 'https://example.com/more'   the attribute</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+
+      <div class="activity">
+        <p class="act-label">Your turn</p>
+        <p>Print the text of the very first <code>&lt;td&gt;</code> cell on the page.</p>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution">
+          <div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">solution.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="4">from bs4 import BeautifulSoup
+soup = BeautifulSoup(html, "html.parser")
+print(soup.find("td").text)</textarea><pre class="output" style="display:none"></pre></div>
+          <p class="muted">You get 'Everest'. <code>find("td")</code> grabs the first cell, and <code>.text</code> pulls its content.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 6 -->
+  <section id="t6" class="panel">
+    <div class="block">
+      <p class="label">The everyday pattern</p>
+      <h2>Scraping a whole table</h2>
+      <p>Here is the move you will use again and again: grab all the rows, loop over them, and for each row grab its cells and read the ones you care about.</p>
+      <div class="read"><p class="rl">The recipe</p><p>rows = soup.find_all("tr"), then for each row, cells = row.find_all("td"), then read cells[0], cells[1], and so on.</p></div>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">scrape_table.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="9">from bs4 import BeautifulSoup
+soup = BeautifulSoup(html, "html.parser")
+
+rows = soup.find_all("tr")            # the three rows
+for row in rows:
+    cells = row.find_all("td")        # this row's three cells
+    print(cells[0].text, "is in", cells[2].text)</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+      <p>Walk through it: <code>find_all("tr")</code> gives the three rows. Inside the loop, <code>row.find_all("td")</code> gives that one row's cells. <code>cells[0]</code> is the name cell and <code>cells[2]</code> is the country cell, so each loop prints a name and its country.</p>
+
+      <div class="activity">
+        <p class="act-label">Your turn</p>
+        <p>Build and print a list of <code>(name, height)</code> tuples for all three mountains, like <code>[('Everest', '8849'), ...]</code>.</p>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution">
+          <div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">solution.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="9">from bs4 import BeautifulSoup
+soup = BeautifulSoup(html, "html.parser")
+
+result = []
+for row in soup.find_all("tr"):
+    cells = row.find_all("td")
+    result.append((cells[0].text, cells[1].text))
+print(result)</textarea><pre class="output" style="display:none"></pre></div>
+          <p class="muted">Result: <code>[('Everest', '8849'), ('K2', '8611'), ('Kangchenjunga', '8586')]</code>. Same loop as above, but instead of printing you collect <code>(cells[0].text, cells[1].text)</code> into a list. Remember the heights come out as strings, so wrap them in <code>int()</code> if you need to compare them as numbers.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 7 -->
+  <section id="t7" class="panel">
+    <div class="block">
+      <p class="label">Exam practice</p>
+      <h2>The questions this lecture gets asked</h2>
+      <p>On the exam, BeautifulSoup shows up as <b>tracing</b>: you are given a small HTML page and some code, and you predict the output. There is also a multiple choice on the method names. These are rebuilt in that style, all using the mountains page from this lesson. Work each on paper first, then reveal it.</p>
+
+      <div class="mcq">
+        <p class="q">Which line returns a list of every <code>&lt;div&gt;</code> tag in the soup?</p>
+        <ul class="opts">
+          <li><span class="lt">A</span>soup.find_all("div")</li>
+          <li><span class="lt">B</span>soup.find_tags("div")</li>
+          <li><span class="lt">C</span>soup.find("div")</li>
+          <li><span class="lt">D</span>"div".findall(soup)</li>
+        </ul>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show answer</button>
+        <div class="solution"><p><b>A, <code>soup.find_all("div")</code>.</b> find_all returns a list of every match. <code>find</code> would return only the first one, and the other two are not real methods.</p></div>
+      </div>
+
+      <h3>Tracing, predict the output</h3>
+      <div class="activity">
+        <p class="act-label">Trace 1</p>
+        <p>What is <code>outlist</code>?</p>
+        <div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">t1.py</span></div><textarea spellcheck="false" rows="3" readonly>rows = soup.find_all("tr")
+outlist = rows[2].find_all("td")[0].text</textarea></div>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution">
+          <p><b><code>'Kangchenjunga'</code></b></p>
+          <p class="muted"><code>rows[2]</code> is the third row (counting from 0), the Kangchenjunga row. <code>.find_all("td")[0]</code> is that row's first cell, the name, and <code>.text</code> reads it.</p>
+          <div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">t1_check.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="5">from bs4 import BeautifulSoup
+soup = BeautifulSoup(html, "html.parser")
+rows = soup.find_all("tr")
+print(rows[2].find_all("td")[0].text)</textarea><pre class="output" style="display:none"></pre></div>
+        </div>
+      </div>
+
+      <div class="activity">
+        <p class="act-label">Trace 2</p>
+        <p>What is <code>outlist</code>?</p>
+        <div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">t2.py</span></div><textarea spellcheck="false" rows="3" readonly>names = [td.text for td in soup.find_all("td", class_="name")]
+outlist = names[::-1]</textarea></div>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution">
+          <p><b><code>['Kangchenjunga', 'K2', 'Everest']</code></b></p>
+          <p class="muted">The comprehension collects the three name cells in order, <code>['Everest', 'K2', 'Kangchenjunga']</code>. The slice <code>[::-1]</code> reverses the list.</p>
+          <div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">t2_check.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="5">from bs4 import BeautifulSoup
+soup = BeautifulSoup(html, "html.parser")
+names = [td.text for td in soup.find_all("td", class_="name")]
+print(names[::-1])</textarea><pre class="output" style="display:none"></pre></div>
+        </div>
+      </div>
+
+      <div class="activity">
+        <p class="act-label">Trace 3</p>
+        <p>What is <code>outlist</code>?</p>
+        <div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">t3.py</span></div><textarea spellcheck="false" rows="3" readonly>cells = soup.find_all("td")
+outlist = [c.text for c in cells[1::3]]</textarea></div>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution">
+          <p><b><code>['8849', '8611', '8586']</code></b></p>
+          <p class="muted"><code>find_all("td")</code> gives all nine cells in order: name, height, country, name, height, country, and so on. The slice <code>[1::3]</code> starts at index 1 (the first height) and takes every third cell, so it lands on each height. The text comes out as strings.</p>
+          <div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">t3_check.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="5">from bs4 import BeautifulSoup
+soup = BeautifulSoup(html, "html.parser")
+cells = soup.find_all("td")
+print([c.text for c in cells[1::3]])</textarea><pre class="output" style="display:none"></pre></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 8 -->
+  <section id="t8" class="panel">
+    <div class="block">
+      <p class="label">Your source of truth</p>
+      <h2>Lecture 9 cheat sheet</h2>
+
+      <div class="sheet-card given">
+        <h3><span class="tag g">Given</span> On the exam reference sheet</h3>
+        <p>The reference sheet you are handed covers <b>regular expressions only</b>. It has <b>nothing</b> about BeautifulSoup or HTML. So this entire topic is from memory, which is exactly why the section below matters.</p>
+      </div>
+
+      <div class="sheet-card memorize">
+        <h3><span class="tag m">Memorize</span> Put this on your crib sheet</h3>
+        <p><b>Setup:</b></p>
+        <pre>from bs4 import BeautifulSoup
+soup = BeautifulSoup(html, "html.parser")</pre>
+        <p><b>Finding tags:</b></p>
+        <pre>soup.find("td")              first match, or None
+soup.find_all("td")          list of every match
+soup.find_all("td", class_="name")   by class (note the _)</pre>
+        <p><b>Reading a tag:</b></p>
+        <pre>tag.text         the visible text inside it
+tag["href"]      an attribute, looked up like a dict key</pre>
+        <p><b>The table loop:</b></p>
+        <pre>for row in soup.find_all("tr"):
+    cells = row.find_all("td")
+    name = cells[0].text
+    # cell text is a string, use int() to compare numbers</pre>
+        <p><b>API versus scraping</b> (a favorite multiple choice): an API is a built endpoint that serves clean data, while scraping pulls data straight out of a page's HTML because there is no such endpoint.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 9 -->
+  <section id="t9" class="panel">
+    <div class="block">
+      <p class="label">Self-test</p>
+      <h2>Before the exam, can you...</h2>
+      <p>Tick each one only when you could do it on paper with no notes.</p>
+      <label class="chk"><input type="checkbox"> Explain what web scraping is and when you use it instead of an API.</label>
+      <label class="chk"><input type="checkbox"> Point to a tag, its content, and its attributes in a chunk of HTML.</label>
+      <label class="chk"><input type="checkbox"> Build a soup with BeautifulSoup(html, "html.parser").</label>
+      <label class="chk"><input type="checkbox"> Say the difference between find and find_all.</label>
+      <label class="chk"><input type="checkbox"> Search by class using class_ with the underscore.</label>
+      <label class="chk"><input type="checkbox"> Get a tag's text with .text and an attribute with tag["href"].</label>
+      <label class="chk"><input type="checkbox"> Loop over rows, grab each row's cells, and read the ones you want.</label>
+      <label class="chk"><input type="checkbox"> Trace a slice like cells[1::3] or names[::-1] over a find_all result.</label>
+    </div>
+  </section>
+
+  <footer>CS 2316 · Lecture 9 · Web Scraping with BeautifulSoup · find it, loop it, read it</footer>
+</div>
+
+<!-- the sample page, loaded into the `html` variable for every cell -->
+<script type="text/plain" id="sample-html"><!DOCTYPE html>
+<html>
+<head><title>Tallest Mountains</title></head>
+<body>
+  <h1>Tallest Mountains</h1>
+  <table>
+    <tr>
+      <td class="name">Everest</td>
+      <td class="height">8849</td>
+      <td class="country">Nepal</td>
+    </tr>
+    <tr>
+      <td class="name">K2</td>
+      <td class="height">8611</td>
+      <td class="country">Pakistan</td>
+    </tr>
+    <tr>
+      <td class="name">Kangchenjunga</td>
+      <td class="height">8586</td>
+      <td class="country">India</td>
+    </tr>
+  </table>
+  <a href="https://example.com/more">More mountains</a>
+</body>
+</html></script>
+
+<script>
+function showTab(btn){
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+  var id = btn.dataset.t;
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === id));
+  window.scrollTo({top:0});
+}
+function toggleSol(btn){
+  var sol = btn.nextElementSibling;
+  var open = sol.classList.toggle('open');
+  var word = (btn.textContent.indexOf('answer') > -1) ? ' answer' : ' solution';
+  btn.innerHTML = (open ? '&#9652; Hide' : '&#9662; Show') + word;
+}
+var _pyPromise = null;
+function ensurePyodide(){
+  if(_pyPromise) return _pyPromise;
+  _pyPromise = (async function(){
+    if(typeof loadPyodide === 'undefined'){
+      await new Promise(function(resolve, reject){
+        var s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js';
+        s.onload = resolve;
+        s.onerror = function(){ reject(new Error('Could not load the Python engine. Check your internet connection, then try Run again.')); };
+        document.head.appendChild(s);
+      });
+    }
+    var py = await loadPyodide();
+    await py.loadPackage('beautifulsoup4');
+    py.globals.set('_sample_html', document.getElementById('sample-html').textContent);
+    py.runPython("html = _sample_html");
+    return py;
+  })();
+  return _pyPromise;
+}
+async function runCell(btn){
+  var cell = btn.closest('.cell');
+  var ta = cell.querySelector('textarea');
+  var out = cell.querySelector('.output');
+  out.style.display = 'block';
+  out.classList.remove('err');
+  out.textContent = 'Loading Python and BeautifulSoup, then running...';
+  var py;
+  try{ py = await ensurePyodide(); }
+  catch(e){ out.classList.add('err'); out.textContent = String(e.message || e); return; }
+  py.runPython("import sys, io\n_buf = io.StringIO()\nsys.stdout = _buf\nsys.stderr = _buf");
+  var errText = '';
+  try{ py.runPython(ta.value); }
+  catch(e){ errText = String(e.message || e); }
+  var res = '';
+  try{ res = py.runPython("sys.stdout = sys.__stdout__\nsys.stderr = sys.__stderr__\n_buf.getvalue()"); }
+  catch(e){}
+  if(!res && !errText){ out.textContent = '(ran with no printed output)'; return; }
+  out.textContent = (res || '') + (errText ? ((res ? '\n' : '') + errText) : '');
+  if(errText) out.classList.add('err');
+}
+</script>
+</body>
+</html>
