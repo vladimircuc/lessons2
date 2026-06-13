@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lecture 8 · More Regular Expressions · CS 2316</title>
+<style>
+:root{--bg:#0a0e16;--surface:#111824;--surface2:#0c121d;--elevated:#16202e;--border:#22304a;--border2:#2c3d5c;--text:#dde6f3;--muted:#8190ab;--faint:#5a6987;--cyan:#54c7ff;--cyan-dim:#2a7fb8;--amber:#f6c454;--amber-dim:#7d611f;--green:#4fd47a;--red:#ff7a7a;--purple:#b18cff;--mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,system-ui,sans-serif}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:radial-gradient(1200px 600px at 80% -10%,#13203200,#0a0e16),var(--bg);color:var(--text);font-family:var(--sans);line-height:1.65;font-size:16px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:920px;margin:0 auto;padding:0 18px 90px}
+a{color:var(--cyan)}
+::selection{background:#54c7ff44}
+.hdr{padding:38px 0 18px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--amber);margin:0 0 10px}
+h1{font-size:clamp(28px,5vw,42px);margin:0;line-height:1.1;letter-spacing:-.01em;font-weight:800}
+.sub{color:var(--muted);margin:14px 0 0;max-width:62ch}
+.prompt{font-family:var(--mono);color:var(--green);font-size:13px;margin-top:16px}
+.cursor{display:inline-block;width:8px;height:15px;background:var(--green);vertical-align:-2px;margin-left:2px;animation:blink 1.1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.tabs{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;gap:6px;padding:10px 0;margin:8px 0 26px;background:linear-gradient(var(--bg),var(--bg) 70%,#0a0e1600);border-bottom:1px solid var(--border)}
+.tab-btn{font-family:var(--mono);font-size:12.5px;letter-spacing:.02em;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;cursor:pointer;transition:.15s}
+.tab-btn:hover{color:var(--text);border-color:var(--border2)}
+.tab-btn.active{color:#06121d;background:var(--cyan);border-color:var(--cyan);font-weight:600}
+.tab-btn .n{color:var(--faint);margin-right:7px}
+.tab-btn.active .n{color:#0a3450}
+.panel{display:none}
+.panel.active{display:block;animation:fade .28s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.block{margin:0 0 30px}
+.label{font-family:var(--mono);font-size:11.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--cyan);margin:0 0 8px}
+h2{font-size:24px;margin:6px 0 12px;letter-spacing:-.01em}
+h3{font-size:17px;margin:24px 0 8px;color:#eef3fb}
+p{margin:11px 0}
+ul,ol{margin:11px 0;padding-left:22px}
+li{margin:6px 0}
+.muted{color:var(--muted)}
+code{font-family:var(--mono);font-size:.9em;background:#1a2433;border:1px solid var(--border);border-radius:5px;padding:1px 6px;color:#cfe6ff}
+.read{background:#10131f;border:1px solid var(--border);border-left:3px solid var(--cyan);border-radius:9px;padding:12px 15px;margin:14px 0}
+.read .rl{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan);margin:0 0 6px;font-weight:700}
+.read p{margin:5px 0}
+.cell{background:var(--surface2);border:1px solid var(--border);border-radius:11px;overflow:hidden;margin:14px 0}
+.cell-head{display:flex;align-items:center;gap:8px;padding:9px 13px;background:#0e1622;border-bottom:1px solid var(--border)}
+.dots{display:flex;gap:6px}
+.dot{width:11px;height:11px;border-radius:50%}
+.d1{background:#ff5f57}.d2{background:#febc2e}.d3{background:#28c840}
+.cell-name{font-family:var(--mono);font-size:12px;color:var(--faint);margin-left:4px}
+.run{margin-left:auto;font-family:var(--mono);font-size:12.5px;font-weight:600;color:#06180d;background:var(--green);border:0;border-radius:7px;padding:6px 13px;cursor:pointer;transition:.15s}
+.run:hover{filter:brightness(1.08)}
+.run:active{transform:translateY(1px)}
+.cell textarea{width:100%;border:0;resize:vertical;background:transparent;color:#e8f0fb;font-family:var(--mono);font-size:13.5px;line-height:1.65;padding:14px;display:block;outline:none;tab-size:4}
+.output{margin:0;border-top:1px dashed var(--border);padding:12px 14px;font-family:var(--mono);font-size:13px;white-space:pre-wrap;word-break:break-word;color:#a9e6c0;background:#0a1119}
+.output.err{color:#ffb4b4}
+.callout{border-radius:11px;padding:14px 16px;margin:16px 0;border:1px solid;font-size:14.5px}
+.callout .ct{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;margin:0 0 6px;font-weight:700}
+.warn{background:#1c140a;border-color:var(--amber-dim)}.warn .ct{color:var(--amber)}
+.tip{background:#0c1822;border-color:var(--cyan-dim)}.tip .ct{color:var(--cyan)}
+.callout p{margin:6px 0}
+.activity{border:1px solid var(--border);border-left:3px solid var(--purple);border-radius:11px;padding:15px 17px;margin:18px 0;background:#10131f}
+.act-label{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--purple);margin:0 0 8px;font-weight:700}
+.sol-btn{font-family:var(--mono);font-size:12.5px;color:var(--cyan);background:#0d1a26;border:1px solid var(--cyan-dim);border-radius:7px;padding:7px 13px;cursor:pointer;margin-top:6px;transition:.15s}
+.sol-btn:hover{background:#10212f}
+.solution{display:none;margin-top:12px;padding-top:12px;border-top:1px dashed var(--border)}
+.solution.open{display:block;animation:fade .2s ease}
+.mcq{border:1px solid var(--border);border-radius:11px;padding:15px 17px;margin:16px 0;background:#10131f}
+.mcq .q{font-weight:600;margin:0 0 10px}
+.opts{list-style:none;padding:0;margin:0 0 8px}
+.opts li{font-family:var(--mono);font-size:13.5px;padding:8px 12px;margin:6px 0;background:#0d1420;border:1px solid var(--border);border-radius:7px}
+.opts li .lt{color:var(--cyan);margin-right:9px;font-weight:700}
+.ref-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+.ref-table th,.ref-table td{border:1px solid var(--border);padding:9px 12px;text-align:left;vertical-align:top}
+.ref-table th{background:#13202f;color:var(--cyan);font-family:var(--mono);font-size:12px;letter-spacing:.05em;text-transform:uppercase}
+.ref-table td:first-child{font-family:var(--mono);color:#cfe6ff;white-space:nowrap}
+.ref-table tr:nth-child(even) td{background:#0d1420}
+.sheet-card{border-radius:13px;padding:18px 20px;margin:16px 0;border:1px solid}
+.given{background:#1a140a;border-color:var(--amber-dim)}
+.memorize{background:#0c1822;border-color:var(--cyan-dim)}
+.sheet-card h3{margin-top:0;display:flex;align-items:center;gap:9px}
+.tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;padding:3px 8px;border-radius:20px;font-weight:700}
+.tag.g{background:var(--amber);color:#1a1304}
+.tag.m{background:var(--cyan);color:#06121d}
+.sheet-card pre{font-family:var(--mono);font-size:13px;background:#0a1019;border:1px solid var(--border);border-radius:8px;padding:13px;overflow-x:auto;white-space:pre;color:#cfe6ff;line-height:1.6}
+.chk{display:flex;gap:11px;align-items:flex-start;padding:11px 14px;margin:8px 0;background:#10131f;border:1px solid var(--border);border-radius:9px;cursor:pointer;font-size:14.5px}
+.chk input{margin-top:3px;width:17px;height:17px;accent-color:var(--green);flex:none}
+.chk:hover{border-color:var(--border2)}
+mark{background:var(--amber);color:#1a1304;border-radius:3px;padding:0 1px}
+.rt{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px}
+.rt label{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan);display:block;margin:4px 0 6px}
+.rt-input{display:flex;align-items:center;background:#0a1019;border:1px solid var(--border2);border-radius:8px;padding:0 10px;font-family:var(--mono)}
+.rt-slash{color:var(--amber);font-size:15px}
+.rt-input input{flex:1;border:0;background:transparent;color:#ffe9a8;font-family:var(--mono);font-size:14px;padding:11px 6px;outline:none}
+.rt-ic{display:inline-flex!important;align-items:center;gap:7px;margin:12px 0 4px;color:var(--muted)!important;letter-spacing:0!important;text-transform:none!important;font-family:var(--sans)!important;font-size:13px!important;cursor:pointer}
+.rt-ic input{width:15px;height:15px;accent-color:var(--cyan)}
+.rt textarea{width:100%;background:#0a1019;border:1px solid var(--border2);border-radius:8px;color:#e8f0fb;font-family:var(--mono);font-size:14px;padding:11px;resize:vertical;outline:none}
+.rt-hl{margin-top:8px;background:#0a1019;border:1px solid var(--border);border-radius:8px;padding:12px;font-family:var(--mono);font-size:14px;line-height:1.8;white-space:pre-wrap;word-break:break-word;min-height:42px}
+.rt-info{margin:10px 0 0;background:#0a1019;border:1px solid var(--border);border-radius:8px;padding:11px 12px;font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;color:#a9e6c0}
+.rt-info .bad{color:#ffb4b4}
+.rt-info .muted{color:var(--faint)}
+footer{color:var(--faint);font-family:var(--mono);font-size:12px;text-align:center;margin-top:40px;padding-top:18px;border-top:1px solid var(--border)}
+@media (max-width:600px){body{font-size:15px}h2{font-size:21px}.tab-btn{font-size:11.5px;padding:7px 9px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hdr">
+    <p class="eyebrow">CS 2316 · Exam 1 Prep</p>
+    <h1>Lecture 8: More Regular Expressions</h1>
+    <p class="sub">Lecture 7 was about finding text. This one adds three powers: pulling out the exact pieces you want, controlling how much you match, and replacing text. Every tab gives you problems to type and run yourself.</p>
+    <p class="prompt">&gt;&gt;&gt; import re<span class="cursor"></span></p>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab-btn active" data-t="t1" onclick="showTab(this)"><span class="n">00</span>Start here</button>
+    <button class="tab-btn" data-t="t2" onclick="showTab(this)"><span class="n">01</span>Raw strings</button>
+    <button class="tab-btn" data-t="t3" onclick="showTab(this)"><span class="n">02</span>Capture groups</button>
+    <button class="tab-btn" data-t="t4" onclick="showTab(this)"><span class="n">03</span>Greedy vs non-greedy</button>
+    <button class="tab-btn" data-t="t5" onclick="showTab(this)"><span class="n">04</span>Substituting with sub</button>
+    <button class="tab-btn" data-t="t6" onclick="showTab(this)"><span class="n">05</span>Regex tester</button>
+    <button class="tab-btn" data-t="t7" onclick="showTab(this)"><span class="n">06</span>Exam drill</button>
+    <button class="tab-btn" data-t="t8" onclick="showTab(this)"><span class="n">07</span>Cheat sheet</button>
+    <button class="tab-btn" data-t="t9" onclick="showTab(this)"><span class="n">08</span>Checklist</button>
+  </nav>
+
+  <!-- TAB 1 -->
+  <section id="t1" class="panel active">
+    <div class="block">
+      <p class="label">Picking up from Lecture 7</p>
+      <h2>What this lecture adds</h2>
+      <p>In Lecture 7 you learned to <em>find</em> text that fits a pattern, using match, search, findall, and finditer, with character classes, repetition, and anchors. This lecture assumes all of that and adds three new abilities:</p>
+      <ul>
+        <li><b>Capture groups</b>, which let you pull out specific pieces of a match instead of the whole thing.</li>
+        <li><b>Greedy versus non-greedy</b>, which lets you control whether a pattern grabs as much as possible or as little as possible.</li>
+        <li><b>Substitution</b> with <code>re.sub</code>, which finds matches and replaces them, so regex can transform text, not just locate it.</li>
+      </ul>
+      <p>We open with one small piece of housekeeping that was promised last time: why every pattern is written as a raw string.</p>
+    </div>
+    <div class="block">
+      <p class="label">How to use this page</p>
+      <h3>Three things to know</h3>
+      <ul>
+        <li><b>Read the tabs in order.</b> Each builds on the last, and on Lecture 7.</li>
+        <li><b>Every tab has practice you type and run.</b> Each problem gives you an empty code box to write your own answer in, a Run button to test it, and a Show solution button once you want to compare.</li>
+        <li><b>The Regex tester now shows capture groups too,</b> which is the heart of this lecture, so lean on it.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- TAB 2 -->
+  <section id="t2" class="panel">
+    <div class="block">
+      <p class="label">The promised explanation</p>
+      <h2>Why we always write r"..."</h2>
+      <p>Here is the thing we kept putting off. A backslash is already special inside a normal Python string. <code>"\n"</code> is not a backslash and an n, it is a single newline character. <code>"\t"</code> is a tab. <code>"\b"</code> is a backspace. Python turns those backslash combinations into special characters for you.</p>
+      <p>Regex <em>also</em> uses backslashes for its own shortcuts, like <code>\d</code>, <code>\w</code>, and <code>\b</code>. So when you write a pattern as a normal string, Python and regex fight over the backslash, and you get confusing bugs.</p>
+      <p>A <b>raw string</b>, written with an <code>r</code> in front, tells Python to leave the backslashes completely alone and pass them straight to regex. Run this to see the difference:</p>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">raw_strings.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="7">print(len("\n"))     # 1  -> a normal string turns \n into ONE newline
+print(len(r"\n"))    # 2  -> a raw string keeps both characters: \ and n
+
+print(len("\b"))     # 1  -> "\b" is a single backspace character
+print(len(r"\b"))    # 2  -> r"\b" is the two characters regex needs</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+      <div class="callout warn"><p class="ct">Why this matters</p><p>Look at <code>\b</code>. In regex it means "word boundary." But as a normal Python string, <code>"\b"</code> is a backspace character. So if you write a word-boundary pattern without the <code>r</code>, it silently turns into a backspace and your pattern quietly breaks. Writing <code>r"\b"</code> avoids the whole problem. The rule is simply: always put the <code>r</code> there.</p></div>
+    </div>
+    <div class="block">
+      <p class="label">Practice</p>
+      <h2>Type it and run it</h2>
+      <div class="activity">
+        <p class="act-label">Practice 1</p>
+        <p>Before you run it, predict the two numbers this prints. Then run it to check, and reveal the explanation.</p>
+        <div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">practice.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="3">print(len("\n\t"))     # predict this number first
+print(len(r"\n\t"))    # then predict this one</textarea><pre class="output" style="display:none"></pre></div>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><p>The first prints <b>2</b> and the second prints <b>4</b>.</p><p class="muted"><code>"\n\t"</code> is a normal string, so <code>\n</code> becomes one newline and <code>\t</code> becomes one tab, two characters total. <code>r"\n\t"</code> is raw, so it keeps all four characters: backslash, n, backslash, t.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 3 -->
+  <section id="t3" class="panel">
+    <div class="block">
+      <p class="label">Grabbing pieces</p>
+      <h2>Capture groups</h2>
+      <p>Often you do not want the whole match, you want a specific piece of it. Wrap that piece in parentheses <code>( )</code> and it becomes a <b>capture group</b>, a part you can pull out on its own. The full pattern still has to match, the parentheses just mark what you want to keep.</p>
+      <table class="ref-table">
+        <tr><th>You call</th><th>You get</th></tr>
+        <tr><td>m.group()</td><td>the whole match (same as group(0))</td></tr>
+        <tr><td>m.group(1)</td><td>the text inside the first pair of parentheses</td></tr>
+        <tr><td>m.group(2)</td><td>the text inside the second pair</td></tr>
+        <tr><td>m.groups()</td><td>a tuple of all the captured pieces</td></tr>
+      </table>
+      <div class="read"><p class="rl">(\d+)-(\d+)</p><p>"one or more digits, captured as group 1, then a dash, then one or more digits, captured as group 2." A pattern for something like a range, 12-34.</p></div>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">groups.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="8">import re
+m = re.search(r"(\d+)-(\d+)", "order 12-34 ready")
+print(m.group())    # '12-34'   the whole match
+print(m.group(1))   # '12'      first group
+print(m.group(2))   # '34'      second group
+print(m.groups())   # ('12', '34')   both, as a tuple</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+    </div>
+
+    <div class="block">
+      <p class="label">The part that surprises everyone</p>
+      <h2>findall changes when you add groups</h2>
+      <p>This is the single most important idea in this lecture. Normally <code>findall</code> returns the whole matches. But the moment your pattern has a capture group, <code>findall</code> returns <b>only the captured pieces</b> instead.</p>
+      <ul>
+        <li>With <b>one</b> group, you get a list of strings, just the captured part of each match.</li>
+        <li>With <b>two or more</b> groups, you get a list of tuples, one tuple per match.</li>
+      </ul>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">findall_groups.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="7">import re
+# one group: the letters BETWEEN the exclamation marks, not the marks themselves
+print(re.findall(r"!([A-Za-z]+)!", "@x!hello!y!world!z"))   # ['hello', 'world']
+# two groups: a list of tuples
+print(re.findall(r"(\d+)-(\d+)", "12-34 and 56-78"))        # [('12', '34'), ('56', '78')]</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+      <div class="callout tip"><p class="ct">The takeaway</p><p>If <code>findall</code> gives you something you did not expect, check whether your pattern has parentheses. Parentheses quietly switch findall from "give me the whole matches" to "give me just the captured pieces."</p></div>
+    </div>
+
+    <div class="block">
+      <p class="label">Practice</p>
+      <h2>Type it and run it</h2>
+      <div class="activity">
+        <p class="act-label">Practice 1</p>
+        <p>From the string below, return a list of just the values, <code>['apple', 'banana']</code>. Use one capture group with findall.</p>
+        <div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">practice1.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="4">import re
+s = "key1=apple key2=banana"
+# write your solution here, then Run
+</textarea><pre class="output" style="display:none"></pre></div>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">solution.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="3">import re
+s = "key1=apple key2=banana"
+print(re.findall(r"key\d=(\w+)", s))</textarea><pre class="output" style="display:none"></pre></div><p class="muted">The pattern matches "key", a digit, an equals sign, then a word, but only the word is in parentheses, so findall returns just the captured words.</p></div>
+      </div>
+      <div class="activity">
+        <p class="act-label">Practice 2</p>
+        <p>Return a list of <code>(first, last)</code> name tuples from the string below. Use two capture groups.</p>
+        <div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">practice2.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="4">import re
+s = "John Smith, Jane Doe"
+# write your solution here, then Run
+</textarea><pre class="output" style="display:none"></pre></div>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">solution.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="3">import re
+s = "John Smith, Jane Doe"
+print(re.findall(r"(\w+) (\w+)", s))</textarea><pre class="output" style="display:none"></pre></div><p class="muted">Result: <code>[('John', 'Smith'), ('Jane', 'Doe')]</code>. Two groups means findall gives you a list of tuples, one tuple per match.</p></div>
+      </div>
+      <div class="activity">
+        <p class="act-label">Practice 3</p>
+        <p>The string holds a time as hour and minute. Use <code>search</code> and a group to print just the hour, <code>14</code>.</p>
+        <div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">practice3.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="4">import re
+s = "time 14:30"
+# write your solution here, then Run
+</textarea><pre class="output" style="display:none"></pre></div>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">solution.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="3">import re
+s = "time 14:30"
+print(re.search(r"(\d+):(\d+)", s).group(1))</textarea><pre class="output" style="display:none"></pre></div><p class="muted">Group 1 is the part before the colon, "14", and group 2 would be "30". <code>.group(1)</code> asks for the first one.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 4 -->
+  <section id="t4" class="panel">
+    <div class="block">
+      <p class="label">How much to grab</p>
+      <h2>Greedy versus non-greedy</h2>
+      <p>Remember from Lecture 7 that repetition is <b>greedy</b>: <code>+</code> and <code>*</code> grab as many characters as they can. Usually that is fine, but sometimes it grabs way too much.</p>
+      <p>To make a repetition <b>non-greedy</b> (also called lazy), put a <code>?</code> right after it. So <code>+?</code> means "one or more, but as few as possible," and <code>*?</code> means "zero or more, but as few as possible." The pattern still has to work, the engine just stops at the earliest point it can.</p>
+      <div class="read"><p class="rl">\(.+\) &nbsp;versus&nbsp; \(.+?\)</p><p>Both read as "an open paren, some characters, a close paren." The first is greedy and stretches to the LAST close paren it can reach. The second is lazy and stops at the FIRST close paren.</p></div>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">greedy.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="7">import re
+# greedy: .+ stretches all the way to the last ) it can find
+print(re.findall(r"\(.+\)", "(a)(b)"))    # ['(a)(b)']
+# non-greedy: .+? stops at the first ) each time
+print(re.findall(r"\(.+?\)", "(a)(b)"))   # ['(a)', '(b)']</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+      <p>The greedy version saw the open paren at the start, then <code>.+</code> swallowed everything, including the middle <code>)(</code>, all the way to the final paren, giving one big match. The lazy version stopped the moment it could close, so it found each group separately.</p>
+      <div class="callout warn"><p class="ct">A second job for ?</p><p>This is the same <code>?</code> you met in Lecture 7, but a different job. On its own, <code>?</code> means "zero or one." Placed right after another repetition like <code>+</code> or <code>*</code>, it means "be lazy." Position is everything, just like the two jobs of <code>^</code>.</p></div>
+    </div>
+    <div class="block">
+      <p class="label">Practice</p>
+      <h2>Type it and run it</h2>
+      <div class="activity">
+        <p class="act-label">Practice 1</p>
+        <p>Return each bracketed chunk, brackets and all, as a list: <code>['[apple]', '[banana]', '[cherry]']</code>. You will need a lazy quantifier so the chunks do not merge.</p>
+        <div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">practice1.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="4">import re
+s = "[apple][banana][cherry]"
+# write your solution here, then Run
+</textarea><pre class="output" style="display:none"></pre></div>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">solution.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="3">import re
+s = "[apple][banana][cherry]"
+print(re.findall(r"\[.+?\]", s))</textarea><pre class="output" style="display:none"></pre></div><p class="muted">The square brackets are escaped with <code>\[</code> and <code>\]</code> because brackets are special. The lazy <code>.+?</code> stops at the first close bracket, so a greedy match cannot swallow all three chunks at once.</p></div>
+      </div>
+      <div class="activity">
+        <p class="act-label">Practice 2</p>
+        <p>Now return just the words inside the brackets, with no brackets: <code>['apple', 'banana']</code>. Combine a capture group with a lazy quantifier.</p>
+        <div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">practice2.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="4">import re
+s = "[apple][banana]"
+# write your solution here, then Run
+</textarea><pre class="output" style="display:none"></pre></div>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">solution.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="3">import re
+s = "[apple][banana]"
+print(re.findall(r"\[(.+?)\]", s))</textarea><pre class="output" style="display:none"></pre></div><p class="muted">The capture group <code>(.+?)</code> grabs only the inside text, and the lazy <code>+?</code> keeps "apple" and "banana" from merging into one match.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 5 -->
+  <section id="t5" class="panel">
+    <div class="block">
+      <p class="label">Find and replace</p>
+      <h2>re.sub</h2>
+      <p>So far regex has only located text. <code>re.sub</code> goes further: it finds every match and swaps in a replacement, handing back a brand new string. The original is never changed.</p>
+      <div class="read"><p class="rl">re.sub(pattern, replacement, text)</p><p>"find every place in text that matches pattern, and replace it with replacement." Returns the new string.</p></div>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">sub_basics.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="7">import re
+# replace every run of digits with a #
+print(re.sub(r"\d+", "#", "a1 b22 c333"))     # 'a# b# c#'
+# replace every word that starts AND ends with e
+quote = "The astronauts soar, they explore, reaching for the stars once more."
+print(re.sub(r"\be\w*e\b", "code", quote))</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+      <p>In the second line, only "explore" starts with e and ends with e, so it is the only word replaced.</p>
+    </div>
+
+    <div class="block">
+      <p class="label">Reusing what you captured</p>
+      <h2>Backreferences</h2>
+      <p>A <b>backreference</b> means "the same text a capture group already matched." You write it as <code>\1</code> for group 1, <code>\2</code> for group 2, and so on. It is useful in two places.</p>
+      <p>First, inside the <b>replacement</b> of a sub, to rearrange text. Here we capture two words and swap them:</p>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">backref_sub.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="4">import re
+# capture two words, then put them back in the opposite order
+print(re.sub(r"(\w+) (\w+)", r"\2 \1", "John Smith"))   # 'Smith John'</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+      <p>Note the replacement <code>r"\2 \1"</code> is also a raw string. <code>\2</code> drops in whatever group 2 caught ("Smith"), then a space, then <code>\1</code> for group 1 ("John").</p>
+      <p>Second, inside the <b>pattern</b> itself, to say "the same thing again." This finds doubled words:</p>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">backref_pattern.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="4">import re
+# \1 means "the same word group 1 just matched"
+print(re.findall(r"\b(\w+) \1\b", "the the cat cat sat"))   # ['the', 'cat']</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+    </div>
+
+    <div class="block">
+      <p class="label">Practice</p>
+      <h2>Type it and run it</h2>
+      <div class="activity">
+        <p class="act-label">Practice 1</p>
+        <p>Replace every vowel in the word below with a single <code>*</code>, giving <code>b*n*n*</code>.</p>
+        <div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">practice1.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="4">import re
+s = "banana"
+# write your solution here, then Run
+</textarea><pre class="output" style="display:none"></pre></div>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">solution.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="3">import re
+s = "banana"
+print(re.sub(r"[aeiou]", "*", s))</textarea><pre class="output" style="display:none"></pre></div><p class="muted">The character class <code>[aeiou]</code> matches each vowel one at a time, and sub replaces every one with a star.</p></div>
+      </div>
+      <div class="activity">
+        <p class="act-label">Practice 2</p>
+        <p>The string has messy spacing. Collapse every run of spaces down to a single space, giving <code>"a b c"</code>.</p>
+        <div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">practice2.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="4">import re
+s = "a   b  c"
+# write your solution here, then Run
+</textarea><pre class="output" style="display:none"></pre></div>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">solution.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="3">import re
+s = "a   b  c"
+print(re.sub(r" +", " ", s))</textarea><pre class="output" style="display:none"></pre></div><p class="muted"><code>" +"</code> matches one or more spaces as a single run, and each run is replaced by exactly one space.</p></div>
+      </div>
+      <div class="activity">
+        <p class="act-label">Practice 3</p>
+        <p>Wrap every run of digits in square brackets, turning <code>"a12b3"</code> into <code>"a[12]b[3]"</code>. Use a capture group and a backreference in the replacement.</p>
+        <div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">practice3.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="4">import re
+s = "a12b3"
+# write your solution here, then Run
+</textarea><pre class="output" style="display:none"></pre></div>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">solution.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="3">import re
+s = "a12b3"
+print(re.sub(r"(\d+)", r"[\1]", s))</textarea><pre class="output" style="display:none"></pre></div><p class="muted">Capture each run of digits as group 1, then in the replacement put a literal <code>[</code>, the backreference <code>\1</code>, and a literal <code>]</code>.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 6 -->
+  <section id="t6" class="panel">
+    <div class="block">
+      <p class="label">Live playground</p>
+      <h2>Regex tester, now with groups</h2>
+      <p>Same live tester as before, but now it also lists any capture groups for each match, which is exactly what you are practicing here. Type a pattern with parentheses and watch the groups appear. It scans the whole string, so it shows the same matches findall and finditer would find.</p>
+      <div class="rt">
+        <label>Pattern</label>
+        <div class="rt-input"><span class="rt-slash">r"</span><input id="rt-pat" spellcheck="false" value="(\w+)@(\w+)" oninput="runRegexTester()"><span class="rt-slash">"</span></div>
+        <label class="rt-ic"><input type="checkbox" id="rt-ic" onchange="runRegexTester()"> ignore case</label>
+        <label>Test string</label>
+        <textarea id="rt-text" rows="3" spellcheck="false" oninput="runRegexTester()">contact alice@gmail or bob@yahoo today</textarea>
+        <label style="margin-top:12px">Matches and groups</label>
+        <div id="rt-hl" class="rt-hl"></div>
+        <pre id="rt-info" class="rt-info"></pre>
+      </div>
+      <div class="callout tip"><p class="ct">Things to try</p><p>The pattern starts as <code>(\w+)@(\w+)</code>, two groups around an at sign, so each match shows its two captured pieces. Try <code>\(.+\)</code> then <code>\(.+?\)</code> on a string like <code>(a)(b)</code> to feel greedy versus lazy. Try <code>(\w+)ing</code> to capture the part of a word before "ing".</p></div>
+    </div>
+  </section>
+
+  <!-- TAB 7 -->
+  <section id="t7" class="panel">
+    <div class="block">
+      <p class="label">Exam practice</p>
+      <h2>The questions this lecture gets asked</h2>
+      <p>Rebuilt in the style of past CS 2316 exams, and different from the practice on the earlier tabs. For the tracing ones, predict the output first, then run the box to check yourself. For the coding ones, write your answer in the box, run it, then compare with the solution.</p>
+
+      <h3>Tracing, predict the output</h3>
+      <div class="activity">
+        <p class="act-label">Trace 1</p>
+        <p>Predict <code>output</code>, then run to check.</p>
+        <div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">t1.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="3">import re
+output = re.findall(r"!([A-Za-z]+)!", "@x!hello!y!world!z")
+print(output)</textarea><pre class="output" style="display:none"></pre></div>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><p><b><code>['hello', 'world']</code></b></p><p class="muted">The match needs an exclamation mark, then letters, then another exclamation mark. But only the letters are in parentheses, so findall returns just the captured letters, not the marks.</p></div>
+      </div>
+      <div class="activity">
+        <p class="act-label">Trace 2</p>
+        <p>Predict <code>output</code>, then run to check.</p>
+        <div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">t2.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="3">import re
+output = re.search(r"(\d+)-(\d+)", "id 250-99 end").group(2)
+print(output)</textarea><pre class="output" style="display:none"></pre></div>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><p><b><code>'99'</code></b></p><p class="muted">The match is "250-99". Group 1 is "250" and group 2 is "99". <code>.group(2)</code> asks for the second.</p></div>
+      </div>
+      <div class="activity">
+        <p class="act-label">Trace 3</p>
+        <p>This one is tricky. Predict <code>output</code>, then run to check.</p>
+        <div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">t3.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="3">import re
+output = re.findall(r"([a-zA-Z]{3,5})[06]", "all8 the4 single5 ladies6, now0 put3 your6 hands1 up!")
+print(output)</textarea><pre class="output" style="display:none"></pre></div>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><p><b><code>['adies', 'now', 'your']</code></b></p><p class="muted">The pattern needs 3 to 5 letters (captured), immediately followed by a 0 or a 6. It only fires at "ladies6", "now0", and "your6". For "ladies6" the letters right before the 6 are five letters, "adies", because the group holds at most 5. findall returns only the captured letters, so the leading "l" and the digit are left out.</p></div>
+      </div>
+      <div class="activity">
+        <p class="act-label">Trace 4</p>
+        <p>Predict <code>output</code>, then run to check.</p>
+        <div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">t4.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="3">import re
+output = re.findall(r"\(.+?\)", "(cat)(dog)")
+print(output)</textarea><pre class="output" style="display:none"></pre></div>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><p><b><code>['(cat)', '(dog)']</code></b></p><p class="muted">The <code>+?</code> is lazy, so each match closes at the first <code>)</code>. There are no capture groups, so findall returns the whole matches, parentheses included.</p></div>
+      </div>
+
+      <h3>Coding, write one line of regex yourself</h3>
+      <div class="activity">
+        <p class="act-label">Code 1</p>
+        <p>Hide every run of digits: replace each one with a single capital <code>X</code> so <code>"a12b345c"</code> becomes <code>"aXbXc"</code>.</p>
+        <div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">code1.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="4">import re
+s = "a12b345c"
+# write your solution here, then Run
+</textarea><pre class="output" style="display:none"></pre></div>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">solution.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="3">import re
+s = "a12b345c"
+print(re.sub(r"\d+", "X", s))</textarea><pre class="output" style="display:none"></pre></div><p class="muted">Each whole run of digits becomes one X.</p></div>
+      </div>
+      <div class="activity">
+        <p class="act-label">Code 2</p>
+        <p>Return a list of just the years inside the parentheses, <code>['2021', '2024']</code>.</p>
+        <div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">code2.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="4">import re
+s = "movie (2021) sequel (2024)"
+# write your solution here, then Run
+</textarea><pre class="output" style="display:none"></pre></div>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">solution.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="3">import re
+s = "movie (2021) sequel (2024)"
+print(re.findall(r"\((\d+)\)", s))</textarea><pre class="output" style="display:none"></pre></div><p class="muted">Escape the parentheses with <code>\(</code> and <code>\)</code>, and capture the digits inside with a group so findall returns just the years.</p></div>
+      </div>
+      <div class="activity">
+        <p class="act-label">Code 3</p>
+        <p>Reformat a date from <code>"2024-12-25"</code> to <code>"25/12/2024"</code> using one sub with backreferences.</p>
+        <div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">code3.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="4">import re
+s = "2024-12-25"
+# write your solution here, then Run
+</textarea><pre class="output" style="display:none"></pre></div>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">solution.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="3">import re
+s = "2024-12-25"
+print(re.sub(r"(\d+)-(\d+)-(\d+)", r"\3/\2/\1", s))</textarea><pre class="output" style="display:none"></pre></div><p class="muted">Capture the three numbers as groups 1, 2, 3, then in the replacement write them back in the order group 3, group 2, group 1, separated by slashes.</p></div>
+      </div>
+      <div class="activity">
+        <p class="act-label">Code 4</p>
+        <p>Return the text inside each set of parentheses, <code>['note one', 'note two']</code>.</p>
+        <div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">code4.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="4">import re
+s = "see (note one) and (note two)"
+# write your solution here, then Run
+</textarea><pre class="output" style="display:none"></pre></div>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">solution.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="3">import re
+s = "see (note one) and (note two)"
+print(re.findall(r"\((.+?)\)", s))</textarea><pre class="output" style="display:none"></pre></div><p class="muted">The group captures the inside text, and the lazy <code>+?</code> keeps the two notes from merging.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 8 -->
+  <section id="t8" class="panel">
+    <div class="block">
+      <p class="label">Your source of truth</p>
+      <h2>Lecture 8 cheat sheet</h2>
+      <p>The exam hands you the same regex tables as before. They show that <code>( )</code> is a capture group, but they do not explain how to use groups, sub, or non-greedy. So those go on your own sheet.</p>
+      <div class="sheet-card given">
+        <h3><span class="tag g">Given</span> On the exam reference sheet</h3>
+        <p>The same two tables from Lecture 7 are printed for you. The relevant rows here:</p>
+        <pre>( )   a capture group within the match
+*     0 or more     +   1 or more     ?   0 or 1
+\     escape a special character
+.     any character except newline</pre>
+        <p>That is all the sheet says about groups. Everything below does not.</p>
+      </div>
+      <div class="sheet-card memorize">
+        <h3><span class="tag m">Memorize</span> Put this on your crib sheet</h3>
+        <p><b>Always write patterns and replacements as raw strings,</b> <code>r"..."</code>, because a bare <code>\b</code> becomes a backspace.</p>
+        <p><b>Capture groups:</b></p>
+        <pre>( )         marks a piece to capture
+m.group(1)  the first captured piece
+m.group(2)  the second
+m.groups()  a tuple of all captured pieces</pre>
+        <p><b>findall with groups</b> (the big one):</p>
+        <pre>no groups    -> list of whole matches
+one group    -> list of the captured strings
+2+ groups    -> list of tuples</pre>
+        <p><b>Non-greedy:</b> add <code>?</code> after a repetition to grab as little as possible.</p>
+        <pre>.+   greedy, grabs as much as it can
+.+?  lazy,   grabs as little as it can
+also *?  and  {m,n}?</pre>
+        <p><b>Substitution and backreferences:</b></p>
+        <pre>re.sub(pattern, replacement, text)  -> new string
+\1 \2 in the replacement   reuse captured groups
+\1 inside the pattern      "the same text again"</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 9 -->
+  <section id="t9" class="panel">
+    <div class="block">
+      <p class="label">Self-test</p>
+      <h2>Before the exam, can you...</h2>
+      <p>Tick each one only when you could do it on paper with no notes.</p>
+      <label class="chk"><input type="checkbox"> Explain why patterns are written as raw strings, using \b as the example.</label>
+      <label class="chk"><input type="checkbox"> Add a capture group and read it back with .group(1) and .groups().</label>
+      <label class="chk"><input type="checkbox"> Predict findall's output with no group, one group, and two groups.</label>
+      <label class="chk"><input type="checkbox"> Make a repetition non-greedy and explain what changes.</label>
+      <label class="chk"><input type="checkbox"> Tell apart the two jobs of ? (zero or one, versus lazy).</label>
+      <label class="chk"><input type="checkbox"> Use re.sub to replace every match, and know it returns a new string.</label>
+      <label class="chk"><input type="checkbox"> Use \1 and \2 in a replacement to rearrange captured text.</label>
+      <label class="chk"><input type="checkbox"> Read a pattern with groups out loud, left to right, in plain words.</label>
+    </div>
+  </section>
+
+  <footer>CS 2316 · Lecture 8 · More Regular Expressions · capture, control, replace</footer>
+</div>
+
+<script>
+function showTab(btn){
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+  var id = btn.dataset.t;
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === id));
+  window.scrollTo({top:0});
+}
+function toggleSol(btn){
+  var sol = btn.nextElementSibling;
+  var open = sol.classList.toggle('open');
+  var word = (btn.textContent.indexOf('answer') > -1) ? ' answer' : ' solution';
+  btn.innerHTML = (open ? '&#9652; Hide' : '&#9662; Show') + word;
+}
+function rtEscape(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function runRegexTester(){
+  var pat = document.getElementById('rt-pat').value;
+  var text = document.getElementById('rt-text').value;
+  var ic = document.getElementById('rt-ic').checked;
+  var hl = document.getElementById('rt-hl');
+  var info = document.getElementById('rt-info');
+  if(!pat){ hl.innerHTML = rtEscape(text) || '<span class="muted">Type a test string.</span>'; info.innerHTML = '<span class="muted">Type a pattern above.</span>'; return; }
+  var re;
+  try{ re = new RegExp(pat, ic ? 'gi' : 'g'); }
+  catch(e){ hl.innerHTML = rtEscape(text); info.innerHTML = '<span class="bad">Invalid pattern: ' + rtEscape(e.message) + '</span>'; return; }
+  var html = '', last = 0, m, count = 0, guard = 0, rows = [];
+  re.lastIndex = 0;
+  while((m = re.exec(text)) !== null){
+    var start = m.index, end = m.index + m[0].length;
+    html += rtEscape(text.slice(last, start)) + '<mark>' + rtEscape(m[0] || '') + '</mark>';
+    last = end; count++;
+    var grp = '';
+    if(m.length > 1){ grp = '   groups: ' + m.slice(1).map(function(g){ return g === undefined ? 'None' : JSON.stringify(g); }).join(', '); }
+    rows.push('match ' + count + ': ' + JSON.stringify(m[0]) + '  at [' + start + ', ' + end + ')' + grp);
+    if(m[0] === ''){ re.lastIndex++; }
+    if(++guard > 5000){ break; }
+  }
+  html += rtEscape(text.slice(last));
+  hl.innerHTML = html || '<span class="muted">(empty)</span>';
+  info.innerHTML = count ? rtEscape(rows.join('\n')) : '<span class="muted">No matches.</span>';
+}
+var _pyPromise = null;
+function ensurePyodide(){
+  if(_pyPromise) return _pyPromise;
+  _pyPromise = (async function(){
+    if(typeof loadPyodide === 'undefined'){
+      await new Promise(function(resolve, reject){
+        var s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js';
+        s.onload = resolve;
+        s.onerror = function(){ reject(new Error('Could not load the Python engine. Check your internet connection, then try Run again.')); };
+        document.head.appendChild(s);
+      });
+    }
+    return await loadPyodide();
+  })();
+  return _pyPromise;
+}
+async function runCell(btn){
+  var cell = btn.closest('.cell');
+  var ta = cell.querySelector('textarea');
+  var out = cell.querySelector('.output');
+  out.style.display = 'block';
+  out.classList.remove('err');
+  out.textContent = 'Loading Python and running...';
+  var py;
+  try{ py = await ensurePyodide(); }
+  catch(e){ out.classList.add('err'); out.textContent = String(e.message || e); return; }
+  py.runPython("import sys, io\n_buf = io.StringIO()\nsys.stdout = _buf\nsys.stderr = _buf");
+  var errText = '';
+  try{ py.runPython(ta.value); }
+  catch(e){ errText = String(e.message || e); }
+  var res = '';
+  try{ res = py.runPython("sys.stdout = sys.__stdout__\nsys.stderr = sys.__stderr__\n_buf.getvalue()"); }
+  catch(e){}
+  if(!res && !errText){ out.textContent = '(ran with no printed output)'; return; }
+  out.textContent = (res || '') + (errText ? ((res ? '\n' : '') + errText) : '');
+  if(errText) out.classList.add('err');
+}
+runRegexTester();
+</script>
+</body>
+</html>
