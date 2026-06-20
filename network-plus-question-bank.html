@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Network+ N10-009 Diagnostic Question Bank | Tim Melvin</title>
+<style>
+  :root{
+    --bg:#0d1117;
+    --panel:#161b22;
+    --panel-2:#1c232d;
+    --line:#2a313c;
+    --ink:#e6edf3;
+    --ink-soft:#9aa7b4;
+    --ink-faint:#6b7682;
+    --wire:#39d3c0;       /* signal teal */
+    --wire-dim:#1f6e67;
+    --amber:#f0a020;
+    --red:#f0556b;
+    --green:#46c46e;
+    --mono:'SFMono-Regular',ui-monospace,'Cascadia Code','Source Code Pro',Menlo,Consolas,monospace;
+    --sans:'Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:var(--sans);line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--wire)}
+
+  /* ---------- header ---------- */
+  header{
+    border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,#0f151c,#0d1117);
+    padding:34px 24px 26px;
+  }
+  .wrap{max-width:1040px;margin:0 auto}
+  .eyebrow{
+    font-family:var(--mono);font-size:12px;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--wire);margin:0 0 10px;
+  }
+  h1{
+    margin:0;font-size:30px;line-height:1.15;font-weight:650;letter-spacing:-.01em;
+  }
+  .sub{color:var(--ink-soft);margin:10px 0 0;font-size:15px;max-width:70ch}
+  .meta-row{
+    display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;
+    font-family:var(--mono);font-size:12.5px;color:var(--ink-faint);
+  }
+  .meta-row b{color:var(--ink-soft);font-weight:600}
+
+  /* ---------- nav tabs ---------- */
+  nav{
+    position:sticky;top:0;z-index:20;background:rgba(13,17,23,.92);
+    backdrop-filter:blur(8px);border-bottom:1px solid var(--line);
+  }
+  .tabs{
+    max-width:1040px;margin:0 auto;display:flex;flex-wrap:wrap;gap:4px;padding:8px 18px;
+  }
+  .tab{
+    appearance:none;border:1px solid transparent;background:transparent;color:var(--ink-soft);
+    font-family:var(--mono);font-size:13px;padding:9px 13px;border-radius:7px;cursor:pointer;
+    display:flex;align-items:center;gap:8px;transition:.15s;
+  }
+  .tab:hover{color:var(--ink);background:var(--panel)}
+  .tab.active{color:var(--bg);background:var(--wire);border-color:var(--wire);font-weight:600}
+  .tab .wt{
+    font-size:11px;opacity:.8;border:1px solid currentColor;border-radius:20px;padding:0 7px;
+  }
+  .tab.active .wt{opacity:1}
+
+  /* ---------- sections ---------- */
+  main{max-width:1040px;margin:0 auto;padding:30px 24px 90px}
+  .panel{display:none}
+  .panel.show{display:block;animation:fade .25s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  /* ---------- overview ---------- */
+  .lead{font-size:16px;color:var(--ink-soft);max-width:74ch}
+  .callout{
+    border:1px solid var(--wire-dim);background:rgba(57,211,192,.06);
+    border-radius:10px;padding:16px 18px;margin:22px 0;
+  }
+  .callout h3{margin:0 0 6px;font-size:14px;color:var(--wire);font-family:var(--mono);
+    letter-spacing:.04em;text-transform:uppercase}
+  .callout p{margin:0;color:var(--ink-soft);font-size:14.5px}
+
+  .stat-bar{display:flex;flex-wrap:wrap;gap:14px;margin:24px 0}
+  .stat{
+    flex:1 1 150px;border:1px solid var(--line);border-radius:10px;background:var(--panel);
+    padding:16px 18px;
+  }
+  .stat .n{font-size:26px;font-weight:650;font-family:var(--mono);color:var(--ink)}
+  .stat .l{font-size:12.5px;color:var(--ink-faint);margin-top:3px;text-transform:uppercase;
+    letter-spacing:.06em}
+  .stat.fail .n{color:var(--red)}
+  .stat.pass .n{color:var(--green)}
+
+  h2.section{font-size:19px;margin:34px 0 6px;font-weight:600;letter-spacing:-.01em}
+  .section-note{color:var(--ink-faint);font-size:13.5px;margin:0 0 16px}
+
+  /* weight viz */
+  .weights{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--panel)}
+  .wrow{
+    display:grid;grid-template-columns:230px 1fr 56px;align-items:center;gap:14px;
+    padding:13px 18px;border-bottom:1px solid var(--line);
+  }
+  .wrow:last-child{border-bottom:0}
+  .wrow .name{font-size:14px}
+  .wrow .name span{display:block;font-family:var(--mono);font-size:11.5px;color:var(--ink-faint)}
+  .track{height:9px;border-radius:6px;background:var(--panel-2);overflow:hidden}
+  .fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--wire-dim),var(--wire))}
+  .pct{font-family:var(--mono);font-size:13px;text-align:right;color:var(--ink-soft)}
+  .wrow.big .fill{background:linear-gradient(90deg,#b67a14,var(--amber))}
+
+  /* objective grids */
+  .dom-block{margin:22px 0;border:1px solid var(--line);border-radius:12px;background:var(--panel);overflow:hidden}
+  .dom-head{
+    display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+    padding:14px 18px;background:var(--panel-2);border-bottom:1px solid var(--line);
+  }
+  .dom-head h4{margin:0;font-size:15px}
+  .dom-head .tag{font-family:var(--mono);font-size:12px;color:var(--wire)}
+  .obj{padding:6px 18px}
+  .obj li{list-style:none;padding:7px 0;border-bottom:1px dashed var(--line);font-size:14px;
+    display:flex;gap:11px;color:var(--ink-soft)}
+  .obj li:last-child{border-bottom:0}
+  .obj li code{font-family:var(--mono);color:var(--wire);font-size:12.5px;flex:0 0 30px}
+  .obj li.clean code{color:var(--green)}
+  .obj li.clean::after{content:'clean';margin-left:auto;font-family:var(--mono);font-size:11px;
+    color:var(--green);border:1px solid var(--green);border-radius:20px;padding:0 8px;align-self:center}
+
+  /* ---------- questions ---------- */
+  .dom-intro{
+    border-left:3px solid var(--wire);padding:4px 0 4px 16px;margin:6px 0 26px;
+    color:var(--ink-soft);font-size:14.5px;max-width:74ch;
+  }
+  .dom-intro b{color:var(--ink)}
+  .qcount{font-family:var(--mono);font-size:12px;color:var(--ink-faint);
+    text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px}
+
+  .q{
+    border:1px solid var(--line);border-radius:11px;background:var(--panel);
+    margin:0 0 14px;overflow:hidden;
+  }
+  .q-top{display:flex;gap:14px;padding:16px 18px}
+  .q-num{
+    font-family:var(--mono);font-size:13px;color:var(--bg);background:var(--wire);
+    border-radius:7px;height:26px;min-width:26px;padding:0 7px;display:flex;align-items:center;
+    justify-content:center;font-weight:650;flex:0 0 auto;margin-top:1px;
+  }
+  .q-body{flex:1}
+  .q-obj{font-family:var(--mono);font-size:11.5px;color:var(--ink-faint);
+    text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
+  .q-text{font-size:15px;color:var(--ink)}
+  .q-actions{padding:0 18px 16px;display:flex;gap:10px;flex-wrap:wrap}
+  .btn{
+    appearance:none;font-family:var(--mono);font-size:12.5px;cursor:pointer;border-radius:7px;
+    padding:7px 13px;border:1px solid var(--line);background:var(--panel-2);color:var(--ink-soft);
+    transition:.15s;
+  }
+  .btn:hover{color:var(--ink);border-color:var(--wire-dim)}
+  .btn.reveal[aria-expanded="true"]{color:var(--wire);border-color:var(--wire-dim);background:rgba(57,211,192,.07)}
+  .score{display:inline-flex;gap:6px;align-items:center}
+  .score b{font-size:11px;color:var(--ink-faint);font-family:var(--mono);text-transform:uppercase}
+  .pip{
+    width:24px;height:24px;border-radius:6px;border:1px solid var(--line);background:var(--panel-2);
+    cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--ink-faint);
+    display:flex;align-items:center;justify-content:center;transition:.12s;
+  }
+  .pip:hover{border-color:var(--ink-soft)}
+  .pip.s0.on{background:var(--red);border-color:var(--red);color:#fff}
+  .pip.s1.on{background:var(--amber);border-color:var(--amber);color:#2a1c00}
+  .pip.s2.on{background:var(--green);border-color:var(--green);color:#052810}
+
+  .answer{
+    display:none;border-top:1px solid var(--line);background:#10161d;
+    padding:16px 18px;font-size:14px;color:var(--ink-soft);
+  }
+  .answer.show{display:block}
+  .answer .lab{font-family:var(--mono);font-size:11px;color:var(--wire);text-transform:uppercase;
+    letter-spacing:.08em;margin:0 0 7px}
+  .answer p{margin:0 0 9px}
+  .answer p:last-child{margin:0}
+  .answer .look{color:var(--ink-faint);font-size:13px;border-top:1px dashed var(--line);
+    padding-top:9px;margin-top:11px}
+  .answer .look b{color:var(--amber)}
+  .answer code{font-family:var(--mono);color:var(--wire);font-size:13px}
+
+  footer{border-top:1px solid var(--line);padding:24px;color:var(--ink-faint);font-size:12.5px;
+    text-align:center}
+  .pill{display:inline-block;font-family:var(--mono);font-size:11px;border:1px solid var(--line);
+    border-radius:20px;padding:1px 9px;color:var(--ink-soft)}
+
+  @media(max-width:640px){
+    .wrow{grid-template-columns:1fr;gap:7px}
+    .track{order:3}
+    h1{font-size:24px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <p class="eyebrow">CompTIA Network+ // N10-009</p>
+    <h1>Diagnostic Question Bank</h1>
+    <p class="sub">Built for your retake prep, Tim. This is a recall check, not a multiple-choice quiz. You answer each question out loud in your own words, and we score where you actually stand on every domain. From there we build a focused study plan around the gaps.</p>
+    <div class="meta-row">
+      <div><b>Candidate:</b> Timothy Melvin</div>
+      <div><b>Last attempt:</b> 615 / 720 (03 May 2026)</div>
+      <div><b>Target:</b> 720 to pass</div>
+      <div><b>Format:</b> open recall, 50 questions</div>
+    </div>
+  </div>
+</header>
+
+<nav>
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-tab="overview">Overview</button>
+    <button class="tab" data-tab="d1">1 · Concepts <span class="wt">23%</span></button>
+    <button class="tab" data-tab="d2">2 · Implementation <span class="wt">20%</span></button>
+    <button class="tab" data-tab="d3">3 · Operations <span class="wt">19%</span></button>
+    <button class="tab" data-tab="d4">4 · Security <span class="wt">14%</span></button>
+    <button class="tab" data-tab="d5">5 · Troubleshooting <span class="wt">24%</span></button>
+  </div>
+</nav>
+
+<main>
+
+<!-- ================= OVERVIEW ================= -->
+<section class="panel show" id="overview">
+  <p class="lead">Here is the whole exam laid out: how it is scored, what each of the five domains covers, how much each one is worth, and how this question bank is built around that. Start here so the structure makes sense before we dive into questions.</p>
+
+  <div class="callout">
+    <h3>The honest read on your score report</h3>
+    <p>You missed at least one question in 23 of the 25 objectives, and only 1.1 (OSI model) and 3.1 (documentation) came back clean. That is not a deep hole in one topic, it is thin coverage spread across everything from a short cram. Good news: your foundation is fine, you just need consistent, complete review. The fastest points are in Troubleshooting and Concepts, which together are 47% of the exam.</p>
+  </div>
+
+  <div class="stat-bar">
+    <div class="stat fail"><div class="n">615</div><div class="l">Your last score</div></div>
+    <div class="stat pass"><div class="n">720</div><div class="l">Passing score</div></div>
+    <div class="stat"><div class="n">~105</div><div class="l">Points short</div></div>
+    <div class="stat"><div class="n">90 / 90</div><div class="l">Questions / minutes</div></div>
+  </div>
+
+  <h2 class="section">Exam format at a glance</h2>
+  <p class="section-note">What the test day actually looks like.</p>
+  <div class="weights" style="padding:6px 0">
+    <div class="wrow" style="grid-template-columns:230px 1fr;border-bottom:1px solid var(--line)">
+      <div class="name">Questions</div><div style="font-size:14px;color:var(--ink-soft)">Up to 90, mix of multiple-choice and performance-based questions (PBQs, the hands-on simulations)</div>
+    </div>
+    <div class="wrow" style="grid-template-columns:230px 1fr;border-bottom:1px solid var(--line)">
+      <div class="name">Time</div><div style="font-size:14px;color:var(--ink-soft)">90 minutes, roughly one minute per question</div>
+    </div>
+    <div class="wrow" style="grid-template-columns:230px 1fr;border-bottom:1px solid var(--line)">
+      <div class="name">Scoring</div><div style="font-size:14px;color:var(--ink-soft)">Scaled 100 to 900, pass at 720</div>
+    </div>
+    <div class="wrow" style="grid-template-columns:230px 1fr">
+      <div class="name">Retake rule</div><div style="font-size:14px;color:var(--ink-soft)">No waiting period before a second attempt, but a 14-day wait kicks in before a third</div>
+    </div>
+  </div>
+
+  <h2 class="section">The five domains and their weights</h2>
+  <p class="section-note">Each domain is one tab in this bank. Weight = share of your exam score, so it drives where we spend time.</p>
+  <div class="weights">
+    <div class="wrow big">
+      <div class="name">Network Troubleshooting<span>Domain 5 · objectives 5.1–5.5</span></div>
+      <div class="track"><div class="fill" style="width:96%"></div></div>
+      <div class="pct">24%</div>
+    </div>
+    <div class="wrow">
+      <div class="name">Networking Concepts<span>Domain 1 · objectives 1.1–1.8</span></div>
+      <div class="track"><div class="fill" style="width:92%"></div></div>
+      <div class="pct">23%</div>
+    </div>
+    <div class="wrow">
+      <div class="name">Network Implementation<span>Domain 2 · objectives 2.1–2.4</span></div>
+      <div class="track"><div class="fill" style="width:80%"></div></div>
+      <div class="pct">20%</div>
+    </div>
+    <div class="wrow">
+      <div class="name">Network Operations<span>Domain 3 · objectives 3.1–3.5</span></div>
+      <div class="track"><div class="fill" style="width:76%"></div></div>
+      <div class="pct">19%</div>
+    </div>
+    <div class="wrow">
+      <div class="name">Network Security<span>Domain 4 · objectives 4.1–4.3</span></div>
+      <div class="track"><div class="fill" style="width:56%"></div></div>
+      <div class="pct">14%</div>
+    </div>
+  </div>
+
+  <h2 class="section">What each domain covers (and where you missed)</h2>
+  <p class="section-note">The objective list is straight from the N10-009 blueprint. Anything tagged clean is one you got right last time.</p>
+
+  <div class="dom-block">
+    <div class="dom-head"><h4>Domain 1 · Networking Concepts</h4><span class="tag">23% · 8 objectives</span></div>
+    <ul class="obj">
+      <li class="clean"><code>1.1</code> OSI reference model and encapsulation</li>
+      <li><code>1.2</code> Networking appliances, applications, and functions</li>
+      <li><code>1.3</code> Cloud concepts and connectivity options</li>
+      <li><code>1.4</code> Ports, protocols, services, and traffic types</li>
+      <li><code>1.5</code> Transmission media and transceivers</li>
+      <li><code>1.6</code> Network topologies, architectures, and types</li>
+      <li><code>1.7</code> IPv4 network addressing (subnetting / CIDR)</li>
+      <li><code>1.8</code> Modern network environments (SDN, IaC, zero trust)</li>
+    </ul>
+  </div>
+
+  <div class="dom-block">
+    <div class="dom-head"><h4>Domain 2 · Network Implementation</h4><span class="tag">20% · 4 objectives</span></div>
+    <ul class="obj">
+      <li><code>2.1</code> Routing technologies (static/dynamic, NAT, FHRP)</li>
+      <li><code>2.2</code> Switching technologies (VLANs, trunking, STP, PoE)</li>
+      <li><code>2.3</code> Wireless devices and technologies</li>
+      <li><code>2.4</code> Physical installation factors</li>
+    </ul>
+  </div>
+
+  <div class="dom-block">
+    <div class="dom-head"><h4>Domain 3 · Network Operations</h4><span class="tag">19% · 5 objectives</span></div>
+    <ul class="obj">
+      <li class="clean"><code>3.1</code> Documentation and organizational policies</li>
+      <li><code>3.2</code> Network monitoring technologies</li>
+      <li><code>3.3</code> Disaster recovery (DR) concepts</li>
+      <li><code>3.4</code> IPv4 and IPv6 network services</li>
+      <li><code>3.5</code> Network access and management methods</li>
+    </ul>
+  </div>
+
+  <div class="dom-block">
+    <div class="dom-head"><h4>Domain 4 · Network Security</h4><span class="tag">14% · 3 objectives</span></div>
+    <ul class="obj">
+      <li><code>4.1</code> Basic network security concepts</li>
+      <li><code>4.2</code> Types of attacks and their impact</li>
+      <li><code>4.3</code> Security features, defenses, and solutions</li>
+    </ul>
+  </div>
+
+  <div class="dom-block">
+    <div class="dom-head"><h4>Domain 5 · Network Troubleshooting</h4><span class="tag">24% · 5 objectives</span></div>
+    <ul class="obj">
+      <li><code>5.1</code> Troubleshooting methodology (the 7 steps)</li>
+      <li><code>5.2</code> Cabling and physical interface issues</li>
+      <li><code>5.3</code> Network service issues</li>
+      <li><code>5.4</code> Performance issues</li>
+      <li><code>5.5</code> Right tool or protocol to solve the issue</li>
+    </ul>
+  </div>
+
+  <h2 class="section">How this question bank works</h2>
+  <p class="section-note">Question counts are weighted to domain size, not a flat ten each, so the big domains get more probing.</p>
+  <div class="weights">
+    <div class="wrow" style="grid-template-columns:230px 1fr 56px">
+      <div class="name">Domain 1 · Concepts</div><div class="track"><div class="fill" style="width:100%"></div></div><div class="pct">12 Q</div>
+    </div>
+    <div class="wrow" style="grid-template-columns:230px 1fr 56px">
+      <div class="name">Domain 2 · Implementation</div><div class="track"><div class="fill" style="width:83%"></div></div><div class="pct">10 Q</div>
+    </div>
+    <div class="wrow" style="grid-template-columns:230px 1fr 56px">
+      <div class="name">Domain 3 · Operations</div><div class="track"><div class="fill" style="width:83%"></div></div><div class="pct">10 Q</div>
+    </div>
+    <div class="wrow" style="grid-template-columns:230px 1fr 56px">
+      <div class="name">Domain 4 · Security</div><div class="track"><div class="fill" style="width:50%"></div></div><div class="pct">6 Q</div>
+    </div>
+    <div class="wrow big" style="grid-template-columns:230px 1fr 56px">
+      <div class="name">Domain 5 · Troubleshooting</div><div class="track"><div class="fill" style="width:100%"></div></div><div class="pct">12 Q</div>
+    </div>
+  </div>
+  <div class="callout" style="margin-top:22px">
+    <h3>How to use it</h3>
+    <p>For each question, answer in your own words first, no peeking. Then we open the model answer to compare, and mark how it went: red (blank / wrong), amber (partial), green (solid). Recall is harder than recognition on purpose, so amber is normal and fine. The colors build a map of which objectives to drill next.</p>
+  </div>
+</section>
+
+<!-- ================= DOMAIN 1 ================= -->
+<section class="panel" id="d1">
+  <p class="dom-intro"><b>Domain 1 · Networking Concepts — 23% of the exam.</b> The vocabulary and logic of how networks work: models, devices, cloud, ports, media, topologies, and IP addressing. This is the base everything else stands on, and it is where subnetting lives.</p>
+  <div class="qcount">12 questions · objectives 1.1–1.8</div>
+
+  <div class="q" data-q></div>
+</section>
+
+<!-- ================= DOMAIN 2 ================= -->
+<section class="panel" id="d2">
+  <p class="dom-intro"><b>Domain 2 · Network Implementation — 20% of the exam.</b> Actually building the network: routing, switching, wireless, and the physical install. More configuration-flavored, so expect scenario questions.</p>
+  <div class="qcount">10 questions · objectives 2.1–2.4</div>
+  <div class="q" data-q></div>
+</section>
+
+<!-- ================= DOMAIN 3 ================= -->
+<section class="panel" id="d3">
+  <p class="dom-intro"><b>Domain 3 · Network Operations — 19% of the exam.</b> Keeping a running network healthy: documentation, monitoring, disaster recovery, IP services, and how you remotely access and manage gear.</p>
+  <div class="qcount">10 questions · objectives 3.1–3.5</div>
+  <div class="q" data-q></div>
+</section>
+
+<!-- ================= DOMAIN 4 ================= -->
+<section class="panel" id="d4">
+  <p class="dom-intro"><b>Domain 4 · Network Security — 14% of the exam.</b> The smallest domain, but still points: core security principles, the common attack types, and the defenses you put in place to stop them.</p>
+  <div class="qcount">6 questions · objectives 4.1–4.3</div>
+  <div class="q" data-q></div>
+</section>
+
+<!-- ================= DOMAIN 5 ================= -->
+<section class="panel" id="d5">
+  <p class="dom-intro"><b>Domain 5 · Network Troubleshooting — 24% of the exam, the largest.</b> The payoff domain: a repeatable methodology, plus diagnosing cabling, services, and performance, and knowing which tool to reach for. Heavily scenario-based.</p>
+  <div class="qcount">12 questions · objectives 5.1–5.5</div>
+  <div class="q" data-q></div>
+</section>
+
+</main>
+
+<footer>
+  <span class="pill">N10-009 · V9 blueprint</span>&nbsp;&nbsp;
+  Diagnostic recall bank · answers reflect current CompTIA objectives · for tutoring assessment use
+</footer>
+
+<script>
+/* ---------- question data ---------- */
+const BANK = {
+  d1:[
+    {o:"1.1 OSI model",
+     q:"Walk me through the seven layers of the OSI model in order, and give one thing that happens at each layer.",
+     a:"<p>Bottom to top: <code>Physical</code> (bits on the wire, cables, signaling), <code>Data Link</code> (frames, MAC addressing, switches), <code>Network</code> (packets, IP addressing and routing, routers), <code>Transport</code> (segments, TCP/UDP, ports, reliability), <code>Session</code> (sets up and tears down sessions between apps), <code>Presentation</code> (formatting, encryption, compression), <code>Application</code> (what the user/app touches, HTTP, DNS, SMTP).</p>",
+     look:"Order is the core thing. Mnemonic 'Please Do Not Throw Sausage Pizza Away'. Bonus if he ties a device or protocol to a layer."},
+    {o:"1.2 Appliances",
+     q:"What is the difference between a router, a switch, and a firewall, and what OSI layer does each primarily operate at?",
+     a:"<p>A <code>switch</code> forwards frames inside a LAN using MAC addresses, Layer 2 (some do Layer 3). A <code>router</code> moves packets between different networks using IP addresses, Layer 3. A <code>firewall</code> filters traffic based on rules, can be Layer 3/4 (ports, IPs) up through Layer 7 (application aware).</p>",
+     look:"Switch = within a network, router = between networks, firewall = filtering/security. Layer mapping shows real understanding."},
+    {o:"1.2 Appliances",
+     q:"What does a load balancer do, and how is an IDS different from an IPS?",
+     a:"<p>A <code>load balancer</code> spreads incoming traffic across multiple servers so no single one is overwhelmed, and adds redundancy. <code>IDS</code> detects and alerts on suspicious traffic but does not stop it (passive). <code>IPS</code> sits inline and can actively block or drop the malicious traffic (active).</p>",
+     look:"Key word: IDS detects, IPS prevents. 'Inline' for IPS is the giveaway he gets it."},
+    {o:"1.3 Cloud",
+     q:"Explain IaaS, PaaS, and SaaS, with an example of each and who manages what.",
+     a:"<p><code>IaaS</code>: you rent raw infrastructure (VMs, storage, network), you manage the OS and up, example AWS EC2. <code>PaaS</code>: provider manages the platform/runtime, you just deploy code, example Heroku or Azure App Service. <code>SaaS</code>: fully managed software you just use, example Gmail or Office 365.</p>",
+     look:"The 'who manages what' ladder is the point: more you manage in IaaS, least in SaaS. Examples confirm it."},
+    {o:"1.4 Ports & protocols",
+     q:"Give me the port numbers for HTTP, HTTPS, SSH, DNS, RDP, and SMTP, and say whether each is TCP, UDP, or both.",
+     a:"<p><code>HTTP 80</code> (TCP), <code>HTTPS 443</code> (TCP), <code>SSH 22</code> (TCP), <code>DNS 53</code> (UDP for lookups, TCP for zone transfers / large responses), <code>RDP 3389</code> (TCP), <code>SMTP 25</code> (TCP).</p>",
+     look:"Pure memorization objective. DNS being both is the one people miss. Note which ones he blanks for flashcard drilling."},
+    {o:"1.4 Ports & protocols",
+     q:"What is the difference between TCP and UDP, and give a real use case where each is the right choice?",
+     a:"<p><code>TCP</code> is connection-oriented and reliable: three-way handshake, ordering, retransmission, acknowledgments. Good for web, email, file transfer where every byte matters. <code>UDP</code> is connectionless and fast with no guaranteed delivery. Good for streaming, VoIP, DNS, online gaming where speed beats perfect delivery.</p>",
+     look:"Reliable vs fast is the headline. 'Three-way handshake' for TCP and a sensible UDP use case = solid."},
+    {o:"1.5 Media",
+     q:"When would you choose fiber over copper, and what is the difference between single-mode and multimode fiber?",
+     a:"<p>Choose <code>fiber</code> for long distances, high bandwidth, or immunity to electromagnetic interference. <code>Single-mode</code>: one light path, thin core, very long distances (carrier/WAN). <code>Multimode</code>: multiple light paths, thicker core, shorter distances (within a building/campus), cheaper optics.</p>",
+     look:"Distance is the deciding factor: single-mode = long haul, multimode = short. EMI immunity is a bonus point."},
+    {o:"1.6 Topologies",
+     q:"Compare a star topology with a mesh topology. What is the main trade-off, and where is each used?",
+     a:"<p><code>Star</code>: every device connects to a central switch/hub. Cheap and easy, but the central device is a single point of failure. Standard for modern LANs. <code>Mesh</code>: devices interconnect with many redundant paths. Very resilient but expensive and complex to cable. Used for backbones, WANs, critical links.</p>",
+     look:"Trade-off is cost/simplicity vs redundancy. Star = single point of failure is the key insight."},
+    {o:"1.6 Architectures",
+     q:"What is the three-tier hierarchical network model, and what does each tier do?",
+     a:"<p><code>Core</code>: high-speed backbone, fast switching between distribution blocks, no filtering. <code>Distribution</code> (aggregation): routing, filtering, policy, VLAN routing between access switches. <code>Access</code> (edge): where end devices plug in, ports for users, PoE, port security.</p>",
+     look:"Core = speed, distribution = policy/routing, access = endpoints. Spine-leaf as a modern alternative is bonus."},
+    {o:"1.7 IPv4 addressing",
+     q:"What are the private IP address ranges for each class, and what is APIPA?",
+     a:"<p>Private ranges: <code>10.0.0.0/8</code>, <code>172.16.0.0/12</code>, <code>192.168.0.0/16</code>. <code>APIPA</code> is the 169.254.0.0/16 range a host self-assigns when it cannot reach a DHCP server, a sign of a DHCP failure.</p>",
+     look:"The three private ranges should be instant. Seeing 169.254 = 'DHCP is broken' is a real troubleshooting tell."},
+    {o:"1.7 IPv4 subnetting",
+     q:"Given 192.168.10.0/26, tell me the subnet mask, number of usable hosts, the network address and broadcast address of the first subnet, and its usable host range.",
+     a:"<p>Mask: <code>255.255.255.192</code> (/26 = 2 bits borrowed, block size 64). Usable hosts: 2^6 − 2 = <code>62</code>. First subnet network: <code>192.168.10.0</code>, broadcast <code>192.168.10.63</code>, usable range <code>192.168.10.1 – 192.168.10.62</code>.</p>",
+     look:"His self-identified weak spot. Watch the method: does he use the magic number (256−192=64)? Where exactly does he stall, mask, host count, or boundaries?"},
+    {o:"1.8 Modern networks",
+     q:"What is SDN (software-defined networking), and what does 'zero trust' mean in one or two sentences?",
+     a:"<p><code>SDN</code> separates the control plane (decisions about where traffic goes) from the data plane (actual forwarding), managed centrally in software, often via a controller. <code>Zero trust</code> means never trust by default: every user and device must be verified continuously, no implicit trust just for being inside the network perimeter.</p>",
+     look:"SDN = control/data plane separation. Zero trust = 'never trust, always verify'. Newer N10-009 content he may not have studied."},
+  ],
+  d2:[
+    {o:"2.1 Routing",
+     q:"What is the difference between static and dynamic routing, and name two dynamic routing protocols?",
+     a:"<p><code>Static</code>: routes manually configured by an admin, no overhead, but no automatic failover, good for small/stable networks. <code>Dynamic</code>: routers learn and update routes automatically via a protocol, adapts to changes. Examples: <code>OSPF</code>, <code>BGP</code>, <code>EIGRP</code>, RIP.</p>",
+     look:"Manual vs automatic. Any two real protocols. OSPF and BGP are the most exam-relevant."},
+    {o:"2.1 Routing",
+     q:"What is NAT, and what is the difference between NAT and PAT?",
+     a:"<p><code>NAT</code> (Network Address Translation) maps private internal IPs to public IPs so internal hosts can reach the internet. <code>PAT</code> (Port Address Translation, aka NAT overload) maps many internal IPs to a single public IP by tracking port numbers, which is what home routers do.</p>",
+     look:"NAT = address translation; PAT = many-to-one using ports. 'How your whole house shares one public IP' = he gets it."},
+    {o:"2.1 Routing",
+     q:"What problem does a First Hop Redundancy Protocol (like HSRP or VRRP) solve?",
+     a:"<p>It removes the default gateway as a single point of failure. Two or more routers share a virtual IP; if the active gateway fails, a standby takes over automatically, so clients keep their connection without reconfiguration.</p>",
+     look:"Gateway redundancy is the answer. Naming HSRP/VRRP/GLBP is a bonus."},
+    {o:"2.2 Switching",
+     q:"What is a VLAN, and why would you use one? What is a trunk port versus an access port?",
+     a:"<p>A <code>VLAN</code> logically segments one physical switch into separate broadcast domains, for security, traffic control, and organization without extra hardware. An <code>access port</code> carries traffic for a single VLAN to an end device. A <code>trunk port</code> carries multiple VLANs between switches, using 802.1Q tagging.</p>",
+     look:"VLAN = logical segmentation / separate broadcast domains. Access = one VLAN, trunk = many + tagging."},
+    {o:"2.2 Switching",
+     q:"What problem does Spanning Tree Protocol (STP) prevent, and how?",
+     a:"<p>STP prevents <code>switching loops</code> in networks with redundant links. Loops cause broadcast storms and MAC table instability. STP detects redundant paths and blocks them, leaving one active path, and re-enables a blocked path if the active one fails.</p>",
+     look:"Loop prevention is the core. 'Broadcast storm' shows he knows why loops are bad."},
+    {o:"2.2 Switching",
+     q:"What is Power over Ethernet (PoE) and give two devices that commonly use it?",
+     a:"<p><code>PoE</code> delivers electrical power and data over the same Ethernet cable, so devices do not need a separate power supply. Common users: IP phones, wireless access points, IP security cameras.</p>",
+     look:"Power + data on one cable. Any two of phones / APs / cameras."},
+    {o:"2.3 Wireless",
+     q:"What is the difference between the 2.4 GHz and 5 GHz bands, and why does channel selection matter on 2.4 GHz?",
+     a:"<p><code>2.4 GHz</code>: longer range, better wall penetration, but slower and more congested. <code>5 GHz</code>: faster, more channels, less interference, shorter range. On 2.4 GHz only channels <code>1, 6, and 11</code> are non-overlapping, so picking those avoids interference.</p>",
+     look:"Range vs speed trade-off. The 1/6/11 non-overlapping fact is the classic exam detail."},
+    {o:"2.3 Wireless",
+     q:"Put these wireless security standards in order from weakest to strongest: WEP, WPA2, WPA3, WPA. Why is the weakest one bad?",
+     a:"<p>Weakest to strongest: <code>WEP → WPA → WPA2 → WPA3</code>. WEP is badly broken: weak RC4 encryption and a tiny IV that can be cracked in minutes, so it should never be used.</p>",
+     look:"Order matters. WEP = obsolete/crackable. WPA3 = current best is the takeaway."},
+    {o:"2.4 Physical install",
+     q:"What environmental and power factors matter when planning a server room or IDF/MDF closet?",
+     a:"<p>Cooling/HVAC and proper airflow (hot/cold aisles), humidity control, adequate and conditioned power with <code>UPS</code> and ideally a generator, physical security/access control, fire suppression, and cable management. The MDF is the main distribution frame; IDFs are intermediate closets that connect back to it.</p>",
+     look:"Cooling, power/UPS, and physical security are the big three. MDF vs IDF distinction is bonus."},
+    {o:"2.4 Physical install",
+     q:"What is the difference between a straight-through and a crossover Ethernet cable, and when does it matter today?",
+     a:"<p>A <code>straight-through</code> cable wires both ends the same (T568B to T568B), used to connect different device types (PC to switch). A <code>crossover</code> swaps transmit and receive pairs, historically used to connect like devices (switch to switch, PC to PC). Modern gear with <code>Auto-MDIX</code> detects and adjusts automatically, so it rarely matters now.</p>",
+     look:"Straight = unlike devices, crossover = like devices. Auto-MDIX making it moot shows current knowledge."},
+  ],
+  d3:[
+    {o:"3.2 Monitoring",
+     q:"What is SNMP used for, and what is the difference between SNMP polling and an SNMP trap?",
+     a:"<p><code>SNMP</code> monitors and manages network devices, collecting stats like interface usage and device health. <code>Polling</code>: the manager periodically asks the device for data. A <code>trap</code>: the device proactively pushes an alert to the manager when an event occurs, no waiting for the next poll.</p>",
+     look:"Polling = pull on a schedule, trap = device-initiated push. That distinction is the exam point."},
+    {o:"3.2 Monitoring",
+     q:"What is the purpose of a syslog server, and what is a SIEM?",
+     a:"<p>A <code>syslog</code> server centralizes log messages from many devices into one place for review and retention. A <code>SIEM</code> (Security Information and Event Management) aggregates and correlates logs/events across the environment, adding alerting and analysis to spot security incidents.</p>",
+     look:"Syslog = central log collection. SIEM = correlation + alerting on top. Good crossover with his security work."},
+    {o:"3.3 Disaster recovery",
+     q:"Define RTO and RPO, and explain the difference between a hot site, a warm site, and a cold site.",
+     a:"<p><code>RTO</code> (Recovery Time Objective): how fast you must be back up. <code>RPO</code> (Recovery Point Objective): how much data loss is acceptable, measured in time. <code>Hot site</code>: fully running duplicate, near-instant failover, expensive. <code>Warm site</code>: equipment ready but needs setup/data, hours to recover. <code>Cold site</code>: just space and power, longest recovery, cheapest.</p>",
+     look:"RTO = time to recover, RPO = data loss tolerance. Hot/warm/cold ranked by cost vs speed."},
+    {o:"3.3 Disaster recovery",
+     q:"What is the difference between high availability and a backup, and what does a 'failover' accomplish?",
+     a:"<p><code>High availability</code> keeps a system running with minimal downtime through redundancy (clustering, redundant hardware, FHRP). A <code>backup</code> is a copy of data for recovery after loss. <code>Failover</code> is automatically switching to a standby system when the primary fails, the mechanism that delivers HA.</p>",
+     look:"HA = stay up via redundancy; backup = recover data. They are not the same thing, that is the trap."},
+    {o:"3.4 IP services",
+     q:"Walk me through the DHCP DORA process. What are the four steps?",
+     a:"<p><code>Discover</code>: client broadcasts looking for a DHCP server. <code>Offer</code>: server offers an IP lease. <code>Request</code>: client requests that offered address. <code>Acknowledge</code>: server confirms and finalizes the lease.</p>",
+     look:"DORA in order. If he gets the acronym and what each step does, that objective is solid."},
+    {o:"3.4 IP services",
+     q:"What is the difference between an A record, a CNAME, an MX record, and a PTR record in DNS?",
+     a:"<p><code>A</code>: maps a hostname to an IPv4 address (AAAA for IPv6). <code>CNAME</code>: an alias pointing one name to another name. <code>MX</code>: mail exchanger, directs email for a domain. <code>PTR</code>: reverse lookup, maps an IP back to a hostname.</p>",
+     look:"A = name to IP, CNAME = alias, MX = mail, PTR = reverse. Common scenario fodder."},
+    {o:"3.4 IP services",
+     q:"What does NTP do, and why does accurate time matter on a network?",
+     a:"<p><code>NTP</code> (Network Time Protocol) synchronizes clocks across devices. Accurate time matters for log correlation (timestamps lining up across devices), authentication systems like Kerberos that reject large time skews, certificate validity, and scheduled tasks.</p>",
+     look:"Clock sync is the function. Any reason it matters (logs, Kerberos, certs) shows depth."},
+    {o:"3.5 Access methods",
+     q:"What is the difference between in-band and out-of-band management, and where does a jump box fit in?",
+     a:"<p><code>In-band</code>: managing a device over the normal production network (SSH over the LAN). <code>Out-of-band</code>: a separate dedicated path (console port, dedicated management interface) that works even if the production network is down. A <code>jump box</code> is a hardened intermediary host you connect to first, then reach internal devices from it, limiting exposure.</p>",
+     look:"In-band uses the prod network, out-of-band is separate (works when the network is down). Jump box = secure pivot point."},
+    {o:"3.5 Access methods",
+     q:"Why is SSH preferred over Telnet, and what is a VPN at a high level?",
+     a:"<p><code>SSH</code> encrypts the session; <code>Telnet</code> sends everything including credentials in cleartext, so Telnet should not be used. A <code>VPN</code> creates an encrypted tunnel over an untrusted network (the internet), so remote users or sites can communicate securely as if on the private network.</p>",
+     look:"SSH encrypted, Telnet plaintext. VPN = encrypted tunnel over untrusted network."},
+    {o:"3.5 Management",
+     q:"What is the difference between configuration management and change management?",
+     a:"<p><code>Configuration management</code> tracks and maintains the known-good state and settings of devices (baselines, version control of configs). <code>Change management</code> is the formal process for proposing, approving, documenting, and rolling out changes so they do not cause unplanned outages.</p>",
+     look:"Config mgmt = tracking state, change mgmt = controlled process for changes. Tied to objective 3.1 he already passed."},
+  ],
+  d4:[
+    {o:"4.1 Security concepts",
+     q:"Explain the CIA triad and give a quick example of protecting each element.",
+     a:"<p><code>Confidentiality</code>: only authorized people see data, protected by encryption and access control. <code>Integrity</code>: data is not altered, protected by hashing and checksums. <code>Availability</code>: data/services are accessible when needed, protected by redundancy, backups, and DDoS protection.</p>",
+     look:"All three letters plus a protection mechanism each. Foundational, should be quick."},
+    {o:"4.1 Security concepts",
+     q:"What does AAA stand for in network security, and what does each part do?",
+     a:"<p><code>Authentication</code>: proving who you are (credentials, MFA). <code>Authorization</code>: what you are allowed to do once authenticated. <code>Accounting</code>: logging/tracking what you did. RADIUS and TACACS+ are common AAA protocols.</p>",
+     look:"Three A's defined. Naming RADIUS/TACACS+ is a bonus and ties to access control."},
+    {o:"4.2 Attacks",
+     q:"What is the difference between a DoS and a DDoS attack, and what is an on-path (man-in-the-middle) attack?",
+     a:"<p><code>DoS</code>: one source floods a target to exhaust resources and deny service. <code>DDoS</code>: the same but from many distributed sources (often a botnet), much harder to block. An <code>on-path</code> attack: the attacker secretly positions between two parties to intercept or alter traffic.</p>",
+     look:"DoS one source, DDoS many. On-path = intercepting traffic in the middle."},
+    {o:"4.2 Attacks",
+     q:"What is ARP spoofing, and what is VLAN hopping?",
+     a:"<p><code>ARP spoofing</code>: attacker sends forged ARP messages to associate their MAC with another host's IP (often the gateway), enabling interception, an on-path technique. <code>VLAN hopping</code>: gaining access to traffic on a VLAN the attacker should not reach, via switch spoofing or double tagging.</p>",
+     look:"ARP spoofing = poisoning the ARP cache to redirect traffic. VLAN hopping = crossing VLAN boundaries. Either explained well is good."},
+    {o:"4.3 Defenses",
+     q:"What is network segmentation, and how does it limit an attack? What is a DMZ?",
+     a:"<p><code>Segmentation</code> divides the network into isolated zones (VLANs, subnets, firewalls) so a breach in one area cannot freely spread, it limits lateral movement and shrinks the blast radius. A <code>DMZ</code> is a semi-trusted zone between the internet and the internal network where public-facing servers live, isolated from the internal LAN.</p>",
+     look:"Segmentation limits lateral movement / blast radius. DMZ = buffer zone for public servers."},
+    {o:"4.3 Defenses",
+     q:"What is port security on a switch, and what is the purpose of Network Access Control (NAC)?",
+     a:"<p><code>Port security</code> restricts which devices can connect to a switch port, typically by limiting or pinning MAC addresses, and can shut the port on violation. <code>NAC</code> enforces policy before granting network access, checking identity and device posture (patches, AV) and placing devices in the right VLAN or quarantine.</p>",
+     look:"Port security = control devices per port by MAC. NAC = posture/identity check before admission."},
+  ],
+  d5:[
+    {o:"5.1 Methodology",
+     q:"List CompTIA's seven troubleshooting methodology steps in order.",
+     a:"<p>1) <code>Identify the problem</code>. 2) <code>Establish a theory</code> of probable cause. 3) <code>Test the theory</code> to determine cause. 4) <code>Establish a plan of action</code> and identify effects. 5) <code>Implement the solution</code> or escalate. 6) <code>Verify full system functionality</code> and apply preventive measures. 7) <code>Document</code> findings, actions, and outcomes.</p>",
+     look:"Order is the whole point of this objective. Documenting last and verifying before documenting are the commonly flipped steps."},
+    {o:"5.1 Methodology",
+     q:"In the methodology, what do you do if testing your theory proves the theory wrong?",
+     a:"<p>You go back and <code>establish a new theory</code> (re-question, re-test). If you cannot determine the cause or it is beyond your scope, you <code>escalate</code>. You do not jump ahead to a fix on a theory you have not confirmed.</p>",
+     look:"Re-establish a new theory or escalate. Tests whether he understands the loop, not just the list."},
+    {o:"5.2 Cabling",
+     q:"A user's PC has no link light. Walk me through the likely physical-layer causes you would check.",
+     a:"<p>Bad or unplugged cable, wrong cable type or damaged connector, faulty switch port (try another port), NIC failure, cable exceeding 100m for copper, or a speed/duplex mismatch. Swap the cable and port first as quick isolation.</p>",
+     look:"Looking for systematic physical checks: cable, port, NIC, distance. Swapping to isolate is good technique."},
+    {o:"5.2 Cabling",
+     q:"What are crosstalk and attenuation, and what is a common cause of each?",
+     a:"<p><code>Attenuation</code>: signal weakening over distance, caused by runs that are too long or poor-quality cable. <code>Crosstalk</code>: signal from one pair bleeding into another, caused by untwisted pairs, poor terminations, or EMI. A cable tester / certifier identifies both.</p>",
+     look:"Attenuation = loss over distance, crosstalk = interference between pairs. Cause for each shows real grasp."},
+    {o:"5.3 Service issues",
+     q:"Users say 'the internet is down' but can reach internal servers by IP, not by name. What is the likely problem and how do you confirm it?",
+     a:"<p>Likely a <code>DNS</code> problem, name resolution is failing while IP connectivity works. Confirm with <code>nslookup</code> or <code>dig</code> against the DNS server, check the client's configured DNS, and test pinging an external IP vs an external hostname.</p>",
+     look:"'Works by IP not by name' should immediately say DNS. The confirmation tools are the second half of the answer."},
+    {o:"5.3 Service issues",
+     q:"A group of users suddenly has 169.254.x.x addresses and cannot reach anything. What happened?",
+     a:"<p>They failed to get an address from <code>DHCP</code> and self-assigned <code>APIPA</code> (169.254.0.0/16). Likely the DHCP server is down, the scope is exhausted, or a relay/connectivity issue is blocking DHCP. Fix the DHCP server or path, then renew the lease.</p>",
+     look:"169.254 = APIPA = DHCP failure. This connects back to objective 1.7, reinforce the link for him."},
+    {o:"5.4 Performance",
+     q:"What are latency, jitter, and packet loss, and which application type is most sensitive to them?",
+     a:"<p><code>Latency</code>: delay for data to travel. <code>Jitter</code>: variation in that delay. <code>Packet loss</code>: packets that never arrive. Real-time apps, <code>VoIP and video conferencing</code>, are the most sensitive, jitter and loss cause choppy or dropped calls.</p>",
+     look:"Three terms defined plus VoIP/real-time as the sensitive case. Jitter being 'variation in latency' is the nuance."},
+    {o:"5.4 Performance",
+     q:"What is a bottleneck, and how would you go about finding one on a slow network?",
+     a:"<p>A <code>bottleneck</code> is the point that limits overall throughput (a saturated link, overloaded device, or duplex mismatch). Find it with monitoring: check interface utilization and errors via SNMP/monitoring tools, look at bandwidth graphs, test segment by segment, and check for duplex mismatches.</p>",
+     look:"Concept plus a monitoring-driven method. Mentioning interface utilization or duplex mismatch is a strong sign."},
+    {o:"5.5 Tools",
+     q:"What do ping and traceroute each tell you, and how do they differ?",
+     a:"<p><code>ping</code> tests basic reachability and round-trip time to a host using ICMP. <code>traceroute</code> (tracert on Windows) shows the path, each hop between you and the destination, and where delay or failure occurs. Ping = can I reach it; traceroute = what is the path and where does it break.</p>",
+     look:"Ping = reachability, traceroute = path/where it fails. The 'where it breaks' framing is the useful part."},
+    {o:"5.5 Tools",
+     q:"Which command shows a Windows machine's IP configuration, and which would you use to query DNS records manually?",
+     a:"<p><code>ipconfig</code> (use <code>ipconfig /all</code> for full detail) shows IP, mask, gateway, DNS on Windows; <code>ifconfig</code> or <code>ip a</code> on Linux. To query DNS manually: <code>nslookup</code> (Windows/cross-platform) or <code>dig</code> (Linux/preferred for detail).</p>",
+     look:"ipconfig vs ifconfig/ip a, and nslookup/dig for DNS. Knowing /all and the Linux equivalents is a bonus."},
+    {o:"5.5 Tools",
+     q:"When would you reach for a protocol analyzer like Wireshark instead of ping or traceroute?",
+     a:"<p>When you need to see the actual packet contents and behavior, diagnosing things basic tools cannot: malformed packets, retransmissions, handshake failures, unexpected protocols, or confirming exactly what is on the wire. It is deep inspection, not just reachability.</p>",
+     look:"Wireshark = packet-level inspection for problems ping/traceroute can't reveal. Any concrete example (retransmissions, handshake) is great."},
+    {o:"5.5 Tools",
+     q:"What does a cable tester (or certifier) do, and when would you use a toner/probe?",
+     a:"<p>A <code>cable tester</code> verifies a cable's wiring, continuity, and faults (opens, shorts, miswires); a certifier also validates performance to a standard. A <code>toner and probe</code> ('fox and hound') puts a tone on a cable so you can trace and identify which cable or port it is among many, useful in a messy wiring closet.</p>",
+     look:"Tester = is the cable good; toner/probe = which cable is this. Both are objective 5.5 staples."},
+  ]
+};
+
+/* ---------- render ---------- */
+function render(id){
+  const host=document.querySelector('#'+id+' [data-q]');
+  if(!host || host.dataset.done) return;
+  const items=BANK[id];
+  let html='';
+  items.forEach((it,i)=>{
+    const n=i+1;
+    html+=`
+    <div class="q">
+      <div class="q-top">
+        <div class="q-num">${n}</div>
+        <div class="q-body">
+          <div class="q-obj">${it.o}</div>
+          <div class="q-text">${it.q}</div>
+        </div>
+      </div>
+      <div class="q-actions">
+        <button class="btn reveal" aria-expanded="false">Show model answer</button>
+        <span class="score">
+          <b>Score</b>
+          <span class="pip s0" title="Blank / wrong">✕</span>
+          <span class="pip s1" title="Partial">~</span>
+          <span class="pip s2" title="Solid">✓</span>
+        </span>
+      </div>
+      <div class="answer">
+        <p class="lab">Model answer</p>
+        ${it.a}
+        <p class="look">${it.look}</p>
+      </div>
+    </div>`;
+  });
+  // replace the single placeholder node with the full set
+  const sec=document.getElementById(id);
+  const placeholder=sec.querySelector('[data-q]');
+  const frag=document.createElement('div');
+  frag.innerHTML=html;
+  placeholder.replaceWith(frag);
+  frag.dataset.done="1";
+}
+
+/* tabs */
+const tabs=document.querySelectorAll('.tab');
+tabs.forEach(t=>t.addEventListener('click',()=>{
+  const id=t.dataset.tab;
+  tabs.forEach(x=>x.classList.toggle('active',x===t));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('show',p.id===id));
+  if(id!=='overview') render(id);
+  window.scrollTo({top:0,behavior:'smooth'});
+}));
+
+/* delegated clicks for reveal + scoring */
+document.addEventListener('click',e=>{
+  const rev=e.target.closest('.reveal');
+  if(rev){
+    const ans=rev.closest('.q').querySelector('.answer');
+    const open=ans.classList.toggle('show');
+    rev.setAttribute('aria-expanded',open);
+    rev.textContent=open?'Hide model answer':'Show model answer';
+    return;
+  }
+  const pip=e.target.closest('.pip');
+  if(pip){
+    const grp=pip.closest('.score');
+    const was=pip.classList.contains('on');
+    grp.querySelectorAll('.pip').forEach(p=>p.classList.remove('on'));
+    if(!was) pip.classList.add('on');
+  }
+});
+</script>
+</body>
+</html>
