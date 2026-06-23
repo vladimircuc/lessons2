@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lecture 10 · Intro to NumPy · CS 2316</title>
+<style>
+:root{--bg:#0a0e16;--surface:#111824;--surface2:#0c121d;--border:#22304a;--border2:#2c3d5c;--text:#dde6f3;--muted:#8190ab;--faint:#5a6987;--cyan:#54c7ff;--cyan-dim:#2a7fb8;--amber:#f6c454;--amber-dim:#7d611f;--green:#4fd47a;--red:#ff7a7a;--purple:#b18cff;--mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,system-ui,sans-serif}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:radial-gradient(1200px 600px at 80% -10%,#13203200,#0a0e16),var(--bg);color:var(--text);font-family:var(--sans);line-height:1.65;font-size:16px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:920px;margin:0 auto;padding:0 18px 90px}
+::selection{background:#54c7ff44}
+.hdr{padding:38px 0 18px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--amber);margin:0 0 10px}
+h1{font-size:clamp(27px,5vw,41px);margin:0;line-height:1.1;letter-spacing:-.01em;font-weight:800}
+.sub{color:var(--muted);margin:14px 0 0;max-width:64ch}
+.prompt{font-family:var(--mono);color:var(--green);font-size:13px;margin-top:16px}
+.cursor{display:inline-block;width:8px;height:15px;background:var(--green);vertical-align:-2px;margin-left:2px;animation:blink 1.1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.tabs{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;gap:6px;padding:10px 0;margin:8px 0 26px;background:linear-gradient(var(--bg),var(--bg) 70%,#0a0e1600);border-bottom:1px solid var(--border)}
+.tab-btn{font-family:var(--mono);font-size:12.5px;letter-spacing:.02em;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;cursor:pointer;transition:.15s}
+.tab-btn:hover{color:var(--text);border-color:var(--border2)}
+.tab-btn.active{color:#06121d;background:var(--cyan);border-color:var(--cyan);font-weight:600}
+.tab-btn .n{color:var(--faint);margin-right:7px}
+.tab-btn.active .n{color:#0a3450}
+.panel{display:none}
+.panel.active{display:block;animation:fade .28s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.block{margin:0 0 30px}
+.label{font-family:var(--mono);font-size:11.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--cyan);margin:0 0 8px}
+h2{font-size:24px;margin:6px 0 12px;letter-spacing:-.01em}
+h3{font-size:16px;margin:24px 0 8px;color:#eef3fb;font-family:var(--mono);letter-spacing:.04em}
+p{margin:11px 0}
+ul,ol{margin:11px 0;padding-left:22px}
+li{margin:6px 0}
+.muted{color:var(--muted)}
+code{font-family:var(--mono);font-size:.9em;background:#1a2433;border:1px solid var(--border);border-radius:5px;padding:1px 6px;color:#cfe6ff}
+.read{background:#10131f;border:1px solid var(--border);border-left:3px solid var(--cyan);border-radius:9px;padding:12px 15px;margin:14px 0}
+.read .rl{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan);margin:0 0 6px;font-weight:700}
+.read p{margin:5px 0}
+.cell{background:var(--surface2);border:1px solid var(--border);border-radius:11px;overflow:hidden;margin:14px 0}
+.cell-head{display:flex;align-items:center;gap:8px;padding:9px 13px;background:#0e1622;border-bottom:1px solid var(--border)}
+.dots{display:flex;gap:6px}.dot{width:11px;height:11px;border-radius:50%}.d1{background:#ff5f57}.d2{background:#febc2e}.d3{background:#28c840}
+.cell-name{font-family:var(--mono);font-size:12px;color:var(--faint);margin-left:4px}
+.run{margin-left:auto;font-family:var(--mono);font-size:12.5px;font-weight:600;color:#06180d;background:var(--green);border:0;border-radius:7px;padding:6px 13px;cursor:pointer;transition:.15s}
+.run:hover{filter:brightness(1.08)}.run:active{transform:translateY(1px)}
+.cell textarea{width:100%;border:0;resize:vertical;background:transparent;color:#e8f0fb;font-family:var(--mono);font-size:13.5px;line-height:1.65;padding:14px;display:block;outline:none;tab-size:4}
+.output{margin:0;border-top:1px dashed var(--border);padding:12px 14px;font-family:var(--mono);font-size:13px;white-space:pre-wrap;word-break:break-word;color:#a9e6c0;background:#0a1119}
+.output.err{color:#ffb4b4}
+.callout{border-radius:11px;padding:14px 16px;margin:16px 0;border:1px solid;font-size:14.5px}
+.callout .ct{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;margin:0 0 6px;font-weight:700}
+.warn{background:#1c140a;border-color:var(--amber-dim)}.warn .ct{color:var(--amber)}
+.tip{background:#0c1822;border-color:var(--cyan-dim)}.tip .ct{color:var(--cyan)}
+.callout p{margin:6px 0}
+.q-card{border:1px solid var(--border);border-left:3px solid var(--purple);border-radius:11px;padding:15px 17px;margin:16px 0;background:#10131f}
+.q-num{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--purple);margin:0 0 8px;font-weight:700}
+.q-num .tag{color:var(--faint);font-weight:600;letter-spacing:.08em}
+.sol-btn{font-family:var(--mono);font-size:12.5px;color:var(--cyan);background:#0d1a26;border:1px solid var(--cyan-dim);border-radius:7px;padding:7px 13px;cursor:pointer;margin-top:6px;transition:.15s}
+.sol-btn:hover{background:#10212f}
+.solution{display:none;margin-top:12px;padding-top:12px;border-top:1px dashed var(--border)}
+.solution.open{display:block;animation:fade .2s ease}
+.solution p{margin:8px 0}
+.chk{display:flex;gap:11px;align-items:flex-start;padding:11px 14px;margin:8px 0;background:#10131f;border:1px solid var(--border);border-radius:9px;cursor:pointer;font-size:14.5px}
+.chk input{margin-top:3px;width:17px;height:17px;accent-color:var(--green);flex:none}
+.chk:hover{border-color:var(--border2)}
+.sheet-card{border-radius:13px;padding:18px 20px;margin:16px 0;border:1px solid;background:#0c1822;border-color:var(--cyan-dim)}
+.sheet-card h3{margin-top:0}
+.sheet-card pre{font-family:var(--mono);font-size:13px;background:#0a1019;border:1px solid var(--border);border-radius:8px;padding:13px;overflow-x:auto;white-space:pre;color:#cfe6ff;line-height:1.6}
+/* numpy grids + widgets */
+.np-grid{display:inline-grid;gap:5px;vertical-align:top}
+.gcell{width:46px;height:38px;display:flex;align-items:center;justify-content:center;border-radius:7px;font-family:var(--mono);font-size:13.5px;background:#0d1726;border:1px solid var(--border);color:#cfe6ff;transition:.12s}
+.gcell.hd{background:transparent;border:0;color:var(--faint);font-size:11px;height:22px}
+.gcell.rl{background:transparent;border:0;color:var(--faint);font-size:11px;width:22px}
+.gcell.sel{background:#123247;border-color:var(--cyan);color:#eaf6ff;box-shadow:inset 0 0 0 1px var(--cyan)}
+.gcell.dim{opacity:.28}
+.gcell.tt{background:#10271a;border-color:var(--green);color:#bdf0cd}
+.gcell.ff{background:#1b1422;border-color:#3a2b46;color:#7e6c8e}
+.gcell.res{background:#1f2433;border-color:var(--amber);color:#ffe6ad}
+.widget{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin:16px 0}
+.wlabel{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--purple);margin:0 0 4px;display:block;font-weight:700}
+.wrow{display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start}
+.wctrl{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin:8px 0 14px;font-family:var(--mono);font-size:13px;color:var(--muted)}
+.wctrl select{background:#0a1019;color:#ffe9a8;border:1px solid var(--border2);border-radius:7px;padding:6px 8px;outline:none;font-family:var(--mono);font-size:13px}
+.wctrl label{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.wctrl input[type=checkbox]{width:15px;height:15px;accent-color:var(--cyan)}
+.wcode{font-family:var(--mono);font-size:14px;color:#a9e6c0;background:#0a1119;border:1px solid var(--border);border-radius:8px;padding:9px 13px;margin:10px 0 0;display:inline-block}
+.warrow{font-size:22px;color:var(--faint);align-self:center;padding:14px 2px 0}
+.wcap{font-family:var(--mono);font-size:11px;color:var(--faint);margin:0 0 6px}
+footer{color:var(--faint);font-family:var(--mono);font-size:12px;text-align:center;margin-top:40px;padding-top:18px;border-top:1px solid var(--border)}
+@media (max-width:600px){body{font-size:15px}h2{font-size:21px}.tab-btn{font-size:11.5px;padding:7px 9px}.gcell{width:38px;height:34px;font-size:12px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hdr">
+    <p class="eyebrow">CS 2316 · Data Handling</p>
+    <h1>Lecture 10: Intro to NumPy</h1>
+    <p class="sub">NumPy is the array library that everything else in data work sits on. The idea is simple: one big block of numbers, all the same type, that you operate on all at once instead of looping. The diagrams here are interactive, so drag the controls and watch the arrays change.</p>
+    <p class="prompt">&gt;&gt;&gt; import numpy as np<span class="cursor"></span></p>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab-btn active" data-t="t0" onclick="showTab(this)"><span class="n">00</span>Setup</button>
+    <button class="tab-btn" data-t="t1" onclick="showTab(this)"><span class="n">01</span>Start here</button>
+    <button class="tab-btn" data-t="t2" onclick="showTab(this)"><span class="n">02</span>Creating arrays</button>
+    <button class="tab-btn" data-t="t3" onclick="showTab(this)"><span class="n">03</span>Indexing &amp; slicing</button>
+    <button class="tab-btn" data-t="t4" onclick="showTab(this)"><span class="n">04</span>Vectorized ops</button>
+    <button class="tab-btn" data-t="t5" onclick="showTab(this)"><span class="n">05</span>Masking</button>
+    <button class="tab-btn" data-t="t6" onclick="showTab(this)"><span class="n">06</span>Tracing</button>
+    <button class="tab-btn" data-t="t7" onclick="showTab(this)"><span class="n">07</span>Session drills</button>
+    <button class="tab-btn" data-t="t8" onclick="showTab(this)"><span class="n">08</span>Cheat sheet</button>
+    <button class="tab-btn" data-t="t9" onclick="showTab(this)"><span class="n">09</span>Checklist</button>
+  </nav>
+
+  <!-- TAB 0 -->
+  <section id="t0" class="panel active">
+    <div class="block">
+      <p class="label">Before you start</p>
+      <h2>Getting Jupyter running in VS Code</h2>
+      <p>The practice on this page is meant to be typed into a real notebook in VS Code. Here is the one-time setup to get there. If your notebooks already run, jump to the Start here tab.</p>
+      <ol>
+        <li><b>Have Python through Anaconda or Miniconda.</b> CS 2316 uses it, and it already ships with Python, NumPy, and Pandas, so there is nothing extra to install for this unit. If you do not have it yet, install Miniconda or Anaconda from its official site and accept the defaults.</li>
+        <li><b>Add the two VS Code extensions.</b> Open the Extensions panel with <code>Ctrl+Shift+X</code> on Windows or Linux, or <code>Cmd+Shift+X</code> on Mac, then search for and install <b>Python</b> by Microsoft and <b>Jupyter</b> by Microsoft. These two are what let VS Code open and run <code>.ipynb</code> files.</li>
+        <li><b>Open or create a notebook.</b> Open one of the lecture <code>.ipynb</code> files, or make a new one: open the Command Palette with <code>Ctrl+Shift+P</code> or <code>Cmd+Shift+P</code>, type <code>Jupyter: Create New Jupyter Notebook</code>, and pick it. Any file ending in <code>.ipynb</code> opens in the notebook editor.</li>
+        <li><b>Pick your kernel.</b> In the top right of the notebook, click <b>Select Kernel</b> and choose your Anaconda Python environment. If VS Code offers to install <code>ipykernel</code>, click install and let it finish.</li>
+        <li><b>Run a cell.</b> Click into a cell, type your code, and press <code>Shift+Enter</code> to run it and drop to the next cell. The <b>+ Code</b> button adds a new cell. Quick keys: <code>Esc</code> leaves a cell, <code>Enter</code> goes back into it, and <code>B</code> adds a cell below.</li>
+      </ol>
+    </div>
+    <div class="block">
+      <p class="label">Confirm it works</p>
+      <h3>// paste this into a new cell and run it</h3>
+      <p>If it prints a version number, your environment is ready for the NumPy tabs.</p>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">check.py · run this in your own notebook</span></div>
+        <textarea spellcheck="false" rows="2" readonly>import numpy as np
+print(np.__version__)</textarea>
+      </div>
+      <div class="callout warn"><p class="ct">If it errors</p><p>A message like <code>No module named numpy</code> means NumPy is not in the environment you picked. Open a terminal in VS Code with <b>Terminal, New Terminal</b> and run <code>conda install numpy</code> if you use Anaconda, or <code>pip install numpy</code> otherwise, then run the cell again.</p></div>
+      <div class="callout tip"><p class="ct">A nice way to work</p><p>Keep this page and your notebook open side by side. Type each practice answer into the notebook, run it, then open Show solution here to check it against the reference.</p></div>
+      <p class="muted">Once a cell runs and prints, head to the Start here tab.</p>
+    </div>
+  </section>
+
+  <!-- TAB 1 -->
+  <section id="t1" class="panel">
+    <div class="block">
+      <p class="label">Why this exists</p>
+      <h2>Why NumPy instead of a list</h2>
+      <p>A Python list can hold anything and grow forever, which is flexible but slow. A NumPy array is the opposite, and that is the whole point:</p>
+      <ul>
+        <li><b>One type only.</b> Every element is the same kind, usually all ints or all floats. That uniformity is what makes it fast.</li>
+        <li><b>Fixed size.</b> The block of memory is set when you make it, so the computer can lay it out tightly and tear through it.</li>
+        <li><b>Operate on it all at once.</b> Instead of a loop, you write <code>array + 7</code> and every element gets 7 added in one shot. This is called vectorizing, and it is both faster and easier to read.</li>
+      </ul>
+      <p>You always bring it in the same way, and it is conventionally shortened to <code>np</code>:</p>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">first_array.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="4">import numpy as np
+a = np.array([1, 2, 3, 4, 5])
+print(a)
+print(a.shape, a.dtype)</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+    </div>
+    <div class="block">
+      <p class="label">How to use this page</p>
+      <h3>// three things to know</h3>
+      <ul>
+        <li><b>The code cells on these tabs run right here.</b> Hit Run to see the output. The first Run loads NumPy, so give it a few seconds, then it is quick.</li>
+        <li><b>The practice is yours to type.</b> Each practice question is something you write in your own notebook while we work. There is no box for it here, just the question and a Show solution you can open to check your answer against.</li>
+        <li><b>The diagrams are interactive.</b> On the slicing, masking, and vectorize tabs there are live grids, change the controls and watch which cells get picked.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- TAB 2 -->
+  <section id="t2" class="panel">
+    <div class="block">
+      <p class="label">Building blocks</p>
+      <h2>Making an array, and its shape</h2>
+      <p>The most direct way is <code>np.array</code>, handing it a list or a list of lists. A flat list gives a 1D array, a list of lists gives a 2D array, a grid of rows and columns.</p>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">np_array.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="8">import numpy as np
+a1 = np.array([1, 2, 3, 4, 5])
+a2 = np.array([[1, 2, 3], [4, 5, 6]])
+print(a1, "shape", a1.shape, a1.dtype)
+print(a2)
+print("shape", a2.shape, "dtype", a2.dtype)</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+      <p>Two attributes you will lean on constantly: <code>.shape</code> is a tuple of the sizes, and <code>.dtype</code> is the one type every element shares. Picture them like this:</p>
+      <div class="widget">
+        <span class="wlabel">a 1D array, shape (5,)</span>
+        <p class="wcap">np.array([1, 2, 3, 4, 5]) &nbsp;&middot;&nbsp; the small grey numbers are the index positions</p>
+        <div id="anat-1d" class="np-grid"></div>
+      </div>
+      <div class="widget">
+        <span class="wlabel">a 2D array, shape (2, 3)</span>
+        <p class="wcap">np.array([[1, 2, 3], [4, 5, 6]]) &nbsp;&middot;&nbsp; 2 rows, 3 columns, indexed [row, column]</p>
+        <div id="anat-2d" class="np-grid"></div>
+      </div>
+    </div>
+    <div class="block">
+      <p class="label">Filling arrays for you</p>
+      <h2>arange, linspace, and the fillers</h2>
+      <p>You rarely type out every number. These build arrays for you.</p>
+      <div class="read"><p class="rl">np.arange(start, stop, step)</p><p>"count from start up to but not including stop, jumping by step." Like Python's range, but the step can be a decimal, and you get an array back.</p></div>
+      <div class="read"><p class="rl">np.linspace(start, stop, num)</p><p>"give me num values evenly spread from start to stop." By default it includes the stop value, and the result is floats.</p></div>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">fillers.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="9">import numpy as np
+print(np.arange(1, 6, 1))         # 1 up to 6, step 1
+print(np.arange(2, 3, 0.1))       # decimal step is fine
+print(np.linspace(1, 5, num=5))   # 5 evenly spaced values, 1 to 5
+print(np.zeros((2, 4)))           # a 2x4 block of zeros
+print(np.ones((2, 3), dtype=int)) # a 2x3 block of ones, as ints</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+      <p><code>np.arange(9).reshape(3, 3)</code> is a common combo: build a flat range, then fold it into a shape. And <code>np.random.random((2, 4))</code> fills a block with random decimals between 0 and 1.</p>
+
+      <h3>// practice, in your notebook</h3>
+      <div class="q-card">
+        <p class="q-num">Practice 1 <span class="tag">// code it in Jupyter</span></p>
+        <p>Create a NumPy array with exactly 20 values evenly spaced from <code>-1.0</code> to <code>1.0</code>, including both endpoints.</p>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">solution.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="2">import numpy as np
+print(np.linspace(-1, 1, 20))</textarea><pre class="output" style="display:none"></pre></div><p class="muted">linspace is the tool whenever you hear "evenly spaced" with a count. The third argument is how many values, and the endpoints are included by default.</p></div>
+      </div>
+      <div class="q-card">
+        <p class="q-num">Practice 2 <span class="tag">// code it in Jupyter</span></p>
+        <p>Create a 3 by 3 array holding the numbers 0 through 8.</p>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">solution.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="2">import numpy as np
+print(np.arange(9).reshape(3, 3))</textarea><pre class="output" style="display:none"></pre></div><p class="muted">arange(9) gives a flat 0 to 8, and reshape folds those nine values into three rows of three.</p></div>
+      </div>
+      <div class="q-card">
+        <p class="q-num">Practice 3 <span class="tag">// code it in Jupyter</span></p>
+        <p>Create a 2 by 4 array of all zeros, then a 2 by 3 array of all ones whose values are integers.</p>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">solution.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="3">import numpy as np
+print(np.zeros((2, 4)))
+print(np.ones((2, 3), dtype=int))</textarea><pre class="output" style="display:none"></pre></div><p class="muted">Both take the shape as a tuple. zeros defaults to floats, so the ones get <code>dtype=int</code> to force whole numbers.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 3 -->
+  <section id="t3" class="panel">
+    <div class="block">
+      <p class="label">Reaching in</p>
+      <h2>Indexing</h2>
+      <p>A 1D array indexes just like a list, including negative indices from the end. A 2D array uses a single pair of brackets with a comma, <code>a[row, column]</code>, which is cleaner than the <code>a[row][column]</code> you might expect.</p>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">indexing.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="7">import numpy as np
+a1 = np.array([1, 2, 3, 4, 5])
+print(a1[2])    # third element
+print(a1[-2])   # second from the end
+a2 = np.arange(12).reshape(3, 4)
+print(a2[1, 2]) # row 1, column 2</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+      <div class="widget">
+        <span class="wlabel">a[1, 2] picks one cell</span>
+        <p class="wcap">a = np.arange(12).reshape(3, 4) &nbsp;&middot;&nbsp; row 1, column 2 is the value 6</p>
+        <div id="idx-demo" class="np-grid"></div>
+      </div>
+    </div>
+    <div class="block">
+      <p class="label">Taking a chunk</p>
+      <h2>Slicing</h2>
+      <p>Slicing uses <code>start:stop</code>, with the stop not included, exactly like lists. For 2D you slice both dimensions at once, separated by the comma.</p>
+      <div class="read"><p class="rl">a[0:2, 1:3]</p><p>"rows 0 up to 2, and columns 1 up to 3." The part before the comma picks rows, the part after picks columns.</p></div>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">slicing.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="7">import numpy as np
+a1 = np.array([1, 2, 3, 4, 5])
+print(a1[1:4])          # elements 1, 2, 3
+a2 = np.arange(12).reshape(3, 4)
+print(a2[0:2, 1:3])     # rows 0-1, columns 1-2
+print(a2[:, 0])         # every row, column 0 (a whole column)</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+      <p>Play with the ranges below. The highlighted cells are what the slice keeps, and the result grid on the right is the array you get back.</p>
+      <div class="widget">
+        <span class="wlabel">Interactive slicer</span>
+        <p class="wcap">a = np.arange(12).reshape(3, 4)</p>
+        <div class="wctrl">
+          rows
+          <select id="sl-rs" onchange="renderSlice()"><option>0</option><option>1</option><option>2</option><option>3</option></select>
+          <b>:</b>
+          <select id="sl-re" onchange="renderSlice()"><option>0</option><option>1</option><option selected>2</option><option>3</option></select>
+          &nbsp; cols
+          <select id="sl-cs" onchange="renderSlice()"><option>0</option><option selected>1</option><option>2</option><option>3</option><option>4</option></select>
+          <b>:</b>
+          <select id="sl-ce" onchange="renderSlice()"><option>0</option><option>1</option><option>2</option><option selected>3</option><option>4</option></select>
+        </div>
+        <div class="wrow">
+          <div><p class="wcap">source, highlighted</p><div id="sl-src" class="np-grid"></div></div>
+          <div class="warrow">&rarr;</div>
+          <div><p class="wcap">result</p><div id="sl-res" class="np-grid"></div></div>
+        </div>
+        <div class="wcode" id="sl-code"></div>
+      </div>
+
+      <h3>// practice, in your notebook</h3>
+      <div class="q-card">
+        <p class="q-num">Practice 1 <span class="tag">// code it in Jupyter</span></p>
+        <p>For <code>a = np.arange(12).reshape(3, 4)</code>, print the single value in row 1, column 2.</p>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">solution.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="3">import numpy as np
+a = np.arange(12).reshape(3, 4)
+print(a[1, 2])</textarea><pre class="output" style="display:none"></pre></div><p class="muted">One pair of brackets, row then column. That lands on the value 6.</p></div>
+      </div>
+      <div class="q-card">
+        <p class="q-num">Practice 2 <span class="tag">// code it in Jupyter</span></p>
+        <p>For the same <code>a</code>, pull out the entire first column.</p>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">solution.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="3">import numpy as np
+a = np.arange(12).reshape(3, 4)
+print(a[:, 0])</textarea><pre class="output" style="display:none"></pre></div><p class="muted">A bare colon means every row. Pairing it with column 0 sweeps down the first column, giving [0 4 8].</p></div>
+      </div>
+      <div class="q-card">
+        <p class="q-num">Practice 3 <span class="tag">// code it in Jupyter</span></p>
+        <p>For the same <code>a</code>, carve out the top-right 2 by 2 block (the first two rows, last two columns).</p>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">solution.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="3">import numpy as np
+a = np.arange(12).reshape(3, 4)
+print(a[:2, 2:])</textarea><pre class="output" style="display:none"></pre></div><p class="muted"><code>:2</code> takes rows 0 and 1, <code>2:</code> takes columns 2 to the end. The block is [[2 3] [6 7]]. Try matching it in the slicer above.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 4 -->
+  <section id="t4" class="panel">
+    <div class="block">
+      <p class="label">Math without loops</p>
+      <h2>Vectorized operations</h2>
+      <p>Here is the move that makes NumPy worth it. Do math on a whole array and it happens to every element at once, no loop required. A single number spreads across the entire array, which is called broadcasting.</p>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">scalar_ops.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="6">import numpy as np
+a = np.array([[2, 3, 7], [9, 10, 11]])
+print(a + 7)   # add 7 to every element
+print(a * 7)   # multiply every element by 7</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+      <p>Change the operation below and watch every cell update at once.</p>
+      <div class="widget">
+        <span class="wlabel">Broadcasting a scalar</span>
+        <div class="wctrl">
+          operation
+          <select id="vec-op" onchange="renderVec()"><option value="+7">a + 7</option><option value="-7">a - 7</option><option value="*7">a * 7</option><option value="/7">a / 7</option></select>
+        </div>
+        <div class="wrow">
+          <div><p class="wcap">a</p><div id="vec-src" class="np-grid"></div></div>
+          <div class="warrow">&rarr;</div>
+          <div><p class="wcap">result</p><div id="vec-res" class="np-grid"></div></div>
+        </div>
+        <div class="wcode" id="vec-code"></div>
+      </div>
+    </div>
+    <div class="block">
+      <p class="label">Array with array</p>
+      <h2>Elementwise, reshape, and matmul</h2>
+      <p>Two arrays of the same shape combine cell by cell. Reshaping rearranges the same values into a new shape, and <code>.flatten()</code> squashes any array down to 1D.</p>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">array_ops.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="8">import numpy as np
+a = np.array([[1, 2], [3, 4]])
+b = np.array([[10, 20], [30, 40]])
+print(a + b)          # cell by cell addition
+print(a * b)          # cell by cell multiplication (NOT matrix mult)
+print(a.flatten())    # squash to 1D
+print(np.matmul(a, b))# true matrix multiplication</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+      <div class="callout warn"><p class="ct">Watch out</p><p>The star <code>*</code> between two arrays multiplies cell by cell, it is not matrix multiplication. For real matrix multiplication use <code>np.matmul(a, b)</code> or the <code>@</code> operator.</p></div>
+
+      <h3>// practice, in your notebook</h3>
+      <div class="q-card">
+        <p class="q-num">Practice 1 <span class="tag">// code it in Jupyter</span></p>
+        <p>Given <code>arr1 = np.array([[1,2,3],[4,5,6],[7,8,9],[1,2,12]])</code>, build a 1D array holding every value with each one larger than it was.</p>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">solution.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="3">import numpy as np
+arr1 = np.array([[1,2,3],[4,5,6],[7,8,9],[1,2,12]])
+print((arr1 + 1).flatten())</textarea><pre class="output" style="display:none"></pre></div><p class="muted">Add 1 to the whole array in one shot, then flatten the 2D result down to a single 1D row.</p></div>
+      </div>
+      <div class="q-card">
+        <p class="q-num">Practice 2 <span class="tag">// code it in Jupyter</span></p>
+        <p>Using the same <code>arr1</code>, build a 1D array from the bottom row with each value five times what it was.</p>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">solution.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="3">import numpy as np
+arr1 = np.array([[1,2,3],[4,5,6],[7,8,9],[1,2,12]])
+print(arr1[-1] * 5)</textarea><pre class="output" style="display:none"></pre></div><p class="muted"><code>arr1[-1]</code> is already the 1D bottom row, so multiplying by 5 broadcasts across it. Result [5 10 60].</p></div>
+      </div>
+      <div class="q-card">
+        <p class="q-num">Practice 3 <span class="tag">// code it in Jupyter</span></p>
+        <p>Using the same <code>arr1</code>, pull out the second column and multiply every value in it by 10.</p>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">solution.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="3">import numpy as np
+arr1 = np.array([[1,2,3],[4,5,6],[7,8,9],[1,2,12]])
+print(arr1[:, 1] * 10)</textarea><pre class="output" style="display:none"></pre></div><p class="muted"><code>arr1[:, 1]</code> grabs column 1 down every row, then the times 10 broadcasts. Result [20 50 80 20].</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 5 -->
+  <section id="t5" class="panel">
+    <div class="block">
+      <p class="label">Filtering</p>
+      <h2>Masking</h2>
+      <p>Masking is how you filter an array by a condition. A comparison like <code>a &gt; 3</code> does not give one True or False, it gives a whole array of True and False, one per element. That boolean array is the mask. Feed it back into the array and you get only the elements where the mask was True.</p>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">masking.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="7">import numpy as np
+a1 = np.array([[1, 2, 3, 4, 5], [3, 3, 4, 1, 2]])
+print(a1 > 3)        # the mask: an array of True/False
+print(a1[a1 > 3])    # keep only the elements that are True
+print(a1[a1 % 2 == 0])  # only the evens</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+      <div class="callout tip"><p class="ct">The one thing to remember</p><p>Masking always hands back a <b>1D</b> array, no matter the shape of the original. It cannot keep a rectangle shape, because in general the True cells are scattered.</p></div>
+      <p>Pick a condition and watch the mask light up. Green cells pass, and the strip on the right is the 1D array you get back.</p>
+      <div class="widget">
+        <span class="wlabel">Masking explorer</span>
+        <p class="wcap">a = np.array([[1, 2, 3, 4, 5], [3, 3, 4, 1, 2]])</p>
+        <div class="wctrl">
+          keep where
+          <select id="mk-a" onchange="renderMask()">
+            <option value="ne3">a != 3</option>
+            <option value="eq3">a == 3</option>
+            <option value="gt3" selected>a &gt; 3</option>
+            <option value="ge4">a &gt;= 4</option>
+            <option value="lt3">a &lt; 3</option>
+            <option value="even">a % 2 == 0 (even)</option>
+            <option value="odd">a % 2 == 1 (odd)</option>
+          </select>
+          <label><input type="checkbox" id="mk-combine" onchange="renderMask()"> add a second condition</label>
+          <span id="mk-b-wrap" style="display:none">
+            <select id="mk-op" onchange="renderMask()"><option value="&amp;">&amp; (and)</option><option value="|">| (or)</option></select>
+            <select id="mk-b" onchange="renderMask()">
+              <option value="ne3">a != 3</option>
+              <option value="eq3">a == 3</option>
+              <option value="gt3">a &gt; 3</option>
+              <option value="ge4">a &gt;= 4</option>
+              <option value="lt3">a &lt; 3</option>
+              <option value="even" selected>a % 2 == 0 (even)</option>
+              <option value="odd">a % 2 == 1 (odd)</option>
+            </select>
+          </span>
+        </div>
+        <div id="mk-grids" class="wrow"></div>
+        <div class="wcode" id="mk-code"></div>
+        <div style="margin-top:10px"><p class="wcap">result (1D)</p><div id="mk-res" class="np-grid"></div></div>
+      </div>
+    </div>
+    <div class="block">
+      <p class="label">Two conditions at once</p>
+      <h2>Combining masks</h2>
+      <p>To use two conditions together you combine the masks with bitwise operators, not the words and or or: <code>&amp;</code> means and, <code>|</code> means or, <code>~</code> means not. Each condition must be wrapped in its own parentheses, because these operators bind tighter than the comparisons.</p>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">combine.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="6">import numpy as np
+a1 = np.array([[1, 2, 3, 4, 5], [3, 3, 4, 1, 2]])
+# even AND greater than 3, note the parentheses around each piece
+print(a1[(a1 % 2 == 0) & (a1 > 3)])</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+      <div class="callout warn"><p class="ct">The parentheses are not optional</p><p>Write <code>(a1 % 2 == 0) &amp; (a1 &gt; 3)</code>, not <code>a1 % 2 == 0 &amp; a1 &gt; 3</code>. Without the parentheses the <code>&amp;</code> tries to run first and you get an error. Tick the second condition in the explorer above to see two masks combine.</p></div>
+
+      <h3>// practice, in your notebook</h3>
+      <div class="q-card">
+        <p class="q-num">Practice 1 <span class="tag">// code it in Jupyter</span></p>
+        <p>Given <code>a1 = np.array([[1,2,3,4,5],[3,3,4,1,2]])</code>, get only the elements that are not 3.</p>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">solution.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="3">import numpy as np
+a1 = np.array([[1,2,3,4,5],[3,3,4,1,2]])
+print(a1[a1 != 3])</textarea><pre class="output" style="display:none"></pre></div><p class="muted">The mask <code>a1 != 3</code> is True everywhere except the 3s, and the result is the flat list of survivors.</p></div>
+      </div>
+      <div class="q-card">
+        <p class="q-num">Practice 2 <span class="tag">// code it in Jupyter</span></p>
+        <p>Using the same <code>a1</code>, get only the even elements.</p>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">solution.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="3">import numpy as np
+a1 = np.array([[1,2,3,4,5],[3,3,4,1,2]])
+print(a1[a1 % 2 == 0])</textarea><pre class="output" style="display:none"></pre></div><p class="muted">A number is even when the remainder after dividing by 2 is 0, so <code>a1 % 2 == 0</code> is the mask.</p></div>
+      </div>
+      <div class="q-card">
+        <p class="q-num">Practice 3 <span class="tag">// code it in Jupyter</span></p>
+        <p>Using the same <code>a1</code>, get only the even elements that are also greater than 3.</p>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">solution.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="3">import numpy as np
+a1 = np.array([[1,2,3,4,5],[3,3,4,1,2]])
+print(a1[(a1 % 2 == 0) & (a1 > 3)])</textarea><pre class="output" style="display:none"></pre></div><p class="muted">Two masks joined with <code>&amp;</code>, each in its own parentheses. Only the 4s pass both tests, so the result is [4 4].</p></div>
+      </div>
+      <div class="q-card">
+        <p class="q-num">Practice 4 <span class="tag">// code it in Jupyter</span></p>
+        <p>Given <code>arr = np.array([[1,2,3],[4,5,6],[7,8,9],[1,2,12]])</code>, get a 1D array of only the values greater than 2.</p>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">solution.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="3">import numpy as np
+arr = np.array([[1,2,3],[4,5,6],[7,8,9],[1,2,12]])
+print(arr[arr > 2])</textarea><pre class="output" style="display:none"></pre></div><p class="muted">One mask, <code>arr &gt; 2</code>, and the survivors come back flattened into 1D in row order.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 6 -->
+  <section id="t6" class="panel">
+    <div class="block">
+      <p class="label">Predict, then run</p>
+      <h2>Tracing practice</h2>
+      <p>These are the exam style questions for NumPy: you are given an array and some code, and you say what prints. They all use the same array. Predict each one in your head first, then run the cell to check.</p>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">setup.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="3">import numpy as np
+arr = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+print(arr)</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+      <div class="q-card">
+        <p class="q-num">Trace 1</p>
+        <p>Predict the output, then run.</p>
+        <div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">t1.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="3">import numpy as np
+arr = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+print((arr + arr)[1])</textarea><pre class="output" style="display:none"></pre></div>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><p><b><code>[ 8 10 12]</code></b></p><p class="muted"><code>arr + arr</code> doubles every cell, then <code>[1]</code> grabs the second row, which was [4 5 6] doubled.</p></div>
+      </div>
+      <div class="q-card">
+        <p class="q-num">Trace 2</p>
+        <p>Predict the output, then run.</p>
+        <div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">t2.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="3">import numpy as np
+arr = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+print(arr[arr < 3][1])</textarea><pre class="output" style="display:none"></pre></div>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><p><b><code>2</code></b></p><p class="muted">The mask <code>arr &lt; 3</code> keeps [1, 2] as a 1D array, and index [1] of that is 2.</p></div>
+      </div>
+      <div class="q-card">
+        <p class="q-num">Trace 3</p>
+        <p>Predict the output, then run.</p>
+        <div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">t3.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="3">import numpy as np
+arr = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+print(arr[arr * 2 < 10])</textarea><pre class="output" style="display:none"></pre></div>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><p><b><code>[1 2 3 4]</code></b></p><p class="muted">The mask is built from <code>arr * 2 &lt; 10</code>, which is true for the original values 1, 2, 3, 4 (since their doubles 2, 4, 6, 8 are under 10). The mask is applied to the original arr, so those original values come back.</p></div>
+      </div>
+      <div class="q-card">
+        <p class="q-num">Trace 4</p>
+        <p>Predict the output, then run.</p>
+        <div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">t4.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="3">import numpy as np
+arr = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+print((arr + arr)[2:3])</textarea><pre class="output" style="display:none"></pre></div>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><p><b><code>[[14 16 18]]</code></b></p><p class="muted">A slice <code>[2:3]</code> keeps row 2 but stays 2D, so the answer has double brackets. The bottom row [7 8 9] doubled is [14 16 18].</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 7 -->
+  <section id="t7" class="panel">
+    <div class="block">
+      <p class="label">Live session</p>
+      <h2>Screen-share drills</h2>
+      <p>These are for you to code in your own notebook while we work, easiest first. Read the prompt, write it, run it, then open the solution to compare. They reuse <code>arr = np.array([[1,2,3],[4,5,6],[7,8,9],[1,2,12]])</code> unless a problem builds its own.</p>
+      <div class="q-card">
+        <p class="q-num">Drill 1 <span class="tag">// code it in Jupyter</span></p>
+        <p>Make a 1D array of the first column, with each value one more than it was.</p>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">solution.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="3">import numpy as np
+arr = np.array([[1,2,3],[4,5,6],[7,8,9],[1,2,12]])
+print(arr[:, 0] + 1)</textarea><pre class="output" style="display:none"></pre></div><p class="muted"><code>arr[:, 0]</code> is the first column down every row, then add 1. Result [2 5 8 2].</p></div>
+      </div>
+      <div class="q-card">
+        <p class="q-num">Drill 2 <span class="tag">// code it in Jupyter</span></p>
+        <p>Make a 1D array of the bottom row, with each value five times what it was.</p>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">solution.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="3">import numpy as np
+arr = np.array([[1,2,3],[4,5,6],[7,8,9],[1,2,12]])
+print(arr[-1] * 5)</textarea><pre class="output" style="display:none"></pre></div><p class="muted"><code>arr[-1]</code> is the last row already as 1D, so times 5 broadcasts. Result [5 10 60].</p></div>
+      </div>
+      <div class="q-card">
+        <p class="q-num">Drill 3 <span class="tag">// code it in Jupyter</span></p>
+        <p>Make a 1D array of only the values in <code>arr</code> that are greater than 2.</p>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">solution.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="3">import numpy as np
+arr = np.array([[1,2,3],[4,5,6],[7,8,9],[1,2,12]])
+print(arr[arr > 2])</textarea><pre class="output" style="display:none"></pre></div><p class="muted">A single mask, and the survivors come back flattened in row order.</p></div>
+      </div>
+      <div class="q-card">
+        <p class="q-num">Drill 4 <span class="tag">// harder</span></p>
+        <p>Build <code>b = np.arange(20).reshape(4, 5)</code>. Then make a 1D array of only the even values from its last two rows.</p>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">solution.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="4">import numpy as np
+b = np.arange(20).reshape(4, 5)
+bottom = b[2:]
+print(bottom[bottom % 2 == 0])</textarea><pre class="output" style="display:none"></pre></div><p class="muted">First slice the last two rows with <code>b[2:]</code>, then mask that slice for evens. Doing it in two steps keeps it readable. Result [10 12 14 16 18].</p></div>
+      </div>
+      <div class="q-card">
+        <p class="q-num">Drill 5 <span class="tag">// harder</span></p>
+        <p>Build a 5 by 5 array of the numbers 1 through 25, then pull out the center 3 by 3 block.</p>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">solution.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="3">import numpy as np
+c = np.arange(1, 26).reshape(5, 5)
+print(c[1:4, 1:4])</textarea><pre class="output" style="display:none"></pre></div><p class="muted"><code>arange(1, 26)</code> is 1 to 25, reshaped to 5 by 5. The center block is rows 1 to 3 and columns 1 to 3, so <code>[1:4, 1:4]</code>.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 8 -->
+  <section id="t8" class="panel">
+    <div class="block">
+      <p class="label">Your source of truth</p>
+      <h2>Lecture 10 cheat sheet</h2>
+      <div class="sheet-card">
+        <h3>Creating arrays</h3>
+        <pre>np.array([1,2,3])             from a list (or list of lists for 2D)
+np.arange(start, stop, step)  range, stop NOT included, step can be decimal
+np.linspace(start, stop, num) num evenly spaced values, stop IS included
+np.zeros((r, c))              block of zeros (floats)
+np.ones((r, c), dtype=int)    block of ones
+np.random.random((r, c))      random decimals in [0, 1)
+arr.reshape((r, c))           same values, new shape (returns a new array)
+.shape  .dtype                the size tuple, and the one element type</pre>
+        <h3>Indexing and slicing</h3>
+        <pre>a[2]        one element (negative counts from the end)
+a[1, 2]     2D: row 1, column 2
+a[0:2, 1:3] rows 0-1, columns 1-2  (stop not included)
+a[:, 0]     every row, column 0  (a whole column)
+a[-1]       the last row</pre>
+        <h3>Vectorized math</h3>
+        <pre>a + 7        a scalar broadcasts to every element
+a + b        same-shape arrays combine cell by cell
+a * b        cell by cell, NOT matrix mult
+np.matmul(a, b)   true matrix multiplication
+a.flatten()  squash any array to 1D</pre>
+        <h3>Masking</h3>
+        <pre>a > 3            a mask: an array of True/False
+a[a > 3]         keep only the True elements (ALWAYS returns 1D)
+a[a % 2 == 0]    only the evens
+(a > 3) & (a < 8)  combine with & | ~  and wrap each piece in ()</pre>
+        <h3>Worth memorizing</h3>
+        <pre>- masking always returns a 1D array
+- a slice is a view into the same data, not a copy
+- check .shape whenever something looks wrong
+- use & | ~ for masks (not and/or/not), with parentheses</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 9 -->
+  <section id="t9" class="panel">
+    <div class="block">
+      <p class="label">Self-test</p>
+      <h2>Before Lecture 11, can you...</h2>
+      <p>Tick each one only when you could do it in your notebook with no notes.</p>
+      <label class="chk"><input type="checkbox"> Say why a NumPy array is faster than a list, in your own words.</label>
+      <label class="chk"><input type="checkbox"> Build arrays with array, arange, linspace, zeros, ones, and reshape.</label>
+      <label class="chk"><input type="checkbox"> Read .shape and .dtype and know what each means.</label>
+      <label class="chk"><input type="checkbox"> Index a 2D array with a[row, col] and slice with a[r0:r1, c0:c1].</label>
+      <label class="chk"><input type="checkbox"> Grab a whole row or a whole column with a colon.</label>
+      <label class="chk"><input type="checkbox"> Add or multiply a whole array by a scalar, and explain broadcasting.</label>
+      <label class="chk"><input type="checkbox"> Tell apart cell-by-cell a*b from matrix multiplication np.matmul.</label>
+      <label class="chk"><input type="checkbox"> Build a mask and filter an array, and know the result is 1D.</label>
+      <label class="chk"><input type="checkbox"> Combine two masks with & or | using parentheses around each.</label>
+    </div>
+  </section>
+
+  <footer>CS 2316 · Lecture 10 · Intro to NumPy · one block of numbers, all at once</footer>
+</div>
+
+<script>
+function showTab(btn){
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+  var id = btn.dataset.t;
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === id));
+  window.scrollTo({top:0});
+}
+function toggleSol(btn){
+  var sol = btn.nextElementSibling;
+  var open = sol.classList.toggle('open');
+  btn.innerHTML = (open ? '&#9652; Hide' : '&#9662; Show') + ' solution';
+}
+function el(id){ return document.getElementById(id); }
+function v(id){ return parseInt(el(id).value, 10); }
+
+// ---- grid rendering ----
+function setGrid(node, arr, cellClass, showIdx){
+  if(!node) return;
+  var rows = arr.length, cols = arr[0].length, html = '';
+  var ncol = cols + (showIdx ? 1 : 0);
+  if(showIdx){
+    html += '<div class="gcell hd"></div>';
+    for(var c = 0; c < cols; c++){ html += '<div class="gcell hd">' + c + '</div>'; }
+  }
+  for(var r = 0; r < rows; r++){
+    if(showIdx){ html += '<div class="gcell rl">' + r + '</div>'; }
+    for(var c2 = 0; c2 < cols; c2++){
+      var cls = cellClass ? cellClass(r, c2) : '';
+      html += '<div class="gcell ' + cls + '">' + arr[r][c2] + '</div>';
+    }
+  }
+  node.style.gridTemplateColumns = 'repeat(' + ncol + ', auto)';
+  node.innerHTML = html;
+}
+
+// ---- static anatomy + index demo ----
+function renderStatics(){
+  setGrid(el('anat-1d'), [[1,2,3,4,5]], function(){ return ''; }, true);
+  setGrid(el('anat-2d'), [[1,2,3],[4,5,6]], function(){ return ''; }, true);
+  var A = [[0,1,2,3],[4,5,6,7],[8,9,10,11]];
+  setGrid(el('idx-demo'), A, function(r,c){ return (r===1 && c===2) ? 'sel' : 'dim'; }, true);
+}
+
+// ---- interactive slicer ----
+var SL = [[0,1,2,3],[4,5,6,7],[8,9,10,11]];
+function renderSlice(){
+  if(!el('sl-src')) return;
+  var rs=v('sl-rs'), re=v('sl-re'), cs=v('sl-cs'), ce=v('sl-ce');
+  setGrid(el('sl-src'), SL, function(r,c){ return (r>=rs && r<re && c>=cs && c<ce) ? 'sel' : 'dim'; }, true);
+  var res = [];
+  for(var r=rs; r<re; r++){
+    var row = [];
+    for(var c=cs; c<ce; c++){ row.push(SL[r][c]); }
+    if(row.length){ res.push(row); }
+  }
+  if(res.length){ setGrid(el('sl-res'), res, function(){ return 'res'; }, false); }
+  else { el('sl-res').style.gridTemplateColumns='auto'; el('sl-res').innerHTML = '<span class="wcap">empty selection</span>'; }
+  el('sl-code').textContent = 'a[' + rs + ':' + re + ', ' + cs + ':' + ce + ']';
+}
+
+// ---- interactive vectorize ----
+var VEC = [[2,3,7],[9,10,11]];
+var VOPS = { '+7': function(x){return x+7;}, '-7': function(x){return x-7;},
+             '*7': function(x){return x*7;}, '/7': function(x){return Math.round(x/7*100)/100;} };
+var VLABEL = { '+7':'a + 7', '-7':'a - 7', '*7':'a * 7', '/7':'a / 7' };
+function renderVec(){
+  if(!el('vec-src')) return;
+  var op = el('vec-op').value, f = VOPS[op];
+  setGrid(el('vec-src'), VEC, function(){ return ''; }, false);
+  var res = VEC.map(function(row){ return row.map(f); });
+  setGrid(el('vec-res'), res, function(){ return 'res'; }, false);
+  el('vec-code').textContent = VLABEL[op];
+}
+
+// ---- interactive masking ----
+var MK = [[1,2,3,4,5],[3,3,4,1,2]];
+var CONDS = {
+  ne3:{code:'a != 3', f:function(x){return x!==3;}},
+  eq3:{code:'a == 3', f:function(x){return x===3;}},
+  gt3:{code:'a > 3',  f:function(x){return x>3;}},
+  ge4:{code:'a >= 4', f:function(x){return x>=4;}},
+  lt3:{code:'a < 3',  f:function(x){return x<3;}},
+  even:{code:'a % 2 == 0', f:function(x){return x%2===0;}},
+  odd:{code:'a % 2 == 1', f:function(x){return x%2!==0;}}
+};
+function maskOf(cond){ return MK.map(function(row){ return row.map(function(x){ return cond.f(x); }); }); }
+function maskClass(m){ return function(r,c){ return m[r][c] ? 'tt' : 'ff'; }; }
+function renderMask(){
+  if(!el('mk-grids')) return;
+  var combine = el('mk-combine').checked;
+  el('mk-b-wrap').style.display = combine ? 'inline' : 'none';
+  var ca = CONDS[el('mk-a').value];
+  var ma = maskOf(ca);
+  var grids = el('mk-grids');
+  grids.innerHTML = '';
+  function addGrid(cap, arr, cls){
+    var wrap = document.createElement('div');
+    wrap.innerHTML = '<p class="wcap">' + cap + '</p><div class="np-grid"></div>';
+    grids.appendChild(wrap);
+    setGrid(wrap.querySelector('.np-grid'), arr, cls, false);
+  }
+  var eff, codeStr;
+  if(combine){
+    var op = el('mk-op').value;
+    var cb = CONDS[el('mk-b').value];
+    var mb = maskOf(cb);
+    eff = MK.map(function(row,r){ return row.map(function(x,c){ return op==='&' ? (ma[r][c]&&mb[r][c]) : (ma[r][c]||mb[r][c]); }); });
+    addGrid('mask A: ' + ca.code, ma, maskClass(ma));
+    addGrid('mask B: ' + cb.code, mb, maskClass(mb));
+    addGrid('A ' + op + ' B', eff, maskClass(eff));
+    codeStr = 'a[(' + ca.code + ') ' + op + ' (' + cb.code + ')]';
+  } else {
+    eff = ma;
+    addGrid('mask: ' + ca.code, ma, maskClass(ma));
+    codeStr = 'a[' + ca.code + ']';
+  }
+  el('mk-code').textContent = codeStr;
+  var out = [];
+  for(var r=0; r<MK.length; r++){ for(var c=0; c<MK[0].length; c++){ if(eff[r][c]){ out.push(MK[r][c]); } } }
+  if(out.length){ setGrid(el('mk-res'), [out], function(){ return 'res'; }, false); }
+  else { el('mk-res').style.gridTemplateColumns='auto'; el('mk-res').innerHTML = '<span class="wcap">empty</span>'; }
+}
+
+// ---- pyodide (loads numpy) ----
+var _pyPromise = null;
+function ensurePyodide(){
+  if(_pyPromise) return _pyPromise;
+  _pyPromise = (async function(){
+    if(typeof loadPyodide === 'undefined'){
+      await new Promise(function(resolve, reject){
+        var s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js';
+        s.onload = resolve;
+        s.onerror = function(){ reject(new Error('Could not load the Python engine. Check your internet connection, then try Run again.')); };
+        document.head.appendChild(s);
+      });
+    }
+    var py = await loadPyodide();
+    await py.loadPackage('numpy');
+    return py;
+  })();
+  return _pyPromise;
+}
+async function runCell(btn){
+  var cell = btn.closest('.cell');
+  var ta = cell.querySelector('textarea');
+  var out = cell.querySelector('.output');
+  out.style.display = 'block';
+  out.classList.remove('err');
+  out.textContent = 'Loading Python and NumPy, then running...';
+  var py;
+  try{ py = await ensurePyodide(); }
+  catch(e){ out.classList.add('err'); out.textContent = String(e.message || e); return; }
+  py.runPython("import sys, io\n_buf = io.StringIO()\nsys.stdout = _buf\nsys.stderr = _buf");
+  var errText = '';
+  try{ py.runPython(ta.value); }
+  catch(e){ errText = String(e.message || e); }
+  var res = '';
+  try{ res = py.runPython("sys.stdout = sys.__stdout__\nsys.stderr = sys.__stderr__\n_buf.getvalue()"); }
+  catch(e){}
+  if(!res && !errText){ out.textContent = '(ran with no printed output)'; return; }
+  out.textContent = (res || '') + (errText ? ((res ? '\n' : '') + errText) : '');
+  if(errText) out.classList.add('err');
+}
+
+// init all widgets
+renderStatics();
+renderSlice();
+renderVec();
+renderMask();
+</script>
+</body>
+</html>
