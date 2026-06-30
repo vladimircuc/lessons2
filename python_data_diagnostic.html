@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python & Data Diagnostic</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --panel-2: #1c2430;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --yellow: #d29922;
+    --code-bg: #0a0e14;
+    --easy: #3fb950;
+    --med: #d29922;
+    --hard: #f85149;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+    padding: 0 0 80px;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 0 20px; }
+  header {
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, #11161d, #0d1117);
+    padding: 36px 0 28px;
+    margin-bottom: 8px;
+  }
+  header h1 { margin: 0 0 8px; font-size: 28px; letter-spacing: -0.5px; }
+  header p { margin: 0; color: var(--muted); font-size: 15px; max-width: 700px; }
+  .howto {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 24px 0 8px;
+    font-size: 14px;
+  }
+  .howto strong { color: var(--accent); }
+  .howto ol { margin: 8px 0 0; padding-left: 20px; }
+  .howto li { margin: 4px 0; }
+  .problem {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px 24px 8px;
+    margin: 28px 0;
+  }
+  .problem h2 {
+    margin: 0 0 4px;
+    font-size: 21px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .pnum {
+    background: var(--accent);
+    color: #08111f;
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: 6px;
+    padding: 2px 10px;
+  }
+  .skill-tag {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 400;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2px 12px;
+  }
+  .desc { color: var(--muted); margin: 8px 0 16px; }
+  .label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--muted);
+    margin: 20px 0 8px;
+    font-weight: 600;
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 18px;
+    overflow-x: auto;
+    margin: 0 0 8px;
+    position: relative;
+  }
+  code {
+    font-family: "SF Mono", "Fira Code", Consolas, Menlo, monospace;
+    font-size: 13.5px;
+    color: #c9d1d9;
+  }
+  .copybtn {
+    position: absolute;
+    top: 8px; right: 8px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .copybtn:hover { color: var(--text); border-color: var(--accent); }
+  .copybtn.done { color: var(--green); border-color: var(--green); }
+  ol.tasks { counter-reset: t; list-style: none; padding: 0; margin: 8px 0 16px; }
+  ol.tasks li {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px 12px 50px;
+    margin: 8px 0;
+    position: relative;
+  }
+  ol.tasks li::before {
+    counter-increment: t;
+    content: counter(t);
+    position: absolute;
+    left: 12px; top: 12px;
+    width: 24px; height: 24px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: var(--accent);
+  }
+  ol.tasks li .diff {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 1px 7px;
+    border-radius: 4px;
+    margin-left: 8px;
+    vertical-align: middle;
+    font-weight: 700;
+  }
+  .d-easy { background: rgba(63,185,80,0.15); color: var(--easy); border: 1px solid var(--easy); }
+  .d-med { background: rgba(210,153,34,0.15); color: var(--med); border: 1px solid var(--med); }
+  .d-hard { background: rgba(248,81,73,0.15); color: var(--hard); border: 1px solid var(--hard); }
+  ol.tasks li code { color: var(--yellow); font-size: 13px; }
+  details.sol {
+    margin: 16px 0 20px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  details.sol summary {
+    cursor: pointer;
+    padding: 12px 18px;
+    background: var(--panel-2);
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--green);
+    user-select: none;
+    list-style: none;
+  }
+  details.sol summary::-webkit-details-marker { display: none; }
+  details.sol summary::before { content: "\25B8  "; color: var(--muted); }
+  details.sol[open] summary::before { content: "\25BE  "; }
+  details.sol .solbody { padding: 4px 18px 8px; }
+  .note {
+    color: var(--muted);
+    font-size: 13px;
+    font-style: italic;
+    margin: 4px 0 14px;
+    padding-left: 10px;
+    border-left: 2px solid var(--border);
+  }
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 12px; font-size: 12px; }
+  .legend span { display: flex; align-items: center; gap: 6px; color: var(--muted); }
+  .dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>Python &amp; Data Diagnostic</h1>
+    <p>A warm-up check across plain Python, NumPy, and pandas. Work through one task at a time. The goal is not to finish everything, it is to see how far you can comfortably get. Skip a task if you are stuck and move on.</p>
+    <div class="legend">
+      <span><i class="dot" style="background:var(--easy)"></i>Easy</span>
+      <span><i class="dot" style="background:var(--med)"></i>Medium</span>
+      <span><i class="dot" style="background:var(--hard)"></i>Harder</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="howto">
+    <strong>How to use this</strong>
+    <ol>
+      <li>For each problem, copy the <em>Data setup</em> block into a fresh cell in your Jupyter notebook and run it.</li>
+      <li>Before doing any task, look at the data: print it, check its shape, see what columns or keys it has.</li>
+      <li>Do the tasks one at a time in their own cells. Try it yourself first, the solutions are collapsed at the bottom of each problem.</li>
+    </ol>
+  </div>
+
+  <!-- ===================== PROBLEM 1 ===================== -->
+  <div class="problem">
+    <h2><span class="pnum">1</span> Student Records <span class="skill-tag">plain Python</span></h2>
+    <p class="desc">A list of dictionaries, no libraries needed. This is pure Python: loops, conditionals, and a small function.</p>
+
+    <div class="label">Data setup, copy this into a cell</div>
+    <pre><button class="copybtn">Copy</button><code>students = [
+    {"name": "Ana",   "grade": 88, "age": 16},
+    {"name": "Ben",   "grade": 72, "age": 17},
+    {"name": "Cara",  "grade": 95, "age": 16},
+    {"name": "Dan",   "grade": 61, "age": 18},
+    {"name": "Eli",   "grade": 78, "age": 17},
+    {"name": "Faye",  "grade": 84, "age": 16},
+    {"name": "Gus",   "grade": 90, "age": 17},
+    {"name": "Hana",  "grade": 55, "age": 18},
+]</code></pre>
+
+    <div class="label">Tasks</div>
+    <ol class="tasks">
+      <li><span class="diff d-easy">Easy</span> Print how many students are in the list.</li>
+      <li><span class="diff d-easy">Easy</span> Print just the name of every student, one per line.</li>
+      <li><span class="diff d-easy">Easy</span> Compute and print the average grade of all students.</li>
+      <li><span class="diff d-med">Medium</span> Print the names of all students who scored 80 or higher.</li>
+      <li><span class="diff d-med">Medium</span> Find and print the student with the highest grade (name and grade).</li>
+      <li><span class="diff d-med">Medium</span> Count how many students are in each age, e.g. <code>{16: 3, 17: 3, 18: 2}</code>.</li>
+      <li><span class="diff d-hard">Harder</span> Write a function <code>letter(grade)</code> that returns "A" for 90+, "B" for 80 to 89, "C" for 70 to 79, else "F". Use it to print each name with its letter.</li>
+    </ol>
+
+    <details class="sol">
+      <summary>Solutions</summary>
+      <div class="solbody">
+        <pre><button class="copybtn">Copy</button><code># Task 1 - basic len(), do they know lists have a length
+print(len(students))
+
+# Task 2 - simple loop + dict access by key
+for s in students:
+    print(s["name"])
+
+# Task 3 - accumulate a total then divide; tests loop + arithmetic
+total = 0
+for s in students:
+    total += s["grade"]
+print(total / len(students))
+# (a stronger student may use: sum(s["grade"] for s in students) / len(students))
+
+# Task 4 - filtering with a condition inside a loop
+for s in students:
+    if s["grade"] >= 80:
+        print(s["name"])
+
+# Task 5 - tracking a "best so far"; tests comparison logic
+best = students[0]
+for s in students:
+    if s["grade"] > best["grade"]:
+        best = s
+print(best["name"], best["grade"])
+# (stronger: max(students, key=lambda s: s["grade"]))
+
+# Task 6 - building a dict by counting; classic beginner stumbling point
+counts = {}
+for s in students:
+    age = s["age"]
+    counts[age] = counts.get(age, 0) + 1
+print(counts)
+
+# Task 7 - defining and calling a function with branching logic
+def letter(grade):
+    if grade >= 90:
+        return "A"
+    elif grade >= 80:
+        return "B"
+    elif grade >= 70:
+        return "C"
+    else:
+        return "F"
+
+for s in students:
+    print(s["name"], letter(s["grade"]))</code></pre>
+        <p class="note">What this reveals: are the Python fundamentals actually rusty or solid? Watch tasks 5 to 7. Tracking "best so far", counting into a dict, and writing a branching function are the three places beginners stall. If he reaches for <code>max(key=...)</code> or a comprehension on his own, he is past beginner.</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- ===================== PROBLEM 2 ===================== -->
+  <div class="problem">
+    <h2><span class="pnum">2</span> Order Log <span class="skill-tag">plain Python</span></h2>
+    <p class="desc">A second pure-Python problem, no libraries, but testing different muscles: strings, nested structures, and set logic. Useful if NumPy and pandas turn out to be new to him.</p>
+
+    <div class="label">Data setup, copy this into a cell</div>
+    <pre><button class="copybtn">Copy</button><code># Each order: customer, and the items they bought
+orders = [
+    ("ana",  ["apple", "bread", "milk"]),
+    ("ben",  ["milk", "eggs"]),
+    ("ana",  ["bread", "eggs", "cheese"]),
+    ("cara", ["apple", "milk"]),
+    ("ben",  ["bread", "milk", "apple"]),
+    ("ana",  ["milk"]),
+]</code></pre>
+
+    <div class="label">Tasks</div>
+    <ol class="tasks">
+      <li><span class="diff d-easy">Easy</span> Print how many orders there are, and how many items are in the very first order.</li>
+      <li><span class="diff d-easy">Easy</span> Print each customer's name in uppercase, one per line.</li>
+      <li><span class="diff d-med">Medium</span> Print the total number of items sold across all orders (count every item, including repeats).</li>
+      <li><span class="diff d-med">Medium</span> Print the set of unique items that appear anywhere (no duplicates).</li>
+      <li><span class="diff d-med">Medium</span> Build a dict mapping each customer to how many orders they placed, e.g. <code>{"ana": 3, "ben": 2, "cara": 1}</code>.</li>
+      <li><span class="diff d-hard">Harder</span> How many times was "milk" ordered in total across all orders?</li>
+      <li><span class="diff d-hard">Harder</span> Build a dict mapping each customer to the set of all distinct items they have ever bought.</li>
+    </ol>
+
+    <details class="sol">
+      <summary>Solutions</summary>
+      <div class="solbody">
+        <pre><button class="copybtn">Copy</button><code># Task 1 - len() on the list, and len() on an item inside a tuple
+print(len(orders))
+print(len(orders[0][1]))   # orders[0] is a tuple; [1] is its item list
+
+# Task 2 - string method .upper(); unpacking the tuple in the loop
+for name, items in orders:
+    print(name.upper())
+
+# Task 3 - a running total across nested lists (loop inside a loop, or sum of lens)
+total = 0
+for name, items in orders:
+    total += len(items)
+print(total)
+# (stronger: sum(len(items) for name, items in orders))
+
+# Task 4 - sets remove duplicates; building one up
+unique = set()
+for name, items in orders:
+    for item in items:
+        unique.add(item)
+print(unique)
+
+# Task 5 - counting into a dict, but keyed on the customer this time
+order_counts = {}
+for name, items in orders:
+    order_counts[name] = order_counts.get(name, 0) + 1
+print(order_counts)
+
+# Task 6 - counting a specific value across nested data
+milk = 0
+for name, items in orders:
+    milk += items.count("milk")   # .count on a list
+print(milk)
+
+# Task 7 - dict of sets; the hardest, combines dict-building + set logic
+bought = {}
+for name, items in orders:
+    if name not in bought:
+        bought[name] = set()
+    bought[name].update(items)   # .update adds all items to the set
+print(bought)
+# (stronger: bought.setdefault(name, set()).update(items))</code></pre>
+        <p class="note">What this reveals: different skills than Problem 1 on purpose. Task 1 tests whether tuple/list nesting confuses him. Task 4 checks if he knows sets exist for deduping (beginners often write clumsy "if not in list" loops instead). Tasks 5 and 7 are the ceiling here, dict-building and especially a dict-of-sets. If both Problem 1 and this feel easy to him, his core Python is solid and you can move quickly into NumPy/pandas.</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- ===================== PROBLEM 3 ===================== -->
+  <div class="problem">
+    <h2><span class="pnum">3</span> Sensor Readings <span class="skill-tag">NumPy</span></h2>
+    <p class="desc">Daily temperature readings as a NumPy array. Tests indexing, slicing, boolean masks, and aggregations.</p>
+
+    <div class="label">Data setup, copy this into a cell</div>
+    <pre><button class="copybtn">Copy</button><code>import numpy as np
+
+# 14 days of temperature readings (Celsius)
+temps = np.array([20.1, 21.5, 19.8, 22.0, 23.4, 18.9, 25.1,
+                  24.6, 19.2, 20.8, 26.3, 22.7, 17.5, 21.9])</code></pre>
+
+    <div class="label">Tasks</div>
+    <ol class="tasks">
+      <li><span class="diff d-easy">Easy</span> Print the shape of <code>temps</code> and how many readings there are.</li>
+      <li><span class="diff d-easy">Easy</span> Print the mean, minimum, and maximum temperature.</li>
+      <li><span class="diff d-easy">Easy</span> Print the first 7 readings (the first week) using slicing.</li>
+      <li><span class="diff d-med">Medium</span> Print all readings that are above 22 degrees, using a boolean mask.</li>
+      <li><span class="diff d-med">Medium</span> Count how many days were above 22 degrees.</li>
+      <li><span class="diff d-med">Medium</span> Convert the whole array to Fahrenheit (C * 9/5 + 32) in one line, no loop.</li>
+      <li><span class="diff d-hard">Harder</span> Find the index of the hottest day, then print which week it fell in (week 1 = first 7 days, week 2 = last 7).</li>
+    </ol>
+
+    <details class="sol">
+      <summary>Solutions</summary>
+      <div class="solbody">
+        <pre><button class="copybtn">Copy</button><code># Task 1 - .shape vs len(); do they know arrays have attributes
+print(temps.shape)
+print(len(temps))
+
+# Task 2 - built-in aggregation methods
+print(temps.mean(), temps.min(), temps.max())
+
+# Task 3 - slicing, same syntax as lists
+print(temps[:7])
+
+# Task 4 - boolean masking, THE core numpy idea to check for
+print(temps[temps > 22])
+
+# Task 5 - a mask is booleans; summing booleans counts True values
+print((temps > 22).sum())
+# (also valid: np.sum(temps > 22) )
+
+# Task 6 - vectorized arithmetic, no loop needed
+print(temps * 9/5 + 32)
+
+# Task 7 - argmax + a little logic
+i = temps.argmax()
+print("hottest index:", i)
+print("week 1" if i < 7 else "week 2")</code></pre>
+        <p class="note">What this reveals: the whole point of NumPy is vectorization, doing things to the whole array at once without a loop. Task 4 (boolean masks), task 5 (summing a mask), and task 6 (vectorized math) are the tell. If he writes a <code>for</code> loop for task 6, he knows Python but not the NumPy mindset yet, which is fine and tells you exactly where to teach.</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- ===================== PROBLEM 4 ===================== -->
+  <div class="problem">
+    <h2><span class="pnum">4</span> Sales Table <span class="skill-tag">pandas</span></h2>
+    <p class="desc">A small sales dataset loaded into a DataFrame. Tests selecting, filtering, grouping, and a missing value.</p>
+
+    <div class="label">Data setup, copy this into a cell</div>
+    <pre><button class="copybtn">Copy</button><code>import pandas as pd
+import io
+
+data = """name,region,sales,units
+Ana,East,250,12
+Ben,West,180,9
+Cara,East,320,15
+Dan,West,,7
+Eli,East,210,11
+Faye,West,275,14
+Gus,East,190,8
+Hana,West,300,16"""
+
+df = pd.read_csv(io.StringIO(data))</code></pre>
+
+    <div class="label">Tasks</div>
+    <ol class="tasks">
+      <li><span class="diff d-easy">Easy</span> Show the first few rows, the column names, and the shape of <code>df</code>.</li>
+      <li><span class="diff d-easy">Easy</span> Print just the <code>sales</code> column.</li>
+      <li><span class="diff d-easy">Easy</span> Print the average and total of the <code>sales</code> column.</li>
+      <li><span class="diff d-med">Medium</span> One row has a missing sales value. Find it, then fill the missing value with the average sales.</li>
+      <li><span class="diff d-med">Medium</span> Print only the rows where region is "East".</li>
+      <li><span class="diff d-med">Medium</span> Use <code>groupby</code> to print total sales per region.</li>
+      <li><span class="diff d-hard">Harder</span> Add a new column <code>per_unit</code> = sales divided by units, then print the name with the highest per-unit value.</li>
+    </ol>
+
+    <details class="sol">
+      <summary>Solutions</summary>
+      <div class="solbody">
+        <pre><button class="copybtn">Copy</button><code># Task 1 - the "look at your data first" habit
+print(df.head())
+print(df.columns)
+print(df.shape)
+
+# Task 2 - selecting a single column
+print(df["sales"])
+
+# Task 3 - column aggregation methods; note NaN is skipped automatically
+print(df["sales"].mean(), df["sales"].sum())
+
+# Task 4 - spotting and handling missing data
+print(df[df["sales"].isna()])          # find the missing row
+avg = df["sales"].mean()
+df["sales"] = df["sales"].fillna(avg)  # fill it
+print(df)
+
+# Task 5 - boolean filtering of rows, the pandas version of a mask
+print(df[df["region"] == "East"])
+
+# Task 6 - groupby, the single most important pandas skill for data work
+print(df.groupby("region")["sales"].sum())
+
+# Task 7 - creating a derived column, then finding a max
+df["per_unit"] = df["sales"] / df["units"]
+top = df.loc[df["per_unit"].idxmax()]
+print(top["name"], round(top["per_unit"], 2))</code></pre>
+        <p class="note">What this reveals: task 1 shows whether he inspects data before touching it (a real habit, not a beginner reflex). Task 4 is missing-data awareness. Task 6 (groupby) is the big one, it is the heart of almost all real data analysis. If he gets through groupby and the derived column in task 7, he is more than ready for the project work.</p>
+      </div>
+    </details>
+  </div>
+
+  <!-- ===================== PROBLEM 5 ===================== -->
+  <div class="problem">
+    <h2><span class="pnum">5</span> Putting It Together <span class="skill-tag">pandas + NumPy</span></h2>
+    <p class="desc">Load a small dataset, clean it, and pull out a simple insight. This is the flavor of what early AI/ML prep work feels like, no modeling yet.</p>
+
+    <div class="label">Data setup, copy this into a cell</div>
+    <pre><button class="copybtn">Copy</button><code>import pandas as pd
+import numpy as np
+import io
+
+data = """hours_studied,attendance,score
+2,60,55
+5,80,70
+1,50,48
+8,95,88
+4,75,66
+7,90,82
+3,65,60
+6,85,79
+9,98,91
+2,55,52"""
+
+study = pd.read_csv(io.StringIO(data))</code></pre>
+
+    <div class="label">Tasks</div>
+    <ol class="tasks">
+      <li><span class="diff d-easy">Easy</span> Inspect the data: shape, column names, and the summary stats from <code>describe()</code>.</li>
+      <li><span class="diff d-easy">Easy</span> Print the average score across all rows.</li>
+      <li><span class="diff d-med">Medium</span> Add a column <code>passed</code> that is True when score is 65 or higher, else False.</li>
+      <li><span class="diff d-med">Medium</span> How many students passed? What fraction of the class is that?</li>
+      <li><span class="diff d-med">Medium</span> Print the average hours studied for students who passed vs students who did not.</li>
+      <li><span class="diff d-hard">Harder</span> Use <code>.corr()</code> to see how strongly hours_studied relates to score. Print just that one correlation number.</li>
+      <li><span class="diff d-hard">Harder</span> In words (a printed string is fine), what does that correlation tell you? Would hours_studied be a useful feature for predicting score?</li>
+    </ol>
+
+    <details class="sol">
+      <summary>Solutions</summary>
+      <div class="solbody">
+        <pre><button class="copybtn">Copy</button><code># Task 1 - describe() is the fast way to size up a dataset
+print(study.shape)
+print(study.columns)
+print(study.describe())
+
+# Task 2 - simple column mean
+print(study["score"].mean())
+
+# Task 3 - a boolean column from a condition (vectorized, no loop)
+study["passed"] = study["score"] >= 65
+print(study)
+
+# Task 4 - summing a boolean column counts the Trues
+n = study["passed"].sum()
+print(n, "passed")
+print(n / len(study))          # the fraction
+
+# Task 5 - filter then aggregate, combining two earlier skills
+print(study[study["passed"]]["hours_studied"].mean())
+print(study[~study["passed"]]["hours_studied"].mean())  # ~ means "not"
+
+# Task 6 - correlation; the .loc just pulls out the single number
+print(study["hours_studied"].corr(study["score"]))
+
+# Task 7 - interpretation, no single right code answer
+print("Correlation is very high (close to 1), so more hours studied"
+      " strongly tracks with higher scores. It would be a useful feature"
+      " for predicting score.")</code></pre>
+        <p class="note">What this reveals: this is the ceiling probe. Task 5 chains filtering + aggregation, task 6 introduces correlation (his first taste of "which inputs predict the output", the seed of feature thinking in ML). Task 7 is not about code at all, it is whether he can reason about data. A student who can explain task 7 in his own words is ready to start the real project. If he stalls around task 3 or 4, you start the curriculum earlier and build up.</p>
+      </div>
+    </details>
+  </div>
+
+  <footer>
+    Diagnostic warm-up. Difficulty is intentionally capped at beginner-to-early-intermediate. The aim is to find the ceiling, not to trip anyone up.
+  </footer>
+
+</div>
+
+<script>
+  document.querySelectorAll(".copybtn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var code = btn.parentElement.querySelector("code").innerText;
+      navigator.clipboard.writeText(code).then(function () {
+        btn.textContent = "Copied";
+        btn.classList.add("done");
+        setTimeout(function () {
+          btn.textContent = "Copy";
+          btn.classList.remove("done");
+        }, 1500);
+      });
+    });
+  });
+</script>
+</body>
+</html>
