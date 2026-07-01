@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lecture 12 · Intro to Pandas · CS 2316</title>
+<style>
+:root{--bg:#0a0e16;--surface:#111824;--surface2:#0c121d;--border:#22304a;--border2:#2c3d5c;--text:#dde6f3;--muted:#8190ab;--faint:#5a6987;--cyan:#54c7ff;--cyan-dim:#2a7fb8;--amber:#f6c454;--amber-dim:#7d611f;--green:#4fd47a;--red:#ff7a7a;--purple:#b18cff;--mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,system-ui,sans-serif}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:radial-gradient(1200px 600px at 80% -10%,#13203200,#0a0e16),var(--bg);color:var(--text);font-family:var(--sans);line-height:1.65;font-size:16px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:920px;margin:0 auto;padding:0 18px 90px}
+::selection{background:#54c7ff44}
+.hdr{padding:38px 0 18px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--amber);margin:0 0 10px}
+h1{font-size:clamp(27px,5vw,41px);margin:0;line-height:1.1;letter-spacing:-.01em;font-weight:800}
+.sub{color:var(--muted);margin:14px 0 0;max-width:64ch}
+.prompt{font-family:var(--mono);color:var(--green);font-size:13px;margin-top:16px}
+.cursor{display:inline-block;width:8px;height:15px;background:var(--green);vertical-align:-2px;margin-left:2px;animation:blink 1.1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.tabs{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;gap:6px;padding:10px 0;margin:8px 0 26px;background:linear-gradient(var(--bg),var(--bg) 70%,#0a0e1600);border-bottom:1px solid var(--border)}
+.tab-btn{font-family:var(--mono);font-size:12.5px;letter-spacing:.02em;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;cursor:pointer;transition:.15s}
+.tab-btn:hover{color:var(--text);border-color:var(--border2)}
+.tab-btn.active{color:#06121d;background:var(--cyan);border-color:var(--cyan);font-weight:600}
+.tab-btn .n{color:var(--faint);margin-right:7px}
+.tab-btn.active .n{color:#0a3450}
+.tab-btn.hwt{border-color:var(--amber-dim)}
+.tab-btn.hwt.active{background:var(--amber);border-color:var(--amber);color:#1a1304}
+.tab-btn.hwt.active .n{color:#6b520f}
+.panel{display:none}
+.panel.active{display:block;animation:fade .28s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.block{margin:0 0 30px}
+.label{font-family:var(--mono);font-size:11.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--cyan);margin:0 0 8px}
+h2{font-size:24px;margin:6px 0 12px;letter-spacing:-.01em}
+h3{font-size:16px;margin:24px 0 8px;color:#eef3fb;font-family:var(--mono);letter-spacing:.04em}
+p{margin:11px 0}
+ul,ol{margin:11px 0;padding-left:22px}
+li{margin:6px 0}
+.muted{color:var(--muted)}
+code{font-family:var(--mono);font-size:.9em;background:#1a2433;border:1px solid var(--border);border-radius:5px;padding:1px 6px;color:#cfe6ff}
+.read{background:#10131f;border:1px solid var(--border);border-left:3px solid var(--cyan);border-radius:9px;padding:12px 15px;margin:14px 0}
+.read .rl{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan);margin:0 0 6px;font-weight:700}
+.read p{margin:5px 0}
+.cell{background:var(--surface2);border:1px solid var(--border);border-radius:11px;overflow:hidden;margin:14px 0}
+.cell-head{display:flex;align-items:center;gap:8px;padding:9px 13px;background:#0e1622;border-bottom:1px solid var(--border)}
+.dots{display:flex;gap:6px}.dot{width:11px;height:11px;border-radius:50%}.d1{background:#ff5f57}.d2{background:#febc2e}.d3{background:#28c840}
+.cell-name{font-family:var(--mono);font-size:12px;color:var(--faint);margin-left:4px}
+.run{margin-left:auto;font-family:var(--mono);font-size:12.5px;font-weight:600;color:#06180d;background:var(--green);border:0;border-radius:7px;padding:6px 13px;cursor:pointer;transition:.15s}
+.run:hover{filter:brightness(1.08)}.run:active{transform:translateY(1px)}
+.cell textarea{width:100%;border:0;resize:vertical;background:transparent;color:#e8f0fb;font-family:var(--mono);font-size:13.5px;line-height:1.65;padding:14px;display:block;outline:none;tab-size:4}
+.output{margin:0;border-top:1px dashed var(--border);padding:12px 14px;font-family:var(--mono);font-size:12.5px;white-space:pre;overflow-x:auto;word-break:normal;color:#a9e6c0;background:#0a1119}
+.output.err{color:#ffb4b4}
+.callout{border-radius:11px;padding:14px 16px;margin:16px 0;border:1px solid;font-size:14.5px}
+.callout .ct{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;margin:0 0 6px;font-weight:700}
+.warn{background:#1c140a;border-color:var(--amber-dim)}.warn .ct{color:var(--amber)}
+.tip{background:#0c1822;border-color:var(--cyan-dim)}.tip .ct{color:var(--cyan)}
+.callout p{margin:6px 0}
+.q-card{border:1px solid var(--border);border-left:3px solid var(--amber);border-radius:11px;padding:15px 17px;margin:16px 0;background:#141007}
+.q-num{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--amber);margin:0 0 8px;font-weight:700}
+.hwbadge{display:inline-block;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;background:var(--amber);color:#1a1304;border-radius:20px;padding:2px 9px;font-weight:700;margin-left:8px}
+.sol-btn{font-family:var(--mono);font-size:12.5px;color:var(--cyan);background:#0d1a26;border:1px solid var(--cyan-dim);border-radius:7px;padding:7px 13px;cursor:pointer;margin-top:6px;transition:.15s}
+.sol-btn:hover{background:#10212f}
+.solution{display:none;margin-top:12px;padding-top:12px;border-top:1px dashed var(--border)}
+.solution.open{display:block;animation:fade .2s ease}
+.solution p{margin:8px 0}
+.chk{display:flex;gap:11px;align-items:flex-start;padding:11px 14px;margin:8px 0;background:#10131f;border:1px solid var(--border);border-radius:9px;cursor:pointer;font-size:14.5px}
+.chk input{margin-top:3px;width:17px;height:17px;accent-color:var(--green);flex:none}
+.chk:hover{border-color:var(--border2)}
+.sheet-card{border-radius:13px;padding:18px 20px;margin:16px 0;border:1px solid;background:#0c1822;border-color:var(--cyan-dim)}
+.sheet-card h3{margin-top:0}
+.sheet-card pre{font-family:var(--mono);font-size:13px;background:#0a1019;border:1px solid var(--border);border-radius:8px;padding:13px;overflow-x:auto;white-space:pre;color:#cfe6ff;line-height:1.6}
+.dffig{border-collapse:collapse;font-family:var(--mono);font-size:13px;margin:14px 0;overflow-x:auto;display:block}
+.dffig th,.dffig td{border:1px solid var(--border);padding:7px 13px;text-align:center;white-space:nowrap}
+.dffig thead th{background:#13202f;color:var(--cyan);font-weight:700}
+.dffig tbody th{background:#1c140a;color:var(--amber);font-weight:700}
+.dffig td{color:#cfe6ff;background:#0d1726}
+.figcap{font-family:var(--mono);font-size:11px;color:var(--faint);margin:6px 0 0}
+footer{color:var(--faint);font-family:var(--mono);font-size:12px;text-align:center;margin-top:40px;padding-top:18px;border-top:1px solid var(--border)}
+@media (max-width:600px){body{font-size:15px}h2{font-size:21px}.tab-btn{font-size:11.5px;padding:7px 9px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hdr">
+    <p class="eyebrow">CS 2316 · Data Handling</p>
+    <h1>Lecture 12: Intro to Pandas</h1>
+    <p class="sub">Pandas is NumPy with labels: real tables with named columns and an index. This lesson is ordered by your homework, so every tool a question needs gets taught first, with examples you can edit and rerun, then that question is the practice.</p>
+    <p class="prompt">&gt;&gt;&gt; import pandas as pd<span class="cursor"></span></p>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab-btn active" data-t="t1" onclick="showTab(this)"><span class="n">00</span>Start here</button>
+    <button class="tab-btn" data-t="t2" onclick="showTab(this)"><span class="n">01</span>Series &amp; Frame</button>
+    <button class="tab-btn" data-t="t3" onclick="showTab(this)"><span class="n">02</span>Cleaning tools</button>
+    <button class="tab-btn hwt" data-t="t4" onclick="showTab(this)"><span class="n">03</span>Homework Q1</button>
+    <button class="tab-btn hwt" data-t="t5" onclick="showTab(this)"><span class="n">04</span>Percent + Q2</button>
+    <button class="tab-btn hwt" data-t="t6" onclick="showTab(this)"><span class="n">05</span>Groupby + Q3</button>
+    <button class="tab-btn" data-t="t7" onclick="showTab(this)"><span class="n">06</span>Cheat sheet</button>
+    <button class="tab-btn" data-t="t8" onclick="showTab(this)"><span class="n">07</span>Checklist</button>
+  </nav>
+
+  <!-- TAB 1 -->
+  <section id="t1" class="panel active">
+    <div class="block">
+      <p class="label">Why this exists</p>
+      <h2>From NumPy to Pandas</h2>
+      <p>NumPy gave you one block of numbers, all the same type. Real data is messier: named columns, mixed types, missing values, text mixed with numbers. Pandas is built on top of NumPy to handle exactly that.</p>
+      <ul>
+        <li><b>Series</b>, a single labeled column.</li>
+        <li><b>DataFrame</b>, a whole table, which is really a bunch of Series sharing one index.</li>
+        <li>Everything has an <b>index</b> (the row labels) and <b>column names</b>, so you select by name, not just position.</li>
+      </ul>
+    </div>
+    <div class="block">
+      <p class="label">How this lesson runs</p>
+      <h3>// read this first</h3>
+      <ul>
+        <li><b>Ordered by your homework.</b> We teach the tools for Q1, do Q1, then the tools for Q2, do Q2, then Q3. Nothing shows up before you have what you need for it.</li>
+        <li><b>Every concept has runnable examples.</b> Edit them, change values, rerun, watch the output. That is the point.</li>
+        <li><b>The only practice is the real homework question,</b> marked <span class="hwbadge">homework</span>. The example boxes <code>print</code> so you can see results, but in the actual homework your functions must <b>return</b> and must not print.</li>
+        <li><b>First Run is slow.</b> Pandas is a bigger download than NumPy, so the first Run may take 15 to 30 seconds while it loads. After that it is quick.</li>
+        <li><b>The data here is a tiny sample.</b> The real file has 146,000 rows. The tools are identical, so anything that works here works on the full file in VS Code.</li>
+      </ul>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">warm_up.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="5">import pandas as pd
+df = pd.DataFrame({"airline": ["Delta", "United"], "price": [550, 900]})
+print(df)
+print("Pandas is working. First run loads it, so give it a moment.")</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 2 -->
+  <section id="t2" class="panel">
+    <div class="block">
+      <p class="label">The single column</p>
+      <h2>Series</h2>
+      <p>A Series is a 1D array with an index. Give it a list and it numbers the rows 0, 1, 2. Give it an <code>index</code> and the rows get labels. You can also build one from a dict, where the keys become the index.</p>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">series_basic.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="6">import pandas as pd
+s = pd.Series([300, 880, 450, 1600])
+print(s)
+print("just the values:", list(s.values))
+print("the index:", list(s.index))</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">series_labels.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="7">import pandas as pd
+s = pd.Series([550, 900, 700], index=["Delta", "United", "Emirates"])
+print(s)
+print("by label with .loc:", s.loc["United"])
+print("by position with .iloc:", s.iloc[0])
+# a Series from a dict: keys become the index
+print(pd.Series({"LHR": 300000, "NRT": 880000}))</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+      <div class="read"><p class="rl">.loc vs .iloc</p><p><code>.loc</code> uses the label (what you see in the index), <code>.iloc</code> uses the integer position. When the index is just 0, 1, 2 they look the same, but they are not once the labels change.</p></div>
+    </div>
+    <div class="block">
+      <p class="label">The whole table</p>
+      <h2>DataFrame</h2>
+      <p>A DataFrame is a table. The quickest way to make one by hand is a dict where each key is a column name and each value is that column's list. Every column is really a Series, and they all share one index.</p>
+      <table class="dffig">
+        <thead><tr><th>index</th><th>airline</th><th>dest</th><th>stops</th><th>price</th></tr></thead>
+        <tbody>
+          <tr><th>0</th><td>Delta</td><td>LHR</td><td>0</td><td>550</td></tr>
+          <tr><th>1</th><td>United</td><td>NRT</td><td>0</td><td>900</td></tr>
+          <tr><th>2</th><td>Delta</td><td>CDG</td><td>1</td><td>700</td></tr>
+        </tbody>
+      </table>
+      <p class="figcap">amber = the index (row labels) &middot; cyan = the column names &middot; each column is a Series</p>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">dataframe_basic.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="11">import pandas as pd
+df = pd.DataFrame({
+    "airline": ["Delta", "United", "Delta", "Emirates"],
+    "dest": ["LHR", "NRT", "CDG", "SYD"],
+    "stops": [0, 0, 1, 1],
+    "price": [550, 900, 700, 1300],
+})
+print(df)
+print("shape:", df.shape)
+print("columns:", list(df.columns))
+print(df.dtypes)</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+      <p><code>df.head()</code> shows the first few rows, handy when the real thing has thousands.</p>
+    </div>
+    <div class="block">
+      <p class="label">Reading a file</p>
+      <h2>read_csv and the index trap</h2>
+      <p><code>pd.read_csv</code> loads a CSV into a DataFrame. The flight file starts with a bare comma, which is an unnamed index column. If you do not tell Pandas about it, you get a junk column called <code>Unnamed: 0</code>. Passing <code>index_col=0</code> makes that first column the index instead.</p>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">read_csv.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="12">import pandas as pd, io
+data = """,airline,dest,price
+0,Delta,LHR,550
+1,United,NRT,900
+2,Emirates,SYD,1300"""
+# without index_col you get an extra "Unnamed: 0" column:
+print(pd.read_csv(io.StringIO(data)))
+print("-----")
+# with index_col=0 that first column becomes the index:
+df = pd.read_csv(io.StringIO(data), index_col=0)
+print(df)</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+      <div class="callout tip"><p class="ct">Why this matters for the homework</p><p>The locked block at the bottom of HW05 reads your cleaned file back with <code>pd.read_csv("cleaned_emissions_data_pandas.csv", index_col=0)</code>. Same idea.</p></div>
+    </div>
+    <div class="block">
+      <p class="label">Picking rows and columns</p>
+      <h2>Selecting and masking</h2>
+      <p>One column name in square brackets gives a Series. A list of names gives a smaller DataFrame. And a condition inside the brackets keeps only the rows where it is True, exactly like NumPy masking but on a whole table.</p>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">selecting.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="12">import pandas as pd
+df = pd.DataFrame({
+    "airline": ["Delta", "United", "Delta", "Emirates"],
+    "dest": ["LHR", "NRT", "CDG", "SYD"],
+    "stops": [0, 0, 1, 1],
+    "price": [550, 900, 700, 1300],
+})
+print(df["price"])                # one name -> a Series
+print("type:", type(df["price"]).__name__)
+print(df[["airline", "price"]])   # a list of names -> a DataFrame</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">masking.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="12">import pandas as pd
+df = pd.DataFrame({
+    "airline": ["Delta", "United", "Delta", "Emirates"],
+    "dest": ["LHR", "NRT", "CDG", "SYD"],
+    "stops": [0, 0, 1, 1],
+    "price": [550, 900, 700, 1300],
+})
+print(df[df["stops"] == 0])                        # nonstop only
+print("-----")
+print(df[(df["stops"] == 0) & (df["price"] > 600)]) # combine with & and ()</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+      <div class="callout warn"><p class="ct">Same rule as NumPy</p><p>Combine conditions with <code>&amp;</code> and <code>|</code>, and wrap each one in parentheses. The words <code>and</code> and <code>or</code> will not work on a Series.</p></div>
+    </div>
+  </section>
+
+  <!-- TAB 3 -->
+  <section id="t3" class="panel">
+    <div class="block">
+      <p class="label">Everything Q1 needs</p>
+      <h2>Cleaning tools</h2>
+      <p>Question 1 is a four-step cleaning pipeline. Here is each tool it uses, on its own, so you can see what each one does before we assemble them.</p>
+    </div>
+    <div class="block">
+      <p class="label">Splitting text into columns</p>
+      <h2>.str.split</h2>
+      <p>The <code>.str</code> accessor runs string methods down a whole column. <code>.str.split("|", expand=True)</code> splits each value on the bar and, with <code>expand=True</code>, spreads the pieces into separate columns. Rows with only one piece get <code>NaN</code> in the second column, which you can fill.</p>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">str_split.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="10">import pandas as pd
+df = pd.DataFrame({"aircraft_type": ["Airbus A330|Boeing 777", "Airbus A330", "Boeing 777|Airbus A320"]})
+# expand=True spreads the split pieces into columns:
+df[["aircraft_type_1", "aircraft_type_2"]] = df["aircraft_type"].str.split("|", expand=True)
+print(df)
+print("-----")
+# fill the missing second type with the string "None":
+df["aircraft_type_2"] = df["aircraft_type_2"].fillna("None")
+print(df)</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+    </div>
+    <div class="block">
+      <p class="label">Handling blanks</p>
+      <h2>fillna and dropna</h2>
+      <p><code>fillna</code> replaces missing values. The trick you need: you can fill from <b>another column</b> by passing that column, and Pandas lines them up by index. <code>dropna(subset=[...])</code> drops the rows that are still missing in a given column.</p>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">fillna_dropna.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="12">import pandas as pd, numpy as np
+df = pd.DataFrame({
+    "co2": [300000.0, np.nan, np.nan, 450000.0],
+    "avg": [280000.0, 1885118.0, np.nan, 420000.0],
+})
+# fill the blanks in co2 using the matching value from avg:
+df["co2"] = df["co2"].fillna(df["avg"])
+print(df)
+print("-----")
+# any row where co2 is STILL blank (avg was also blank) gets dropped:
+print(df.dropna(subset=["co2"]))</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+    </div>
+    <div class="block">
+      <p class="label">Filtering by text</p>
+      <h2>.str.contains</h2>
+      <p><code>.str.contains("Boeing 737")</code> gives a True/False Series for whether each value holds that phrase. Combine the two aircraft columns with <code>|</code>, then keep the rows without it using <code>~</code>.</p>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">str_contains.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="12">import pandas as pd
+df = pd.DataFrame({
+    "aircraft_type_1": ["Airbus A330", "Boeing 737", "Airbus A320", "Boeing 737"],
+    "aircraft_type_2": ["Boeing 777", "Airbus A320", "None", "None"],
+})
+has_737 = df["aircraft_type_1"].str.contains("Boeing 737") | df["aircraft_type_2"].str.contains("Boeing 737")
+print(has_737)
+print("-----")
+# ~ flips it, so we keep the flights WITHOUT a Boeing 737:
+print(df[~has_737])</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+    </div>
+    <div class="block">
+      <p class="label">Math on columns</p>
+      <h2>Column arithmetic, sum, and round</h2>
+      <p>A whole column has <code>.sum()</code>, <code>.mean()</code>, and so on, just like NumPy. Arithmetic between columns happens row by row. <code>.round(0)</code> rounds but keeps the values as floats.</p>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">column_math.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="10">import pandas as pd
+df = pd.DataFrame({"co2": [300000, 880000, 450000], "duration": [420, 660, 480]})
+per_min = df["co2"].sum() / df["duration"].sum()   # two whole-column sums
+print("co2 per minute:", round(per_min, 2))
+# multiply that rate by each row's duration, then round (stays float):
+print((per_min * df["duration"]).round(0))</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+    </div>
+    <div class="block">
+      <p class="label">Writing a file</p>
+      <h2>to_csv</h2>
+      <p><code>df.to_csv("name.csv")</code> writes the table to disk. By default it writes the index as the first column, which is why the file needs <code>index_col=0</code> when it is read back.</p>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">to_csv.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="6">import pandas as pd
+df = pd.DataFrame({"a": [1, 2], "b": [3, 4]})
+df.to_csv("out.csv")             # writes the file
+print(open("out.csv").read())    # peek at what got written</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 4 -->
+  <section id="t4" class="panel">
+    <div class="block">
+      <p class="label">First homework question</p>
+      <h2>Homework Q1: the cleaning pipeline</h2>
+      <p>Now assemble the tools from the last tab. The four steps must run <b>in this order</b>, because each one depends on the last:</p>
+      <ol>
+        <li>Split <code>aircraft_type</code> on the bar into <code>aircraft_type_1</code> and <code>aircraft_type_2</code>, filling a missing second type with the string <code>"None"</code>.</li>
+        <li>Fill blank <code>co2_emissions</code> from <code>avg_co2_emission_for_this_route</code>. If that is also blank, drop the row.</li>
+        <li>Remove any flight where either aircraft type contains <code>"Boeing 737"</code>.</li>
+        <li>For rows where <code>avg_co2_emission_for_this_route</code> is still blank: compute the average co2 per minute over the whole frame (total co2 divided by total duration), then fill each blank with that rate times the row's duration, rounded to 0 decimals but kept as a float.</li>
+      </ol>
+      <p>Then write it to <code>cleaned_emissions_data_pandas.csv</code> and return the DataFrame. The sample below is small so it runs here; on the real file it comes out to 118,319 rows by 14 columns.</p>
+      <div class="q-card">
+        <p class="q-num">Homework Q1 <span class="hwbadge">homework</span> &nbsp;pandas_cleaner</p>
+        <div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">pandas_cleaner.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="18">import pandas as pd, numpy as np, io
+raw = """,from_airport_code,from_country,dest_airport_code,dest_country,aircraft_type,airline_name,departure_time,arrival_time,duration,stops,price,co2_emissions,avg_co2_emission_for_this_route
+0,ALG,Algeria,MEL,Australia,Airbus A330|Boeing 777,Qatar Airways,4/30/22 15:20,5/2/22 16:10,2390,1,2062,1968000.0,
+1,ALG,Algeria,SYD,Australia,Airbus A330,Qatar Airways,4/30/22 15:20,5/2/22 17:25,2465,1,2313,,1885118.0
+2,JFK,United States,LHR,UK,Boeing 737|Airbus A320,Delta,5/1/22 08:00,5/1/22 20:00,420,0,550,300000.0,280000.0
+3,LAX,United States,NRT,Japan,Boeing 777,United,5/2/22 11:00,5/3/22 15:00,660,0,900,,
+4,CDG,France,JFK,United States,Airbus A350,Air France,5/3/22 10:00,5/3/22 13:00,480,0,700,450000.0,420000.0
+5,FRA,Germany,PEK,China,Boeing 737,Lufthansa,5/4/22 09:00,5/5/22 02:00,600,1,800,500000.0,
+6,DXB,UAE,SYD,Australia,Airbus A380|Boeing 777,Emirates,5/1/22 22:00,5/3/22 06:00,830,1,1300,1600000.0,1400000.0"""
+df = pd.read_csv(io.StringIO(raw), index_col=0)
+
+# do the 4 steps IN ORDER here, then print df
+
+</textarea><pre class="output" style="display:none"></pre></div>
+        <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+        <div class="solution"><div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">solution.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="24">import pandas as pd, numpy as np, io
+raw = """,from_airport_code,from_country,dest_airport_code,dest_country,aircraft_type,airline_name,departure_time,arrival_time,duration,stops,price,co2_emissions,avg_co2_emission_for_this_route
+0,ALG,Algeria,MEL,Australia,Airbus A330|Boeing 777,Qatar Airways,4/30/22 15:20,5/2/22 16:10,2390,1,2062,1968000.0,
+1,ALG,Algeria,SYD,Australia,Airbus A330,Qatar Airways,4/30/22 15:20,5/2/22 17:25,2465,1,2313,,1885118.0
+2,JFK,United States,LHR,UK,Boeing 737|Airbus A320,Delta,5/1/22 08:00,5/1/22 20:00,420,0,550,300000.0,280000.0
+3,LAX,United States,NRT,Japan,Boeing 777,United,5/2/22 11:00,5/3/22 15:00,660,0,900,,
+4,CDG,France,JFK,United States,Airbus A350,Air France,5/3/22 10:00,5/3/22 13:00,480,0,700,450000.0,420000.0
+5,FRA,Germany,PEK,China,Boeing 737,Lufthansa,5/4/22 09:00,5/5/22 02:00,600,1,800,500000.0,
+6,DXB,UAE,SYD,Australia,Airbus A380|Boeing 777,Emirates,5/1/22 22:00,5/3/22 06:00,830,1,1300,1600000.0,1400000.0"""
+df = pd.read_csv(io.StringIO(raw), index_col=0)
+
+# 1) split the aircraft type, fill a missing second with "None"
+df[["aircraft_type_1", "aircraft_type_2"]] = df["aircraft_type"].str.split("|", expand=True)
+df["aircraft_type_2"] = df["aircraft_type_2"].fillna("None")
+df = df.drop(columns=["aircraft_type"])
+# 2) fill co2 from avg, then drop rows still missing co2
+df["co2_emissions"] = df["co2_emissions"].fillna(df["avg_co2_emission_for_this_route"])
+df = df.dropna(subset=["co2_emissions"])
+# 3) drop flights with a Boeing 737 in either type
+df = df[~(df["aircraft_type_1"].str.contains("Boeing 737") | df["aircraft_type_2"].str.contains("Boeing 737"))]
+# 4) fill blank avg with (co2 per minute) * duration, rounded, kept float
+per_min = df["co2_emissions"].sum() / df["duration"].sum()
+df["avg_co2_emission_for_this_route"] = df["avg_co2_emission_for_this_route"].fillna((per_min * df["duration"]).round(0))
+
+df.to_csv("cleaned_emissions_data_pandas.csv")
+print(df)</textarea><pre class="output" style="display:none"></pre></div><p class="muted">Each step is one tool from the last tab: split, fillna from a column, dropna, contains with <code>~</code>, whole-column sum with column math, and to_csv. Order matters: the Boeing 737 rows and the both-blank rows are gone before step 4 sums the columns, so the per-minute rate is computed on the rows that survive. In your homework, <b>return</b> the DataFrame instead of printing, and keep the <code>to_csv</code> line since the questions after this read that file back.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 5 -->
+  <section id="t5" class="panel">
+    <div class="block">
+      <p class="label">Tools for Q2</p>
+      <h2>Column arithmetic into a mean</h2>
+      <p>Q2 is one line: subtract two columns, divide, scale to a percentage, then average the whole result. Arithmetic between columns gives a new Series, and that Series has <code>.mean()</code>. Wrap it in <code>round(value, 3)</code> for three decimals.</p>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">pct_and_mean.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="9">import pandas as pd
+df = pd.DataFrame({"co2": [300000, 880000, 450000], "avg": [280000, 900000, 420000]})
+pct = (df["avg"] - df["co2"]) / df["avg"] * 100   # a Series, computed row by row
+print(pct)
+print("mean of the Series:", pct.mean())
+print("rounded to 3:", round(pct.mean(), 3))</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+      <div class="block">
+        <p class="label">Second homework question</p>
+        <h2>Homework Q2</h2>
+        <p>Average emission percentage, using the formula <code>(avg - co2) / avg * 100</code>, then the mean of that, rounded to 3 decimals. One line, returns a float. The sample is already cleaned so it stands on its own.</p>
+        <div class="q-card">
+          <p class="q-num">Homework Q2 <span class="hwbadge">homework</span> &nbsp;average_co2_percentage</p>
+          <div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">average_co2_percentage.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="8">import pandas as pd
+df = pd.DataFrame({
+    "co2_emissions": [1968000.0, 450000.0, 880000.0, 1885000.0],
+    "avg_co2_emission_for_this_route": [1827762.0, 420000.0, 900000.0, 1885118.0],
+})
+# average emission percentage, rounded to 3 decimals (one line), then print
+</textarea><pre class="output" style="display:none"></pre></div>
+          <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+          <div class="solution"><div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">solution.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="7">import pandas as pd
+df = pd.DataFrame({
+    "co2_emissions": [1968000.0, 450000.0, 880000.0, 1885000.0],
+    "avg_co2_emission_for_this_route": [1827762.0, 420000.0, 900000.0, 1885118.0],
+})
+print(round(((df["avg_co2_emission_for_this_route"] - df["co2_emissions"]) / df["avg_co2_emission_for_this_route"] * 100).mean(), 3))</textarea><pre class="output" style="display:none"></pre></div><p class="muted">The whole formula is one Series expression, then <code>.mean()</code> collapses it to a number and <code>round(..., 3)</code> trims it. On the full cleaned file this comes out to -36.54. In your homework, <b>return</b> it instead of printing.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 6 -->
+  <section id="t6" class="panel">
+    <div class="block">
+      <p class="label">Tools for Q3</p>
+      <h2>groupby with an aggregate</h2>
+      <p><code>groupby</code> splits rows into groups by a column's value, then you apply an aggregate to each group. The bracket style decides the shape you get back, and Q3 needs a DataFrame.</p>
+      <div class="read"><p class="rl">single vs double brackets after groupby</p><p><code>groupby("x")["y"].mean()</code> gives a <b>Series</b>. <code>groupby("x")[["y"]].mean()</code> gives a <b>DataFrame</b>. The double brackets keep it a table.</p></div>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">groupby.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="12">import pandas as pd
+df = pd.DataFrame({
+    "aircraft": ["Airbus A330", "Boeing 777", "Airbus A330", "Boeing 777", "Airbus A350"],
+    "co2": [1900000, 880000, 1950000, 900000, 450000],
+})
+print(df.groupby("aircraft")["co2"].mean())     # a Series
+print("type:", type(df.groupby("aircraft")["co2"].mean()).__name__)
+print("-----")
+print(df.groupby("aircraft")[["co2"]].mean())   # a DataFrame
+print("type:", type(df.groupby("aircraft")[["co2"]].mean()).__name__)</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+      <p>The other piece Q3 needs is filtering to just Airbus rows first, with <code>.str.startswith</code>.</p>
+      <div class="cell">
+        <div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">startswith.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div>
+        <textarea spellcheck="false" rows="8">import pandas as pd
+df = pd.DataFrame({"aircraft_type_1": ["Airbus A330", "Boeing 777", "Airbus A320"]})
+print(df["aircraft_type_1"].str.startswith("Airbus"))   # True/False Series
+print("-----")
+print(df[df["aircraft_type_1"].str.startswith("Airbus")])  # keep the Airbus rows</textarea>
+        <pre class="output" style="display:none"></pre>
+      </div>
+      <div class="block">
+        <p class="label">Third homework question</p>
+        <h2>Homework Q3</h2>
+        <p>Average co2 for each aircraft model where the first type is an Airbus. Filter to Airbus rows, group by <code>aircraft_type_1</code>, take the mean of <code>co2_emissions</code>, and return a DataFrame. One line.</p>
+        <div class="q-card">
+          <p class="q-num">Homework Q3 <span class="hwbadge">homework</span> &nbsp;airbus_emissions_average</p>
+          <div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">airbus_emissions_average.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="9">import pandas as pd
+df = pd.DataFrame({
+    "aircraft_type_1": ["Airbus A330", "Airbus A350", "Boeing 777", "Airbus A330", "Boeing 737"],
+    "co2_emissions": [1968000.0, 450000.0, 880000.0, 1885000.0, 500000.0],
+})
+# average co2 per Airbus model, as a DataFrame (one line), then print
+</textarea><pre class="output" style="display:none"></pre></div>
+          <button class="sol-btn" onclick="toggleSol(this)">&#9662; Show solution</button>
+          <div class="solution"><div class="cell"><div class="cell-head"><span class="dots"><span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span></span><span class="cell-name">solution.py</span><button class="run" onclick="runCell(this)">&#9654; Run</button></div><textarea spellcheck="false" rows="8">import pandas as pd
+df = pd.DataFrame({
+    "aircraft_type_1": ["Airbus A330", "Airbus A350", "Boeing 777", "Airbus A330", "Boeing 737"],
+    "co2_emissions": [1968000.0, 450000.0, 880000.0, 1885000.0, 500000.0],
+})
+print(df[df["aircraft_type_1"].str.startswith("Airbus")].groupby("aircraft_type_1")[["co2_emissions"]].mean())</textarea><pre class="output" style="display:none"></pre></div><p class="muted">Filter to Airbus with <code>.str.startswith</code>, group by the model, and take the mean. The double brackets around <code>co2_emissions</code> keep the result a DataFrame, which is what the question asks for. In your homework, <b>return</b> it instead of printing.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 7 -->
+  <section id="t7" class="panel">
+    <div class="block">
+      <p class="label">Your source of truth</p>
+      <h2>Lecture 12 cheat sheet</h2>
+      <div class="sheet-card">
+        <h3>Series and DataFrame</h3>
+        <pre>pd.Series([1, 2, 3])                a labeled 1D column
+pd.Series(vals, index=labels)      give the rows labels
+s.loc["label"]   s.iloc[0]         select by label / by position
+pd.DataFrame({"col": [...], ...})  a table from a dict of columns
+df.head()  df.shape  df.columns  df.dtypes</pre>
+        <h3>Reading, selecting, masking</h3>
+        <pre>pd.read_csv("f.csv", index_col=0)  first bare column becomes the index
+df["col"]                          one column -> a Series
+df[["a", "b"]]                     a list of columns -> a DataFrame
+df[df["stops"] == 0]               keep rows where the condition is True
+df[(df["a"] > 1) & (df["b"] < 9)]  combine with & | and parentheses</pre>
+        <h3>Cleaning tools</h3>
+        <pre>df["c"].str.split("|", expand=True)   split text into columns
+s.fillna("None")                      replace blanks with a value
+df["co2"].fillna(df["avg"])           fill blanks FROM another column
+df.dropna(subset=["co2"])             drop rows blank in that column
+df["c1"].str.contains("Boeing 737")   True/False for holding a phrase
+df[~mask]                             keep rows where the mask is False
+df["c"].sum()                         whole-column total
+(rate * df["dur"]).round(0)           column math, rounded, stays float
+df.to_csv("out.csv")                  write the table (index included)</pre>
+        <h3>Summaries and groups</h3>
+        <pre>(df["a"] - df["b"]) / df["b"] * 100   arithmetic between columns
+some_series.mean()                    average a Series
+round(value, 3)                       trim to 3 decimals
+df.groupby("x")["y"].mean()           per group -> a Series
+df.groupby("x")[["y"]].mean()         per group -> a DataFrame
+df["c"].str.startswith("Airbus")      True/False for a prefix</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 8 -->
+  <section id="t8" class="panel">
+    <div class="block">
+      <p class="label">Self-test</p>
+      <h2>Before Lecture 13, can you...</h2>
+      <p>Tick each only when you could do it in your own notebook with no notes.</p>
+      <label class="chk"><input type="checkbox"> Build a Series and a DataFrame, and read the index and columns.</label>
+      <label class="chk"><input type="checkbox"> Select one column as a Series and several as a DataFrame.</label>
+      <label class="chk"><input type="checkbox"> Read a CSV with index_col=0 and say why it matters here.</label>
+      <label class="chk"><input type="checkbox"> Filter rows with a boolean mask, combining conditions with & and |.</label>
+      <label class="chk"><input type="checkbox"> Split a text column into two with str.split and expand=True.</label>
+      <label class="chk"><input type="checkbox"> Fill blanks with fillna, including from another column, and drop with dropna.</label>
+      <label class="chk"><input type="checkbox"> Filter rows by text with str.contains and str.startswith.</label>
+      <label class="chk"><input type="checkbox"> Do column arithmetic, sum a column, and round while keeping floats.</label>
+      <label class="chk"><input type="checkbox"> Write a DataFrame with to_csv.</label>
+      <label class="chk"><input type="checkbox"> Group by a column and aggregate, and control Series vs DataFrame output.</label>
+      <label class="chk"><input type="checkbox"> Assemble the four cleaning steps of Q1 in the right order.</label>
+    </div>
+  </section>
+
+  <footer>CS 2316 · Lecture 12 · Intro to Pandas · tables with labels, cleaned in order</footer>
+</div>
+
+<script>
+function showTab(btn){
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+  var id = btn.dataset.t;
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === id));
+  window.scrollTo({top:0});
+}
+function toggleSol(btn){
+  var sol = btn.nextElementSibling;
+  var open = sol.classList.toggle('open');
+  btn.innerHTML = (open ? '&#9652; Hide' : '&#9662; Show') + ' solution';
+}
+var _pyPromise = null;
+function ensurePyodide(){
+  if(_pyPromise) return _pyPromise;
+  _pyPromise = (async function(){
+    if(typeof loadPyodide === 'undefined'){
+      await new Promise(function(resolve, reject){
+        var s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js';
+        s.onload = resolve;
+        s.onerror = function(){ reject(new Error('Could not load the Python engine. Check your internet connection, then try Run again.')); };
+        document.head.appendChild(s);
+      });
+    }
+    var py = await loadPyodide();
+    await py.loadPackage('pandas');
+    return py;
+  })();
+  return _pyPromise;
+}
+async function runCell(btn){
+  var cell = btn.closest('.cell');
+  var ta = cell.querySelector('textarea');
+  var out = cell.querySelector('.output');
+  out.style.display = 'block'; out.classList.remove('err');
+  out.textContent = 'Loading Python and Pandas (first run can take 15 to 30 seconds), then running...';
+  var py;
+  try{ py = await ensurePyodide(); }
+  catch(e){ out.classList.add('err'); out.textContent = String(e.message || e); return; }
+  py.runPython("import sys, io\n_buf = io.StringIO()\nsys.stdout = _buf\nsys.stderr = _buf");
+  var errText = '';
+  try{ py.runPython(ta.value); }
+  catch(e){ errText = String(e.message || e); }
+  var res = '';
+  try{ res = py.runPython("sys.stdout = sys.__stdout__\nsys.stderr = sys.__stderr__\n_buf.getvalue()"); }
+  catch(e){}
+  if(!res && !errText){ out.textContent = '(ran with no printed output)'; return; }
+  out.textContent = (res || '') + (errText ? ((res ? '\n' : '') + errText) : '');
+  if(errText) out.classList.add('err');
+}
+</script>
+</body>
+</html>
