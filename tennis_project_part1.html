@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project - Tennis Match Predictor (Week 2)</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2430; --border:#30363d;
+    --text:#e6edf3; --muted:#8b949e; --accent:#c9f24d; --accent2:#58a6ff;
+    --code:#0a0e14; --green:#3fb950; --yellow:#d29922; --red:#f85149; --purple:#bc8cff;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.68;padding:0 0 60px;}
+  .wrap{max-width:920px;margin:0 auto;padding:0 20px;}
+  header{border-bottom:1px solid var(--border);
+    background:linear-gradient(180deg,#0e1512,#0d1117);padding:34px 0 26px;}
+  .kicker{color:var(--accent);font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 8px;}
+  header h1{margin:0 0 10px;font-size:28px;letter-spacing:-0.5px;}
+  header p{margin:0;color:var(--muted);font-size:14.5px;max-width:770px;}
+  .pill{display:inline-block;background:var(--panel2);border:1px solid var(--border);border-radius:20px;padding:2px 12px;font-size:12px;color:var(--muted);margin-right:6px;}
+  .pill.proj{background:rgba(188,140,255,.14);color:var(--purple);border-color:var(--purple);}
+
+  #tabbar{position:sticky;top:0;z-index:50;background:rgba(13,17,23,.96);
+    backdrop-filter:blur(6px);border-bottom:1px solid var(--border);}
+  .tabs{max-width:920px;margin:0 auto;padding:8px 14px;display:flex;flex-wrap:wrap;gap:6px;}
+  .tab{background:var(--panel);border:1px solid var(--border);color:var(--muted);
+    font-size:13px;font-weight:600;padding:7px 13px;border-radius:8px;cursor:pointer;
+    display:flex;align-items:center;gap:7px;transition:.12s;font-family:inherit;}
+  .tab:hover{color:var(--text);border-color:#455063;}
+  .tab .n{font-size:11px;font-weight:800;background:var(--panel2);color:var(--muted);
+    border-radius:5px;padding:1px 6px;min-width:20px;text-align:center;}
+  .tab.active{background:var(--accent);color:#0d1117;border-color:var(--accent);}
+  .tab.active .n{background:rgba(13,17,23,.25);color:#0d1117;}
+
+  .panel{display:none;animation:fade .18s ease;}
+  .panel.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+  .panel-head{padding:26px 0 2px;}
+  .panel-head h2{margin:0;font-size:24px;letter-spacing:-0.3px;}
+  .panel-head .sub{color:var(--muted);margin:8px 0 0;font-size:15px;}
+
+  h3{font-size:15px;margin:24px 0 6px;color:var(--text);}
+  .lead{color:var(--muted);margin:6px 0 14px;}
+  p{margin:11px 0;}
+  ul{margin:8px 0;padding-left:22px;}
+  li{margin:6px 0;}
+  .box{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin:16px 0;}
+  .tip{border-left:3px solid var(--accent2);}
+  .warn{border-left:3px solid var(--yellow);}
+  .concept{border-left:3px solid var(--accent);}
+  .proj{border-left:3px solid var(--purple);}
+  .cell-label{font-size:11px;font-weight:700;letter-spacing:0.5px;margin:18px 0 4px;text-transform:uppercase;}
+  .cl-code{color:var(--green);}
+  .cl-md{color:var(--accent2);}
+  pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padding:15px 16px;overflow-x:auto;margin:0 0 6px;position:relative;}
+  pre.md{border-style:dashed;}
+  code{font-family:"SF Mono","Fira Code",Consolas,Menlo,monospace;font-size:13.5px;color:#c9d1d9;}
+  .copybtn{position:absolute;top:7px;right:7px;background:var(--panel2);border:1px solid var(--border);
+    color:var(--muted);font-size:11px;padding:4px 10px;border-radius:6px;cursor:pointer;transition:.15s;font-family:inherit;}
+  .copybtn:hover{color:var(--text);border-color:var(--accent);}
+  .copybtn.done{color:var(--green);border-color:var(--green);}
+  code.inl{background:var(--panel2);border:1px solid var(--border);border-radius:5px;padding:1px 6px;color:var(--accent);font-size:12.5px;}
+
+  .task{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:10px;padding:16px 18px;margin:16px 0;}
+  .task .th{font-size:11px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--accent);margin:0 0 6px;}
+  .task p{margin:6px 0;}
+  details.sol{margin:12px 0 0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  details.sol summary{cursor:pointer;padding:9px 14px;background:var(--panel2);font-weight:600;font-size:12.5px;color:var(--green);user-select:none;list-style:none;}
+  details.sol summary::-webkit-details-marker{display:none;}
+  details.sol summary::before{content:"\25B8  ";color:var(--muted);}
+  details.sol[open] summary::before{content:"\25BE  ";}
+  details.sol .sb{padding:8px 14px 10px;}
+
+  .see{background:rgba(63,185,80,.07);border:1px solid rgba(63,185,80,.35);border-radius:8px;padding:12px 16px;margin:12px 0 0;}
+  .see .lbl{font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--green);margin:0 0 4px;}
+  .see p{margin:0;font-size:13.5px;color:var(--text);}
+  .see code.inl{color:var(--green);}
+
+  .nav{display:flex;justify-content:flex-end;margin:32px 0 10px;padding-top:18px;border-top:1px solid var(--border);}
+  .nextbtn{background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:14px;font-weight:600;
+    padding:10px 18px;border-radius:9px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;transition:.12s;}
+  .nextbtn:hover{border-color:var(--accent);color:var(--accent);}
+  a{color:var(--accent2);}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <p class="kicker">Tennis AI Project &middot; Project Notebook</p>
+    <h1>Build Your Match Predictor: Part 1</h1>
+    <p>This is the real thing. Unlike the lesson scratch files, this notebook is a project you keep and grow every week until it is a finished match predictor for your portfolio. This week you set up its structure and turn the raw 2023 data into a clean, model-ready table. Do each step in the notebook, check it against "what you should see", and open a solution only if you are stuck.</p>
+    <div style="margin-top:14px;">
+      <span class="pill proj">tennis_predictor.ipynb</span><span class="pill">load</span><span class="pill">clean</span><span class="pill">features</span><span class="pill">save</span>
+    </div>
+  </div>
+</header>
+
+<div id="tabbar">
+  <div class="tabs">
+    <button class="tab active" data-target="t0"><span class="n">0</span>Set up</button>
+    <button class="tab" data-target="t1"><span class="n">1</span>Load</button>
+    <button class="tab" data-target="t2"><span class="n">2</span>Clean</button>
+    <button class="tab" data-target="t3"><span class="n">3</span>Features</button>
+    <button class="tab" data-target="t4"><span class="n">4</span>Save &amp; next</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ============ SET UP ============ -->
+<section class="panel active" id="t0">
+  <div class="panel-head"><h2>Set up the project notebook</h2>
+    <p class="sub">Create the file and lay out its skeleton first, so the whole project has a clean, professional structure from day one.</p>
+  </div>
+
+  <div class="box proj">
+    <b>Why we scaffold it up front.</b>
+    <p style="margin:8px 0 0;">A good project notebook reads like a story: load, clean, build features, model, evaluate. If you just pile cells on week after week it turns into an unreadable mess that will not run top to bottom. So we create all the section headers now, even the ones for future weeks, and each week you fill in the right section. Keeping it tidy is itself a skill, and it is what makes the final project look impressive to a college reviewer.</p>
+  </div>
+
+  <h3>1 &nbsp;Create the file</h3>
+  <p>In your <code class="inl">Tennis_AI</code> folder, create a new notebook called <code class="inl">tennis_predictor.ipynb</code> and open it. Pick your Python 3.11 kernel if asked.</p>
+
+  <h3>2 &nbsp;Add the section headers as markdown cells</h3>
+  <p>A notebook has two kinds of cells: <b>code</b> and <b>markdown</b> (formatted text). Headers should be markdown. To make a cell markdown, click it, press <b>Esc</b> then <b>M</b> (in VS Code you can also use the code/markdown toggle on the cell). Type the text and run it with Shift + Enter to render it.</p>
+  <p>Create these as separate cells, top to bottom. The first is your title, then one header per section.</p>
+
+  <p class="cell-label cl-md">Markdown cell &middot; title</p>
+  <pre class="md"><button class="copybtn">Copy</button><code># Tennis Match Predictor
+
+Predicting the winner of ATP matches from information known **before** the match.
+Data: 2023 ATP season (Jeff Sackmann, via the guillemservera Kaggle mirror).</code></pre>
+
+  <p class="cell-label cl-md">Markdown cells &middot; the section headers (one cell each)</p>
+  <pre class="md"><button class="copybtn">Copy</button><code>## 1. Load the Data</code></pre>
+  <pre class="md"><button class="copybtn">Copy</button><code>## 2. Clean the Data</code></pre>
+  <pre class="md"><button class="copybtn">Copy</button><code>## 3. Build Features</code></pre>
+  <pre class="md"><button class="copybtn">Copy</button><code>## 4. Save the Clean Dataset</code></pre>
+  <pre class="md"><button class="copybtn">Copy</button><code>## 5. Baseline Model  _(coming next week)_</code></pre>
+  <pre class="md"><button class="copybtn">Copy</button><code>## 6. Train a Model  _(coming soon)_</code></pre>
+  <pre class="md"><button class="copybtn">Copy</button><code>## 7. Evaluate  _(coming soon)_</code></pre>
+
+  <div class="see"><p class="lbl">You should see</p><p>Seven rendered headings down your notebook, sections 5 to 7 sitting empty as placeholders. That is your roadmap. This week you fill in sections 1 to 4, leaving a code cell (or two) under each of those headers.</p></div>
+
+  <div class="box tip">
+    <b>Golden rule for this notebook:</b> it must run cleanly from top to bottom, in order. Before you send it each week, use Run, then Run All Cells, to make sure nothing breaks. Keep it clean and it stays easy to grow.
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t1">Next: Load &rarr;</button></div>
+</section>
+
+<!-- ============ LOAD ============ -->
+<section class="panel" id="t1">
+  <div class="panel-head"><h2>Section 1: Load the Data</h2>
+    <p class="sub">Add a code cell under your <code class="inl">## 1. Load the Data</code> header.</p>
+  </div>
+
+  <div class="task">
+    <p class="th">Your task</p>
+    <p>Load <code class="inl">atp_matches_2023.csv</code> into a DataFrame called <code class="inl">df</code>, then confirm it loaded by printing its shape and showing the first few rows.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>import pandas as pd
+
+df = pd.read_csv("atp_matches_2023.csv")
+print(df.shape)
+df.head()</code></pre></div></details>
+  </div>
+
+  <div class="see"><p class="lbl">You should see</p><p><code class="inl">(2986, 49)</code> printed, then a table of the first 5 matches. If you get a file-not-found error, make sure <code class="inl">atp_matches_2023.csv</code> is in the same folder as the notebook.</p></div>
+
+  <div class="nav"><button class="nextbtn" data-next="t2">Next: Clean &rarr;</button></div>
+</section>
+
+<!-- ============ CLEAN ============ -->
+<section class="panel" id="t2">
+  <div class="panel-head"><h2>Section 2: Clean the Data</h2>
+    <p class="sub">Under <code class="inl">## 2. Clean the Data</code>. Two parts: fix the date column, then handle missing values.</p>
+  </div>
+
+  <div class="task">
+    <p class="th">Task A &middot; fix the date</p>
+    <p>Convert <code class="inl">tourney_date</code> from a plain number into a real date, then add <code class="inl">year</code> and <code class="inl">month</code> columns.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df["tourney_date"] = pd.to_datetime(df["tourney_date"], format="%Y%m%d")
+df["year"]  = df["tourney_date"].dt.year
+df["month"] = df["tourney_date"].dt.month
+
+df[["tourney_date", "year", "month"]].head()</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p><code class="inl">tourney_date</code> now showing real dates like <code class="inl">2023-01-02</code>, with matching <code class="inl">year</code> and <code class="inl">month</code> columns.</p></div>
+
+  <div class="task">
+    <p class="th">Task B &middot; look at the gaps</p>
+    <p>Before fixing anything, see where the missing values are. Print the missing count per column, worst first.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df.isna().sum().sort_values(ascending=False).head(10)</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>The seed columns near the top (mostly empty, expected), then smaller gaps in the serve stats, <code class="inl">winner_rank</code>, <code class="inl">loser_rank</code>, and <code class="inl">surface</code>. Those last three are the ones we care about for features.</p></div>
+
+  <div class="task">
+    <p class="th">Task C &middot; handle the gaps</p>
+    <p>Drop the rows missing the essentials we need (<code class="inl">surface</code>, <code class="inl">winner_rank</code>, <code class="inl">loser_rank</code>), then fill missing heights with the median so we keep those rows. Print the shape before and after.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>print("before:", df.shape)
+
+# drop rows missing something we cannot fake
+df = df.dropna(subset=["surface", "winner_rank", "loser_rank"])
+
+# fill minor gaps with the median height
+df["winner_ht"] = df["winner_ht"].fillna(df["winner_ht"].median())
+df["loser_ht"]  = df["loser_ht"].fillna(df["loser_ht"].median())
+
+print("after: ", df.shape)</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>The row count drop from <code class="inl">2986</code> to somewhere around <code class="inl">2800</code> (the exact number depends on how many rows were missing a rank or surface), and no more gaps in the height columns.</p></div>
+
+  <div class="box proj">
+    <b>Add a short markdown note above this section</b> recording your choices, for example: "Dropped rows missing surface or either ranking, since those cannot be reliably guessed. Filled missing heights with the median." Writing down your cleaning decisions is exactly the kind of reasoning that stands out in a project.
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t3">Next: Features &rarr;</button></div>
+</section>
+
+<!-- ============ FEATURES ============ -->
+<section class="panel" id="t3">
+  <div class="panel-head"><h2>Section 3: Build Features</h2>
+    <p class="sub">Under <code class="inl">## 3. Build Features</code>. Turn the raw columns into the difference features a model can learn from.</p>
+  </div>
+
+  <div class="task">
+    <p class="th">Your task</p>
+    <p>Build four pre-match difference features: <code class="inl">rank_diff</code>, <code class="inl">points_diff</code>, <code class="inl">age_diff</code>, and <code class="inl">height_diff</code>. Then show the first few rows of just those columns.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df["rank_diff"]   = df["loser_rank"] - df["winner_rank"]
+df["points_diff"] = df["winner_rank_points"] - df["loser_rank_points"]
+df["age_diff"]    = df["winner_age"] - df["loser_age"]
+df["height_diff"] = df["winner_ht"]  - df["loser_ht"]
+
+df[["rank_diff", "points_diff", "age_diff", "height_diff"]].head()</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>A small table with your four new columns. Positive <code class="inl">rank_diff</code> and <code class="inl">points_diff</code> mean the higher-ranked, higher-points player won.</p></div>
+
+  <div class="box warn">
+    <b>Only pre-match columns.</b> Every feature above comes from information known before the match starts. Do <b>not</b> build features from aces, double faults, minutes, or the score, those are post-match and would leak the result (see the Leakage tab in the lesson). This is the single most important rule of the whole project.
+  </div>
+
+  <div class="task">
+    <p class="th">Bonus &middot; the number to beat</p>
+    <p>As a sanity check, compute how often the higher-ranked player won. This is the "always pick the favorite" baseline our model has to beat later.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>favorite_wins = (df["rank_diff"] > 0).sum()
+known = df["rank_diff"].notna().sum()
+print(favorite_wins / known)</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>A number around <code class="inl">0.65</code>, meaning the favorite wins roughly two-thirds of the time. Write it down. When we train a real model, beating this number is how we know it actually learned something.</p></div>
+
+  <div class="box proj">
+    <b>Add a markdown note</b> under this section: "These features currently use the winner and loser columns, which encode the result. Next week we will restructure the data into a symmetric player A vs player B format with a proper 0/1 label so the model cannot cheat." That documents the next step and shows you understand the trap.
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t4">Next: Save &amp; next &rarr;</button></div>
+</section>
+
+<!-- ============ SAVE & NEXT ============ -->
+<section class="panel" id="t4">
+  <div class="panel-head"><h2>Section 4: Save the Clean Dataset</h2>
+    <p class="sub">Under <code class="inl">## 4. Save the Clean Dataset</code>. Lock in your work so later weeks can load it instantly.</p>
+  </div>
+
+  <div class="task">
+    <p class="th">Your task</p>
+    <p>Save your cleaned, feature-added table to a new file called <code class="inl">atp_2023_clean.csv</code>.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df.to_csv("atp_2023_clean.csv", index=False)
+print("saved", df.shape)</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>A new file <code class="inl">atp_2023_clean.csv</code> appear in your <code class="inl">Tennis_AI</code> folder, and a printed shape confirming the rows and columns. <code class="inl">index=False</code> keeps pandas from adding an extra unnamed column.</p></div>
+
+  <div class="box concept">
+    <b>What your notebook now does, top to bottom:</b> loads the raw 2023 season, converts the date and adds year and month, drops rows it cannot trust and fills minor gaps, builds four honest pre-match features, and saves a clean table. That clean table is the foundation everything else sits on.
+  </div>
+
+  <div class="box proj">
+    <b>Where this is heading (the empty sections):</b>
+    <ul style="margin:8px 0 0;">
+      <li><b>Graphs</b> come next: we visualize this clean data (aces by surface, upsets over time, how the features relate to winning) to understand it before modeling.</li>
+      <li><b>Section 5, Baseline:</b> formalize the "favorite wins" number as our benchmark.</li>
+      <li><b>Section 6, Train a Model:</b> restructure into player A vs player B, then fit a first model on your features.</li>
+      <li><b>Section 7, Evaluate:</b> measure it against the baseline and see which features matter most.</li>
+    </ul>
+  </div>
+
+  <div class="box tip">
+    <b>Turn it in:</b>
+    <ul style="margin:8px 0 0;">
+      <li>Run the whole notebook once more with Run, then Run All Cells, so every output shows and it runs clean start to finish.</li>
+      <li>Save with Ctrl + S.</li>
+      <li>Send me both <code class="inl">tennis_predictor.ipynb</code> and the <code class="inl">atp_2023_clean.csv</code> it produced.</li>
+      <li><b>Keep this notebook.</b> Do not start a new one next week, we build directly on this file.</li>
+    </ul>
+  </div>
+
+  <div class="box concept" style="margin-top:20px;">
+    <b>Reminder:</b> this project notebook is the second half of your homework. The first half is the 10 review questions at the end of the Week 2 lesson.
+  </div>
+</section>
+
+</div>
+
+<script>
+  var tabs = document.querySelectorAll(".tab");
+  var panels = document.querySelectorAll(".panel");
+  var bar = document.getElementById("tabbar");
+  function show(id){
+    tabs.forEach(function(t){ t.classList.toggle("active", t.dataset.target === id); });
+    panels.forEach(function(p){ p.classList.toggle("active", p.id === id); });
+    window.scrollTo({ top: bar.offsetTop, behavior: "smooth" });
+  }
+  tabs.forEach(function(t){ t.addEventListener("click", function(){ show(t.dataset.target); }); });
+  document.querySelectorAll("[data-next]").forEach(function(b){
+    b.addEventListener("click", function(){ show(b.dataset.next); });
+  });
+  document.querySelectorAll(".copybtn").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var code = btn.parentElement.querySelector("code").innerText;
+      navigator.clipboard.writeText(code).then(function(){
+        btn.textContent = "Copied"; btn.classList.add("done");
+        setTimeout(function(){ btn.textContent = "Copy"; btn.classList.remove("done"); }, 1500);
+      });
+    });
+  });
+</script>
+</body>
+</html>
