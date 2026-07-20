@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Homework 1 (with solutions) - Pandas on ATP Data</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2430; --border:#30363d;
+    --text:#e6edf3; --muted:#8b949e; --accent:#c9f24d; --accent2:#58a6ff;
+    --code:#0a0e14; --green:#3fb950; --yellow:#d29922; --red:#f85149;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.65;padding:0 0 60px;}
+  .wrap{max-width:920px;margin:0 auto;padding:0 20px;}
+  header{border-bottom:1px solid var(--border);
+    background:linear-gradient(180deg,#12160e,#0d1117);padding:34px 0 26px;}
+  .kicker{color:var(--accent);font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 8px;}
+  header h1{margin:0 0 10px;font-size:28px;letter-spacing:-0.5px;}
+  header p{margin:0;color:var(--muted);font-size:14.5px;max-width:760px;}
+  .pill{display:inline-block;background:var(--panel2);border:1px solid var(--border);border-radius:20px;padding:2px 12px;font-size:12px;color:var(--muted);margin-right:6px;}
+  .badge-sol{background:rgba(63,185,80,.15);color:var(--green);border:1px solid var(--green);}
+
+  #tabbar{position:sticky;top:0;z-index:50;background:rgba(13,17,23,.96);
+    backdrop-filter:blur(6px);border-bottom:1px solid var(--border);}
+  .tabs{max-width:920px;margin:0 auto;padding:8px 14px;display:flex;flex-wrap:wrap;gap:6px;}
+  .tab{background:var(--panel);border:1px solid var(--border);color:var(--muted);
+    font-size:13px;font-weight:600;padding:7px 13px;border-radius:8px;cursor:pointer;
+    display:flex;align-items:center;gap:7px;transition:.12s;font-family:inherit;}
+  .tab:hover{color:var(--text);border-color:#455063;}
+  .tab .n{font-size:11px;font-weight:800;background:var(--panel2);color:var(--muted);
+    border-radius:5px;padding:1px 6px;min-width:20px;text-align:center;}
+  .tab.active{background:var(--accent);color:#0d1117;border-color:var(--accent);}
+  .tab.active .n{background:rgba(13,17,23,.25);color:#0d1117;}
+
+  .panel{display:none;animation:fade .18s ease;}
+  .panel.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+  .panel-head{padding:26px 0 2px;}
+  .panel-head h2{margin:0;font-size:24px;letter-spacing:-0.3px;}
+  .panel-head .sub{color:var(--muted);margin:8px 0 0;font-size:15px;}
+
+  h3{font-size:15px;margin:22px 0 6px;color:var(--text);}
+  .lead{color:var(--muted);margin:6px 0 14px;}
+  .box{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin:16px 0;}
+  .tip{border-left:3px solid var(--accent2);}
+  .warn{border-left:3px solid var(--yellow);}
+  .concept{border-left:3px solid var(--accent);}
+  pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padding:15px 16px;overflow-x:auto;margin:0 0 6px;position:relative;}
+  code{font-family:"SF Mono","Fira Code",Consolas,Menlo,monospace;font-size:13.5px;color:#c9d1d9;}
+  .copybtn{position:absolute;top:7px;right:7px;background:var(--panel2);border:1px solid var(--border);
+    color:var(--muted);font-size:11px;padding:4px 10px;border-radius:6px;cursor:pointer;transition:.15s;font-family:inherit;}
+  .copybtn:hover{color:var(--text);border-color:var(--accent);}
+  .copybtn.done{color:var(--green);border-color:var(--green);}
+  p{margin:10px 0;}
+  ul{margin:8px 0;padding-left:22px;}
+  li{margin:5px 0;}
+  code.inl{background:var(--panel2);border:1px solid var(--border);border-radius:5px;padding:1px 6px;color:var(--accent);font-size:12.5px;}
+
+  .task{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px 18px 14px 16px;margin:12px 0;display:flex;gap:14px;align-items:flex-start;}
+  .tasknum{flex:0 0 auto;width:30px;height:30px;border-radius:8px;background:var(--panel2);border:1px solid var(--border);
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:var(--accent);margin-top:1px;}
+  .task-body{flex:1;min-width:0;}
+  .task-body p{margin:0;}
+  .tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 8px;border-radius:4px;margin-left:8px;vertical-align:middle;}
+  .t-warm{background:rgba(63,185,80,.15);color:var(--green);border:1px solid var(--green);}
+  .t-mid{background:rgba(210,153,34,.15);color:var(--yellow);border:1px solid var(--yellow);}
+  .t-spicy{background:rgba(248,81,73,.15);color:var(--red);border:1px solid var(--red);}
+  .hint{color:var(--muted);font-size:12.5px;margin-top:6px !important;font-style:italic;}
+  .hint b{color:var(--text);font-style:normal;}
+
+  details.sol{margin:10px 0 0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  details.sol summary{cursor:pointer;padding:9px 14px;background:var(--panel2);font-weight:600;font-size:12.5px;color:var(--green);user-select:none;list-style:none;}
+  details.sol summary::-webkit-details-marker{display:none;}
+  details.sol summary::before{content:"\25B8  ";color:var(--muted);}
+  details.sol[open] summary::before{content:"\25BE  ";}
+  details.sol .sb{padding:8px 14px 10px;}
+  .sb .note{color:var(--muted);font-size:12.5px;margin:6px 0 0;padding-left:10px;border-left:2px solid var(--border);}
+
+  .nav{display:flex;justify-content:flex-end;margin:30px 0 10px;padding-top:18px;border-top:1px solid var(--border);}
+  .nextbtn{background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:14px;font-weight:600;
+    padding:10px 18px;border-radius:9px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;transition:.12s;}
+  .nextbtn:hover{border-color:var(--accent);color:var(--accent);}
+  a{color:var(--accent2);}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <p class="kicker">Tennis AI Project &middot; Week 1 Homework</p>
+    <h1>Homework 1: Pandas on ATP Data</h1>
+    <p>Thirty tasks on the 2023 ATP season, ramping from warm-ups to the first pieces of the match predictor. Everything you need is in the Week 1 lesson. Do each task in its own cell. A solution sits under every task, try it first, then check.</p>
+    <div style="margin-top:14px;">
+      <span class="pill">30 tasks</span><span class="pill badge-sol">solutions included</span><span class="pill">atp_matches_2023.csv</span>
+    </div>
+  </div>
+</header>
+
+<div id="tabbar">
+  <div class="tabs">
+    <button class="tab active" data-target="t0"><span class="n">0</span>Start</button>
+    <button class="tab" data-target="t1"><span class="n">1</span>Warm-up</button>
+    <button class="tab" data-target="t2"><span class="n">2</span>Filtering</button>
+    <button class="tab" data-target="t3"><span class="n">3</span>Sort &amp; Count</button>
+    <button class="tab" data-target="t4"><span class="n">4</span>Grouping</button>
+    <button class="tab" data-target="t5"><span class="n">5</span>Predictor Prep</button>
+    <button class="tab" data-target="t6"><span class="n">&#10003;</span>Submit</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- START -->
+<section class="panel active" id="t0">
+  <div class="panel-head"><h2>Start here</h2>
+    <p class="sub">Set up a fresh notebook for the homework and load the data. You already have the CSV in your folder from the lesson.</p>
+  </div>
+
+  <h3>1 &nbsp;Make a new notebook</h3>
+  <p>In your <code class="inl">Tennis_AI</code> folder, create a new file called <code class="inl">homework1.ipynb</code> and open it. Pick your Python 3.11 kernel if it asks.</p>
+
+  <h3>2 &nbsp;First cell: load the data</h3>
+  <p>Put this in the very first cell and run it to confirm the data loads.</p>
+  <pre><button class="copybtn">Copy</button><code>import pandas as pd
+
+df = pd.read_csv("atp_matches_2023.csv")
+df.shape   # should show (2986, 49)</code></pre>
+  <p class="lead">If that errors, the CSV is not in the same folder as the notebook. Copy <code class="inl">atp_matches_2023.csv</code> into your <code class="inl">Tennis_AI</code> folder and run again.</p>
+
+  <div class="box tip">
+    <b>How to work through this:</b>
+    <ul style="margin-bottom:0;">
+      <li>Do each task in its <b>own cell</b>. Start the cell with a comment like <code class="inl"># Task 1</code> so it stays organized.</li>
+      <li>Try each one yourself first. The solution is tucked under the task, open it only after you have attempted it.</li>
+      <li>Run every cell (Shift + Enter) and leave the output showing.</li>
+      <li>Tasks get harder toward the end and a few point straight at the predictor. Push as far as you can.</li>
+    </ul>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t1">Start tasks &rarr;</button></div>
+</section>
+
+<!-- WARM-UP -->
+<section class="panel" id="t1">
+  <div class="panel-head"><h2>Warm-up</h2>
+    <p class="sub">Getting comfortable moving around the data. Tasks 1 to 6.</p>
+  </div>
+
+  <div class="task"><div class="tasknum">1</div><div class="task-body">
+    <p>In your first cell, load the data into <code class="inl">df</code> (if you have not already) and print its shape and its column names. <span class="tag t-warm">warm-up</span></p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>import pandas as pd
+df = pd.read_csv("atp_matches_2023.csv")
+print(df.shape)
+print(df.columns.tolist())</code></pre></div></details>
+  </div></div>
+
+  <div class="task"><div class="tasknum">2</div><div class="task-body">
+    <p>Show the first 10 matches in the dataset. <span class="tag t-warm">warm-up</span></p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df.head(10)</code></pre></div></details>
+  </div></div>
+
+  <div class="task"><div class="tasknum">3</div><div class="task-body">
+    <p>Print the total number of matches in the dataset. <span class="tag t-warm">warm-up</span></p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>len(df)          # or: df.shape[0]</code></pre></div></details>
+  </div></div>
+
+  <div class="task"><div class="tasknum">4</div><div class="task-body">
+    <p>Display only these columns, for the first 15 matches: <code class="inl">winner_name</code>, <code class="inl">loser_name</code>, <code class="inl">surface</code>, <code class="inl">score</code>. <span class="tag t-warm">warm-up</span></p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df[["winner_name", "loser_name", "surface", "score"]].head(15)</code></pre></div></details>
+  </div></div>
+
+  <div class="task"><div class="tasknum">5</div><div class="task-body">
+    <p>How many matches were played on <b>Hard</b> courts? <span class="tag t-warm">warm-up</span></p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>(df["surface"] == "Hard").sum()</code></pre></div></details>
+  </div></div>
+
+  <div class="task"><div class="tasknum">6</div><div class="task-body">
+    <p>Show every match that lasted more than <b>200 minutes</b>. <span class="tag t-warm">warm-up</span></p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df[df["minutes"] > 200]</code></pre></div></details>
+  </div></div>
+
+  <div class="nav"><button class="nextbtn" data-next="t2">Next: Filtering &rarr;</button></div>
+</section>
+
+<!-- FILTERING -->
+<section class="panel" id="t2">
+  <div class="panel-head"><h2>Filtering</h2>
+    <p class="sub">Boolean masks, single and combined conditions. Tasks 7 to 13.</p>
+  </div>
+
+  <div class="task"><div class="tasknum">7</div><div class="task-body">
+    <p>Show every match won by <b>Novak Djokovic</b>. <span class="tag t-warm">warm-up</span></p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df[df["winner_name"] == "Novak Djokovic"]</code></pre></div></details>
+  </div></div>
+
+  <div class="task"><div class="tasknum">8</div><div class="task-body">
+    <p>Show every match played on <b>grass</b> where the winner hit <b>at least 15 aces</b>. <span class="tag t-mid">step up</span></p>
+    <p class="hint">Hint: two conditions joined with <code class="inl">&amp;</code>, each in its own parentheses.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df[(df["surface"] == "Grass") & (df["w_ace"] >= 15)]</code></pre></div></details>
+  </div></div>
+
+  <div class="task"><div class="tasknum">9</div><div class="task-body">
+    <p>Show every match played on <b>Clay or Grass</b>. <span class="tag t-mid">step up</span></p>
+    <p class="hint">Hint: <code class="inl">.isin([...])</code> is cleaner than two OR conditions.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df[df["surface"].isin(["Clay", "Grass"])]</code></pre></div></details>
+  </div></div>
+
+  <div class="task"><div class="tasknum">10</div><div class="task-body">
+    <p>How many matches were <b>not</b> played on Hard courts? <span class="tag t-mid">step up</span></p>
+    <p class="hint">Hint: you can compare with <code class="inl">!=</code>, or flip a mask with <code class="inl">~</code>.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>(df["surface"] != "Hard").sum()</code></pre>
+    <p class="note">This also counts the few matches with a missing surface as "not Hard". If you want strictly Clay or Grass, use <code class="inl">df["surface"].isin(["Clay","Grass"]).sum()</code>.</p></div></details>
+  </div></div>
+
+  <div class="task"><div class="tasknum">11</div><div class="task-body">
+    <p>Show every <b>Grand Slam</b> match (<code class="inl">tourney_level == "G"</code>) where the winner hit <b>more than 10 aces</b>. <span class="tag t-mid">step up</span></p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df[(df["tourney_level"] == "G") & (df["w_ace"] > 10)]</code></pre></div></details>
+  </div></div>
+
+  <div class="task"><div class="tasknum">12</div><div class="task-body">
+    <p>Show every match won by a player <b>older than 33</b> (use <code class="inl">winner_age</code>). <span class="tag t-mid">step up</span></p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df[df["winner_age"] > 33]</code></pre></div></details>
+  </div></div>
+
+  <div class="task"><div class="tasknum">13</div><div class="task-body">
+    <p>Show every match where a <b>top-10 ranked player lost</b> (<code class="inl">loser_rank</code> is 10 or better). <span class="tag t-mid">step up</span></p>
+    <p class="hint">Hint: a better rank is a smaller number, so top-10 means <code class="inl">loser_rank &lt;= 10</code>.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df[df["loser_rank"] <= 10]</code></pre></div></details>
+  </div></div>
+
+  <div class="nav"><button class="nextbtn" data-next="t3">Next: Sort &amp; Count &rarr;</button></div>
+</section>
+
+<!-- SORT & COUNT -->
+<section class="panel" id="t3">
+  <div class="panel-head"><h2>Sorting and counting</h2>
+    <p class="sub">Ordering the table and tallying categories. Tasks 14 to 19.</p>
+  </div>
+
+  <div class="task"><div class="tasknum">14</div><div class="task-body">
+    <p>Show the <b>10 longest matches</b>. Display winner, loser, minutes, and tournament name. <span class="tag t-mid">step up</span></p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df.sort_values("minutes", ascending=False)[
+    ["winner_name", "loser_name", "minutes", "tourney_name"]
+].head(10)
+# shortcut: df.nlargest(10, "minutes")[[ ...same columns... ]]</code></pre></div></details>
+  </div></div>
+
+  <div class="task"><div class="tasknum">15</div><div class="task-body">
+    <p>Show the <b>10 matches with the most aces</b> by the winner. <span class="tag t-mid">step up</span></p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df.nlargest(10, "w_ace")[["winner_name", "w_ace", "tourney_name"]]</code></pre></div></details>
+  </div></div>
+
+  <div class="task"><div class="tasknum">16</div><div class="task-body">
+    <p>Count how many matches were played on <b>each surface</b>. <span class="tag t-warm">warm-up</span></p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df["surface"].value_counts()</code></pre></div></details>
+  </div></div>
+
+  <div class="task"><div class="tasknum">17</div><div class="task-body">
+    <p>Who are the <b>top 10 players by number of match wins</b> this season? <span class="tag t-mid">step up</span></p>
+    <p class="hint">Hint: <code class="inl">value_counts()</code> on the winners column.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df["winner_name"].value_counts().head(10)</code></pre></div></details>
+  </div></div>
+
+  <div class="task"><div class="tasknum">18</div><div class="task-body">
+    <p>How many <b>different tournaments</b> are in the dataset? <span class="tag t-mid">step up</span></p>
+    <p class="hint">Hint: <code class="inl">nunique()</code>.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df["tourney_name"].nunique()</code></pre></div></details>
+  </div></div>
+
+  <div class="task"><div class="tasknum">19</div><div class="task-body">
+    <p>Among <b>best-of-5</b> matches only (<code class="inl">best_of == 5</code>), show the <b>5 shortest</b> by minutes. <span class="tag t-spicy">challenge</span></p>
+    <p class="hint">Hint: filter to best-of-5 first, then use <code class="inl">nsmallest</code> on the result.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df[df["best_of"] == 5].nsmallest(5, "minutes")[
+    ["winner_name", "loser_name", "minutes"]
+]</code></pre></div></details>
+  </div></div>
+
+  <div class="nav"><button class="nextbtn" data-next="t4">Next: Grouping &rarr;</button></div>
+</section>
+
+<!-- GROUPING -->
+<section class="panel" id="t4">
+  <div class="panel-head"><h2>Grouping and aggregating</h2>
+    <p class="sub">Turning matches into summaries with groupby. Tasks 20 to 25.</p>
+  </div>
+
+  <div class="task"><div class="tasknum">20</div><div class="task-body">
+    <p>What is the <b>average number of winner aces on each surface</b>? <span class="tag t-mid">step up</span></p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df.groupby("surface")["w_ace"].mean()</code></pre></div></details>
+  </div></div>
+
+  <div class="task"><div class="tasknum">21</div><div class="task-body">
+    <p>What is the <b>average match length</b> (minutes) for <b>each tournament level</b>? <span class="tag t-mid">step up</span></p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df.groupby("tourney_level")["minutes"].mean()</code></pre></div></details>
+  </div></div>
+
+  <div class="task"><div class="tasknum">22</div><div class="task-body">
+    <p>For each surface, show the <b>mean, max, and min</b> of winner aces, all in one table. <span class="tag t-spicy">challenge</span></p>
+    <p class="hint">Hint: <code class="inl">.agg([...])</code> with a list of function names.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df.groupby("surface")["w_ace"].agg(["mean", "max", "min"])</code></pre></div></details>
+  </div></div>
+
+  <div class="task"><div class="tasknum">23</div><div class="task-body">
+    <p>Which <b>10 players served the most total aces</b> across the whole season? <span class="tag t-spicy">challenge</span></p>
+    <p class="hint">Hint: group by winner name, sum their aces, then sort.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df.groupby("winner_name")["w_ace"].sum().sort_values(ascending=False).head(10)</code></pre></div></details>
+  </div></div>
+
+  <div class="task"><div class="tasknum">24</div><div class="task-body">
+    <p>For each surface, show the <b>average winner aces and average winner double faults</b> side by side. <span class="tag t-spicy">challenge</span></p>
+    <p class="hint">Hint: group by surface, then select both columns before <code class="inl">.mean()</code>.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df.groupby("surface")[["w_ace", "w_df"]].mean()</code></pre></div></details>
+  </div></div>
+
+  <div class="task"><div class="tasknum">25</div><div class="task-body">
+    <p>What is the <b>average winner_rank on each surface</b>? A lower average means higher-ranked players tend to win there. <span class="tag t-spicy">challenge</span></p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df.groupby("surface")["winner_rank"].mean()</code></pre></div></details>
+  </div></div>
+
+  <div class="nav"><button class="nextbtn" data-next="t5">Next: Predictor Prep &rarr;</button></div>
+</section>
+
+<!-- PREDICTOR PREP -->
+<section class="panel" id="t5">
+  <div class="panel-head"><h2>Predictor prep</h2>
+    <p class="sub">Building new columns and asking the kind of questions the match predictor will answer. Tasks 26 to 30.</p>
+  </div>
+
+  <div class="task"><div class="tasknum">26</div><div class="task-body">
+    <p>Create a new column <code class="inl">total_aces</code> = winner aces + loser aces. Then show the <b>10 matches with the highest total_aces</b>. <span class="tag t-mid">step up</span></p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df["total_aces"] = df["w_ace"] + df["l_ace"]
+df.nlargest(10, "total_aces")[["winner_name", "loser_name", "total_aces", "tourney_name"]]</code></pre></div></details>
+  </div></div>
+
+  <div class="task"><div class="tasknum">27</div><div class="task-body">
+    <p>Create a column <code class="inl">rank_diff</code> = <code class="inl">loser_rank - winner_rank</code>. In <b>how many matches did the higher-ranked player win</b> (<code class="inl">rank_diff &gt; 0</code>)? Then compute what <b>fraction</b> that is of all matches where both rankings are known. <span class="tag t-spicy">challenge</span></p>
+    <p class="hint">Hint: <code class="inl">df["rank_diff"].notna().sum()</code> gives the number of matches where both ranks are known. Divide the two.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df["rank_diff"] = df["loser_rank"] - df["winner_rank"]
+
+favorite_wins = (df["rank_diff"] > 0).sum()      # higher-ranked player won
+known = df["rank_diff"].notna().sum()            # matches with both ranks present
+
+print(favorite_wins)
+print(favorite_wins / known)                     # fraction, e.g. about 0.65</code></pre>
+    <p class="note">That fraction is the accuracy of the simplest possible predictor, "the higher-ranked player wins". It is the number our model has to beat.</p></div></details>
+  </div></div>
+
+  <div class="task"><div class="tasknum">28</div><div class="task-body">
+    <p>Create a column <code class="inl">upset</code> that is <code class="inl">True</code> when the winner was ranked <b>worse</b> than the loser (<code class="inl">winner_rank &gt; loser_rank</code>). <b>How many upsets</b> happened, and <b>which surface</b> had the most? <span class="tag t-spicy">challenge</span></p>
+    <p class="hint">Hint: sum the True/False column for the count; filter to upsets then <code class="inl">value_counts()</code> the surface.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df["upset"] = df["winner_rank"] > df["loser_rank"]
+
+print(df["upset"].sum())                            # how many upsets
+print(df[df["upset"]]["surface"].value_counts())    # which surface had the most</code></pre></div></details>
+  </div></div>
+
+  <div class="task"><div class="tasknum">29</div><div class="task-body">
+    <p>Create a column <code class="inl">ace_diff</code> = <code class="inl">w_ace - l_ace</code> and print its <b>average</b> across all matches. Is it positive? In a comment, write one line on what that tells you about winners. <span class="tag t-spicy">challenge</span></p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df["ace_diff"] = df["w_ace"] - df["l_ace"]
+df["ace_diff"].mean()
+# positive average means winners tend to out-serve (out-ace) their opponents</code></pre></div></details>
+  </div></div>
+
+  <div class="task"><div class="tasknum">30</div><div class="task-body">
+    <p>For each player, compute <b>how many matches they won</b> and their <b>average aces per win</b>, then show the <b>top 10 by wins</b>. <span class="tag t-spicy">challenge</span></p>
+    <p class="hint">Hint: group by winner name and use <code class="inl">.agg(["count", "mean"])</code> on the winner aces column, then sort by the count.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df.groupby("winner_name")["w_ace"].agg(["count", "mean"]).sort_values(
+    "count", ascending=False
+).head(10)
+# count = matches won, mean = average aces per win</code></pre>
+    <p class="note">This little table is a first "player profile". Next week we expand it into the features the model learns from.</p></div></details>
+  </div></div>
+
+  <div class="nav"><button class="nextbtn" data-next="t6">Finish &rarr;</button></div>
+</section>
+
+<!-- SUBMIT -->
+<section class="panel" id="t6">
+  <div class="panel-head"><h2>When you are done</h2>
+    <p class="sub">A few steps so I can review your work.</p>
+  </div>
+
+  <ul>
+    <li><b>Run every cell</b> one more time from top to bottom, so all outputs are showing. In the notebook menu you can use Run, then Run All Cells.</li>
+    <li><b>Save</b> the notebook with <b>Ctrl + S</b>.</li>
+    <li><b>Send me the file</b> <code class="inl">homework1.ipynb</code> from your <code class="inl">Tennis_AI</code> folder.</li>
+  </ul>
+
+  <div class="box concept">
+    <b>Do not stress about finishing all 30.</b> Get as far as you comfortably can and leave the ones that stump you. Where you get stuck is exactly what tells me what to cover next session, so an honest attempt is worth more than a perfect one. If a task confuses you, drop a short comment in that cell saying what tripped you up.
+  </div>
+
+  <div class="box tip">
+    <b>Looking ahead:</b> tasks 27 and 28 (how often the favorite wins, and where upsets happen) are the seed of the whole predictor. Next week we start turning these ideas into features and build a first model.
+  </div>
+</section>
+
+</div>
+
+<script>
+  var tabs = document.querySelectorAll(".tab");
+  var panels = document.querySelectorAll(".panel");
+  var bar = document.getElementById("tabbar");
+
+  function show(id){
+    tabs.forEach(function(t){ t.classList.toggle("active", t.dataset.target === id); });
+    panels.forEach(function(p){ p.classList.toggle("active", p.id === id); });
+    window.scrollTo({ top: bar.offsetTop, behavior: "smooth" });
+  }
+  tabs.forEach(function(t){ t.addEventListener("click", function(){ show(t.dataset.target); }); });
+  document.querySelectorAll("[data-next]").forEach(function(b){
+    b.addEventListener("click", function(){ show(b.dataset.next); });
+  });
+
+  document.querySelectorAll(".copybtn").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var code = btn.parentElement.querySelector("code").innerText;
+      navigator.clipboard.writeText(code).then(function(){
+        btn.textContent = "Copied";
+        btn.classList.add("done");
+        setTimeout(function(){ btn.textContent = "Copy"; btn.classList.remove("done"); }, 1500);
+      });
+    });
+  });
+</script>
+</body>
+</html>
