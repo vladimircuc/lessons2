@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Week 3 - Visualize and Frame the Problem</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2430; --border:#30363d;
+    --text:#e6edf3; --muted:#8b949e; --accent:#c9f24d; --accent2:#58a6ff;
+    --code:#0a0e14; --green:#3fb950; --yellow:#d29922; --red:#f85149; --clay:#e07b39;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.68;padding:0 0 60px;}
+  .wrap{max-width:920px;margin:0 auto;padding:0 20px;}
+  header{border-bottom:1px solid var(--border);
+    background:linear-gradient(180deg,#12160e,#0d1117);padding:34px 0 26px;}
+  .kicker{color:var(--accent);font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 8px;}
+  header h1{margin:0 0 10px;font-size:28px;letter-spacing:-0.5px;}
+  header p{margin:0;color:var(--muted);font-size:14.5px;max-width:770px;}
+  .pill{display:inline-block;background:var(--panel2);border:1px solid var(--border);border-radius:20px;padding:2px 12px;font-size:12px;color:var(--muted);margin-right:6px;}
+
+  #tabbar{position:sticky;top:0;z-index:50;background:rgba(13,17,23,.96);
+    backdrop-filter:blur(6px);border-bottom:1px solid var(--border);}
+  .tabs{max-width:920px;margin:0 auto;padding:8px 14px;display:flex;flex-wrap:wrap;gap:6px;}
+  .tab{background:var(--panel);border:1px solid var(--border);color:var(--muted);
+    font-size:13px;font-weight:600;padding:7px 13px;border-radius:8px;cursor:pointer;
+    display:flex;align-items:center;gap:7px;transition:.12s;font-family:inherit;}
+  .tab:hover{color:var(--text);border-color:#455063;}
+  .tab .n{font-size:11px;font-weight:800;background:var(--panel2);color:var(--muted);
+    border-radius:5px;padding:1px 6px;min-width:20px;text-align:center;}
+  .tab.active{background:var(--accent);color:#0d1117;border-color:var(--accent);}
+  .tab.active .n{background:rgba(13,17,23,.25);color:#0d1117;}
+
+  .panel{display:none;animation:fade .18s ease;}
+  .panel.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+  .panel-head{padding:26px 0 2px;}
+  .panel-head h2{margin:0;font-size:24px;letter-spacing:-0.3px;}
+  .panel-head .sub{color:var(--muted);margin:8px 0 0;font-size:15px;}
+
+  h3{font-size:15px;margin:24px 0 6px;color:var(--text);}
+  .lead{color:var(--muted);margin:6px 0 14px;}
+  p{margin:11px 0;}
+  ul{margin:8px 0;padding-left:22px;}
+  li{margin:6px 0;}
+  .box{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin:16px 0;}
+  .tip{border-left:3px solid var(--accent2);}
+  .warn{border-left:3px solid var(--yellow);}
+  .concept{border-left:3px solid var(--accent);}
+  .why{border-left:3px solid var(--clay);}
+  .cell-label{font-size:11px;color:var(--accent);font-weight:700;letter-spacing:0.5px;margin:18px 0 4px;text-transform:uppercase;}
+  pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padding:15px 16px;overflow-x:auto;margin:0 0 6px;position:relative;}
+  code{font-family:"SF Mono","Fira Code",Consolas,Menlo,monospace;font-size:13.5px;color:#c9d1d9;}
+  .copybtn{position:absolute;top:7px;right:7px;background:var(--panel2);border:1px solid var(--border);
+    color:var(--muted);font-size:11px;padding:4px 10px;border-radius:6px;cursor:pointer;transition:.15s;font-family:inherit;}
+  .copybtn:hover{color:var(--text);border-color:var(--accent);}
+  .copybtn.done{color:var(--green);border-color:var(--green);}
+  .out{color:var(--muted);font-size:13px;margin:2px 0 14px;padding-left:12px;border-left:2px solid var(--border);}
+  .out b{color:var(--text);font-weight:600;}
+  code.inl{background:var(--panel2);border:1px solid var(--border);border-radius:5px;padding:1px 6px;color:var(--accent);font-size:12.5px;}
+
+  .practice-head{margin:30px 0 4px;font-size:13px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--accent);display:flex;align-items:center;gap:10px;}
+  .practice-head::before{content:"";flex:0 0 26px;height:2px;background:var(--accent);}
+  .ex{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:10px;padding:14px 18px;margin:12px 0;}
+  .ex p{margin:0;}
+  .qn{font-weight:700;color:var(--accent);margin-right:6px;}
+  details.sol{margin:10px 0 0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  details.sol summary{cursor:pointer;padding:9px 14px;background:var(--panel2);font-weight:600;font-size:12.5px;color:var(--green);user-select:none;list-style:none;}
+  details.sol summary::-webkit-details-marker{display:none;}
+  details.sol summary::before{content:"\25B8  ";color:var(--muted);}
+  details.sol[open] summary::before{content:"\25BE  ";}
+  details.sol .sb{padding:8px 14px 10px;}
+  .sb .note{color:var(--muted);font-size:12.5px;margin:6px 0 0;padding-left:10px;border-left:2px solid var(--border);}
+
+  .nav{display:flex;justify-content:flex-end;margin:32px 0 10px;padding-top:18px;border-top:1px solid var(--border);}
+  .nextbtn{background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:14px;font-weight:600;
+    padding:10px 18px;border-radius:9px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;transition:.12s;}
+  .nextbtn:hover{border-color:var(--accent);color:var(--accent);}
+  a{color:var(--accent2);}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <p class="kicker">Tennis AI Project &middot; Week 3</p>
+    <h1>Visualize the Data, Then Frame the Problem</h1>
+    <p>Two things this week. First, draw a few charts so you actually understand the data before modeling it. Second, the most important modeling idea in the whole project: reshaping the matches so a model can learn to predict a winner honestly, without cheating. Each tab teaches, then gives you practice to do right there.</p>
+    <div style="margin-top:14px;">
+      <span class="pill">charts</span><span class="pill">player A vs B</span><span class="pill">target</span><span class="pill">train / test</span><span class="pill">baseline</span>
+    </div>
+  </div>
+</header>
+
+<div id="tabbar">
+  <div class="tabs">
+    <button class="tab active" data-target="t0"><span class="n">0</span>Start</button>
+    <button class="tab" data-target="t1"><span class="n">1</span>Charts I</button>
+    <button class="tab" data-target="t2"><span class="n">2</span>Charts II</button>
+    <button class="tab" data-target="t3"><span class="n">3</span>The trap</button>
+    <button class="tab" data-target="t4"><span class="n">4</span>Train / test</button>
+    <button class="tab" data-target="t5"><span class="n">5</span>Baseline</button>
+    <button class="tab" data-target="t6"><span class="n">R</span>Review</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ============ START ============ -->
+<section class="panel active" id="t0">
+  <div class="panel-head"><h2>Start here</h2>
+    <p class="sub">Load and quickly re-prep the data so this scratch notebook stands on its own.</p>
+  </div>
+
+  <p>Make a new scratch notebook <code class="inl">lesson3.ipynb</code>. This first cell loads the season and redoes last week's cleaning in one go, so you have a clean <code class="inl">df</code> to work with. Nothing new here, it is a recap.</p>
+  <pre><button class="copybtn">Copy</button><code>import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+df = pd.read_csv("atp_matches_2023.csv")
+
+# quick clean (same as last week)
+df["tourney_date"] = pd.to_datetime(df["tourney_date"], format="%Y%m%d")
+df["year"]  = df["tourney_date"].dt.year
+df["month"] = df["tourney_date"].dt.month
+df = df.dropna(subset=["surface", "winner_rank", "loser_rank"]).copy()
+df["winner_ht"] = df["winner_ht"].fillna(df["winner_ht"].median())
+df["loser_ht"]  = df["loser_ht"].fillna(df["loser_ht"].median())
+
+print(df.shape)</code></pre>
+  <p class="out">The <code class="inl">import matplotlib.pyplot as plt</code> line is new, that is the plotting library we use in the first two tabs.</p>
+
+  <div class="box why">
+    <b>The week in one sentence.</b> Before you can build a predictor you should look at the data with charts, and then reshape it so "who won" is something the model has to figure out, not something baked into the columns. Charts first, then the reshape.
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t1">Next: Charts I &rarr;</button></div>
+</section>
+
+<!-- ============ CHARTS I ============ -->
+<section class="panel" id="t1">
+  <div class="panel-head"><h2>Charts I: bars and histograms</h2>
+    <p class="sub">You can plot straight from a DataFrame. A picture shows the shape of the data far faster than a table of numbers.</p>
+  </div>
+
+  <div class="box concept">
+    <b>How plotting works here.</b> pandas has a built-in <code class="inl">.plot()</code> that draws charts using matplotlib under the hood. You pick the chart type with <code class="inl">kind="bar"</code>, <code class="inl">"hist"</code>, <code class="inl">"line"</code>, and so on. In a notebook the chart appears right under the cell. We also use <code class="inl">plt</code> (matplotlib) to add a title and axis labels.</p>
+  </div>
+
+  <p class="cell-label">Cell &middot; a bar chart of matches per surface</p>
+  <pre><button class="copybtn">Copy</button><code>df["surface"].value_counts().plot(kind="bar", title="Matches per surface")
+plt.ylabel("number of matches")
+plt.show()</code></pre>
+  <p class="out"><code class="inl">value_counts()</code> gives the count per surface (same as week 1), and <code class="inl">.plot(kind="bar")</code> turns that into bars. You will see Hard towering over Clay and Grass, which matches the real tour calendar.</p>
+
+  <p class="cell-label">Cell &middot; a histogram of match length</p>
+  <pre><button class="copybtn">Copy</button><code>df["minutes"].plot(kind="hist", bins=30, title="How long matches last")
+plt.xlabel("minutes")
+plt.show()</code></pre>
+  <p class="out">A histogram splits a number column into ranges (bins) and shows how many matches fall in each. <code class="inl">bins=30</code> sets how fine the buckets are. You see most matches cluster around 90 to 120 minutes with a long tail of marathons.</p>
+
+  <div class="box tip">
+    <b>Two habits:</b> always add a <code class="inl">title</code> so a chart explains itself, and call <code class="inl">plt.show()</code> at the end of the cell to render it cleanly (it also hides a line of text output pandas would otherwise print).
+  </div>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex">
+    <p><span class="qn">1.</span>Make a bar chart of how many matches happened at each <code class="inl">tourney_level</code> (G, M, A, D).</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df["tourney_level"].value_counts().plot(kind="bar", title="Matches per tournament level")
+plt.ylabel("matches")
+plt.show()</code></pre></div></details>
+  </div>
+  <div class="ex">
+    <p><span class="qn">2.</span>Make a histogram of the winners' aces (<code class="inl">w_ace</code>) with 20 bins.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df["w_ace"].plot(kind="hist", bins=20, title="Aces by the winner")
+plt.xlabel("aces")
+plt.show()</code></pre></div></details>
+  </div>
+  <div class="ex">
+    <p><span class="qn">3.</span>Make a bar chart of the 10 players with the most match wins. (Hint: <code class="inl">value_counts().head(10)</code> on the winners, then plot.)</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df["winner_name"].value_counts().head(10).plot(kind="bar", title="Most wins in 2023")
+plt.ylabel("wins")
+plt.show()</code></pre></div></details>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t2">Next: Charts II &rarr;</button></div>
+</section>
+
+<!-- ============ CHARTS II ============ -->
+<section class="panel" id="t2">
+  <div class="panel-head"><h2>Charts II: comparing and relating</h2>
+    <p class="sub">Charts that combine grouping with plotting, so you can compare groups and spot patterns that matter for the predictor.</p>
+  </div>
+
+  <p class="cell-label">Cell &middot; average aces by surface (groupby then plot)</p>
+  <pre><button class="copybtn">Copy</button><code>df.groupby("surface")["w_ace"].mean().plot(kind="bar", title="Average winner aces by surface")
+plt.ylabel("average aces")
+plt.show()</code></pre>
+  <p class="out">This is a week 1 groupby with <code class="inl">.plot()</code> stuck on the end. You should see grass highest and clay lowest, which fits tennis intuition (fast courts reward big serving).</p>
+
+  <p class="cell-label">Cell &middot; matches over the season (a line chart)</p>
+  <pre><button class="copybtn">Copy</button><code>df.groupby("month").size().plot(kind="line", marker="o", title="Matches per month")
+plt.xlabel("month")
+plt.ylabel("matches")
+plt.show()</code></pre>
+  <p class="out"><code class="inl">.size()</code> counts rows in each month group. A line chart is right for anything over time. You can see the calendar breathe: busy stretches around the Slams, quieter gaps.</p>
+
+  <p class="cell-label">Cell &middot; where do upsets happen? (a "story" chart)</p>
+  <pre><button class="copybtn">Copy</button><code># favorite_won is True when the higher-ranked player won
+df["favorite_won"] = df["winner_rank"] < df["loser_rank"]
+
+df.groupby("surface")["favorite_won"].mean().plot(kind="bar", title="Favorite win rate by surface")
+plt.ylabel("share won by favorite")
+plt.show()</code></pre>
+  <p class="out">Taking the mean of a True/False column gives the share that are True, so this is the fraction of matches the favorite won on each surface. This chart is directly relevant to our predictor: it shows how often rankings alone get it right, and where upsets are more common.</p>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex">
+    <p><span class="qn">1.</span>Make a bar chart of the average match length (<code class="inl">minutes</code>) per surface.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df.groupby("surface")["minutes"].mean().plot(kind="bar", title="Average match length by surface")
+plt.ylabel("minutes")
+plt.show()</code></pre></div></details>
+  </div>
+  <div class="ex">
+    <p><span class="qn">2.</span>Make a bar chart of the average winner aces per <code class="inl">tourney_level</code>.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df.groupby("tourney_level")["w_ace"].mean().plot(kind="bar", title="Average winner aces by level")
+plt.ylabel("aces")
+plt.show()</code></pre></div></details>
+  </div>
+  <div class="ex">
+    <p><span class="qn">3.</span>Using the <code class="inl">favorite_won</code> column, make a bar chart of the favorite win rate per <code class="inl">tourney_level</code>. Are favorites safer at Grand Slams (best of 5)?</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df.groupby("tourney_level")["favorite_won"].mean().plot(kind="bar", title="Favorite win rate by level")
+plt.ylabel("share won by favorite")
+plt.show()</code></pre>
+    <p class="note">Best-of-5 (Grand Slams, level G) usually favors the stronger player more, since there is less room for a lucky upset over five sets.</p></div></details>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t3">Next: The trap &rarr;</button></div>
+</section>
+
+<!-- ============ THE TRAP / SYMMETRIC ============ -->
+<section class="panel" id="t3">
+  <div class="panel-head"><h2>The winner/loser trap, and the fix</h2>
+    <p class="sub">This is the most important idea in the whole project. Get it right and everything downstream works. Get it wrong and your model is meaningless.</p>
+  </div>
+
+  <div class="box why">
+    <b>The trap.</b> Our data lists every match as <code class="inl">winner_...</code> and <code class="inl">loser_...</code>. The winner is always the winner. If we ask a model "given this row, who won?", the answer is baked into the column names, there is nothing to predict. Even the difference features you built last week secretly point at the answer, because they are always computed as winner minus loser. A model trained on that learns a useless rule and falls apart on a real, unplayed match.
+  </div>
+
+  <div class="box concept">
+    <b>The fix: player A vs player B, chosen at random.</b>
+    <p style="margin:8px 0 0;">Instead of "winner" and "loser", we relabel the two players as <b>player A</b> and <b>player B</b>. For each match we flip a coin: sometimes the winner is A, sometimes the winner is B. Then we make a <b>target</b> column that is 1 when A won and 0 when B won. Because the coin flip is random, A wins about half the time, so the target is balanced and the model cannot cheat by always guessing one side. It is forced to look at the features (the ranking gap, and so on) to decide. Our features become "player A minus player B", computed from whoever ended up as A.</p>
+  </div>
+
+  <p class="cell-label">Cell &middot; flip the coin and make the target</p>
+  <pre><button class="copybtn">Copy</button><code>rng = np.random.default_rng(42)   # fixed seed so results repeat
+
+# for each match, randomly decide whether the winner is player A
+df["winner_is_A"] = rng.random(len(df)) < 0.5
+
+# target: 1 if player A won, 0 if player B won
+df["target"] = df["winner_is_A"].astype(int)
+
+df["target"].value_counts()</code></pre>
+  <p class="out">You should see roughly equal counts of 1 and 0. That balance is the whole point: the model starts from a coin flip and has to earn its accuracy from the features.</p>
+
+  <p class="cell-label">Cell &middot; build the features from A and B</p>
+  <pre><button class="copybtn">Copy</button><code># helper: player A's value minus player B's value, based on who is A
+def a_minus_b(winner_col, loser_col):
+    a = np.where(df["winner_is_A"], df[winner_col], df[loser_col])  # A's value
+    b = np.where(df["winner_is_A"], df[loser_col], df[winner_col])  # B's value
+    return a - b
+
+df["rank_diff"]   = a_minus_b("winner_rank", "loser_rank")
+df["points_diff"] = a_minus_b("winner_rank_points", "loser_rank_points")
+df["age_diff"]    = a_minus_b("winner_age", "loser_age")
+df["height_diff"] = a_minus_b("winner_ht", "loser_ht")
+
+df[["target", "rank_diff", "points_diff", "age_diff", "height_diff"]].head()</code></pre>
+  <p class="out"><code class="inl">np.where(condition, x, y)</code> picks <code class="inl">x</code> where the condition is True and <code class="inl">y</code> where it is False. So for each match it grabs A's value and B's value correctly depending on the coin flip, then subtracts. Now the features describe A relative to B, with no hint of who won.</p>
+
+  <div class="box tip">
+    <b>Sanity check it learned nothing yet.</b> Because A is random, <code class="inl">rank_diff</code> is now positive or negative roughly equally. The signal is still there (when A is much stronger, A usually wins), but the model has to discover the direction. That is exactly what we want.
+  </div>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex">
+    <p><span class="qn">1.</span>Print the exact balance of the target as fractions (what share is 1 vs 0). Hint: <code class="inl">value_counts(normalize=True)</code>.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df["target"].value_counts(normalize=True)</code></pre>
+    <p class="note">Both should be close to 0.50. If they are wildly different, the coin flip did not run.</p></div></details>
+  </div>
+  <div class="ex">
+    <p><span class="qn">2.</span>Check the relationship between <code class="inl">points_diff</code> and the target with a correlation. Should it be positive or negative, and why?</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df["target"].corr(df["points_diff"])</code></pre>
+    <p class="note">Positive. <code class="inl">points_diff</code> is A minus B, so when A has more ranking points it is usually the stronger player, and A winning (target 1) becomes more likely. A positive correlation confirms the feature carries real signal.</p></div></details>
+  </div>
+  <div class="ex">
+    <p><span class="qn">3.</span>In a comment, explain in your own words why we randomize who is player A instead of always making the winner player A.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb">
+      <p style="margin:0;">If the winner were always player A, the target would always be 1, and the model would just learn "A always wins", which predicts nothing for a new match. Randomizing makes the target a real 50/50 question, so the model must use the features to decide, and its accuracy becomes meaningful.</p>
+    </div></details>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t4">Next: Train / test &rarr;</button></div>
+</section>
+
+<!-- ============ TRAIN/TEST ============ -->
+<section class="panel" id="t4">
+  <div class="panel-head"><h2>Splitting into train and test</h2>
+    <p class="sub">To know if a model is any good, you have to test it on matches it has never seen. So we hold some out.</p>
+  </div>
+
+  <div class="box concept">
+    <b>Why split at all.</b> If you train and test on the same matches, of course the model looks great, it already saw the answers. That tells you nothing about new matches. So we teach the model on one slice of the data (the <b>training set</b>) and check it on a separate slice it never saw (the <b>test set</b>). The test accuracy is the honest measure of how well it predicts.</p>
+  </div>
+
+  <div class="box why">
+    <b>Why split by time for tennis.</b> A random split is fine in general, but for anything with time, predicting the future from the past is the honest test. So we train on the earlier matches of 2023 and test on the later ones. That mirrors real life: you would use past results to predict an upcoming match, never the reverse.</p>
+  </div>
+
+  <p class="cell-label">Cell &middot; a time-based 80/20 split</p>
+  <pre><button class="copybtn">Copy</button><code>df_sorted = df.sort_values("tourney_date")   # oldest matches first
+
+cutoff = int(len(df_sorted) * 0.8)           # 80% mark
+train = df_sorted.iloc[:cutoff]              # earlier matches
+test  = df_sorted.iloc[cutoff:]              # later matches
+
+print("train:", train.shape[0], " test:", test.shape[0])</code></pre>
+  <p class="out">Sort by date, find the 80% point, take everything before it as training and everything after as testing. The model will learn on early-season matches and be judged on late-season ones it has never seen.</p>
+
+  <p class="cell-label">Cell &middot; the simpler random split (for comparison)</p>
+  <pre><button class="copybtn">Copy</button><code>train_r = df.sample(frac=0.8, random_state=42)   # random 80%
+test_r  = df.drop(train_r.index)                 # the other 20%
+print(train_r.shape[0], test_r.shape[0])</code></pre>
+  <p class="out"><code class="inl">sample</code> grabs a random 80%, and <code class="inl">drop(train_r.index)</code> keeps the rows that were not chosen. Good to know, but for our tennis predictor we will use the time-based split above.</p>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex">
+    <p><span class="qn">1.</span>Do a time-based split, but hold out the last 25% for testing instead of 20%.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df_sorted = df.sort_values("tourney_date")
+cutoff = int(len(df_sorted) * 0.75)
+train = df_sorted.iloc[:cutoff]
+test  = df_sorted.iloc[cutoff:]
+print(train.shape[0], test.shape[0])</code></pre></div></details>
+  </div>
+  <div class="ex">
+    <p><span class="qn">2.</span>After the 80/20 time split, print the earliest and latest date in the <b>test</b> set, to confirm it really is the later matches.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df_sorted = df.sort_values("tourney_date")
+cutoff = int(len(df_sorted) * 0.8)
+test = df_sorted.iloc[cutoff:]
+print(test["tourney_date"].min(), test["tourney_date"].max())</code></pre>
+    <p class="note">The test set should start later in the year than where the training set ends, no overlap in time.</p></div></details>
+  </div>
+  <div class="ex">
+    <p><span class="qn">3.</span>In a comment, explain why testing on future matches is more honest than a random split for this project.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb">
+      <p style="margin:0;">In real use you always predict an upcoming match from past data. A time split copies that exactly, so the test accuracy reflects real-world performance. A random split lets the model train on some late matches and test on earlier ones, which is a mild form of peeking at the future.</p>
+    </div></details>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t5">Next: Baseline &rarr;</button></div>
+</section>
+
+<!-- ============ BASELINE ============ -->
+<section class="panel" id="t5">
+  <div class="panel-head"><h2>The baseline: the number to beat</h2>
+    <p class="sub">Before building anything fancy, measure the dumbest reasonable predictor. That is the bar your real model has to clear.</p>
+  </div>
+
+  <div class="box concept">
+    <b>What a baseline is and why it matters.</b> A baseline is the simplest rule you could use without any machine learning. For tennis, that rule is "the higher-ranked player wins". If a fancy model cannot beat that simple rule, the model is not worth much. Measuring the baseline first keeps you honest: it turns "my model is 65% accurate" into "my model is 65%, and the free baseline was already 64%", which is a very different story.</p>
+  </div>
+
+  <p class="cell-label">Cell &middot; measure the favorite-wins baseline on the test set</p>
+  <pre><button class="copybtn">Copy</button><code>df_sorted = df.sort_values("tourney_date")
+cutoff = int(len(df_sorted) * 0.8)
+test = df_sorted.iloc[cutoff:]
+
+# rule: predict A wins when A is the higher-ranked player.
+# rank_diff is A_rank - B_rank, and a smaller rank number is better,
+# so A is the favorite when rank_diff is negative.
+baseline_pred = (test["rank_diff"] < 0).astype(int)
+
+accuracy = (baseline_pred == test["target"]).mean()
+print("baseline accuracy:", round(accuracy, 3))</code></pre>
+  <p class="out">We predict player A wins whenever A is ranked higher, then compare those guesses to the real <code class="inl">target</code> and take the share we got right. On the real data this lands around <b>0.65</b>. Write that number down, it is the score to beat when we train a model next week.</p>
+
+  <div class="box warn">
+    <b>Keep this number in your head.</b> When your first trained model prints its accuracy next week, the first thing you do is compare it to this baseline. Beating it by a few points is a genuine, honest win. Scoring 0.97 would mean something leaked, not that you built a genius.
+  </div>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex">
+    <p><span class="qn">1.</span>Build a second baseline using ranking points instead of rank: predict A wins when A has more points (<code class="inl">points_diff &gt; 0</code>). Does it give a similar accuracy?</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df_sorted = df.sort_values("tourney_date")
+cutoff = int(len(df_sorted) * 0.8)
+test = df_sorted.iloc[cutoff:]
+
+pred_points = (test["points_diff"] > 0).astype(int)
+print("points baseline:", round((pred_points == test["target"]).mean(), 3))</code></pre>
+    <p class="note">Very close to the rank baseline, since rank and points measure almost the same thing.</p></div></details>
+  </div>
+  <div class="ex">
+    <p><span class="qn">2.</span>What accuracy would you get by always guessing 1 (A always wins)? Compute it, and explain why it is near 0.5.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df_sorted = df.sort_values("tourney_date")
+cutoff = int(len(df_sorted) * 0.8)
+test = df_sorted.iloc[cutoff:]
+
+print("always-1 accuracy:", round((test["target"] == 1).mean(), 3))</code></pre>
+    <p class="note">Near 0.5, because A was assigned by a coin flip, so A wins about half the time. This is the true floor: any useful model must beat 0.5, and a good one beats the ~0.65 favorite baseline too.</p></div></details>
+  </div>
+  <div class="ex">
+    <p><span class="qn">3.</span>In a comment, state in one line what it would mean if next week's model scored 0.66 versus if it scored 0.98.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb">
+      <p style="margin:0;">0.66 would be a real, honest result, slightly better than the favorite baseline, which is exactly what a sound tennis model looks like. 0.98 would almost certainly mean a post-match column (like aces or the score) leaked into the features, making the result fake.</p>
+    </div></details>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t6">Next: Review &rarr;</button></div>
+</section>
+
+<!-- ============ REVIEW ============ -->
+<section class="panel" id="t6">
+  <div class="panel-head"><h2>Review: 10 questions</h2>
+    <p class="sub">Mixed across charts and framing. Do them in order in their own cells (some build on earlier ones). These 10 are part one of your homework.</p>
+  </div>
+
+  <div class="ex"><p><span class="qn">1.</span>Bar chart of matches per surface, with a title.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df["surface"].value_counts().plot(kind="bar", title="Matches per surface")
+plt.show()</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">2.</span>Histogram of match length in minutes.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df["minutes"].plot(kind="hist", bins=30, title="Match length")
+plt.xlabel("minutes"); plt.show()</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">3.</span>Bar chart of average winner aces per surface.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df.groupby("surface")["w_ace"].mean().plot(kind="bar", title="Avg winner aces by surface")
+plt.show()</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">4.</span>Line chart of matches per month.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df.groupby("month").size().plot(kind="line", marker="o", title="Matches per month")
+plt.xlabel("month"); plt.show()</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">5.</span>Create <code class="inl">favorite_won</code> and make a bar chart of the favorite win rate by surface.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df["favorite_won"] = df["winner_rank"] < df["loser_rank"]
+df.groupby("surface")["favorite_won"].mean().plot(kind="bar", title="Favorite win rate by surface")
+plt.show()</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">6.</span>Build the symmetric target: randomly assign each winner to A or B, make a <code class="inl">target</code> column, and print its balance as fractions.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>rng = np.random.default_rng(42)
+df["winner_is_A"] = rng.random(len(df)) < 0.5
+df["target"] = df["winner_is_A"].astype(int)
+df["target"].value_counts(normalize=True)</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">7.</span>Build <code class="inl">rank_diff</code> and <code class="inl">points_diff</code> as player A minus player B, then show the first 5 rows with the target.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>def a_minus_b(w, l):
+    a = np.where(df["winner_is_A"], df[w], df[l])
+    b = np.where(df["winner_is_A"], df[l], df[w])
+    return a - b
+
+df["rank_diff"]   = a_minus_b("winner_rank", "loser_rank")
+df["points_diff"] = a_minus_b("winner_rank_points", "loser_rank_points")
+df[["target", "rank_diff", "points_diff"]].head()</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">8.</span>Do a time-based 80/20 split and print the train and test sizes.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df_sorted = df.sort_values("tourney_date")
+cutoff = int(len(df_sorted) * 0.8)
+train = df_sorted.iloc[:cutoff]
+test  = df_sorted.iloc[cutoff:]
+print(train.shape[0], test.shape[0])</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">9.</span>Compute the favorite-wins baseline accuracy on the test set (predict A wins when <code class="inl">rank_diff &lt; 0</code>).</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>pred = (test["rank_diff"] < 0).astype(int)
+print("baseline:", round((pred == test["target"]).mean(), 3))</code></pre>
+    <p class="note">Around 0.65 on the real data. This is the number your model has to beat next week.</p></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">10.</span>In a comment, explain the winner/loser trap and how the player A/B setup fixes it.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb">
+      <p style="margin:0;">In the raw data the winner is always the winner, so "who won" is baked into the columns and there is nothing to predict. Relabeling the two players as A and B and randomly deciding who is A makes the target a real 50/50 question, forcing the model to learn from the features instead of the column layout.</p>
+    </div></details>
+  </div>
+
+  <div class="box concept" style="margin-top:26px;">
+    <b>Done with Week 3.</b> You can now visualize the data and, more importantly, you have framed the prediction problem correctly: a balanced target, honest features, a train/test split, and a baseline to beat. Next week is the payoff, we train the first real model and see if it beats that baseline. The 10 questions above are homework part one; the project notebook is part two.
+  </div>
+</section>
+
+</div>
+
+<script>
+  var tabs = document.querySelectorAll(".tab");
+  var panels = document.querySelectorAll(".panel");
+  var bar = document.getElementById("tabbar");
+  function show(id){
+    tabs.forEach(function(t){ t.classList.toggle("active", t.dataset.target === id); });
+    panels.forEach(function(p){ p.classList.toggle("active", p.id === id); });
+    window.scrollTo({ top: bar.offsetTop, behavior: "smooth" });
+  }
+  tabs.forEach(function(t){ t.addEventListener("click", function(){ show(t.dataset.target); }); });
+  document.querySelectorAll("[data-next]").forEach(function(b){
+    b.addEventListener("click", function(){ show(b.dataset.next); });
+  });
+  document.querySelectorAll(".copybtn").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var code = btn.parentElement.querySelector("code").innerText;
+      navigator.clipboard.writeText(code).then(function(){
+        btn.textContent = "Copied"; btn.classList.add("done");
+        setTimeout(function(){ btn.textContent = "Copy"; btn.classList.remove("done"); }, 1500);
+      });
+    });
+  });
+</script>
+</body>
+</html>
