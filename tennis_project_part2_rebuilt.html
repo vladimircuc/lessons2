@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project - Tennis Match Predictor (Part 2, rebuilt)</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2430; --border:#30363d;
+    --text:#e6edf3; --muted:#8b949e; --accent:#c9f24d; --accent2:#58a6ff;
+    --code:#0a0e14; --green:#3fb950; --yellow:#d29922; --red:#f85149; --purple:#bc8cff;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.68;padding:0 0 60px;}
+  .wrap{max-width:920px;margin:0 auto;padding:0 20px;}
+  header{border-bottom:1px solid var(--border);
+    background:linear-gradient(180deg,#0e1512,#0d1117);padding:34px 0 26px;}
+  .kicker{color:var(--accent);font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 8px;}
+  header h1{margin:0 0 10px;font-size:28px;letter-spacing:-0.5px;}
+  header p{margin:0;color:var(--muted);font-size:14.5px;max-width:770px;}
+  .pill{display:inline-block;background:var(--panel2);border:1px solid var(--border);border-radius:20px;padding:2px 12px;font-size:12px;color:var(--muted);margin-right:6px;}
+  .pill.proj{background:rgba(188,140,255,.14);color:var(--purple);border-color:var(--purple);}
+
+  #tabbar{position:sticky;top:0;z-index:50;background:rgba(13,17,23,.96);
+    backdrop-filter:blur(6px);border-bottom:1px solid var(--border);}
+  .tabs{max-width:920px;margin:0 auto;padding:8px 14px;display:flex;flex-wrap:wrap;gap:6px;}
+  .tab{background:var(--panel);border:1px solid var(--border);color:var(--muted);
+    font-size:13px;font-weight:600;padding:7px 13px;border-radius:8px;cursor:pointer;
+    display:flex;align-items:center;gap:7px;transition:.12s;font-family:inherit;}
+  .tab:hover{color:var(--text);border-color:#455063;}
+  .tab .n{font-size:11px;font-weight:800;background:var(--panel2);color:var(--muted);
+    border-radius:5px;padding:1px 6px;min-width:20px;text-align:center;}
+  .tab.active{background:var(--accent);color:#0d1117;border-color:var(--accent);}
+  .tab.active .n{background:rgba(13,17,23,.25);color:#0d1117;}
+
+  .panel{display:none;animation:fade .18s ease;}
+  .panel.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+  .panel-head{padding:26px 0 2px;}
+  .panel-head h2{margin:0;font-size:24px;letter-spacing:-0.3px;}
+  .panel-head .sub{color:var(--muted);margin:8px 0 0;font-size:15px;}
+
+  h3{font-size:15px;margin:24px 0 6px;color:var(--text);}
+  .lead{color:var(--muted);margin:6px 0 14px;}
+  p{margin:11px 0;}
+  ul{margin:8px 0;padding-left:22px;}
+  li{margin:6px 0;}
+  .box{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin:16px 0;}
+  .tip{border-left:3px solid var(--accent2);}
+  .warn{border-left:3px solid var(--yellow);}
+  .concept{border-left:3px solid var(--accent);}
+  .proj{border-left:3px solid var(--purple);}
+  .cell-label{font-size:11px;font-weight:700;letter-spacing:0.5px;margin:18px 0 4px;text-transform:uppercase;}
+  .cl-md{color:var(--accent2);}
+  pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padding:15px 16px;overflow-x:auto;margin:0 0 6px;position:relative;}
+  pre.md{border-style:dashed;}
+  code{font-family:"SF Mono","Fira Code",Consolas,Menlo,monospace;font-size:13.5px;color:#c9d1d9;}
+  .copybtn{position:absolute;top:7px;right:7px;background:var(--panel2);border:1px solid var(--border);
+    color:var(--muted);font-size:11px;padding:4px 10px;border-radius:6px;cursor:pointer;transition:.15s;font-family:inherit;}
+  .copybtn:hover{color:var(--text);border-color:var(--accent);}
+  .copybtn.done{color:var(--green);border-color:var(--green);}
+  code.inl{background:var(--panel2);border:1px solid var(--border);border-radius:5px;padding:1px 6px;color:var(--accent);font-size:12.5px;}
+
+  .task{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:10px;padding:16px 18px;margin:16px 0;}
+  .task .th{font-size:11px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--accent);margin:0 0 6px;}
+  .task p{margin:6px 0;}
+  details.sol{margin:12px 0 0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  details.sol summary{cursor:pointer;padding:9px 14px;background:var(--panel2);font-weight:600;font-size:12.5px;color:var(--green);user-select:none;list-style:none;}
+  details.sol summary::-webkit-details-marker{display:none;}
+  details.sol summary::before{content:"\25B8  ";color:var(--muted);}
+  details.sol[open] summary::before{content:"\25BE  ";}
+  details.sol .sb{padding:8px 14px 10px;}
+
+  .see{background:rgba(63,185,80,.07);border:1px solid rgba(63,185,80,.35);border-radius:8px;padding:12px 16px;margin:12px 0 0;}
+  .see .lbl{font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--green);margin:0 0 4px;}
+  .see p{margin:0;font-size:13.5px;color:var(--text);}
+  .see code.inl{color:var(--green);}
+
+  .nav{display:flex;justify-content:flex-end;margin:32px 0 10px;padding-top:18px;border-top:1px solid var(--border);}
+  .nextbtn{background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:14px;font-weight:600;
+    padding:10px 18px;border-radius:9px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;transition:.12s;}
+  .nextbtn:hover{border-color:var(--accent);color:var(--accent);}
+  a{color:var(--accent2);}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <p class="kicker">Tennis AI Project &middot; Project Notebook</p>
+    <h1>Build Your Match Predictor: Part 2</h1>
+    <p>The big one. You take your notebook from clean data all the way to two working, evaluated machine learning models. This covers a lot: charts, reshaping the data, a train/test split, the baseline, then training a logistic regression and a decision tree and comparing them. Work through it at your own pace, checking each step against "what you should see". By the end you have a real ML result.</p>
+    <div style="margin-top:14px;">
+      <span class="pill proj">tennis_predictor.ipynb</span><span class="pill">reshape</span><span class="pill">baseline</span><span class="pill">2 models</span><span class="pill">compare</span>
+    </div>
+  </div>
+</header>
+
+<div id="tabbar">
+  <div class="tabs">
+    <button class="tab active" data-target="t0"><span class="n">0</span>Continue</button>
+    <button class="tab" data-target="t1"><span class="n">1</span>Explore</button>
+    <button class="tab" data-target="t2"><span class="n">2</span>Reframe</button>
+    <button class="tab" data-target="t3"><span class="n">3</span>Split + baseline</button>
+    <button class="tab" data-target="t4"><span class="n">4</span>Train models</button>
+    <button class="tab" data-target="t5"><span class="n">5</span>Compare</button>
+    <button class="tab" data-target="t6"><span class="n">6</span>Save &amp; next</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ============ CONTINUE ============ -->
+<section class="panel active" id="t0">
+  <div class="panel-head"><h2>Continue your project notebook</h2>
+    <p class="sub">Same file as Part 1. Open it, run it, and set up the imports you will need this week.</p>
+  </div>
+
+  <p>First, install the machine learning library if you have not already (one time, in a terminal):</p>
+  <pre><button class="copybtn">Copy</button><code>pip install scikit-learn</code></pre>
+
+  <p>Open <code class="inl">tennis_predictor.ipynb</code> and update your imports cell at the top so it has everything for this week:</p>
+  <pre><button class="copybtn">Copy</button><code>import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report</code></pre>
+  <p>Then Run All Cells so your cleaned <code class="inl">df</code> from Part 1 is in memory.</p>
+
+  <div class="box proj">
+    <b>What you are doing this week, in order:</b>
+    <ul style="margin:8px 0 0;">
+      <li><b>Explore</b> the data with a few charts.</li>
+      <li><b>Reframe</b>: replace Part 1's features with a balanced target and symmetric features.</li>
+      <li><b>Split</b> by time and measure the <b>baseline</b>.</li>
+      <li><b>Train two models</b> (logistic regression, decision tree).</li>
+      <li><b>Compare</b> them and read the feature importances, then save.</li>
+    </ul>
+  </div>
+
+  <div class="box warn">
+    <b>Two edits, not just additions.</b> In your Build Features section you will <b>delete</b> Part 1's four difference-feature lines and replace them, and you will <b>delete</b> the little baseline print cell that came right after them (the proper baseline moves to its own section this week). Both are called out where they happen.
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t1">Next: Explore &rarr;</button></div>
+</section>
+
+<!-- ============ EXPLORE ============ -->
+<section class="panel" id="t1">
+  <div class="panel-head"><h2>Add a charts section</h2>
+    <p class="sub">Add a new section right after your Clean section, so you understand the data before modeling.</p>
+  </div>
+
+  <p class="cell-label cl-md">Markdown cell &middot; new header (after Clean)</p>
+  <pre class="md"><button class="copybtn">Copy</button><code>## Explore the Data (charts)</code></pre>
+
+  <div class="task">
+    <p class="th">Your task</p>
+    <p>Add three charts: matches per surface, match length, and favorite win rate by surface.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df["surface"].value_counts().plot(kind="bar", title="Matches per surface")
+plt.ylabel("matches"); plt.show()
+
+df["minutes"].plot(kind="hist", bins=30, title="Match length")
+plt.xlabel("minutes"); plt.show()
+
+df["favorite_won"] = df["winner_rank"] < df["loser_rank"]
+df.groupby("surface")["favorite_won"].mean().plot(kind="bar", title="Favorite win rate by surface")
+plt.ylabel("share won by favorite"); plt.show()</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>Three charts: Hard dominating, match lengths peaking around 90 to 120 minutes, and favorites winning around two-thirds of matches. Add a one-line markdown note with what you notice.</p></div>
+
+  <div class="nav"><button class="nextbtn" data-next="t2">Next: Reframe &rarr;</button></div>
+</section>
+
+<!-- ============ REFRAME ============ -->
+<section class="panel" id="t2">
+  <div class="panel-head"><h2>Reshape into a real prediction problem</h2>
+    <p class="sub">Go to your <code class="inl">## 3. Build Features</code> section. This is where the two deletions happen.</p>
+  </div>
+
+  <div class="box warn">
+    <b>Delete two things first.</b> (1) The four lines building <code class="inl">rank_diff</code>, <code class="inl">points_diff</code>, <code class="inl">age_diff</code>, <code class="inl">height_diff</code> from winner minus loser. (2) The small cell right after them that printed <code class="inl">favorite_wins / known</code>. You are rebuilding both, correctly, below and in the next tab.
+  </div>
+
+  <div class="task">
+    <p class="th">Task A &middot; balanced target</p>
+    <p>Randomly assign each winner to player A or B, and make a <code class="inl">target</code> that is 1 when A won.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>rng = np.random.default_rng(42)
+df["winner_is_A"] = rng.random(len(df)) < 0.5
+df["target"] = df["winner_is_A"].astype(int)
+df["target"].value_counts(normalize=True)</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>Both values near <code class="inl">0.50</code>. The target is now a real coin-flip question the model must earn.</p></div>
+
+  <div class="task">
+    <p class="th">Task B &middot; symmetric features</p>
+    <p>Rebuild the four difference features as player A minus player B.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>def a_minus_b(winner_col, loser_col):
+    a = np.where(df["winner_is_A"], df[winner_col], df[loser_col])
+    b = np.where(df["winner_is_A"], df[loser_col], df[winner_col])
+    return a - b
+
+df["rank_diff"]   = a_minus_b("winner_rank", "loser_rank")
+df["points_diff"] = a_minus_b("winner_rank_points", "loser_rank_points")
+df["age_diff"]    = a_minus_b("winner_age", "loser_age")
+df["height_diff"] = a_minus_b("winner_ht", "loser_ht")
+
+# drop any rows still missing a feature value, so the models never see a gap
+feature_cols = ["rank_diff", "points_diff", "age_diff", "height_diff"]
+df = df.dropna(subset=feature_cols + ["target"])
+
+df[["target"] + feature_cols].head()</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>A table with the target and four features. <code class="inl">rank_diff</code> is now positive or negative roughly equally. The <code class="inl">dropna</code> line matters: scikit-learn errors on missing values, so we remove any leftover gaps here.</p></div>
+
+  <div class="box proj">
+    <b>Add a markdown note:</b> "Players relabeled A and B with a random coin flip so the target is balanced. Features are A minus B, from pre-match columns only (no aces, minutes, or score) to avoid leakage."
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t3">Next: Split + baseline &rarr;</button></div>
+</section>
+
+<!-- ============ SPLIT + BASELINE ============ -->
+<section class="panel" id="t3">
+  <div class="panel-head"><h2>Split by time, then measure the baseline</h2>
+    <p class="sub">Two short sections: the train/test split, then filling in your Baseline placeholder.</p>
+  </div>
+
+  <p class="cell-label cl-md">Markdown cell &middot; new header (after Build Features)</p>
+  <pre class="md"><button class="copybtn">Copy</button><code>## Train / Test Split</code></pre>
+
+  <div class="task">
+    <p class="th">Task A &middot; time-based split</p>
+    <p>Train on the earlier 80% of the season, test on the later 20%.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df_sorted = df.sort_values("tourney_date")
+cut = int(len(df_sorted) * 0.8)
+train = df_sorted.iloc[:cut]
+test  = df_sorted.iloc[cut:]
+print("train:", train.shape[0], " test:", test.shape[0])</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>Two numbers that add up to your match count, roughly 80/20. The test set is the later part of the season.</p></div>
+
+  <div class="task">
+    <p class="th">Task B &middot; fill in the baseline (Section 5)</p>
+    <p>Under your <code class="inl">## 5. Baseline Model</code> header, predict A wins when A is ranked better, and measure it on the test set.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>from sklearn.metrics import accuracy_score
+
+baseline_pred = (test["rank_diff"] < 0).astype(int)
+baseline_acc = accuracy_score(test["target"], baseline_pred)
+print("baseline accuracy:", round(baseline_acc, 3))</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>Around <code class="inl">0.65</code>. Note it in markdown, this is the number your models must beat.</p></div>
+
+  <div class="nav"><button class="nextbtn" data-next="t4">Next: Train models &rarr;</button></div>
+</section>
+
+<!-- ============ TRAIN MODELS ============ -->
+<section class="panel" id="t4">
+  <div class="panel-head"><h2>Train two models (Section 6)</h2>
+    <p class="sub">Fill in your <code class="inl">## 6. Train a Model</code> section. First set up X and y, then train a logistic regression and a decision tree.</p>
+  </div>
+
+  <div class="task">
+    <p class="th">Task A &middot; set up X and y</p>
+    <p>Split the features (<code class="inl">X</code>) and the target (<code class="inl">y</code>) for train and test.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>feature_cols = ["rank_diff", "points_diff", "age_diff", "height_diff"]
+X_train, y_train = train[feature_cols], train["target"]
+X_test,  y_test  = test[feature_cols],  test["target"]</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>No output, this just names the four pieces. <code class="inl">X_train</code>/<code class="inl">y_train</code> are what the model learns from; <code class="inl">X_test</code>/<code class="inl">y_test</code> are the unseen matches we judge it on.</p></div>
+
+  <div class="task">
+    <p class="th">Task B &middot; logistic regression</p>
+    <p>Create, fit, predict, and score a logistic regression.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>logreg = LogisticRegression(max_iter=1000)
+logreg.fit(X_train, y_train)
+logreg_pred = logreg.predict(X_test)
+
+logreg_acc = accuracy_score(y_test, logreg_pred)
+print("logistic regression:", round(logreg_acc, 3))</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>An accuracy around <code class="inl">0.65 to 0.68</code>, right in the neighborhood of the baseline.</p></div>
+
+  <div class="task">
+    <p class="th">Task C &middot; decision tree</p>
+    <p>Do the same with a decision tree (cap the depth so it does not overfit).</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>tree = DecisionTreeClassifier(max_depth=4, random_state=42)
+tree.fit(X_train, y_train)
+tree_pred = tree.predict(X_test)
+
+tree_acc = accuracy_score(y_test, tree_pred)
+print("decision tree:", round(tree_acc, 3))</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>Another accuracy in the same <code class="inl">0.65 to 0.68</code> range. Two real models, trained and scored.</p></div>
+
+  <div class="nav"><button class="nextbtn" data-next="t5">Next: Compare &rarr;</button></div>
+</section>
+
+<!-- ============ COMPARE ============ -->
+<section class="panel" id="t5">
+  <div class="panel-head"><h2>Compare and evaluate (Section 7)</h2>
+    <p class="sub">Fill in your <code class="inl">## 7. Evaluate</code> section: a results table, a confusion matrix, and feature importances.</p>
+  </div>
+
+  <div class="task">
+    <p class="th">Task A &middot; results table</p>
+    <p>Put the baseline and both models in one table.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>results = pd.DataFrame({
+    "model": ["baseline (favorite wins)", "logistic regression", "decision tree"],
+    "accuracy": [baseline_acc, logreg_acc, tree_acc],
+})
+results</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>A three-row table, all three scores close together near 0.65 to 0.68. This is the centerpiece of your write-up.</p></div>
+
+  <div class="task">
+    <p class="th">Task B &middot; confusion matrix</p>
+    <p>Look at the kinds of mistakes the logistic regression makes.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>print(confusion_matrix(y_test, logreg_pred))
+print(classification_report(y_test, logreg_pred, digits=3))</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>A 2x2 grid (correct on the diagonal, mistakes off it) and a report with precision and recall, all near the accuracy since the target is balanced.</p></div>
+
+  <div class="task">
+    <p class="th">Task C &middot; feature importances</p>
+    <p>Show which features the tree relied on most.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>pd.Series(tree.feature_importances_, index=feature_cols).sort_values(ascending=False)</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p><code class="inl">rank_diff</code> at the top by a wide margin, with age and height barely registering. That is your headline: ranking is almost the whole story.</p></div>
+
+  <div class="box proj">
+    <b>Add a markdown conclusion</b> under this section, for example: "All three approaches score about 0.65 to 0.68. The models barely beat the ranking-only baseline, and the ranking gap is by far the most important feature. This suggests ATP outcomes are mostly explained by who is stronger on paper, with the remaining upsets close to irreducible." That paragraph is the seed of your final paper.
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t6">Next: Save &amp; next &rarr;</button></div>
+</section>
+
+<!-- ============ SAVE & NEXT ============ -->
+<section class="panel" id="t6">
+  <div class="panel-head"><h2>Save and look ahead</h2>
+    <p class="sub">Lock in your work and see where the project is going.</p>
+  </div>
+
+  <div class="task">
+    <p class="th">Your task</p>
+    <p>Save the model-ready data (with target and features) so next week starts fast.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df.to_csv("atp_2023_model_ready.csv", index=False)
+print("saved", df.shape)</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>A new <code class="inl">atp_2023_model_ready.csv</code> in your folder. Your notebook now runs end to end: clean, explore, reshape, split, baseline, two trained models, and a comparison.</p></div>
+
+  <div class="box concept">
+    <b>What you have built:</b> a complete, honest machine learning pipeline. Raw tennis data goes in; a fair comparison of a baseline and two models comes out, with an explanation of which features matter. That is a real project.
+  </div>
+
+  <div class="box proj">
+    <b>Where it is heading:</b>
+    <ul style="margin:8px 0 0;">
+      <li><b>Next lesson:</b> add another algorithm or two (like a random forest) and make the evaluation deeper (cross-validation, so the numbers are trustworthy).</li>
+      <li><b>After that:</b> turn all of this into the written study (your README, which reads like a short paper) with the results table and charts.</li>
+      <li><b>Then:</b> a small interactive web page where anyone can pick two players and see the model's prediction, plus the paper and comparison, hosted so it works from a link. That is the piece that makes the whole project pop for college applications.</li>
+    </ul>
+  </div>
+
+  <div class="box tip">
+    <b>Turn it in:</b>
+    <ul style="margin:8px 0 0;">
+      <li>Run All Cells so it runs clean top to bottom and all charts and tables show.</li>
+      <li>Save with Ctrl + S.</li>
+      <li>Send me <code class="inl">tennis_predictor.ipynb</code> and the new <code class="inl">atp_2023_model_ready.csv</code>.</li>
+      <li><b>Keep the notebook</b>, we keep building on it.</li>
+    </ul>
+  </div>
+
+  <div class="box concept" style="margin-top:20px;">
+    <b>Reminder:</b> this project is homework part two. Part one is the 10 review questions at the end of the Week 4 lesson.
+  </div>
+</section>
+
+</div>
+
+<script>
+  var tabs = document.querySelectorAll(".tab");
+  var panels = document.querySelectorAll(".panel");
+  var bar = document.getElementById("tabbar");
+  function show(id){
+    tabs.forEach(function(t){ t.classList.toggle("active", t.dataset.target === id); });
+    panels.forEach(function(p){ p.classList.toggle("active", p.id === id); });
+    window.scrollTo({ top: bar.offsetTop, behavior: "smooth" });
+  }
+  tabs.forEach(function(t){ t.addEventListener("click", function(){ show(t.dataset.target); }); });
+  document.querySelectorAll("[data-next]").forEach(function(b){
+    b.addEventListener("click", function(){ show(b.dataset.next); });
+  });
+  document.querySelectorAll(".copybtn").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var code = btn.parentElement.querySelector("code").innerText;
+      navigator.clipboard.writeText(code).then(function(){
+        btn.textContent = "Copied"; btn.classList.add("done");
+        setTimeout(function(){ btn.textContent = "Copy"; btn.classList.remove("done"); }, 1500);
+      });
+    });
+  });
+</script>
+</body>
+</html>

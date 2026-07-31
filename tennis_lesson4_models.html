@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Week 4 - Your First Machine Learning Models</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2430; --border:#30363d;
+    --text:#e6edf3; --muted:#8b949e; --accent:#c9f24d; --accent2:#58a6ff;
+    --code:#0a0e14; --green:#3fb950; --yellow:#d29922; --red:#f85149; --clay:#e07b39;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.68;padding:0 0 60px;}
+  .wrap{max-width:920px;margin:0 auto;padding:0 20px;}
+  header{border-bottom:1px solid var(--border);
+    background:linear-gradient(180deg,#12160e,#0d1117);padding:34px 0 26px;}
+  .kicker{color:var(--accent);font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 8px;}
+  header h1{margin:0 0 10px;font-size:28px;letter-spacing:-0.5px;}
+  header p{margin:0;color:var(--muted);font-size:14.5px;max-width:770px;}
+  .pill{display:inline-block;background:var(--panel2);border:1px solid var(--border);border-radius:20px;padding:2px 12px;font-size:12px;color:var(--muted);margin-right:6px;}
+
+  #tabbar{position:sticky;top:0;z-index:50;background:rgba(13,17,23,.96);
+    backdrop-filter:blur(6px);border-bottom:1px solid var(--border);}
+  .tabs{max-width:920px;margin:0 auto;padding:8px 14px;display:flex;flex-wrap:wrap;gap:6px;}
+  .tab{background:var(--panel);border:1px solid var(--border);color:var(--muted);
+    font-size:13px;font-weight:600;padding:7px 13px;border-radius:8px;cursor:pointer;
+    display:flex;align-items:center;gap:7px;transition:.12s;font-family:inherit;}
+  .tab:hover{color:var(--text);border-color:#455063;}
+  .tab .n{font-size:11px;font-weight:800;background:var(--panel2);color:var(--muted);
+    border-radius:5px;padding:1px 6px;min-width:20px;text-align:center;}
+  .tab.active{background:var(--accent);color:#0d1117;border-color:var(--accent);}
+  .tab.active .n{background:rgba(13,17,23,.25);color:#0d1117;}
+
+  .panel{display:none;animation:fade .18s ease;}
+  .panel.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+  .panel-head{padding:26px 0 2px;}
+  .panel-head h2{margin:0;font-size:24px;letter-spacing:-0.3px;}
+  .panel-head .sub{color:var(--muted);margin:8px 0 0;font-size:15px;}
+
+  h3{font-size:15px;margin:24px 0 6px;color:var(--text);}
+  .lead{color:var(--muted);margin:6px 0 14px;}
+  p{margin:11px 0;}
+  ul{margin:8px 0;padding-left:22px;}
+  li{margin:6px 0;}
+  .box{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin:16px 0;}
+  .tip{border-left:3px solid var(--accent2);}
+  .warn{border-left:3px solid var(--yellow);}
+  .concept{border-left:3px solid var(--accent);}
+  .why{border-left:3px solid var(--clay);}
+  .cell-label{font-size:11px;color:var(--accent);font-weight:700;letter-spacing:0.5px;margin:18px 0 4px;text-transform:uppercase;}
+  pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padding:15px 16px;overflow-x:auto;margin:0 0 6px;position:relative;}
+  code{font-family:"SF Mono","Fira Code",Consolas,Menlo,monospace;font-size:13.5px;color:#c9d1d9;}
+  .copybtn{position:absolute;top:7px;right:7px;background:var(--panel2);border:1px solid var(--border);
+    color:var(--muted);font-size:11px;padding:4px 10px;border-radius:6px;cursor:pointer;transition:.15s;font-family:inherit;}
+  .copybtn:hover{color:var(--text);border-color:var(--accent);}
+  .copybtn.done{color:var(--green);border-color:var(--green);}
+  .out{color:var(--muted);font-size:13px;margin:2px 0 14px;padding-left:12px;border-left:2px solid var(--border);}
+  .out b{color:var(--text);font-weight:600;}
+  code.inl{background:var(--panel2);border:1px solid var(--border);border-radius:5px;padding:1px 6px;color:var(--accent);font-size:12.5px;}
+
+  .practice-head{margin:30px 0 4px;font-size:13px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--accent);display:flex;align-items:center;gap:10px;}
+  .practice-head::before{content:"";flex:0 0 26px;height:2px;background:var(--accent);}
+  .ex{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:10px;padding:14px 18px;margin:12px 0;}
+  .ex p{margin:0;}
+  .qn{font-weight:700;color:var(--accent);margin-right:6px;}
+  details.sol{margin:10px 0 0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  details.sol summary{cursor:pointer;padding:9px 14px;background:var(--panel2);font-weight:600;font-size:12.5px;color:var(--green);user-select:none;list-style:none;}
+  details.sol summary::-webkit-details-marker{display:none;}
+  details.sol summary::before{content:"\25B8  ";color:var(--muted);}
+  details.sol[open] summary::before{content:"\25BE  ";}
+  details.sol .sb{padding:8px 14px 10px;}
+  .sb .note{color:var(--muted);font-size:12.5px;margin:6px 0 0;padding-left:10px;border-left:2px solid var(--border);}
+
+  .nav{display:flex;justify-content:flex-end;margin:32px 0 10px;padding-top:18px;border-top:1px solid var(--border);}
+  .nextbtn{background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:14px;font-weight:600;
+    padding:10px 18px;border-radius:9px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;transition:.12s;}
+  .nextbtn:hover{border-color:var(--accent);color:var(--accent);}
+  a{color:var(--accent2);}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <p class="kicker">Tennis AI Project &middot; Week 4</p>
+    <h1>Your First Machine Learning Models</h1>
+    <p>This is the payoff. You have clean data, honest features, a balanced target, and a baseline to beat. Now you train real models, a logistic regression and a decision tree, judge them fairly on unseen matches, and see which features actually drive a win. Same format: each tab teaches, then you practice right there.</p>
+    <div style="margin-top:14px;">
+      <span class="pill">scikit-learn</span><span class="pill">fit / predict</span><span class="pill">accuracy</span><span class="pill">two models</span><span class="pill">feature importance</span>
+    </div>
+  </div>
+</header>
+
+<div id="tabbar">
+  <div class="tabs">
+    <button class="tab active" data-target="t0"><span class="n">0</span>Start</button>
+    <button class="tab" data-target="t1"><span class="n">1</span>First model</button>
+    <button class="tab" data-target="t2"><span class="n">2</span>Evaluate</button>
+    <button class="tab" data-target="t3"><span class="n">3</span>Second model</button>
+    <button class="tab" data-target="t4"><span class="n">4</span>Compare</button>
+    <button class="tab" data-target="t5"><span class="n">R</span>Review</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ============ START ============ -->
+<section class="panel active" id="t0">
+  <div class="panel-head"><h2>Start here</h2>
+    <p class="sub">Install the machine learning library, then rebuild everything from the last three weeks in one prep cell so this scratch notebook stands alone.</p>
+  </div>
+
+  <h3>0.1 &nbsp;Install scikit-learn</h3>
+  <p>scikit-learn (imported as <code class="inl">sklearn</code>) is the standard Python machine learning library. Install it once in a terminal:</p>
+  <pre><button class="copybtn">Copy</button><code>pip install scikit-learn</code></pre>
+
+  <h3>0.2 &nbsp;Prep cell: load, clean, reframe, split</h3>
+  <p>New scratch notebook <code class="inl">lesson4.ipynb</code>. This first cell is pure recap of weeks 2 and 3, run it and move on.</p>
+  <pre><button class="copybtn">Copy</button><code>import pandas as pd
+import numpy as np
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+
+# load + clean (week 2)
+df = pd.read_csv("atp_matches_2023.csv")
+df["tourney_date"] = pd.to_datetime(df["tourney_date"], format="%Y%m%d")
+df = df.dropna(subset=["surface", "winner_rank", "loser_rank"]).copy()
+df["winner_ht"] = df["winner_ht"].fillna(df["winner_ht"].median())
+df["loser_ht"]  = df["loser_ht"].fillna(df["loser_ht"].median())
+
+# reframe: balanced target + symmetric features (week 3)
+rng = np.random.default_rng(42)
+df["winner_is_A"] = rng.random(len(df)) < 0.5
+df["target"] = df["winner_is_A"].astype(int)
+def a_minus_b(w, l):
+    a = np.where(df["winner_is_A"], df[w], df[l])
+    b = np.where(df["winner_is_A"], df[l], df[w])
+    return a - b
+df["rank_diff"]   = a_minus_b("winner_rank", "loser_rank")
+df["points_diff"] = a_minus_b("winner_rank_points", "loser_rank_points")
+df["age_diff"]    = a_minus_b("winner_age", "loser_age")
+df["height_diff"] = a_minus_b("winner_ht", "loser_ht")
+
+# drop any rows still missing a feature, then split by time
+feature_cols = ["rank_diff", "points_diff", "age_diff", "height_diff"]
+df = df.dropna(subset=feature_cols + ["target"])
+df_sorted = df.sort_values("tourney_date")
+cut = int(len(df_sorted) * 0.8)
+train = df_sorted.iloc[:cut]
+test  = df_sorted.iloc[cut:]
+print("train:", train.shape[0], " test:", test.shape[0])</code></pre>
+
+  <h3>0.3 &nbsp;Name the four pieces every model needs</h3>
+  <p>A model learns from features (the inputs) to predict a target (the answer). By convention the features are called <code class="inl">X</code> and the target <code class="inl">y</code>. We make four: training inputs and answers, and test inputs and answers.</p>
+  <pre><button class="copybtn">Copy</button><code>X_train = train[feature_cols]   # inputs the model learns from
+y_train = train["target"]       # answers it learns from
+X_test  = test[feature_cols]    # inputs it has never seen
+y_test  = test["target"]        # answers we check against
+
+X_train.head()</code></pre>
+  <p class="out">The model studies <code class="inl">X_train</code> with <code class="inl">y_train</code>, then we ask it to predict on <code class="inl">X_test</code> and compare its guesses to the real <code class="inl">y_test</code>.</p>
+
+  <div class="nav"><button class="nextbtn" data-next="t1">Next: First model &rarr;</button></div>
+</section>
+
+<!-- ============ FIRST MODEL ============ -->
+<section class="panel" id="t1">
+  <div class="panel-head"><h2>Model 1: Logistic Regression</h2>
+    <p class="sub">Your first real machine learning model. Despite the name, it is a classifier: it predicts one of two outcomes, here "player A wins" or "player B wins".</p>
+  </div>
+
+  <div class="box concept">
+    <b>What a model does, and the three-step pattern.</b>
+    <p style="margin:8px 0 0;">A model is a rule that maps inputs to an answer. It is not written by you, it is <em>learned</em> from the training data. Every scikit-learn model follows the same three steps: <b>create</b> it, <b>fit</b> it (learn from <code class="inl">X_train</code> and <code class="inl">y_train</code>), and <b>predict</b> with it (guess the answers for new inputs). Logistic regression learns a weight for each feature and combines them into a probability of A winning, then rounds to a 0 or 1.</p>
+  </div>
+
+  <p class="cell-label">Cell &middot; create, fit, predict</p>
+  <pre><button class="copybtn">Copy</button><code>model = LogisticRegression(max_iter=1000)   # create
+model.fit(X_train, y_train)                 # learn from the training data
+predictions = model.predict(X_test)         # predict on unseen test matches
+
+predictions[:10]   # its guesses for the first 10 test matches (0 or 1)</code></pre>
+  <p class="out"><code class="inl">max_iter=1000</code> just gives the solver enough steps to settle. After <code class="inl">fit</code>, the model has learned its weights. <code class="inl">predict</code> returns an array of 0s and 1s, one guess per test match.</p>
+
+  <p class="cell-label">Cell &middot; how accurate is it?</p>
+  <pre><button class="copybtn">Copy</button><code>accuracy_score(y_test, predictions)</code></pre>
+  <p class="out"><code class="inl">accuracy_score</code> compares the guesses to the real answers and returns the share it got right. Expect something around <b>0.65</b>. Hold that thought, the next tab is about what that number really means.</p>
+
+  <div class="box tip">
+    <b>The whole ML workflow in one breath:</b> split the data, <code class="inl">fit</code> on train, <code class="inl">predict</code> on test, score the predictions. Every model you ever build follows this same shape.
+  </div>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex">
+    <p><span class="qn">1.</span>Print the model's predictions for the first 15 test matches.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>predictions[:15]</code></pre></div></details>
+  </div>
+  <div class="ex">
+    <p><span class="qn">2.</span>Store the accuracy in a variable called <code class="inl">logreg_acc</code> and print it rounded to 3 decimals.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>logreg_acc = accuracy_score(y_test, predictions)
+print(round(logreg_acc, 3))</code></pre></div></details>
+  </div>
+  <div class="ex">
+    <p><span class="qn">3.</span>The model predicts probabilities before rounding. Show the probability of A winning for the first 5 test matches. (Hint: <code class="inl">model.predict_proba(X_test)</code> returns two columns, and column 1 is the chance of a 1.)</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>model.predict_proba(X_test)[:5, 1]</code></pre>
+    <p class="note">These are the raw probabilities, for example 0.72 means a 72% chance A wins. Rounding at 0.5 turns them into the 0/1 predictions. Later, the interactive predictor will show these probabilities.</p></div></details>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t2">Next: Evaluate &rarr;</button></div>
+</section>
+
+<!-- ============ EVALUATE ============ -->
+<section class="panel" id="t2">
+  <div class="panel-head"><h2>Evaluating the model</h2>
+    <p class="sub">Accuracy is one number. To really understand a model you compare it to the baseline and look at the kinds of mistakes it makes.</p>
+  </div>
+
+  <div class="box why">
+    <b>Always compare to the baseline.</b> Remember the "favorite always wins" baseline from last week, around 0.65. A model is only impressive if it beats that. If your logistic regression scores 0.66 and the baseline was 0.65, the honest headline is "the model roughly matches the simple rule", which is a real and interesting finding in tennis, not a failure.</p>
+  </div>
+
+  <p class="cell-label">Cell &middot; recompute the baseline on the test set</p>
+  <pre><button class="copybtn">Copy</button><code>baseline_pred = (test["rank_diff"] < 0).astype(int)   # predict A wins if A ranked better
+baseline_acc = accuracy_score(y_test, baseline_pred)
+print("baseline:", round(baseline_acc, 3))
+print("model:   ", round(accuracy_score(y_test, predictions), 3))</code></pre>
+  <p class="out">Printing them side by side is the honest comparison. Usually they are within a point or two of each other.</p>
+
+  <div class="box concept">
+    <b>The confusion matrix: what kinds of mistakes?</b>
+    <p style="margin:8px 0 0;">Accuracy hides the details. A confusion matrix breaks the predictions into four boxes: correctly predicted B wins, correctly predicted A wins, and the two kinds of wrong guesses. It shows whether the model is balanced or leaning one way.</p>
+  </div>
+
+  <p class="cell-label">Cell &middot; confusion matrix and full report</p>
+  <pre><button class="copybtn">Copy</button><code>print(confusion_matrix(y_test, predictions))
+print(classification_report(y_test, predictions, digits=3))</code></pre>
+  <p class="out">The 2x2 grid reads: top-left and bottom-right are correct, the other two are mistakes. The report adds <b>precision</b> (when it predicted A wins, how often was it right) and <b>recall</b> (of the matches A actually won, how many it caught). For a balanced target like ours, these should all sit close to the accuracy.</p>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex">
+    <p><span class="qn">1.</span>Print just the confusion matrix for the logistic regression.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>confusion_matrix(y_test, predictions)</code></pre></div></details>
+  </div>
+  <div class="ex">
+    <p><span class="qn">2.</span>Print the baseline accuracy and the model accuracy on the same two lines, rounded to 3 decimals. Does the model beat the baseline?</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>print("baseline:", round(accuracy_score(y_test, (test["rank_diff"] < 0).astype(int)), 3))
+print("model:   ", round(accuracy_score(y_test, predictions), 3))</code></pre>
+    <p class="note">Likely within a point or two. Barely beating a strong baseline is the normal, honest result in tennis.</p></div></details>
+  </div>
+  <div class="ex">
+    <p><span class="qn">3.</span>In a comment, explain what it means if the model and baseline are almost equal.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb">
+      <p style="margin:0;">It means the rankings already carry most of the predictive signal, and the extra features (age, height) add little. That is a genuine tennis insight: outcomes are largely explained by who is higher ranked, and the rest is close to unpredictable variance (upsets).</p>
+    </div></details>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t3">Next: Second model &rarr;</button></div>
+</section>
+
+<!-- ============ SECOND MODEL ============ -->
+<section class="panel" id="t3">
+  <div class="panel-head"><h2>Model 2: Decision Tree</h2>
+    <p class="sub">A different kind of model, so you can compare. A decision tree learns a flowchart of yes/no questions about the features.</p>
+  </div>
+
+  <div class="box concept">
+    <b>How a decision tree thinks.</b>
+    <p style="margin:8px 0 0;">Where logistic regression draws one straight dividing line, a decision tree asks a series of threshold questions, "is <code class="inl">rank_diff</code> below this value? if so, ask another question, otherwise ask a different one", building a flowchart that ends in a prediction. It is easy to picture and can capture patterns a straight line cannot. The exact same <code class="inl">fit</code> and <code class="inl">predict</code> pattern applies, which is the beauty of scikit-learn: swap the model, keep the workflow.</p>
+  </div>
+
+  <p class="cell-label">Cell &middot; train a decision tree</p>
+  <pre><button class="copybtn">Copy</button><code>tree = DecisionTreeClassifier(max_depth=4, random_state=42)
+tree.fit(X_train, y_train)
+tree_pred = tree.predict(X_test)
+
+accuracy_score(y_test, tree_pred)</code></pre>
+  <p class="out"><code class="inl">max_depth=4</code> limits how many questions deep the flowchart goes, which stops it from memorizing the training data. <code class="inl">random_state=42</code> just makes the result repeatable. Expect an accuracy in the same 0.65 range.</p>
+
+  <div class="box warn">
+    <b>Depth controls overfitting.</b> A very deep tree can score near-perfect on the training data by memorizing it, then do worse on the test set, that gap is called overfitting. A shallow tree generalizes better. This is why we cap the depth, and why we always judge on the test set, never the training set.
+  </div>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex">
+    <p><span class="qn">1.</span>Train a decision tree with <code class="inl">max_depth=3</code> and print its test accuracy.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>t3 = DecisionTreeClassifier(max_depth=3, random_state=42)
+t3.fit(X_train, y_train)
+print(round(accuracy_score(y_test, t3.predict(X_test)), 3))</code></pre></div></details>
+  </div>
+  <div class="ex">
+    <p><span class="qn">2.</span>Train a very deep tree with <code class="inl">max_depth=20</code>. Compare its accuracy on the <b>training</b> set versus the <b>test</b> set.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>deep = DecisionTreeClassifier(max_depth=20, random_state=42)
+deep.fit(X_train, y_train)
+print("train acc:", round(accuracy_score(y_train, deep.predict(X_train)), 3))
+print("test acc: ", round(accuracy_score(y_test, deep.predict(X_test)), 3))</code></pre>
+    <p class="note">The train accuracy shoots up (near memorized) while the test accuracy is lower. That gap is overfitting in action.</p></div></details>
+  </div>
+  <div class="ex">
+    <p><span class="qn">3.</span>In a comment, say which tree you would trust for real predictions, the depth-3 one or the depth-20 one, and why.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb">
+      <p style="margin:0;">The depth-3 tree, because we judge models on unseen data. The deep tree looks better on the training set only because it memorized it; on the test set (new matches) the shallow tree generalizes better, which is what matters for predicting real future matches.</p>
+    </div></details>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t4">Next: Compare &rarr;</button></div>
+</section>
+
+<!-- ============ COMPARE ============ -->
+<section class="panel" id="t4">
+  <div class="panel-head"><h2>Compare the models and read the story</h2>
+    <p class="sub">Put everything side by side, then look at which features actually matter. This is the core of the study you will write up.</p>
+  </div>
+
+  <p class="cell-label">Cell &middot; a fair comparison table</p>
+  <pre><button class="copybtn">Copy</button><code>baseline_acc = accuracy_score(y_test, (test["rank_diff"] < 0).astype(int))
+logreg_acc   = accuracy_score(y_test, predictions)
+tree_acc     = accuracy_score(y_test, tree_pred)
+
+results = pd.DataFrame({
+    "model": ["baseline (favorite wins)", "logistic regression", "decision tree"],
+    "accuracy": [baseline_acc, logreg_acc, tree_acc],
+})
+results</code></pre>
+  <p class="out">One clean table, same test set for all three, is exactly what belongs in your write-up. It lets a reader see at a glance that the models are in the same ballpark as the baseline.</p>
+
+  <p class="cell-label">Cell &middot; which features drive the prediction?</p>
+  <pre><button class="copybtn">Copy</button><code>importances = pd.Series(tree.feature_importances_, index=feature_cols)
+importances.sort_values(ascending=False)</code></pre>
+  <p class="out"><code class="inl">feature_importances_</code> tells you how much the tree leaned on each feature. You will see <code class="inl">rank_diff</code> (and points, which measures the same thing) dominate, with age and height barely registering. That is the headline finding: <b>ranking is almost the whole story</b>.</p>
+
+  <div class="box why">
+    <b>The honest conclusion of the study.</b> All three approaches land near 0.65 to 0.68. The models barely beat the favorite baseline, and ranking is by far the most important feature. Read the right way, that is a genuine result about tennis: match outcomes are mostly explained by who is stronger on paper, and the remaining upsets are close to irreducible randomness. Reporting that honestly, with the table and the feature importances to back it, is far more impressive than claiming an unrealistic 95%.</p>
+  </div>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex">
+    <p><span class="qn">1.</span>Build the three-row results table (baseline, logistic regression, decision tree).</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>results = pd.DataFrame({
+    "model": ["baseline (favorite wins)", "logistic regression", "decision tree"],
+    "accuracy": [
+        accuracy_score(y_test, (test["rank_diff"] < 0).astype(int)),
+        accuracy_score(y_test, predictions),
+        accuracy_score(y_test, tree_pred),
+    ],
+})
+results</code></pre></div></details>
+  </div>
+  <div class="ex">
+    <p><span class="qn">2.</span>Show the tree's feature importances, sorted, and name the most important feature.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>pd.Series(tree.feature_importances_, index=feature_cols).sort_values(ascending=False)</code></pre>
+    <p class="note"><code class="inl">rank_diff</code> should be at the top by a wide margin.</p></div></details>
+  </div>
+  <div class="ex">
+    <p><span class="qn">3.</span>In a comment, write the one-sentence takeaway of this study so far.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb">
+      <p style="margin:0;">Simple pre-match features predict ATP match winners about 65 to 68% of the time, barely above the ranking-only baseline, because a player's ranking already captures most of what decides a match and the rest is largely upset variance.</p>
+    </div></details>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t5">Next: Review &rarr;</button></div>
+</section>
+
+<!-- ============ REVIEW ============ -->
+<section class="panel" id="t5">
+  <div class="panel-head"><h2>Review: 10 questions</h2>
+    <p class="sub">The full modeling workflow. Do them in order in their own cells (they build on each other). These 10 are part one of your homework.</p>
+  </div>
+
+  <div class="ex"><p><span class="qn">1.</span>From <code class="inl">train</code> and <code class="inl">test</code>, create <code class="inl">X_train</code>, <code class="inl">y_train</code>, <code class="inl">X_test</code>, <code class="inl">y_test</code> using the four feature columns.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>feature_cols = ["rank_diff", "points_diff", "age_diff", "height_diff"]
+X_train, y_train = train[feature_cols], train["target"]
+X_test,  y_test  = test[feature_cols],  test["target"]</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">2.</span>Create and fit a logistic regression on the training data.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>model = LogisticRegression(max_iter=1000)
+model.fit(X_train, y_train)</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">3.</span>Predict on the test set and show the first 10 predictions.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>predictions = model.predict(X_test)
+predictions[:10]</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">4.</span>Compute and print the logistic regression accuracy.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>print(round(accuracy_score(y_test, predictions), 3))</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">5.</span>Print the confusion matrix for the logistic regression.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>confusion_matrix(y_test, predictions)</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">6.</span>Train a decision tree with <code class="inl">max_depth=4</code> and print its accuracy.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>tree = DecisionTreeClassifier(max_depth=4, random_state=42)
+tree.fit(X_train, y_train)
+tree_pred = tree.predict(X_test)
+print(round(accuracy_score(y_test, tree_pred), 3))</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">7.</span>Build a results table comparing the baseline, logistic regression, and decision tree accuracies.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>results = pd.DataFrame({
+    "model": ["baseline (favorite wins)", "logistic regression", "decision tree"],
+    "accuracy": [
+        accuracy_score(y_test, (test["rank_diff"] < 0).astype(int)),
+        accuracy_score(y_test, predictions),
+        accuracy_score(y_test, tree_pred),
+    ],
+})
+results</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">8.</span>Show the decision tree's feature importances, sorted from most to least.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>pd.Series(tree.feature_importances_, index=feature_cols).sort_values(ascending=False)</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">9.</span>In a comment, name the most important feature and say whether it makes tennis sense.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb">
+      <p style="margin:0;">The most important feature is <code class="inl">rank_diff</code>, the ranking gap. It makes complete sense: a player's ranking summarizes their recent results, so the gap between two players is the single best clue to who wins.</p>
+    </div></details>
+  </div>
+  <div class="ex"><p><span class="qn">10.</span>In a comment, explain why models barely beating the baseline is still a good, honest result for this project.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb">
+      <p style="margin:0;">Because tennis outcomes are largely set by who is stronger (captured by ranking) plus real randomness (upsets). A model near the baseline reflects that truth. An unrealistically high score would mean leakage, so an honest 65 to 68% with a clear explanation is the credible, impressive result.</p>
+    </div></details>
+  </div>
+
+  <div class="box concept" style="margin-top:26px;">
+    <b>Done with Week 4.</b> You trained two real models, evaluated them honestly against the baseline, and found that ranking drives the prediction. Next week we add one or two more algorithms (like a random forest) and make the comparison and evaluation deeper, then we turn it all into the written study. These 10 questions are homework part one; the project notebook is part two.
+  </div>
+</section>
+
+</div>
+
+<script>
+  var tabs = document.querySelectorAll(".tab");
+  var panels = document.querySelectorAll(".panel");
+  var bar = document.getElementById("tabbar");
+  function show(id){
+    tabs.forEach(function(t){ t.classList.toggle("active", t.dataset.target === id); });
+    panels.forEach(function(p){ p.classList.toggle("active", p.id === id); });
+    window.scrollTo({ top: bar.offsetTop, behavior: "smooth" });
+  }
+  tabs.forEach(function(t){ t.addEventListener("click", function(){ show(t.dataset.target); }); });
+  document.querySelectorAll("[data-next]").forEach(function(b){
+    b.addEventListener("click", function(){ show(b.dataset.next); });
+  });
+  document.querySelectorAll(".copybtn").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var code = btn.parentElement.querySelector("code").innerText;
+      navigator.clipboard.writeText(code).then(function(){
+        btn.textContent = "Copied"; btn.classList.add("done");
+        setTimeout(function(){ btn.textContent = "Copy"; btn.classList.remove("done"); }, 1500);
+      });
+    });
+  });
+</script>
+</body>
+</html>
