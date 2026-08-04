@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Week 5 - More Models, Trustworthy Numbers</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2430; --border:#30363d;
+    --text:#e6edf3; --muted:#8b949e; --accent:#c9f24d; --accent2:#58a6ff;
+    --code:#0a0e14; --green:#3fb950; --yellow:#d29922; --red:#f85149; --clay:#e07b39; --purple:#bc8cff;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.68;padding:0 0 60px;}
+  .wrap{max-width:920px;margin:0 auto;padding:0 20px;}
+  header{border-bottom:1px solid var(--border);
+    background:linear-gradient(180deg,#12160e,#0d1117);padding:34px 0 26px;}
+  .kicker{color:var(--accent);font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 8px;}
+  header h1{margin:0 0 10px;font-size:28px;letter-spacing:-0.5px;}
+  header p{margin:0;color:var(--muted);font-size:14.5px;max-width:770px;}
+  .pill{display:inline-block;background:var(--panel2);border:1px solid var(--border);border-radius:20px;padding:2px 12px;font-size:12px;color:var(--muted);margin-right:6px;}
+
+  #tabbar{position:sticky;top:0;z-index:50;background:rgba(13,17,23,.96);
+    backdrop-filter:blur(6px);border-bottom:1px solid var(--border);}
+  .tabs{max-width:920px;margin:0 auto;padding:8px 14px;display:flex;flex-wrap:wrap;gap:6px;}
+  .tab{background:var(--panel);border:1px solid var(--border);color:var(--muted);
+    font-size:13px;font-weight:600;padding:7px 13px;border-radius:8px;cursor:pointer;
+    display:flex;align-items:center;gap:7px;transition:.12s;font-family:inherit;}
+  .tab:hover{color:var(--text);border-color:#455063;}
+  .tab .n{font-size:11px;font-weight:800;background:var(--panel2);color:var(--muted);
+    border-radius:5px;padding:1px 6px;min-width:20px;text-align:center;}
+  .tab.active{background:var(--accent);color:#0d1117;border-color:var(--accent);}
+  .tab.active .n{background:rgba(13,17,23,.25);color:#0d1117;}
+
+  .panel{display:none;animation:fade .18s ease;}
+  .panel.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+  .panel-head{padding:26px 0 2px;}
+  .panel-head h2{margin:0;font-size:24px;letter-spacing:-0.3px;}
+  .panel-head .sub{color:var(--muted);margin:8px 0 0;font-size:15px;}
+
+  h3{font-size:15px;margin:24px 0 6px;color:var(--text);}
+  .lead{color:var(--muted);margin:6px 0 14px;}
+  p{margin:11px 0;}
+  ul{margin:8px 0;padding-left:22px;}
+  li{margin:6px 0;}
+  .box{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin:16px 0;}
+  .tip{border-left:3px solid var(--accent2);}
+  .warn{border-left:3px solid var(--yellow);}
+  .concept{border-left:3px solid var(--accent);}
+  .why{border-left:3px solid var(--clay);}
+  .write{border-left:3px solid var(--purple);}
+  .cell-label{font-size:11px;color:var(--accent);font-weight:700;letter-spacing:0.5px;margin:18px 0 4px;text-transform:uppercase;}
+  pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padding:15px 16px;overflow-x:auto;margin:0 0 6px;position:relative;}
+  code{font-family:"SF Mono","Fira Code",Consolas,Menlo,monospace;font-size:13.5px;color:#c9d1d9;}
+  .copybtn{position:absolute;top:7px;right:7px;background:var(--panel2);border:1px solid var(--border);
+    color:var(--muted);font-size:11px;padding:4px 10px;border-radius:6px;cursor:pointer;transition:.15s;font-family:inherit;}
+  .copybtn:hover{color:var(--text);border-color:var(--accent);}
+  .copybtn.done{color:var(--green);border-color:var(--green);}
+  .out{color:var(--muted);font-size:13px;margin:2px 0 14px;padding-left:12px;border-left:2px solid var(--border);}
+  .out b{color:var(--text);font-weight:600;}
+  code.inl{background:var(--panel2);border:1px solid var(--border);border-radius:5px;padding:1px 6px;color:var(--accent);font-size:12.5px;}
+
+  .practice-head{margin:30px 0 4px;font-size:13px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--accent);display:flex;align-items:center;gap:10px;}
+  .practice-head::before{content:"";flex:0 0 26px;height:2px;background:var(--accent);}
+  .ex{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:10px;padding:14px 18px;margin:12px 0;}
+  .ex.wr{border-left-color:var(--purple);}
+  .ex p{margin:0;}
+  .qn{font-weight:700;color:var(--accent);margin-right:6px;}
+  .ex.wr .qn{color:var(--purple);}
+  .wtag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 8px;border-radius:4px;margin-left:8px;background:rgba(188,140,255,.15);color:var(--purple);border:1px solid var(--purple);vertical-align:middle;}
+  details.sol{margin:10px 0 0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  details.sol summary{cursor:pointer;padding:9px 14px;background:var(--panel2);font-weight:600;font-size:12.5px;color:var(--green);user-select:none;list-style:none;}
+  details.sol summary::-webkit-details-marker{display:none;}
+  details.sol summary::before{content:"\25B8  ";color:var(--muted);}
+  details.sol[open] summary::before{content:"\25BE  ";}
+  details.sol .sb{padding:8px 14px 10px;}
+  details.sol.ex-ans summary{color:var(--purple);}
+  .sb .note{color:var(--muted);font-size:12.5px;margin:6px 0 0;padding-left:10px;border-left:2px solid var(--border);}
+  .sb .exans{font-size:13.5px;color:var(--text);margin:0;font-style:italic;}
+  .sb .exans::before{content:"Example answer: ";font-style:normal;font-weight:700;color:var(--purple);}
+
+  .nav{display:flex;justify-content:flex-end;margin:32px 0 10px;padding-top:18px;border-top:1px solid var(--border);}
+  .nextbtn{background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:14px;font-weight:600;
+    padding:10px 18px;border-radius:9px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;transition:.12s;}
+  .nextbtn:hover{border-color:var(--accent);color:var(--accent);}
+  a{color:var(--accent2);}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <p class="kicker">Tennis AI Project &middot; Week 5</p>
+    <h1>More Models, and Numbers You Can Trust</h1>
+    <p>You have two models. This week you add a stronger one (a random forest), learn to report accuracy in a way that is actually trustworthy (cross-validation), and run an experiment: add more features and watch the accuracy barely move, which is the real story of this study. Some questions this week ask you to write, not just code, to build the report skill.</p>
+    <div style="margin-top:14px;">
+      <span class="pill">random forest</span><span class="pill">cross-validation</span><span class="pill">more features</span><span class="pill">the ceiling</span><span class="pill">writing</span>
+    </div>
+  </div>
+</header>
+
+<div id="tabbar">
+  <div class="tabs">
+    <button class="tab active" data-target="t0"><span class="n">0</span>Start</button>
+    <button class="tab" data-target="t1"><span class="n">1</span>Random forest</button>
+    <button class="tab" data-target="t2"><span class="n">2</span>Cross-validation</button>
+    <button class="tab" data-target="t3"><span class="n">3</span>More features</button>
+    <button class="tab" data-target="t4"><span class="n">4</span>Compare</button>
+    <button class="tab" data-target="t5"><span class="n">R</span>Review</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ============ START ============ -->
+<section class="panel active" id="t0">
+  <div class="panel-head"><h2>Start here</h2>
+    <p class="sub">Load the model-ready data you saved, split it, and rebuild the baseline and your two earlier models so we have something to compare against.</p>
+  </div>
+
+  <p>New scratch notebook <code class="inl">lesson5.ipynb</code>. This prep cell loads your saved file and gets the two earlier models back, all recap.</p>
+  <pre><button class="copybtn">Copy</button><code>import pandas as pd
+import numpy as np
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import cross_val_score
+from sklearn.metrics import accuracy_score
+
+df = pd.read_csv("atp_2000_2024_model_ready.csv", low_memory=False)
+df["tourney_date"] = pd.to_datetime(df["tourney_date"])
+df = df.sort_values("tourney_date")
+
+feature_cols = ["rank_diff", "points_diff", "age_diff", "height_diff"]
+cut = int(len(df) * 0.8)
+train, test = df.iloc[:cut], df.iloc[cut:]
+X_train, y_train = train[feature_cols], train["target"]
+X_test,  y_test  = test[feature_cols],  test["target"]
+
+# rebuild baseline + the two earlier models
+baseline_acc = accuracy_score(y_test, (test["rank_diff"] < 0).astype(int))
+logreg = LogisticRegression(max_iter=1000).fit(X_train, y_train)
+logreg_acc = accuracy_score(y_test, logreg.predict(X_test))
+tree = DecisionTreeClassifier(max_depth=4, random_state=42).fit(X_train, y_train)
+tree_acc = accuracy_score(y_test, tree.predict(X_test))
+
+print("baseline:", round(baseline_acc, 3), " logreg:", round(logreg_acc, 3), " tree:", round(tree_acc, 3))</code></pre>
+  <p class="out">You should see all three near <b>0.64</b>. Those are the numbers your new model and experiments this week get measured against.</p>
+
+  <div class="nav"><button class="nextbtn" data-next="t1">Next: Random forest &rarr;</button></div>
+</section>
+
+<!-- ============ RANDOM FOREST ============ -->
+<section class="panel" id="t1">
+  <div class="panel-head"><h2>Model 3: Random Forest</h2>
+    <p class="sub">A stronger model that is really just many decision trees working together.</p>
+  </div>
+
+  <div class="box concept">
+    <b>What a random forest is.</b>
+    <p style="margin:8px 0 0;">A single decision tree is easy to fool: change the data a little and it draws a very different flowchart. A random forest fixes that by training <em>many</em> trees, each on a slightly different random slice of the data and features, then letting them vote. One tree might overreact to a quirk, but the crowd averages those quirks out, so the forest is usually more accurate and more stable than any single tree. Same <code class="inl">fit</code> and <code class="inl">predict</code> pattern as always.</p>
+  </div>
+
+  <p class="cell-label">Cell &middot; train a random forest</p>
+  <pre><button class="copybtn">Copy</button><code>forest = RandomForestClassifier(n_estimators=200, max_depth=8, random_state=42, n_jobs=-1)
+forest.fit(X_train, y_train)
+forest_pred = forest.predict(X_test)
+
+forest_acc = accuracy_score(y_test, forest_pred)
+print("random forest:", round(forest_acc, 3))</code></pre>
+  <p class="out"><code class="inl">n_estimators=200</code> is the number of trees, <code class="inl">max_depth=8</code> caps each tree's depth, and <code class="inl">n_jobs=-1</code> uses all your CPU cores so it trains faster. Expect an accuracy around <b>0.64</b>, in the same neighborhood as the others.</p>
+
+  <div class="box tip">
+    <b>Note it will not blow the baseline away.</b> On this data the forest lands within a point of everything else. That is not disappointing, it is the finding: the signal that exists is easy to capture, and no fancier model can squeeze out much more.
+  </div>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex">
+    <p><span class="qn">1.</span>Train a <b>second</b> forest with only 50 trees and no depth limit (<code class="inl">n_estimators=50, max_depth=None</code>), and print its test accuracy next to the first forest's. Which does better?</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>forest2 = RandomForestClassifier(n_estimators=50, max_depth=None, random_state=42, n_jobs=-1)
+forest2.fit(X_train, y_train)
+print("depth 8, 200 trees:", round(forest_acc, 3))
+print("no limit, 50 trees:", round(accuracy_score(y_test, forest2.predict(X_test)), 3))</code></pre>
+    <p class="note">The unlimited-depth one often does slightly worse on the test set (it overfits a bit), showing that bigger is not automatically better.</p></div></details>
+  </div>
+  <div class="ex">
+    <p><span class="qn">2.</span>A forest reports feature importances just like a single tree does. Show the forest's importances as a sorted table.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>pd.Series(forest.feature_importances_, index=feature_cols).sort_values(ascending=False)</code></pre>
+    <p class="note">Notice the forest spreads importance across <code class="inl">rank_diff</code> and <code class="inl">points_diff</code> more evenly than the single tree did, because different trees split on different ones.</p></div></details>
+  </div>
+  <div class="ex wr">
+    <p><span class="qn">3.</span>In a <b>markdown cell</b>, explain in 2 to 3 sentences what a random forest is and why a crowd of trees usually beats one tree. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb">
+      <p class="exans">A random forest trains many decision trees, each on a different random part of the data, and has them vote on the prediction. Any single tree can overfit to quirks in the data, but averaging many trees cancels those quirks out. This usually makes the forest more accurate and much more stable than a single decision tree.</p>
+    </div></details>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t2">Next: Cross-validation &rarr;</button></div>
+</section>
+
+<!-- ============ CROSS-VALIDATION ============ -->
+<section class="panel" id="t2">
+  <div class="panel-head"><h2>Cross-validation: trustworthy accuracy</h2>
+    <p class="sub">A single train/test split gives one number, and that number got lucky or unlucky. Cross-validation gives you a range you can trust.</p>
+  </div>
+
+  <div class="box why">
+    <b>Why one split is not enough.</b> Your 0.64 came from one particular slice of matches used as the test set. Split the data a different way and you might get 0.62 or 0.66. Reporting a single number hides that wobble. Cross-validation splits the data into several parts, trains and tests several times using a different part as the test each time, and reports the average plus how much it varied. Now you can honestly say "about 0.66, give or take a point" instead of pretending 0.64 is exact.</p>
+  </div>
+
+  <p class="cell-label">Cell &middot; cross-validate the logistic regression</p>
+  <pre><button class="copybtn">Copy</button><code>X_all = df[feature_cols]
+y_all = df["target"]
+
+scores = cross_val_score(LogisticRegression(max_iter=1000), X_all, y_all, cv=5)
+print("fold scores:", scores.round(3))
+print("mean:", round(scores.mean(), 3), " give or take:", round(scores.std(), 3))</code></pre>
+  <p class="out"><code class="inl">cv=5</code> means five train/test rounds. You get five accuracies, then their mean and standard deviation. The mean is your headline number and the standard deviation is the honest wobble around it.</p>
+
+  <div class="box tip">
+    <b>A subtlety for time data.</b> The default cross-validation shuffles matches randomly, which lets it peek slightly across time. For a strict version that always trains on the past and tests on the future, scikit-learn has <code class="inl">TimeSeriesSplit</code>. On this data both land around 0.66, so it does not change the story, but it is worth a mention in your write-up that you were aware of it.</p>
+  </div>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex">
+    <p><span class="qn">1.</span>Cross-validate the <b>decision tree</b> (depth 4) instead, with 5 folds, and print its mean and standard deviation.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>tree_scores = cross_val_score(DecisionTreeClassifier(max_depth=4, random_state=42), X_all, y_all, cv=5)
+print("tree CV mean:", round(tree_scores.mean(), 3), " give or take:", round(tree_scores.std(), 3))</code></pre></div></details>
+  </div>
+  <div class="ex">
+    <p><span class="qn">2.</span>Compare: is the logistic regression's cross-validated mean higher or lower than the single-split accuracy (<code class="inl">logreg_acc</code>) you computed in the Start cell? Print both on two lines.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>print("single split:", round(logreg_acc, 3))
+print("cross-val:   ", round(cross_val_score(LogisticRegression(max_iter=1000), X_all, y_all, cv=5).mean(), 3))</code></pre>
+    <p class="note">The cross-validated mean is a bit higher here, because the single split tests only on the hardest, most recent matches while cross-validation averages over all years.</p></div></details>
+  </div>
+  <div class="ex wr">
+    <p><span class="qn">3.</span>In a <b>markdown cell</b>, explain why a cross-validated score is more trustworthy than a single train/test split. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb">
+      <p class="exans">A single split depends on which matches happened to land in the test set, so the number can be lucky or unlucky. Cross-validation repeats the test several times on different parts of the data and averages the results, which cancels out that luck. It also reports how much the accuracy varied, so we can state a trustworthy range instead of one possibly-misleading number.</p>
+    </div></details>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t3">Next: More features &rarr;</button></div>
+</section>
+
+<!-- ============ MORE FEATURES ============ -->
+<section class="panel" id="t3">
+  <div class="panel-head"><h2>Adding features: does more help?</h2>
+    <p class="sub">A natural instinct is "use more columns and the model gets better". Let us actually test that, honestly.</p>
+  </div>
+
+  <div class="box concept">
+    <b>One-hot encoding for categories.</b>
+    <p style="margin:8px 0 0;">Models need numbers, but <code class="inl">surface</code> is text (Hard, Clay, Grass, Carpet). One-hot encoding turns one text column into several 0/1 columns, one per category, so "Clay" becomes a 1 in the clay column and 0 in the others. <code class="inl">pd.get_dummies</code> does this in one line. Then we can bolt those columns onto our numeric features and see if they help.</p>
+  </div>
+
+  <p class="cell-label">Cell &middot; build a bigger feature set: surface + best_of</p>
+  <pre><button class="copybtn">Copy</button><code>surface_cols = pd.get_dummies(df["surface"], prefix="surface")   # Hard/Clay/Grass/Carpet as 0-1 columns
+
+X_more = pd.concat([df[feature_cols], surface_cols, df[["best_of"]]], axis=1)
+y_more = df["target"]
+
+X_more.columns.tolist()</code></pre>
+  <p class="out"><code class="inl">pd.concat(..., axis=1)</code> glues the columns together side by side. You now have the four differences, one column per surface, and best_of.</p>
+
+  <p class="cell-label">Cell &middot; retrain on the bigger set and compare</p>
+  <pre><button class="copybtn">Copy</button><code>Xm_train, Xm_test = X_more.iloc[:cut], X_more.iloc[cut:]
+
+logreg_more = LogisticRegression(max_iter=1000).fit(Xm_train, y_train)
+more_acc = accuracy_score(y_test, logreg_more.predict(Xm_test))
+
+print("4 features:        ", round(logreg_acc, 3))
+print("with surface+best_of:", round(more_acc, 3))</code></pre>
+  <p class="out">The two numbers are almost identical. Adding surface and best-of barely moved the needle. That is the honest, slightly surprising result at the heart of your study.</p>
+
+  <div class="box why">
+    <b>Why more features did not help.</b> Ranking already reflects how well a player does across all surfaces and formats, so telling the model the surface adds little it did not already know. This is a real finding worth stating plainly: in tennis, the ranking gap dominates, and extra context adds only crumbs.</p>
+  </div>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex">
+    <p><span class="qn">1.</span>Instead of surface, one-hot encode <code class="inl">tourney_level</code> and add it (plus best_of) to the four features. Build that feature matrix and print its columns.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>level_cols = pd.get_dummies(df["tourney_level"], prefix="level")
+X_lvl = pd.concat([df[feature_cols], level_cols, df[["best_of"]]], axis=1)
+X_lvl.columns.tolist()</code></pre></div></details>
+  </div>
+  <div class="ex">
+    <p><span class="qn">2.</span>Train a logistic regression on that tourney_level feature set and compare its accuracy to the plain 4-feature version.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>Xl_train, Xl_test = X_lvl.iloc[:cut], X_lvl.iloc[cut:]
+lvl_acc = accuracy_score(y_test, LogisticRegression(max_iter=1000).fit(Xl_train, y_train).predict(Xl_test))
+print("4 features:      ", round(logreg_acc, 3))
+print("with level+best_of:", round(lvl_acc, 3))</code></pre>
+    <p class="note">Again, almost no change. The ceiling holds no matter which extra feature you try.</p></div></details>
+  </div>
+  <div class="ex wr">
+    <p><span class="qn">3.</span>In a <b>markdown cell</b>, the accuracy barely changed after adding features. Explain in 2 to 3 sentences what that suggests about predicting tennis. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb">
+      <p class="exans">Adding surface, level, and match format barely changed the accuracy, which suggests the ranking gap already captures almost all of the predictable signal. The extra context does not tell the model much it did not already know from the rankings. It points to a real ceiling: a large share of match outcomes come down to who is stronger on paper, and most of what is left is genuine upset randomness that no feature can predict.</p>
+    </div></details>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t4">Next: Compare &rarr;</button></div>
+</section>
+
+<!-- ============ COMPARE ============ -->
+<section class="panel" id="t4">
+  <div class="panel-head"><h2>Compare everything and write the story</h2>
+    <p class="sub">Put all the models in one table, understand the redundant features, and start turning results into words.</p>
+  </div>
+
+  <p class="cell-label">Cell &middot; the full comparison table</p>
+  <pre><button class="copybtn">Copy</button><code>results = pd.DataFrame({
+    "model": ["baseline (favorite wins)", "logistic regression", "decision tree", "random forest"],
+    "accuracy": [baseline_acc, logreg_acc, tree_acc, forest_acc],
+})
+results</code></pre>
+  <p class="out">Four rows, all clustered near 0.64. This single table is the backbone of your write-up: it shows at a glance that three different algorithms all land in the same place, just above the simple baseline.</p>
+
+  <p class="cell-label">Cell &middot; check the redundant features</p>
+  <pre><button class="copybtn">Copy</button><code># do rank and points ever disagree on who the favorite is?
+agreement = ((test["rank_diff"] < 0) == (test["points_diff"] > 0)).mean()
+print("rank and points agree on the favorite:", round(agreement, 3))</code></pre>
+  <p class="out">You will see they agree essentially 100% of the time. Ranking and ranking points are two ways of saying the same thing, which is why the tree's feature importance can flip between them arbitrarily depending on the data. Good to know, and worth explaining in the write-up.</p>
+
+  <div class="box why">
+    <b>The honest conclusion so far.</b> Three algorithms and a baseline all score about 0.64 to 0.66. Extra features do not help. Ranking (and its twin, ranking points) is nearly the whole story. Stated plainly: ATP outcomes are largely determined by who is stronger on paper, and the remaining upsets are close to irreducible randomness. That is a credible, mature result, and the fact that it holds across models and features is what makes it convincing.</p>
+  </div>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex wr">
+    <p><span class="qn">1.</span>In a <b>markdown cell</b>: rank and points agree ~100% of the time. Explain what that means, and say whether you would keep both, drop one, and why. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb">
+      <p class="exans">It means the two features carry the same information, since a better ranking always comes with more ranking points. Keeping both is redundant and can make feature-importance results look unstable, because the model splits credit between them arbitrarily. I would keep just one (ranking points, since it is a finer-grained number) to make the model simpler and the importances easier to interpret.</p>
+    </div></details>
+  </div>
+  <div class="ex wr">
+    <p><span class="qn">2.</span>In a <b>markdown cell</b>, write a 3 to 4 sentence "Results" paragraph summarizing the model comparison, as if for your report. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb">
+      <p class="exans">We compared a favorite-wins baseline against logistic regression, a decision tree, and a random forest, all trained on pre-match difference features and evaluated on held-out later matches. All three models scored between about 0.64 and 0.66 accuracy, only marginally above the 0.64 baseline. Cross-validation confirmed these numbers are stable to within roughly a percentage point. The clear pattern is that model choice barely matters here, because the ranking gap already captures most of the available signal.</p>
+    </div></details>
+  </div>
+  <div class="ex wr">
+    <p><span class="qn">3.</span>In a <b>markdown cell</b>, explain in your own words why every model lands near 64%. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb">
+      <p class="exans">Every model relies on the same underlying signal, mainly the ranking gap, and that signal only predicts outcomes so far because tennis has genuine upsets. Once a model has learned "the higher-ranked player usually wins", there is little left for a fancier algorithm to exploit. So all the models converge to about the same accuracy, which reflects a real ceiling in how predictable these matches are.</p>
+    </div></details>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t5">Next: Review &rarr;</button></div>
+</section>
+
+<!-- ============ REVIEW ============ -->
+<section class="panel" id="t5">
+  <div class="panel-head"><h2>Review: 10 questions</h2>
+    <p class="sub">A mix of code and writing. For the <span style="color:var(--purple);font-weight:700;">write it</span> questions, put your answer in a <b>markdown cell</b>, this is you practicing the report. Solutions to those show an example of a good answer, not the only one. These 10 are homework part one.</p>
+  </div>
+
+  <div class="ex"><p><span class="qn">1.</span>Train a random forest on the four features and print its test accuracy.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>forest = RandomForestClassifier(n_estimators=200, max_depth=8, random_state=42, n_jobs=-1)
+forest.fit(X_train, y_train)
+print(round(accuracy_score(y_test, forest.predict(X_test)), 3))</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">2.</span>Cross-validate the logistic regression with 5 folds and print the mean and standard deviation.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>s = cross_val_score(LogisticRegression(max_iter=1000), df[feature_cols], df["target"], cv=5)
+print(round(s.mean(), 3), round(s.std(), 3))</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">3.</span>One-hot encode <code class="inl">surface</code> and show the resulting column names.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>pd.get_dummies(df["surface"], prefix="surface").columns.tolist()</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">4.</span>Retrain a logistic regression with surface and best_of added, and print its accuracy next to the 4-feature accuracy.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>X_more = pd.concat([df[feature_cols], pd.get_dummies(df["surface"], prefix="surface"), df[["best_of"]]], axis=1)
+Xm_train, Xm_test = X_more.iloc[:cut], X_more.iloc[cut:]
+more_acc = accuracy_score(y_test, LogisticRegression(max_iter=1000).fit(Xm_train, y_train).predict(Xm_test))
+print("4 features:", round(logreg_acc, 3), " | with extras:", round(more_acc, 3))</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">5.</span>Print the random forest's feature importances, sorted from most to least.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>pd.Series(forest.feature_importances_, index=feature_cols).sort_values(ascending=False)</code></pre></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">6.</span>Explain why cross-validation is more trustworthy than a single train/test split. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb">
+      <p class="exans">A single split's accuracy depends on which matches happened to be in the test set, so it can be lucky or unlucky. Cross-validation tests on several different slices and averages them, cancelling that luck, and it also reports the variation so you can give a trustworthy range rather than one number.</p>
+    </div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">7.</span>On the big dataset the tree gave <code class="inl">points_diff</code> most of the importance, but on the small 2023 set <code class="inl">rank_diff</code> dominated. Explain why this flip happens. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb">
+      <p class="exans">Ranking and ranking points carry the same information, so they are interchangeable to the model. When two features are redundant, a tree just picks one to split on, and which one it favors can change with the data. So the importance flipping between them is not a real change in what matters, it is an artifact of the two features being twins.</p>
+    </div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">8.</span>After adding features, accuracy barely moved. What does this suggest about tennis prediction? <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb">
+      <p class="exans">It suggests the ranking gap already captures almost all of the predictable signal, so extra features add little. There appears to be a real ceiling: much of a match is decided by who is stronger on paper, and the rest is genuine upset randomness that no additional feature can capture.</p>
+    </div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">9.</span>Write a short "Results" paragraph (3 to 4 sentences) summarizing the model comparison for your report. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb">
+      <p class="exans">We compared a favorite-wins baseline with logistic regression, a decision tree, and a random forest, all using pre-match difference features and tested on held-out matches. Every model scored roughly 0.64 to 0.66 accuracy, only slightly above the baseline, and cross-validation showed these results are stable to about a percentage point. Model choice made little difference, indicating that the ranking gap carries most of the signal and that match outcomes have a natural predictability ceiling.</p>
+    </div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">10.</span>Write a short "Limitations" paragraph listing at least two honest limitations of this study. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb">
+      <p class="exans">This study uses only simple pre-match features (ranking, points, age, height), so it ignores richer signals like recent form, head-to-head history, and surface-specific strength that might help. It also merges 25 seasons, over which the ranking-points system changed, so points are not perfectly comparable across eras. Finally, the model predicts only a binary winner and does not account for injuries, retirements, or match context, all of which limit how far the accuracy can realistically go.</p>
+    </div></details>
+  </div>
+
+  <div class="box concept" style="margin-top:26px;">
+    <b>Done with Week 5.</b> You have three models, trustworthy cross-validated numbers, a feature experiment proving the ceiling, and, just as important, several paragraphs of written analysis. Next week we turn all of this into the README, your short paper. These 10 are homework part one; the project notebook is part two.
+  </div>
+</section>
+
+</div>
+
+<script>
+  var tabs = document.querySelectorAll(".tab");
+  var panels = document.querySelectorAll(".panel");
+  var bar = document.getElementById("tabbar");
+  function show(id){
+    tabs.forEach(function(t){ t.classList.toggle("active", t.dataset.target === id); });
+    panels.forEach(function(p){ p.classList.toggle("active", p.id === id); });
+    window.scrollTo({ top: bar.offsetTop, behavior: "smooth" });
+  }
+  tabs.forEach(function(t){ t.addEventListener("click", function(){ show(t.dataset.target); }); });
+  document.querySelectorAll("[data-next]").forEach(function(b){
+    b.addEventListener("click", function(){ show(b.dataset.next); });
+  });
+  document.querySelectorAll(".copybtn").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var code = btn.parentElement.querySelector("code").innerText;
+      navigator.clipboard.writeText(code).then(function(){
+        btn.textContent = "Copied"; btn.classList.add("done");
+        setTimeout(function(){ btn.textContent = "Copy"; btn.classList.remove("done"); }, 1500);
+      });
+    });
+  });
+</script>
+</body>
+</html>

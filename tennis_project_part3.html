@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project - Tennis Match Predictor (Part 3)</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2430; --border:#30363d;
+    --text:#e6edf3; --muted:#8b949e; --accent:#c9f24d; --accent2:#58a6ff;
+    --code:#0a0e14; --green:#3fb950; --yellow:#d29922; --red:#f85149; --purple:#bc8cff;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.68;padding:0 0 60px;}
+  .wrap{max-width:920px;margin:0 auto;padding:0 20px;}
+  header{border-bottom:1px solid var(--border);
+    background:linear-gradient(180deg,#0e1512,#0d1117);padding:34px 0 26px;}
+  .kicker{color:var(--accent);font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 8px;}
+  header h1{margin:0 0 10px;font-size:28px;letter-spacing:-0.5px;}
+  header p{margin:0;color:var(--muted);font-size:14.5px;max-width:770px;}
+  .pill{display:inline-block;background:var(--panel2);border:1px solid var(--border);border-radius:20px;padding:2px 12px;font-size:12px;color:var(--muted);margin-right:6px;}
+  .pill.proj{background:rgba(188,140,255,.14);color:var(--purple);border-color:var(--purple);}
+
+  #tabbar{position:sticky;top:0;z-index:50;background:rgba(13,17,23,.96);
+    backdrop-filter:blur(6px);border-bottom:1px solid var(--border);}
+  .tabs{max-width:920px;margin:0 auto;padding:8px 14px;display:flex;flex-wrap:wrap;gap:6px;}
+  .tab{background:var(--panel);border:1px solid var(--border);color:var(--muted);
+    font-size:13px;font-weight:600;padding:7px 13px;border-radius:8px;cursor:pointer;
+    display:flex;align-items:center;gap:7px;transition:.12s;font-family:inherit;}
+  .tab:hover{color:var(--text);border-color:#455063;}
+  .tab .n{font-size:11px;font-weight:800;background:var(--panel2);color:var(--muted);
+    border-radius:5px;padding:1px 6px;min-width:20px;text-align:center;}
+  .tab.active{background:var(--accent);color:#0d1117;border-color:var(--accent);}
+  .tab.active .n{background:rgba(13,17,23,.25);color:#0d1117;}
+
+  .panel{display:none;animation:fade .18s ease;}
+  .panel.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+  .panel-head{padding:26px 0 2px;}
+  .panel-head h2{margin:0;font-size:24px;letter-spacing:-0.3px;}
+  .panel-head .sub{color:var(--muted);margin:8px 0 0;font-size:15px;}
+
+  h3{font-size:15px;margin:24px 0 6px;color:var(--text);}
+  p{margin:11px 0;}
+  ul{margin:8px 0;padding-left:22px;}
+  li{margin:6px 0;}
+  .box{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin:16px 0;}
+  .tip{border-left:3px solid var(--accent2);}
+  .warn{border-left:3px solid var(--yellow);}
+  .concept{border-left:3px solid var(--accent);}
+  .proj{border-left:3px solid var(--purple);}
+  .cell-label{font-size:11px;font-weight:700;letter-spacing:0.5px;margin:18px 0 4px;text-transform:uppercase;}
+  .cl-md{color:var(--accent2);}
+  pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padding:15px 16px;overflow-x:auto;margin:0 0 6px;position:relative;}
+  pre.md{border-style:dashed;}
+  code{font-family:"SF Mono","Fira Code",Consolas,Menlo,monospace;font-size:13.5px;color:#c9d1d9;}
+  .copybtn{position:absolute;top:7px;right:7px;background:var(--panel2);border:1px solid var(--border);
+    color:var(--muted);font-size:11px;padding:4px 10px;border-radius:6px;cursor:pointer;transition:.15s;font-family:inherit;}
+  .copybtn:hover{color:var(--text);border-color:var(--accent);}
+  .copybtn.done{color:var(--green);border-color:var(--green);}
+  code.inl{background:var(--panel2);border:1px solid var(--border);border-radius:5px;padding:1px 6px;color:var(--accent);font-size:12.5px;}
+
+  .task{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:10px;padding:16px 18px;margin:16px 0;}
+  .task.wr{border-left-color:var(--purple);}
+  .task .th{font-size:11px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--accent);margin:0 0 6px;}
+  .task.wr .th{color:var(--purple);}
+  .task p{margin:6px 0;}
+  details.sol{margin:12px 0 0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  details.sol summary{cursor:pointer;padding:9px 14px;background:var(--panel2);font-weight:600;font-size:12.5px;color:var(--green);user-select:none;list-style:none;}
+  details.sol summary::-webkit-details-marker{display:none;}
+  details.sol summary::before{content:"\25B8  ";color:var(--muted);}
+  details.sol[open] summary::before{content:"\25BE  ";}
+  details.sol.ex-ans summary{color:var(--purple);}
+  details.sol .sb{padding:8px 14px 10px;}
+  .sb .exans{font-size:13.5px;color:var(--text);margin:0;font-style:italic;}
+  .sb .exans::before{content:"Example answer: ";font-style:normal;font-weight:700;color:var(--purple);}
+
+  .see{background:rgba(63,185,80,.07);border:1px solid rgba(63,185,80,.35);border-radius:8px;padding:12px 16px;margin:12px 0 0;}
+  .see .lbl{font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--green);margin:0 0 4px;}
+  .see p{margin:0;font-size:13.5px;color:var(--text);}
+  .see code.inl{color:var(--green);}
+
+  .nav{display:flex;justify-content:flex-end;margin:32px 0 10px;padding-top:18px;border-top:1px solid var(--border);}
+  .nextbtn{background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:14px;font-weight:600;
+    padding:10px 18px;border-radius:9px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;transition:.12s;}
+  .nextbtn:hover{border-color:var(--accent);color:var(--accent);}
+  a{color:var(--accent2);}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <p class="kicker">Tennis AI Project &middot; Project Notebook</p>
+    <h1>Build Your Match Predictor: Part 3</h1>
+    <p>You take the notebook from two models to a full, trustworthy comparison, and you start writing the study. This week: a random forest, cross-validated numbers, an experiment showing extra features barely help, and a set of short written analysis cells that become the first draft of your paper. Some tasks are code, some are writing.</p>
+    <div style="margin-top:14px;">
+      <span class="pill proj">tennis_predictor.ipynb</span><span class="pill">random forest</span><span class="pill">cross-val</span><span class="pill">experiment</span><span class="pill">writing</span>
+    </div>
+  </div>
+</header>
+
+<div id="tabbar">
+  <div class="tabs">
+    <button class="tab active" data-target="t0"><span class="n">0</span>Continue</button>
+    <button class="tab" data-target="t1"><span class="n">1</span>Forest</button>
+    <button class="tab" data-target="t2"><span class="n">2</span>Cross-val</button>
+    <button class="tab" data-target="t3"><span class="n">3</span>Experiment</button>
+    <button class="tab" data-target="t4"><span class="n">4</span>Write it up</button>
+    <button class="tab" data-target="t5"><span class="n">5</span>Save &amp; next</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ============ CONTINUE ============ -->
+<section class="panel active" id="t0">
+  <div class="panel-head"><h2>Continue, and two quick fixes</h2>
+    <p class="sub">Open your notebook, tidy up two small things from last week, and add the imports for this week.</p>
+  </div>
+
+  <div class="box warn">
+    <b>Two housekeeping fixes first:</b>
+    <ul style="margin:8px 0 0;">
+      <li>Your first save cell says <code class="inl">df.to_csv("atp_2000_2024_clean", ...)</code> with no <code class="inl">.csv</code>. That cell is also redundant (you save a model-ready file at the end). Simplest fix: <b>delete that cell</b> entirely.</li>
+      <li>In your title cell, fix the typo "informaton" to "information", and make sure the line reads <b>2000 to 2024</b>, since that is the data you are now using.</li>
+    </ul>
+  </div>
+
+  <p>Update your imports cell so it includes the forest and cross-validation:</p>
+  <pre><button class="copybtn">Copy</button><code>import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import cross_val_score
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report</code></pre>
+  <p>Then Run All Cells so <code class="inl">df</code>, <code class="inl">train</code>, <code class="inl">test</code>, and your earlier accuracies are all in memory.</p>
+
+  <div class="box proj">
+    <b>This week's additions:</b> a random forest in Section 6, a cross-validation block in Section 7, a feature experiment, and a short written analysis section that seeds your paper.
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t1">Next: Forest &rarr;</button></div>
+</section>
+
+<!-- ============ FOREST ============ -->
+<section class="panel" id="t1">
+  <div class="panel-head"><h2>Add a random forest (Section 6)</h2>
+    <p class="sub">Add a third model under your Train a Model section.</p>
+  </div>
+
+  <div class="task">
+    <p class="th">Your task</p>
+    <p>Train a random forest on your four features and print its test accuracy.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>forest = RandomForestClassifier(n_estimators=200, max_depth=8, random_state=42, n_jobs=-1)
+forest.fit(X_train, y_train)
+forest_pred = forest.predict(X_test)
+
+forest_acc = accuracy_score(y_test, forest_pred)
+print("random forest:", round(forest_acc, 3))</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>An accuracy around <code class="inl">0.64</code>, within a whisker of your logistic regression and tree. A forest is a crowd of trees that vote, usually steadier than one tree, but here it lands in the same place because the signal is simple.</p></div>
+
+  <div class="nav"><button class="nextbtn" data-next="t2">Next: Cross-val &rarr;</button></div>
+</section>
+
+<!-- ============ CROSS-VAL ============ -->
+<section class="panel" id="t2">
+  <div class="panel-head"><h2>Cross-validation (Section 7)</h2>
+    <p class="sub">Under Evaluate, add cross-validation so your accuracy numbers come with an honest range, not a single lucky value.</p>
+  </div>
+
+  <div class="task">
+    <p class="th">Your task</p>
+    <p>Cross-validate all three models on the full feature set and print each mean with its wobble.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>X_all = df[feature_cols]
+y_all = df["target"]
+
+for name, mdl in [
+    ("logistic regression", LogisticRegression(max_iter=1000)),
+    ("decision tree",       DecisionTreeClassifier(max_depth=4, random_state=42)),
+    ("random forest",       RandomForestClassifier(n_estimators=100, max_depth=8, random_state=42, n_jobs=-1)),
+]:
+    s = cross_val_score(mdl, X_all, y_all, cv=5)
+    print(f"{name:22} {s.mean():.3f} +/- {s.std():.3f}")</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>All three means around <code class="inl">0.65 to 0.66</code>, each give or take about a percentage point. The random forest line takes a few seconds to run. These ranges are what you report in the paper, they are far more honest than a single split.</p></div>
+
+  <div class="box tip">
+    <b>Optional, for extra credit:</b> the default cross-validation shuffles matches randomly. Add a sentence in a markdown cell noting that for strict time-honesty you could use <code class="inl">TimeSeriesSplit</code>, and that it gives a similar number here.
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t3">Next: Experiment &rarr;</button></div>
+</section>
+
+<!-- ============ EXPERIMENT ============ -->
+<section class="panel" id="t3">
+  <div class="panel-head"><h2>Experiment: do more features help?</h2>
+    <p class="sub">Add a short new section that tests whether adding surface and match format improves accuracy.</p>
+  </div>
+
+  <p class="cell-label cl-md">Markdown cell &middot; new header (after Evaluate)</p>
+  <pre class="md"><button class="copybtn">Copy</button><code>## Experiment: Does Adding Features Help?</code></pre>
+
+  <div class="task">
+    <p class="th">Task A &middot; build a bigger feature set and retrain</p>
+    <p>One-hot encode <code class="inl">surface</code>, add <code class="inl">best_of</code>, retrain a logistic regression, and compare its accuracy to the 4-feature version.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>surface_cols = pd.get_dummies(df["surface"], prefix="surface")
+X_more = pd.concat([df[feature_cols], surface_cols, df[["best_of"]]], axis=1)
+
+Xm_train, Xm_test = X_more.iloc[:cut], X_more.iloc[cut:]
+more_acc = accuracy_score(y_test, LogisticRegression(max_iter=1000).fit(Xm_train, y_train).predict(Xm_test))
+
+print("4 features:          ", round(logreg_acc, 3))
+print("with surface+best_of:", round(more_acc, 3))</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>The two numbers almost identical. Adding surface and format barely changes anything, which is the honest, slightly surprising centerpiece of your study.</p></div>
+
+  <div class="task wr">
+    <p class="th">Task B &middot; interpret it (write)</p>
+    <p>In a <b>markdown cell</b>, explain in 2 to 3 sentences why adding those features did not help, and what it says about tennis.</p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb">
+      <p class="exans">Adding surface and match format barely changed the accuracy, which means the ranking gap already captures almost all of the predictable signal. A player's ranking reflects how they perform across surfaces and formats, so those extra columns tell the model little it did not already know. This points to a genuine ceiling: most of a match is decided by who is stronger on paper, and the rest is upset randomness that no feature can capture.</p>
+    </div></details>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t4">Next: Write it up &rarr;</button></div>
+</section>
+
+<!-- ============ WRITE IT UP ============ -->
+<section class="panel" id="t4">
+  <div class="panel-head"><h2>Write the analysis (first draft of your paper)</h2>
+    <p class="sub">This is where the project becomes a study. Add a written section in markdown cells. These paragraphs become your README next week.</p>
+  </div>
+
+  <p class="cell-label cl-md">Markdown cell &middot; new header</p>
+  <pre class="md"><button class="copybtn">Copy</button><code>## Findings</code></pre>
+
+  <div class="box write" style="border-left:3px solid var(--purple);">
+    <b>Write these in your own words.</b> The examples below show the kind of thing a good answer looks like, they are a model, not a script to copy. Writing clearly about your own results is a real skill, and it is a big part of what makes this project impressive.
+  </div>
+
+  <div class="task wr">
+    <p class="th">Task A &middot; results summary</p>
+    <p>In a <b>markdown cell</b>, write a 3 to 4 sentence paragraph summarizing the model comparison (baseline vs the three models, and the cross-validated ranges).</p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb">
+      <p class="exans">We compared a favorite-wins baseline against logistic regression, a decision tree, and a random forest, all trained on pre-match difference features and tested on held-out later matches. All three models scored roughly 0.64 to 0.66 accuracy, only marginally above the 0.64 baseline, and cross-validation confirmed these numbers are stable to within about a percentage point. Model choice made little difference, which indicates the ranking gap already captures most of the available signal.</p>
+    </div></details>
+  </div>
+
+  <div class="task wr">
+    <p class="th">Task B &middot; the redundant features</p>
+    <p>In a <b>markdown cell</b>, explain that rank and points carry the same information (they agree ~100% on the favorite), why that makes feature importance look unstable, and what you would do about it.</p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb">
+      <p class="exans">Ranking and ranking points agree on the favorite essentially 100% of the time, because a better ranking always comes with more points, so they are effectively the same feature. When two features are redundant, a tree splits credit between them arbitrarily, which is why the importance flips from one to the other depending on the dataset. To keep the model simple and the importances interpretable, it would be reasonable to keep just one of them.</p>
+    </div></details>
+  </div>
+
+  <div class="task wr">
+    <p class="th">Task C &middot; limitations</p>
+    <p>In a <b>markdown cell</b>, write a short paragraph with at least two honest limitations of the study.</p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb">
+      <p class="exans">This study uses only simple pre-match features and ignores richer signals like recent form, head-to-head history, and surface-specific strength, which could improve predictions. It also merges 25 seasons, over which the ATP points system changed, so ranking points are not perfectly comparable across eras. Finally, it predicts only a binary winner and cannot account for injuries, retirements, or match context, all of which cap how accurate any model can be.</p>
+    </div></details>
+  </div>
+
+  <div class="see"><p class="lbl">You should have</p><p>Three or four short written cells under a Findings header: a results summary, the redundant-feature note, the ceiling interpretation from the experiment, and limitations. That is the skeleton of your paper.</p></div>
+
+  <div class="nav"><button class="nextbtn" data-next="t5">Next: Save &amp; next &rarr;</button></div>
+</section>
+
+<!-- ============ SAVE & NEXT ============ -->
+<section class="panel" id="t5">
+  <div class="panel-head"><h2>Save and look ahead</h2>
+    <p class="sub">Re-run everything, save, and see what is left.</p>
+  </div>
+
+  <div class="task">
+    <p class="th">Your task</p>
+    <p>Make sure your model-ready save at the end is still there and correct.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df.to_csv("atp_2000_2024_model_ready.csv", index=False)
+print("saved", df.shape)</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>The model-ready file saved. Your notebook now runs end to end: clean, explore, reshape, split, baseline, three models, cross-validation, a feature experiment, and a written Findings section.</p></div>
+
+  <div class="box concept">
+    <b>What you have now:</b> a complete, honest ML study in one notebook, three algorithms compared fairly with trustworthy numbers, an experiment that proves the accuracy ceiling, and written analysis explaining it. This is genuinely strong work.
+  </div>
+
+  <div class="box proj">
+    <b>Where it is heading:</b>
+    <ul style="margin:8px 0 0;">
+      <li><b>Next lesson:</b> turn your Findings cells and results table into a proper README that reads like a short paper, with the charts and the comparison table.</li>
+      <li><b>After that:</b> a small interactive web page where anyone can set a ranking gap and surface and see the model's prediction, plus the paper and comparison, hosted from a link for your college applications.</li>
+    </ul>
+  </div>
+
+  <div class="box tip">
+    <b>Turn it in:</b>
+    <ul style="margin:8px 0 0;">
+      <li>Run All Cells so everything runs clean top to bottom and the charts, tables, and written cells all show.</li>
+      <li>Save with Ctrl + S.</li>
+      <li>Send me <code class="inl">tennis_predictor.ipynb</code> and the <code class="inl">atp_2000_2024_model_ready.csv</code>.</li>
+      <li><b>Keep the notebook.</b></li>
+    </ul>
+  </div>
+
+  <div class="box concept" style="margin-top:20px;">
+    <b>Reminder:</b> this project is homework part two. Part one is the 10 review questions at the end of the Week 5 lesson, including the written ones.
+  </div>
+</section>
+
+</div>
+
+<script>
+  var tabs = document.querySelectorAll(".tab");
+  var panels = document.querySelectorAll(".panel");
+  var bar = document.getElementById("tabbar");
+  function show(id){
+    tabs.forEach(function(t){ t.classList.toggle("active", t.dataset.target === id); });
+    panels.forEach(function(p){ p.classList.toggle("active", p.id === id); });
+    window.scrollTo({ top: bar.offsetTop, behavior: "smooth" });
+  }
+  tabs.forEach(function(t){ t.addEventListener("click", function(){ show(t.dataset.target); }); });
+  document.querySelectorAll("[data-next]").forEach(function(b){
+    b.addEventListener("click", function(){ show(b.dataset.next); });
+  });
+  document.querySelectorAll(".copybtn").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var code = btn.parentElement.querySelector("code").innerText;
+      navigator.clipboard.writeText(code).then(function(){
+        btn.textContent = "Copied"; btn.classList.add("done");
+        setTimeout(function(){ btn.textContent = "Copy"; btn.classList.remove("done"); }, 1500);
+      });
+    });
+  });
+</script>
+</body>
+</html>
