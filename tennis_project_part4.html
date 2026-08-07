@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project - Tennis Match Predictor (Part 4)</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2430; --border:#30363d;
+    --text:#e6edf3; --muted:#8b949e; --accent:#c9f24d; --accent2:#58a6ff;
+    --code:#0a0e14; --green:#3fb950; --yellow:#d29922; --red:#f85149; --purple:#bc8cff;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.68;padding:0 0 60px;}
+  .wrap{max-width:920px;margin:0 auto;padding:0 20px;}
+  header{border-bottom:1px solid var(--border);background:linear-gradient(180deg,#0e1512,#0d1117);padding:34px 0 26px;}
+  .kicker{color:var(--accent);font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 8px;}
+  header h1{margin:0 0 10px;font-size:28px;letter-spacing:-0.5px;}
+  header p{margin:0;color:var(--muted);font-size:14.5px;max-width:770px;}
+  .pill{display:inline-block;background:var(--panel2);border:1px solid var(--border);border-radius:20px;padding:2px 12px;font-size:12px;color:var(--muted);margin-right:6px;}
+  .pill.proj{background:rgba(188,140,255,.14);color:var(--purple);border-color:var(--purple);}
+
+  #tabbar{position:sticky;top:0;z-index:50;background:rgba(13,17,23,.96);backdrop-filter:blur(6px);border-bottom:1px solid var(--border);}
+  .tabs{max-width:920px;margin:0 auto;padding:8px 14px;display:flex;flex-wrap:wrap;gap:6px;}
+  .tab{background:var(--panel);border:1px solid var(--border);color:var(--muted);font-size:13px;font-weight:600;padding:7px 13px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:7px;transition:.12s;font-family:inherit;}
+  .tab:hover{color:var(--text);border-color:#455063;}
+  .tab .n{font-size:11px;font-weight:800;background:var(--panel2);color:var(--muted);border-radius:5px;padding:1px 6px;min-width:20px;text-align:center;}
+  .tab.active{background:var(--accent);color:#0d1117;border-color:var(--accent);}
+  .tab.active .n{background:rgba(13,17,23,.25);color:#0d1117;}
+
+  .panel{display:none;animation:fade .18s ease;}
+  .panel.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+  .panel-head{padding:26px 0 2px;}
+  .panel-head h2{margin:0;font-size:24px;letter-spacing:-0.3px;}
+  .panel-head .sub{color:var(--muted);margin:8px 0 0;font-size:15px;}
+
+  h3{font-size:15px;margin:24px 0 6px;color:var(--text);}
+  p{margin:11px 0;} ul{margin:8px 0;padding-left:22px;} li{margin:6px 0;}
+  .box{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin:16px 0;}
+  .tip{border-left:3px solid var(--accent2);}
+  .warn{border-left:3px solid var(--yellow);}
+  .concept{border-left:3px solid var(--accent);}
+  .proj{border-left:3px solid var(--purple);}
+  .cell-label{font-size:11px;font-weight:700;letter-spacing:0.5px;margin:18px 0 4px;text-transform:uppercase;}
+  .cl-md{color:var(--accent2);} .cl-file{color:var(--yellow);}
+  pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padding:15px 16px;overflow-x:auto;margin:0 0 6px;position:relative;}
+  pre.md{border-style:dashed;}
+  code{font-family:"SF Mono","Fira Code",Consolas,Menlo,monospace;font-size:13px;color:#c9d1d9;}
+  .copybtn{position:absolute;top:7px;right:7px;background:var(--panel2);border:1px solid var(--border);color:var(--muted);font-size:11px;padding:4px 10px;border-radius:6px;cursor:pointer;transition:.15s;font-family:inherit;}
+  .copybtn:hover{color:var(--text);border-color:var(--accent);}
+  .copybtn.done{color:var(--green);border-color:var(--green);}
+  code.inl{background:var(--panel2);border:1px solid var(--border);border-radius:5px;padding:1px 6px;color:var(--accent);font-size:12.5px;}
+
+  .task{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:10px;padding:16px 18px;margin:16px 0;}
+  .task .th{font-size:11px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--accent);margin:0 0 6px;}
+  .task p{margin:6px 0;}
+  details.sol{margin:12px 0 0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  details.sol summary{cursor:pointer;padding:9px 14px;background:var(--panel2);font-weight:600;font-size:12.5px;color:var(--green);user-select:none;list-style:none;}
+  details.sol summary::-webkit-details-marker{display:none;}
+  details.sol summary::before{content:"\25B8  ";color:var(--muted);}
+  details.sol[open] summary::before{content:"\25BE  ";}
+  details.sol .sb{padding:8px 14px 10px;}
+  .see{background:rgba(63,185,80,.07);border:1px solid rgba(63,185,80,.35);border-radius:8px;padding:12px 16px;margin:12px 0 0;}
+  .see .lbl{font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--green);margin:0 0 4px;}
+  .see p{margin:0;font-size:13.5px;color:var(--text);}
+  .see code.inl{color:var(--green);}
+  .tree-box{background:var(--code);border:1px solid var(--border);border-radius:8px;padding:15px 16px;overflow-x:auto;}
+  .tree-box code{color:#c9d1d9;white-space:pre;}
+
+  .nav{display:flex;justify-content:flex-end;margin:32px 0 10px;padding-top:18px;border-top:1px solid var(--border);}
+  .nextbtn{background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:14px;font-weight:600;padding:10px 18px;border-radius:9px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;transition:.12s;}
+  .nextbtn:hover{border-color:var(--accent);color:var(--accent);}
+  a{color:var(--accent2);}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <p class="kicker">Tennis AI Project &middot; Project Notebook</p>
+    <h1>Build Your Match Predictor: Part 4</h1>
+    <p>Two jobs this week. First, add the four new models to your notebook so your comparison covers seven algorithms. Second, get everything ready to become a real GitHub repository: export your charts, write a proper README that reads like a short paper, and organize your files. Next session we push it to GitHub and start the interactive site.</p>
+    <div style="margin-top:14px;">
+      <span class="pill proj">tennis_predictor.ipynb</span><span class="pill">4 models</span><span class="pill">charts</span><span class="pill">README</span><span class="pill">repo setup</span>
+    </div>
+  </div>
+</header>
+
+<div id="tabbar">
+  <div class="tabs">
+    <button class="tab active" data-target="t0"><span class="n">0</span>Continue</button>
+    <button class="tab" data-target="t1"><span class="n">1</span>4 models</button>
+    <button class="tab" data-target="t2"><span class="n">2</span>Charts</button>
+    <button class="tab" data-target="t3"><span class="n">3</span>README</button>
+    <button class="tab" data-target="t4"><span class="n">4</span>Repo setup</button>
+    <button class="tab" data-target="t5"><span class="n">5</span>Submit</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ============ CONTINUE ============ -->
+<section class="panel active" id="t0">
+  <div class="panel-head"><h2>Continue your notebook</h2>
+    <p class="sub">Open it, update the imports, and run all.</p>
+  </div>
+  <p>Add the new models and the scaler to your imports cell:</p>
+  <pre><button class="copybtn">Copy</button><code>from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import LinearSVC
+from sklearn.neural_network import MLPClassifier</code></pre>
+  <p>Run All Cells so <code class="inl">train</code>, <code class="inl">test</code>, <code class="inl">X_train</code>, <code class="inl">y_train</code>, and your earlier accuracies are ready.</p>
+  <div class="box proj"><b>This week's additions:</b> scaled features and four new models in Section 6, a chart-export cell, and then the README and repo files outside the notebook.</div>
+  <div class="nav"><button class="nextbtn" data-next="t1">Next: 4 models &rarr;</button></div>
+</section>
+
+<!-- ============ 4 MODELS ============ -->
+<section class="panel" id="t1">
+  <div class="panel-head"><h2>Add the four models (Section 6)</h2>
+    <p class="sub">Scale the features once, then train all four and fold them into your comparison table.</p>
+  </div>
+
+  <div class="task">
+    <p class="th">Task A &middot; scale the features</p>
+    <p>Three of these models need features on the same scale. Build scaled copies.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>scaler = StandardScaler().fit(X_train)
+X_train_s = scaler.transform(X_train)
+X_test_s  = scaler.transform(X_test)</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>No output, this just creates <code class="inl">X_train_s</code> and <code class="inl">X_test_s</code>. Tree models use the plain features; KNN, SVM, and the neural net use these scaled ones.</p></div>
+
+  <div class="task">
+    <p class="th">Task B &middot; train all four</p>
+    <p>Gradient boosting (plain features), then KNN, SVM, and a neural network (scaled features).</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>gb = GradientBoostingClassifier(max_depth=3, random_state=42).fit(X_train, y_train)
+gb_acc = accuracy_score(y_test, gb.predict(X_test))
+
+knn = KNeighborsClassifier(n_neighbors=15).fit(X_train_s, y_train)
+knn_acc = accuracy_score(y_test, knn.predict(X_test_s))
+
+svm = LinearSVC(max_iter=5000).fit(X_train_s, y_train)
+svm_acc = accuracy_score(y_test, svm.predict(X_test_s))
+
+nn = MLPClassifier(hidden_layer_sizes=(16, 8), max_iter=300, random_state=42).fit(X_train_s, y_train)
+nn_acc = accuracy_score(y_test, nn.predict(X_test_s))
+
+print("boosting", round(gb_acc,3), "KNN", round(knn_acc,3), "SVM", round(svm_acc,3), "NN", round(nn_acc,3))</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>All four around <code class="inl">0.64</code> (KNN a touch lower). Gradient boosting takes a few seconds; the rest are quick.</p></div>
+
+  <div class="task">
+    <p class="th">Task C &middot; the seven-model table (Section 7)</p>
+    <p>Rebuild your comparison table with all models, sorted.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>results = pd.DataFrame({
+    "model": ["baseline (favorite wins)", "logistic regression", "decision tree",
+              "random forest", "gradient boosting", "KNN", "linear SVM", "neural network"],
+    "accuracy": [baseline_acc, logreg_acc, tree_acc, forest_acc, gb_acc, knn_acc, svm_acc, nn_acc],
+}).sort_values("accuracy", ascending=False)
+results</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>Eight rows all within a couple of points of each other, just above the baseline. Keep this <code class="inl">results</code> table, the chart-export step uses it.</p></div>
+
+  <div class="nav"><button class="nextbtn" data-next="t2">Next: Charts &rarr;</button></div>
+</section>
+
+<!-- ============ CHARTS ============ -->
+<section class="panel" id="t2">
+  <div class="panel-head"><h2>Export charts for the README</h2>
+    <p class="sub">Save a couple of charts as image files so you can show them in your README.</p>
+  </div>
+
+  <div class="task">
+    <p class="th">Your task</p>
+    <p>Make a <code class="inl">charts</code> folder and save two images: the favorite-win-rate chart and the model comparison.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>import os
+os.makedirs("charts", exist_ok=True)
+
+# 1) favorite win rate by surface
+ax = df.groupby("surface")["favorite_won"].mean().plot(kind="bar", title="Favorite win rate by surface")
+ax.set_ylabel("share won by favorite")
+ax.figure.savefig("charts/favorite_win_rate.png", bbox_inches="tight", dpi=120)
+ax.figure.clear()
+
+# 2) model comparison
+ax2 = results.set_index("model")["accuracy"].plot(kind="barh", title="Model accuracy vs baseline")
+ax2.set_xlabel("accuracy")
+ax2.figure.savefig("charts/model_comparison.png", bbox_inches="tight", dpi=120)
+ax2.figure.clear()
+
+print("saved:", os.listdir("charts"))</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>A new <code class="inl">charts</code> folder with <code class="inl">favorite_win_rate.png</code> and <code class="inl">model_comparison.png</code>. <code class="inl">savefig</code> writes the chart to a file; <code class="inl">bbox_inches="tight"</code> trims the whitespace and <code class="inl">dpi=120</code> makes it crisp.</p></div>
+
+  <div class="box tip"><b>Optional:</b> export one or two more charts you like (match length, matches per month). More visuals make the README look richer, just keep them clearly labeled.</div>
+
+  <div class="nav"><button class="nextbtn" data-next="t3">Next: README &rarr;</button></div>
+</section>
+
+<!-- ============ README ============ -->
+<section class="panel" id="t3">
+  <div class="panel-head"><h2>Write the README (your short paper)</h2>
+    <p class="sub">This is the front page of your repo and the thing admissions readers actually read. Make a file called <code class="inl">README.md</code> and build it from this skeleton.</p>
+  </div>
+
+  <div class="box concept">
+    <b>A README is written in Markdown.</b> A few basics: <code class="inl"># Title</code> is a big heading, <code class="inl">## Section</code> a smaller one. <code class="inl">**bold**</code> for bold. A link is <code class="inl">[text](url)</code>. An image is <code class="inl">![caption](charts/model_comparison.png)</code>. A table uses pipes and dashes (shown below). GitHub renders all of this into a clean page automatically.
+  </div>
+
+  <p class="cell-label cl-file">README.md &middot; full skeleton (copy, then fill in the blanks)</p>
+  <pre class="md"><button class="copybtn">Copy</button><code># Predicting ATP Tennis Match Outcomes
+
+A comparison of machine learning models for predicting the winner of professional
+men's tennis matches from information known before the match.
+
+**TL;DR:** Seven models (from logistic regression to a neural network) all reach
+about 64-66% accuracy, barely above a simple "the favorite wins" baseline. The
+ranking gap between two players carries almost all of the predictive signal, and
+the rest is close to irreducible upset randomness.
+
+---
+
+## 1. Question
+Can we predict who wins an ATP match using only pre-match information such as the
+players' rankings, ages, and heights? And does a more sophisticated model beat a
+simple ranking-based rule?
+
+## 2. Data
+- Source: Jeff Sackmann's ATP dataset (via the guillemservera Kaggle mirror).
+- Size: ~71,000 matches from 2000 to 2024, one row per match.
+- Each row lists the winner and loser with their pre-match stats (ranking, ranking
+  points, age, height, surface, round, best-of) and post-match stats (aces, etc.).
+- Cleaning: dropped matches missing a ranking or surface; filled missing heights
+  with the median. (Post-match stats are deliberately NOT used, see Method.)
+
+## 3. Method
+- **Avoiding leakage:** only pre-match information is used as input. Post-match
+  stats like aces would leak the result.
+- **Framing:** the two players are relabeled A and B at random, and the model
+  predicts whether player A wins (a balanced 50/50 target), so it must learn from
+  the features rather than the column layout.
+- **Features:** differences between the two players, `rank_diff`, `points_diff`,
+  `age_diff`, `height_diff` (plus surface and best-of in one experiment).
+- **Split:** trained on earlier matches, tested on later ones (a time-based split),
+  which mirrors real prediction.
+- **Models compared:** a favorite-wins baseline, logistic regression, decision
+  tree, random forest, gradient boosting, k-nearest neighbors, a linear SVM, and a
+  neural network. Evaluated with accuracy and cross-validation.
+
+## 4. Results
+
+| Model | Accuracy |
+| --- | --- |
+| Baseline (favorite wins) | 0.64 |
+| Logistic regression | 0.64 |
+| Decision tree | 0.64 |
+| Random forest | 0.64 |
+| Gradient boosting | 0.64 |
+| KNN | 0.63 |
+| Linear SVM | 0.64 |
+| Neural network | 0.64 |
+
+*(fill in your exact numbers)*
+
+![Model accuracy vs baseline](charts/model_comparison.png)
+![Favorite win rate by surface](charts/favorite_win_rate.png)
+
+Cross-validation confirmed these numbers are stable to within about a percentage point.
+
+## 5. Findings
+- All seven models land within a couple of points of each other and of the baseline.
+- The ranking gap is by far the most important feature; ranking points carry the
+  same information (they agree on the favorite ~100% of the time).
+- Adding surface and match format barely changed accuracy.
+- Together this points to a real predictability ceiling: ranking explains most of
+  what is predictable, and upsets impose a hard limit no model beats.
+
+## 6. Limitations
+- Uses only simple pre-match features; no recent form, head-to-head, or
+  surface-specific strength.
+- Merges 25 seasons, over which the ranking-points system changed.
+- Predicts only a binary winner; ignores injuries, retirements, and match context.
+
+## 7. How to Run
+```
+pip install -r requirements.txt
+```
+Then open `tennis_predictor.ipynb` and run all cells top to bottom.
+
+## 8. Repository Structure
+```
+tennis-match-predictor/
+├── README.md
+├── tennis_predictor.ipynb
+├── requirements.txt
+├── data/            # dataset (or a note on where to download it)
+└── charts/          # exported figures used above
+```
+</code></pre>
+
+  <div class="box proj">
+    <b>Your job with this:</b> paste it into <code class="inl">README.md</code>, then replace every placeholder with your real numbers and your own wording. Pull the sentences from the Findings cells you already wrote in the notebook, that is exactly what they were for. Keep it honest and clear; the ceiling result is a strength, so state it plainly.
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t4">Next: Repo setup &rarr;</button></div>
+</section>
+
+<!-- ============ REPO SETUP ============ -->
+<section class="panel" id="t4">
+  <div class="panel-head"><h2>Get the repo ready</h2>
+    <p class="sub">Three things so it looks professional when we push it to GitHub next session.</p>
+  </div>
+
+  <h3>1 &nbsp;Clean the notebook</h3>
+  <ul>
+    <li>Delete any dead or experimental cells (old tries, prints you no longer need). Every cell left should earn its place.</li>
+    <li>Then run <b>Kernel, then Restart Kernel and Run All Cells</b>. This clears everything and runs the notebook fresh from top to bottom. It must run start to finish <b>with no errors</b>, that is what "reproducible" means.</li>
+    <li>Save. The clean, fully-run notebook (with outputs showing) is what goes in the repo.</li>
+  </ul>
+
+  <h3>2 &nbsp;Set up the folders</h3>
+  <p>Make a single project folder and arrange your files like this:</p>
+  <div class="tree-box"><code>tennis-match-predictor/
+├── README.md                     &lt;- your write-up (front page)
+├── tennis_predictor.ipynb        &lt;- the clean, fully-run notebook
+├── requirements.txt              &lt;- the libraries needed
+├── data/
+│   └── atp_2000_2024_model_ready.csv
+└── charts/
+    ├── model_comparison.png
+    └── favorite_win_rate.png</code></div>
+  <p>The <code class="inl">README.md</code> sits at the top level (GitHub shows it automatically). Charts go in <code class="inl">charts/</code> so the image links in the README work. Data goes in <code class="inl">data/</code>.</p>
+
+  <h3>3 &nbsp;Add a requirements file</h3>
+  <p>Create <code class="inl">requirements.txt</code> so anyone can install the exact libraries:</p>
+  <pre class="md"><button class="copybtn">Copy</button><code>pandas
+numpy
+scikit-learn
+matplotlib</code></pre>
+
+  <div class="box tip">
+    <b>About the data file:</b> your CSV is around 20 MB. GitHub allows files up to 100 MB, so committing it is fine. If you would rather keep the repo light, you can leave it out and add a short line in the README saying where to download it instead. We will decide together next session.
+  </div>
+
+  <div class="box warn">
+    <b>Do not push yet.</b> Just get the folder, README, requirements, and clean notebook ready on your machine. Next session we will create the GitHub repo and push it together, then start building the interactive site.
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t5">Next: Submit &rarr;</button></div>
+</section>
+
+<!-- ============ SUBMIT ============ -->
+<section class="panel" id="t5">
+  <div class="panel-head"><h2>Bring this back next session</h2>
+    <p class="sub">A checklist of what should be done.</p>
+  </div>
+  <div class="box concept">
+    <b>You should arrive with:</b>
+    <ul style="margin:8px 0 0;">
+      <li>The notebook updated with all seven models and the comparison table, cleaned and run top to bottom.</li>
+      <li>A <code class="inl">charts</code> folder with your exported figures.</li>
+      <li>A drafted <code class="inl">README.md</code> filled in with your real numbers and your own words.</li>
+      <li>The project folder arranged as shown, with <code class="inl">requirements.txt</code>.</li>
+    </ul>
+  </div>
+  <div class="box proj">
+    <b>Next session:</b> we push the whole thing to GitHub, then start the fun part, an interactive web page where anyone can set a ranking gap and surface and watch the model predict the winner, with your paper and comparison right there on the site. We will build it together using AI.
+  </div>
+  <div class="box tip">
+    <b>Turn it in:</b> send me the updated <code class="inl">tennis_predictor.ipynb</code> and your draft <code class="inl">README.md</code> so I can look them over before we push. Reminder: this project is homework part two; part one is the 10 review questions at the end of the Week 6 lesson.
+  </div>
+</section>
+
+</div>
+
+<script>
+  var tabs = document.querySelectorAll(".tab");
+  var panels = document.querySelectorAll(".panel");
+  var bar = document.getElementById("tabbar");
+  function show(id){
+    tabs.forEach(function(t){ t.classList.toggle("active", t.dataset.target === id); });
+    panels.forEach(function(p){ p.classList.toggle("active", p.id === id); });
+    window.scrollTo({ top: bar.offsetTop, behavior: "smooth" });
+  }
+  tabs.forEach(function(t){ t.addEventListener("click", function(){ show(t.dataset.target); }); });
+  document.querySelectorAll("[data-next]").forEach(function(b){ b.addEventListener("click", function(){ show(b.dataset.next); }); });
+  document.querySelectorAll(".copybtn").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var code = btn.parentElement.querySelector("code").innerText;
+      navigator.clipboard.writeText(code).then(function(){
+        btn.textContent = "Copied"; btn.classList.add("done");
+        setTimeout(function(){ btn.textContent = "Copy"; btn.classList.remove("done"); }, 1500);
+      });
+    });
+  });
+</script>
+</body>
+</html>

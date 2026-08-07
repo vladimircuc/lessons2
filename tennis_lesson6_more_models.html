@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Week 6 - Four More Models</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2430; --border:#30363d;
+    --text:#e6edf3; --muted:#8b949e; --accent:#c9f24d; --accent2:#58a6ff;
+    --code:#0a0e14; --green:#3fb950; --yellow:#d29922; --red:#f85149; --clay:#e07b39; --purple:#bc8cff;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.68;padding:0 0 60px;}
+  .wrap{max-width:920px;margin:0 auto;padding:0 20px;}
+  header{border-bottom:1px solid var(--border);background:linear-gradient(180deg,#12160e,#0d1117);padding:34px 0 26px;}
+  .kicker{color:var(--accent);font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 8px;}
+  header h1{margin:0 0 10px;font-size:28px;letter-spacing:-0.5px;}
+  header p{margin:0;color:var(--muted);font-size:14.5px;max-width:770px;}
+  .pill{display:inline-block;background:var(--panel2);border:1px solid var(--border);border-radius:20px;padding:2px 12px;font-size:12px;color:var(--muted);margin-right:6px;}
+
+  #tabbar{position:sticky;top:0;z-index:50;background:rgba(13,17,23,.96);backdrop-filter:blur(6px);border-bottom:1px solid var(--border);}
+  .tabs{max-width:920px;margin:0 auto;padding:8px 14px;display:flex;flex-wrap:wrap;gap:6px;}
+  .tab{background:var(--panel);border:1px solid var(--border);color:var(--muted);font-size:13px;font-weight:600;padding:7px 13px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:7px;transition:.12s;font-family:inherit;}
+  .tab:hover{color:var(--text);border-color:#455063;}
+  .tab .n{font-size:11px;font-weight:800;background:var(--panel2);color:var(--muted);border-radius:5px;padding:1px 6px;min-width:20px;text-align:center;}
+  .tab.active{background:var(--accent);color:#0d1117;border-color:var(--accent);}
+  .tab.active .n{background:rgba(13,17,23,.25);color:#0d1117;}
+
+  .panel{display:none;animation:fade .18s ease;}
+  .panel.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+  .panel-head{padding:26px 0 2px;}
+  .panel-head h2{margin:0;font-size:24px;letter-spacing:-0.3px;}
+  .panel-head .sub{color:var(--muted);margin:8px 0 0;font-size:15px;}
+
+  h3{font-size:15px;margin:24px 0 6px;color:var(--text);}
+  p{margin:11px 0;}
+  ul{margin:8px 0;padding-left:22px;} li{margin:6px 0;}
+  .box{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin:16px 0;}
+  .tip{border-left:3px solid var(--accent2);}
+  .warn{border-left:3px solid var(--yellow);}
+  .concept{border-left:3px solid var(--accent);}
+  .why{border-left:3px solid var(--clay);}
+  .cell-label{font-size:11px;color:var(--accent);font-weight:700;letter-spacing:0.5px;margin:18px 0 4px;text-transform:uppercase;}
+  pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padding:15px 16px;overflow-x:auto;margin:0 0 6px;position:relative;}
+  code{font-family:"SF Mono","Fira Code",Consolas,Menlo,monospace;font-size:13.5px;color:#c9d1d9;}
+  .copybtn{position:absolute;top:7px;right:7px;background:var(--panel2);border:1px solid var(--border);color:var(--muted);font-size:11px;padding:4px 10px;border-radius:6px;cursor:pointer;transition:.15s;font-family:inherit;}
+  .copybtn:hover{color:var(--text);border-color:var(--accent);}
+  .copybtn.done{color:var(--green);border-color:var(--green);}
+  .out{color:var(--muted);font-size:13px;margin:2px 0 14px;padding-left:12px;border-left:2px solid var(--border);}
+  .out b{color:var(--text);font-weight:600;}
+  code.inl{background:var(--panel2);border:1px solid var(--border);border-radius:5px;padding:1px 6px;color:var(--accent);font-size:12.5px;}
+
+  .figure{background:#0b0f16;border:1px solid var(--border);border-radius:12px;padding:18px 16px 10px;margin:18px 0;text-align:center;}
+  .figure svg{max-width:100%;height:auto;}
+  .figure .cap{color:var(--muted);font-size:12.5px;margin:10px 6px 4px;line-height:1.5;}
+
+  .practice-head{margin:30px 0 4px;font-size:13px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--accent);display:flex;align-items:center;gap:10px;}
+  .practice-head::before{content:"";flex:0 0 26px;height:2px;background:var(--accent);}
+  .ex{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:10px;padding:14px 18px;margin:12px 0;}
+  .ex.wr{border-left-color:var(--purple);}
+  .ex p{margin:0;}
+  .qn{font-weight:700;color:var(--accent);margin-right:6px;}
+  .ex.wr .qn{color:var(--purple);}
+  .wtag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 8px;border-radius:4px;margin-left:8px;background:rgba(188,140,255,.15);color:var(--purple);border:1px solid var(--purple);vertical-align:middle;}
+  details.sol{margin:10px 0 0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  details.sol summary{cursor:pointer;padding:9px 14px;background:var(--panel2);font-weight:600;font-size:12.5px;color:var(--green);user-select:none;list-style:none;}
+  details.sol summary::-webkit-details-marker{display:none;}
+  details.sol summary::before{content:"\25B8  ";color:var(--muted);}
+  details.sol[open] summary::before{content:"\25BE  ";}
+  details.sol.ex-ans summary{color:var(--purple);}
+  details.sol .sb{padding:8px 14px 10px;}
+  .sb .note{color:var(--muted);font-size:12.5px;margin:6px 0 0;padding-left:10px;border-left:2px solid var(--border);}
+  .sb .exans{font-size:13.5px;color:var(--text);margin:0;font-style:italic;}
+  .sb .exans::before{content:"Example answer: ";font-style:normal;font-weight:700;color:var(--purple);}
+
+  .nav{display:flex;justify-content:flex-end;margin:32px 0 10px;padding-top:18px;border-top:1px solid var(--border);}
+  .nextbtn{background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:14px;font-weight:600;padding:10px 18px;border-radius:9px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;transition:.12s;}
+  .nextbtn:hover{border-color:var(--accent);color:var(--accent);}
+  a{color:var(--accent2);}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <p class="kicker">Tennis AI Project &middot; Week 6</p>
+    <h1>Four More Models: Breadth for the Study</h1>
+    <p>You already know the honest answer, everything lands near 0.64. So this week is about breadth, not chasing a higher number: four more algorithms, each genuinely different, each with a picture of how it actually works. Seeing four more models all hit the same ceiling is what makes your study's conclusion bulletproof. Same format, with a diagram and a real explanation on every model.</p>
+    <div style="margin-top:14px;">
+      <span class="pill">gradient boosting</span><span class="pill">KNN</span><span class="pill">SVM</span><span class="pill">neural network</span><span class="pill">diagrams</span>
+    </div>
+  </div>
+</header>
+
+<div id="tabbar">
+  <div class="tabs">
+    <button class="tab active" data-target="t0"><span class="n">0</span>Start</button>
+    <button class="tab" data-target="t1"><span class="n">1</span>Boosting</button>
+    <button class="tab" data-target="t2"><span class="n">2</span>KNN</button>
+    <button class="tab" data-target="t3"><span class="n">3</span>SVM</button>
+    <button class="tab" data-target="t4"><span class="n">4</span>Neural net</button>
+    <button class="tab" data-target="t5"><span class="n">5</span>Report</button>
+    <button class="tab" data-target="t6"><span class="n">R</span>Review</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ============ START ============ -->
+<section class="panel active" id="t0">
+  <div class="panel-head"><h2>Start here</h2>
+    <p class="sub">Load the data, rebuild your earlier models, and prepare a scaled copy of the features, three of this week's models need it.</p>
+  </div>
+
+  <pre><button class="copybtn">Copy</button><code>import pandas as pd
+import numpy as np
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import LinearSVC
+from sklearn.neural_network import MLPClassifier
+from sklearn.metrics import accuracy_score
+
+df = pd.read_csv("atp_2000_2024_model_ready.csv", low_memory=False)
+df["tourney_date"] = pd.to_datetime(df["tourney_date"])
+df = df.sort_values("tourney_date")
+
+feature_cols = ["rank_diff", "points_diff", "age_diff", "height_diff"]
+cut = int(len(df) * 0.8)
+train, test = df.iloc[:cut], df.iloc[cut:]
+X_train, y_train = train[feature_cols], train["target"]
+X_test,  y_test  = test[feature_cols],  test["target"]
+
+# baseline + the three models from earlier weeks (for the final table)
+baseline_acc = accuracy_score(y_test, (test["rank_diff"] < 0).astype(int))
+logreg_acc = accuracy_score(y_test, LogisticRegression(max_iter=1000).fit(X_train, y_train).predict(X_test))
+tree_acc   = accuracy_score(y_test, DecisionTreeClassifier(max_depth=4, random_state=42).fit(X_train, y_train).predict(X_test))
+forest_acc = accuracy_score(y_test, RandomForestClassifier(n_estimators=200, max_depth=8, random_state=42, n_jobs=-1).fit(X_train, y_train).predict(X_test))
+print("baseline", round(baseline_acc,3), "logreg", round(logreg_acc,3), "tree", round(tree_acc,3), "forest", round(forest_acc,3))</code></pre>
+
+  <h3>Scale the features</h3>
+  <p>Three of this week's models measure <b>distances</b> or follow <b>gradients</b> through the features. If one feature runs in the thousands (ranking points) and another in single digits (age), the big one drowns out the small one. Scaling rewrites every feature to the same footing (mean 0, similar spread) so they count fairly.</p>
+  <pre><button class="copybtn">Copy</button><code>scaler = StandardScaler().fit(X_train)     # learn the scaling from the training data only
+X_train_s = scaler.transform(X_train)      # scaled training features
+X_test_s  = scaler.transform(X_test)       # scaled test features</code></pre>
+  <div class="box tip">
+    <b>Rule of thumb:</b> tree-based models (decision tree, random forest, gradient boosting) do not care about scale. Distance and gradient models (KNN, SVM, neural networks) do. So this week, gradient boosting uses the plain features, and the other three use the scaled ones.
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t1">Next: Boosting &rarr;</button></div>
+</section>
+
+<!-- ============ GRADIENT BOOSTING ============ -->
+<section class="panel" id="t1">
+  <div class="panel-head"><h2>Model 4: Gradient Boosting</h2>
+    <p class="sub">The model competition winners reach for on tabular data. Like a random forest it is made of trees, but it builds them in a completely different way.</p>
+  </div>
+
+  <div class="figure">
+    <svg viewBox="0 0 680 250" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+      <!-- three little trees each fixing the last -->
+      <g stroke="#3fb950" stroke-width="2" fill="none">
+        <g transform="translate(70,60)"><line x1="30" y1="0" x2="30" y2="20"/><line x1="30" y1="20" x2="10" y2="45"/><line x1="30" y1="20" x2="50" y2="45"/><circle cx="10" cy="50" r="6" fill="#3fb950"/><circle cx="50" cy="50" r="6" fill="#3fb950"/></g>
+        <g transform="translate(280,60)"><line x1="30" y1="0" x2="30" y2="20"/><line x1="30" y1="20" x2="10" y2="45"/><line x1="30" y1="20" x2="50" y2="45"/><circle cx="10" cy="50" r="6" fill="#3fb950"/><circle cx="50" cy="50" r="6" fill="#3fb950"/></g>
+        <g transform="translate(490,60)"><line x1="30" y1="0" x2="30" y2="20"/><line x1="30" y1="20" x2="10" y2="45"/><line x1="30" y1="20" x2="50" y2="45"/><circle cx="10" cy="50" r="6" fill="#3fb950"/><circle cx="50" cy="50" r="6" fill="#3fb950"/></g>
+      </g>
+      <text x="100" y="150" fill="#e6edf3" font-size="13" text-anchor="middle">Tree 1</text>
+      <text x="100" y="168" fill="#8b949e" font-size="11" text-anchor="middle">rough guess</text>
+      <text x="310" y="150" fill="#e6edf3" font-size="13" text-anchor="middle">Tree 2</text>
+      <text x="310" y="168" fill="#8b949e" font-size="11" text-anchor="middle">fixes Tree 1's misses</text>
+      <text x="520" y="150" fill="#e6edf3" font-size="13" text-anchor="middle">Tree 3</text>
+      <text x="520" y="168" fill="#8b949e" font-size="11" text-anchor="middle">fixes what's left</text>
+      <!-- arrows -->
+      <g stroke="#d29922" stroke-width="2" fill="none" marker-end="url(#ar)">
+        <line x1="170" y1="90" x2="270" y2="90"/>
+        <line x1="380" y1="90" x2="480" y2="90"/>
+      </g>
+      <text x="220" y="82" fill="#d29922" font-size="10.5" text-anchor="middle">errors</text>
+      <text x="430" y="82" fill="#d29922" font-size="10.5" text-anchor="middle">errors</text>
+      <text x="600" y="90" fill="#8b949e" font-size="20" text-anchor="middle">&#8230;</text>
+      <line x1="70" y1="205" x2="620" y2="205" stroke="#30363d" stroke-width="1"/>
+      <text x="345" y="230" fill="#c9f24d" font-size="12.5" text-anchor="middle">final prediction = Tree 1 + Tree 2 + Tree 3 + &#8230; (all added together)</text>
+      <defs><marker id="ar" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#d29922"/></marker></defs>
+    </svg>
+    <p class="cap">Gradient boosting builds trees <b>one at a time</b>, and each new tree is trained specifically on the mistakes the previous trees are still making. The final prediction adds them all up.</p>
+  </div>
+
+  <div class="box concept">
+    <b>How it works, and how it differs from a random forest.</b>
+    <p style="margin:8px 0 0;">A random forest builds many trees <em>independently and in parallel</em>, then averages their votes. Gradient boosting builds trees <em>in sequence</em>: the first tree makes a rough prediction, then the second tree looks only at where the first went wrong and tries to correct it, the third corrects what is still wrong, and so on. Each tree is usually shallow (a "weak" learner), but adding hundreds of small corrections produces a very accurate model. The word "gradient" just means it uses the errors to decide what to fix next. On tables of numbers like ours, this is generally the single most powerful off-the-shelf method.</p>
+  </div>
+
+  <p class="cell-label">Cell &middot; train gradient boosting (plain features, it is tree-based)</p>
+  <pre><button class="copybtn">Copy</button><code>gb = GradientBoostingClassifier(max_depth=3, random_state=42)
+gb.fit(X_train, y_train)
+gb_pred = gb.predict(X_test)
+
+gb_acc = accuracy_score(y_test, gb_pred)
+print("gradient boosting:", round(gb_acc, 3))</code></pre>
+  <p class="out">Takes a few seconds (it is building 100 trees in a row). Expect ~<b>0.64</b>. The most powerful tabular method available, and it still lands at the ceiling, which is a strong point for your study.</p>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex"><p><span class="qn">1.</span>Train a second gradient boosting model that learns more slowly but longer: <code class="inl">learning_rate=0.05</code> and <code class="inl">n_estimators=300</code>. Print its accuracy next to the first.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>gb2 = GradientBoostingClassifier(max_depth=3, learning_rate=0.05, n_estimators=300, random_state=42)
+gb2.fit(X_train, y_train)
+print("default:", round(gb_acc, 3), " | slower+longer:", round(accuracy_score(y_test, gb2.predict(X_test)), 3))</code></pre>
+    <p class="note">Barely different, more tuning does not break the ceiling either.</p></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">2.</span>Show the gradient boosting model's feature importances, sorted.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>pd.Series(gb.feature_importances_, index=feature_cols).sort_values(ascending=False)</code></pre></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">3.</span>In a <b>markdown cell</b>, explain the core difference between gradient boosting and a random forest. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">A random forest builds many trees independently and averages their votes, so the trees do not talk to each other. Gradient boosting builds trees one after another, where each new tree focuses on correcting the mistakes the previous trees made. So a forest is a parallel crowd, while boosting is a sequence of fixes that build on each other.</p></div></details>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t2">Next: KNN &rarr;</button></div>
+</section>
+
+<!-- ============ KNN ============ -->
+<section class="panel" id="t2">
+  <div class="panel-head"><h2>Model 5: K-Nearest Neighbors</h2>
+    <p class="sub">The simplest idea in machine learning: to predict a new match, find the most similar past matches and copy what happened.</p>
+  </div>
+
+  <div class="figure">
+    <svg viewBox="0 0 680 300" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+      <!-- axes -->
+      <line x1="55" y1="255" x2="640" y2="255" stroke="#30363d"/><line x1="55" y1="35" x2="55" y2="255" stroke="#30363d"/>
+      <text x="345" y="285" fill="#8b949e" font-size="11" text-anchor="middle">ranking gap  &#8594;</text>
+      <text x="30" y="150" fill="#8b949e" font-size="11" text-anchor="middle" transform="rotate(-90 30 150)">age gap  &#8594;</text>
+      <!-- class A (green) dots -->
+      <g fill="#3fb950">
+        <circle cx="120" cy="210" r="7"/><circle cx="160" cy="170" r="7"/><circle cx="200" cy="225" r="7"/><circle cx="150" cy="120" r="7"/><circle cx="110" cy="150" r="7"/><circle cx="230" cy="180" r="7"/>
+        <circle cx="300" cy="140" r="7"/><circle cx="355" cy="125" r="7"/><circle cx="320" cy="185" r="7"/>
+      </g>
+      <!-- class B (blue) dots -->
+      <g fill="#58a6ff">
+        <circle cx="470" cy="95" r="7"/><circle cx="510" cy="135" r="7"/><circle cx="450" cy="150" r="7"/><circle cx="530" cy="85" r="7"/><circle cx="490" cy="195" r="7"/><circle cx="560" cy="160" r="7"/>
+        <circle cx="380" cy="150" r="7"/><circle cx="365" cy="185" r="7"/>
+      </g>
+      <!-- neighbourhood circle around the query -->
+      <circle cx="338" cy="152" r="66" fill="none" stroke="#c9f24d" stroke-width="2" stroke-dasharray="6 5"/>
+      <!-- query star -->
+      <path d="M338,134 l5,12 l13,0 l-10,8 l4,13 l-12,-8 l-12,8 l4,-13 l-10,-8 l13,0 Z" fill="#c9f24d"/>
+      <text x="338" y="245" fill="#c9f24d" font-size="12" text-anchor="middle">new match</text>
+      <!-- legend -->
+      <circle cx="470" cy="255" r="6" fill="#3fb950"/><text x="482" y="259" fill="#8b949e" font-size="11">A won</text>
+      <circle cx="545" cy="255" r="6" fill="#58a6ff"/><text x="557" y="259" fill="#8b949e" font-size="11">B won</text>
+    </svg>
+    <p class="cap">Each dot is a past match, placed by its features and colored by who won. For a new match (the star), KNN finds the <b>k</b> closest past matches (dashed circle) and takes the majority vote. Here 3 green vs 2 blue, so it predicts A.</p>
+  </div>
+
+  <div class="box concept">
+    <b>How it works.</b>
+    <p style="margin:8px 0 0;">KNN does no real "training" at all, it just memorizes every past match. When a new match comes in, it measures the distance from that match to every stored one, picks the <code class="inl">k</code> nearest (say the 15 most similar matchups by ranking gap, age gap, and so on), and lets them vote. If most of those similar past matches were won by player A, it predicts A. The only knob is <code class="inl">k</code>: small <code class="inl">k</code> is jumpy and noise-sensitive, large <code class="inl">k</code> is smoother. Because it is built entirely on distance, this is a model where scaling the features really matters.</p>
+  </div>
+
+  <p class="cell-label">Cell &middot; train KNN (scaled features)</p>
+  <pre><button class="copybtn">Copy</button><code>knn = KNeighborsClassifier(n_neighbors=15)
+knn.fit(X_train_s, y_train)
+knn_pred = knn.predict(X_test_s)
+
+knn_acc = accuracy_score(y_test, knn_pred)
+print("KNN (k=15):", round(knn_acc, 3))</code></pre>
+  <p class="out">Expect a bit <b>lower</b> than the others, around 0.63. That dip is informative, see practice question 2.</p>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex"><p><span class="qn">1.</span>Try two very different neighbor counts: <code class="inl">k=1</code> and <code class="inl">k=50</code>. Print both accuracies.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>for k in [1, 50]:
+    m = KNeighborsClassifier(n_neighbors=k).fit(X_train_s, y_train)
+    print(f"k={k}:", round(accuracy_score(y_test, m.predict(X_test_s)), 3))</code></pre>
+    <p class="note"><code class="inl">k=1</code> is usually worst (it trusts a single nearest match), larger k is smoother.</p></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">2.</span>KNN scored a little lower than the other models. In a <b>markdown cell</b>, suggest why "nearest neighbors" might struggle on this data. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">KNN assumes matches that are close in feature space have the same outcome, but tennis has many upsets, so two very similar matchups can end differently. With lots of noise and only a few weak features, the nearest neighbors often disagree, which makes the vote unreliable. The other models can weigh the overall trend, while KNN is at the mercy of whichever handful of similar matches it happens to find.</p></div></details>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t3">Next: SVM &rarr;</button></div>
+</section>
+
+<!-- ============ SVM ============ -->
+<section class="panel" id="t3">
+  <div class="panel-head"><h2>Model 6: Support Vector Machine</h2>
+    <p class="sub">A model that draws the dividing line between the two classes with the widest possible buffer around it.</p>
+  </div>
+
+  <div class="figure">
+    <svg viewBox="0 0 680 300" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+      <!-- margin band -->
+      <polygon points="150,300 470,20 560,20 240,300" fill="#c9f24d" opacity="0.06"/>
+      <!-- decision boundary -->
+      <line x1="200" y1="300" x2="510" y2="20" stroke="#c9f24d" stroke-width="2.5"/>
+      <!-- margins -->
+      <line x1="150" y1="300" x2="460" y2="20" stroke="#c9f24d" stroke-width="1.3" stroke-dasharray="6 5"/>
+      <line x1="250" y1="300" x2="560" y2="20" stroke="#c9f24d" stroke-width="1.3" stroke-dasharray="6 5"/>
+      <!-- class A (green), lower-left -->
+      <g fill="#3fb950">
+        <circle cx="95" cy="250" r="7"/><circle cx="130" cy="210" r="7"/><circle cx="90" cy="180" r="7"/><circle cx="150" cy="270" r="7"/><circle cx="70" cy="220" r="7"/>
+        <circle cx="205" cy="235" r="7"/>
+      </g>
+      <!-- class B (blue), upper-right -->
+      <g fill="#58a6ff">
+        <circle cx="560" cy="90" r="7"/><circle cx="520" cy="60" r="7"/><circle cx="590" cy="130" r="7"/><circle cx="540" cy="150" r="7"/><circle cx="600" cy="70" r="7"/>
+        <circle cx="470" cy="120" r="7"/>
+      </g>
+      <!-- support vectors circled -->
+      <circle cx="205" cy="235" r="12" fill="none" stroke="#e6edf3" stroke-width="1.6"/>
+      <circle cx="470" cy="120" r="12" fill="none" stroke="#e6edf3" stroke-width="1.6"/>
+      <text x="150" y="70" fill="#c9f24d" font-size="12">boundary</text>
+      <text x="360" y="290" fill="#8b949e" font-size="11" text-anchor="middle">the margin is the widest gap that separates the two groups</text>
+      <text x="235" y="205" fill="#e6edf3" font-size="10.5">support vector</text>
+    </svg>
+    <p class="cap">An SVM places the boundary so the empty gap (margin) on either side is as wide as possible. Only the borderline points, the <b>support vectors</b> (circled), actually decide where it goes; the rest do not matter.</p>
+  </div>
+
+  <div class="box concept">
+    <b>How it works.</b>
+    <p style="margin:8px 0 0;">Many lines could separate two groups of points. An SVM picks the one with the biggest empty buffer on both sides, on the theory that a boundary with lots of breathing room will generalize best to new points. Cleverly, only the handful of points right on the edge of that buffer, the support vectors, matter; move a far-away point and the boundary does not budge. SVMs can also bend the boundary into curves using something called a kernel, which makes them powerful, but that version is slow on large datasets, so on our 70,000 matches we use the fast straight-line version.</p>
+  </div>
+
+  <p class="cell-label">Cell &middot; train a linear SVM (scaled features)</p>
+  <pre><button class="copybtn">Copy</button><code>svm = LinearSVC(max_iter=5000)
+svm.fit(X_train_s, y_train)
+svm_pred = svm.predict(X_test_s)
+
+svm_acc = accuracy_score(y_test, svm_pred)
+print("linear SVM:", round(svm_acc, 3))</code></pre>
+  <p class="out">Expect ~<b>0.64</b>, right with the others. We use <code class="inl">LinearSVC</code> because a full curved-boundary SVM would take far too long on this many matches, which is itself a real, worth-noting limitation of SVMs.</p>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex"><p><span class="qn">1.</span>Do the SVM and the logistic regression tend to agree? Fit a logistic regression on the scaled features and print the fraction of test matches where the two models make the <b>same</b> prediction.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>lr = LogisticRegression(max_iter=1000).fit(X_train_s, y_train)
+agree = (svm.predict(X_test_s) == lr.predict(X_test_s)).mean()
+print("SVM and logistic regression agree on", round(agree, 3), "of test matches")</code></pre>
+    <p class="note">Very high, both draw a straight boundary, so they land in almost the same place.</p></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">2.</span>In a <b>markdown cell</b>, explain in your own words what the "margin" and the "support vectors" are. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">The margin is the empty gap on either side of the boundary line, and the SVM chooses the boundary that makes this gap as wide as possible so it generalizes well. The support vectors are the few data points sitting right on the edge of that gap, and they are the only points that determine where the boundary goes. Points far from the boundary have no effect on it at all.</p></div></details>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t4">Next: Neural net &rarr;</button></div>
+</section>
+
+<!-- ============ NEURAL NET ============ -->
+<section class="panel" id="t4">
+  <div class="panel-head"><h2>Model 7: Neural Network</h2>
+    <p class="sub">The famous one. For a table of numbers like ours it is overkill, but building one and watching it hit the same ceiling is a great result to show.</p>
+  </div>
+
+  <div class="figure">
+    <svg viewBox="0 0 680 320" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+      <!-- connections input(4)->hidden(5) -->
+      <g stroke="#30363d" stroke-width="1">
+        <line x1="150" y1="70" x2="330" y2="55"/><line x1="150" y1="70" x2="330" y2="115"/><line x1="150" y1="70" x2="330" y2="175"/><line x1="150" y1="70" x2="330" y2="235"/><line x1="150" y1="70" x2="330" y2="295"/>
+        <line x1="150" y1="130" x2="330" y2="55"/><line x1="150" y1="130" x2="330" y2="115"/><line x1="150" y1="130" x2="330" y2="175"/><line x1="150" y1="130" x2="330" y2="235"/><line x1="150" y1="130" x2="330" y2="295"/>
+        <line x1="150" y1="190" x2="330" y2="55"/><line x1="150" y1="190" x2="330" y2="115"/><line x1="150" y1="190" x2="330" y2="175"/><line x1="150" y1="190" x2="330" y2="235"/><line x1="150" y1="190" x2="330" y2="295"/>
+        <line x1="150" y1="250" x2="330" y2="55"/><line x1="150" y1="250" x2="330" y2="115"/><line x1="150" y1="250" x2="330" y2="175"/><line x1="150" y1="250" x2="330" y2="235"/><line x1="150" y1="250" x2="330" y2="295"/>
+      </g>
+      <!-- hidden(5)->output(1) -->
+      <g stroke="#30363d" stroke-width="1">
+        <line x1="330" y1="55" x2="540" y2="175"/><line x1="330" y1="115" x2="540" y2="175"/><line x1="330" y1="175" x2="540" y2="175"/><line x1="330" y1="235" x2="540" y2="175"/><line x1="330" y1="295" x2="540" y2="175"/>
+      </g>
+      <!-- input nodes -->
+      <g>
+        <circle cx="150" cy="70" r="15" fill="#161b22" stroke="#3fb950" stroke-width="2"/>
+        <circle cx="150" cy="130" r="15" fill="#161b22" stroke="#3fb950" stroke-width="2"/>
+        <circle cx="150" cy="190" r="15" fill="#161b22" stroke="#3fb950" stroke-width="2"/>
+        <circle cx="150" cy="250" r="15" fill="#161b22" stroke="#3fb950" stroke-width="2"/>
+      </g>
+      <text x="150" y="74" fill="#8b949e" font-size="9" text-anchor="middle">rank</text>
+      <text x="150" y="134" fill="#8b949e" font-size="9" text-anchor="middle">points</text>
+      <text x="150" y="194" fill="#8b949e" font-size="9" text-anchor="middle">age</text>
+      <text x="150" y="254" fill="#8b949e" font-size="9" text-anchor="middle">height</text>
+      <!-- hidden nodes -->
+      <g fill="#161b22" stroke="#58a6ff" stroke-width="2">
+        <circle cx="330" cy="55" r="15"/><circle cx="330" cy="115" r="15"/><circle cx="330" cy="175" r="15"/><circle cx="330" cy="235" r="15"/><circle cx="330" cy="295" r="15"/>
+      </g>
+      <!-- output node -->
+      <circle cx="540" cy="175" r="18" fill="#161b22" stroke="#c9f24d" stroke-width="2.5"/>
+      <text x="540" y="179" fill="#c9f24d" font-size="10" text-anchor="middle">P(A)</text>
+      <!-- labels -->
+      <text x="150" y="300" fill="#8b949e" font-size="11" text-anchor="middle">inputs</text>
+      <text x="330" y="320" fill="#8b949e" font-size="11" text-anchor="middle">hidden layer of units</text>
+      <text x="540" y="215" fill="#8b949e" font-size="11" text-anchor="middle">output</text>
+    </svg>
+    <p class="cap">The features enter on the left, pass through a layer of "units" that each combine and re-weight them, and end at a single output: the probability that player A wins. Training nudges every connection until those probabilities match the real results.</p>
+  </div>
+
+  <div class="box concept">
+    <b>How it works.</b>
+    <p style="margin:8px 0 0;">A neural network is layers of simple units. Each unit takes all the numbers from the previous layer, multiplies them by its own set of weights, adds them up, and passes the result through a little on/off curve. Stack a few layers and the network can, in principle, learn very complicated patterns. Training means feeding in matches, checking how wrong the output is, and nudging every weight a tiny bit in the direction that reduces the error, over and over. This is exactly what powers image and language models, but those problems have rich structure to exploit. Our four tidy numbers do not, so here the network has little to chew on beyond what a simple line already captures.</p>
+  </div>
+
+  <p class="cell-label">Cell &middot; train a small neural network (scaled features)</p>
+  <pre><button class="copybtn">Copy</button><code>nn = MLPClassifier(hidden_layer_sizes=(16, 8), max_iter=300, random_state=42)
+nn.fit(X_train_s, y_train)
+nn_pred = nn.predict(X_test_s)
+
+nn_acc = accuracy_score(y_test, nn_pred)
+print("neural network:", round(nn_acc, 3))</code></pre>
+  <p class="out"><code class="inl">hidden_layer_sizes=(16, 8)</code> means two hidden layers, one of 16 units and one of 8. Expect ~<b>0.64</b>, same ceiling. A neural network with far more capacity than the problem needs still cannot beat a straight line here, which is a powerful thing to state in the write-up.</p>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex"><p><span class="qn">1.</span>Train a much bigger network, <code class="inl">hidden_layer_sizes=(64, 32)</code>, and compare its accuracy to the smaller one.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>big = MLPClassifier(hidden_layer_sizes=(64, 32), max_iter=300, random_state=42)
+big.fit(X_train_s, y_train)
+print("small:", round(nn_acc, 3), " | big:", round(accuracy_score(y_test, big.predict(X_test_s)), 3))</code></pre>
+    <p class="note">Almost identical. More capacity does not help when there is no more signal to find.</p></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">2.</span>The neural network did not beat the simple models. In a <b>markdown cell</b>, explain why that is not surprising for this kind of data. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">Neural networks shine when the data has rich hidden structure, like the pixels in an image or the words in a sentence. Our data is just four plain numbers per match, so there is no deep pattern for the extra layers to discover. Once the ranking gap is accounted for, a simple line captures almost everything, so the network has nothing extra to learn and lands at the same accuracy.</p></div></details>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t5">Next: Report &rarr;</button></div>
+</section>
+
+<!-- ============ REPORT ============ -->
+<section class="panel" id="t5">
+  <div class="panel-head"><h2>Compare all seven, and report</h2>
+    <p class="sub">Put every model in one table and turn the pattern into words. Seven algorithms at the same ceiling is your headline.</p>
+  </div>
+
+  <p class="cell-label">Cell &middot; the full comparison table</p>
+  <pre><button class="copybtn">Copy</button><code>results = pd.DataFrame({
+    "model": ["baseline (favorite wins)", "logistic regression", "decision tree",
+              "random forest", "gradient boosting", "KNN", "linear SVM", "neural network"],
+    "accuracy": [baseline_acc, logreg_acc, tree_acc, forest_acc, gb_acc, knn_acc, svm_acc, nn_acc],
+}).sort_values("accuracy", ascending=False)
+results</code></pre>
+  <p class="out">Sorted, all eight rows sit within a couple of points of each other, hovering just above the baseline. This one table is the strongest evidence in your whole study.</p>
+
+  <div class="box why">
+    <b>The finding, now airtight.</b> You have tried a linear model, two kinds of tree ensembles, a distance-based model, a margin-based model, and a neural network. Every one lands near 0.64 to 0.66. When seven very different algorithms all agree, it is no longer a quirk of one method, it is strong evidence of a real ceiling: pre-match information predicts ATP matches to about this level and no further, because ranking captures most of the signal and upsets are close to irreducible. That is a genuinely convincing result.</p>
+  </div>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex wr"><p><span class="qn">1.</span>In a <b>markdown cell</b>, write a 4 to 5 sentence "Results" paragraph covering all seven models and the ceiling. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">We compared seven algorithms against a favorite-wins baseline: logistic regression, a decision tree, a random forest, gradient boosting, k-nearest neighbors, a linear support vector machine, and a neural network. All of them scored between roughly 0.63 and 0.66 accuracy, only marginally above the 0.64 baseline, with KNN slightly the weakest. No model, however simple or complex, pulled meaningfully ahead. This consistency across very different methods is strong evidence of a genuine predictability ceiling: the ranking gap carries almost all of the usable signal, and the remaining upsets are largely irreducible.</p></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">2.</span>In a <b>markdown cell</b>, answer: if seven models tie, which one would you choose for the final project, and why? <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">Since accuracy is basically the same across models, I would choose logistic regression, because it is the simplest and most interpretable, and its prediction is just a weighted sum that is easy to explain and even to run inside a web page. When results are tied, the simplest model that is easiest to understand and deploy is the best choice.</p></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">3.</span>Print the comparison table again, but rounded to 3 decimals for a clean look in the report.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>results.round(3)</code></pre></div></details>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t6">Next: Review &rarr;</button></div>
+</section>
+
+<!-- ============ REVIEW ============ -->
+<section class="panel" id="t6">
+  <div class="panel-head"><h2>Review: 10 questions</h2>
+    <p class="sub">Code and writing mixed. Put the <span style="color:var(--purple);font-weight:700;">write it</span> answers in markdown cells. These 10 are homework part one; the project (adding these models to your notebook, plus starting your README) is part two.</p>
+  </div>
+
+  <div class="ex"><p><span class="qn">1.</span>Train a gradient boosting model and print its accuracy.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>gb = GradientBoostingClassifier(max_depth=3, random_state=42).fit(X_train, y_train)
+print(round(accuracy_score(y_test, gb.predict(X_test)), 3))</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">2.</span>Train a KNN (k=15) on the <b>scaled</b> features and print its accuracy.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>knn = KNeighborsClassifier(n_neighbors=15).fit(X_train_s, y_train)
+print(round(accuracy_score(y_test, knn.predict(X_test_s)), 3))</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">3.</span>Train a linear SVM on the scaled features and print its accuracy.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>svm = LinearSVC(max_iter=5000).fit(X_train_s, y_train)
+print(round(accuracy_score(y_test, svm.predict(X_test_s)), 3))</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">4.</span>Train a neural network on the scaled features and print its accuracy.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>nn = MLPClassifier(hidden_layer_sizes=(16, 8), max_iter=300, random_state=42).fit(X_train_s, y_train)
+print(round(accuracy_score(y_test, nn.predict(X_test_s)), 3))</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">5.</span>Build a comparison table of all the models sorted by accuracy.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>pd.DataFrame({
+    "model": ["baseline", "logreg", "tree", "forest", "gradient boosting", "KNN", "SVM", "neural net"],
+    "accuracy": [baseline_acc, logreg_acc, tree_acc, forest_acc, gb_acc, knn_acc, svm_acc, nn_acc],
+}).sort_values("accuracy", ascending=False)</code></pre></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">6.</span>Explain why KNN, SVM, and neural networks need scaled features, but tree-based models do not. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">KNN, SVM, and neural networks all rely on distances or on adding up weighted feature values, so a feature measured in the thousands would completely overpower one measured in single digits. Scaling puts every feature on the same footing so each contributes fairly. Tree-based models only ask yes/no threshold questions about one feature at a time, so the scale of a feature does not change the splits, and scaling makes no difference to them.</p></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">7.</span>Explain in your own words how gradient boosting builds its model. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">Gradient boosting builds trees one at a time. The first tree makes a rough prediction, then each new tree is trained specifically on the errors the previous trees are still making, so it gradually corrects them. Adding up all these small correcting trees produces a strong final model.</p></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">8.</span>All four new models also landed near 0.64. What does that add to the study's conclusion? <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">It makes the conclusion much stronger. A single model near the baseline could be blamed on that method, but seven very different algorithms all agreeing shows the limit is in the data, not the model. It is strong evidence of a real ceiling where the ranking gap explains most of what is predictable and the rest is upset randomness.</p></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">9.</span>Which single model would you pick for the final project, and why? <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">Logistic regression, because every model scores about the same, so I would take the simplest and most interpretable one. Its prediction is just a weighted sum, which is easy to explain and can even run directly inside a web page for the interactive demo.</p></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">10.</span>Write an updated 4 to 5 sentence "Results" paragraph for your report, now that you have compared seven models. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">We evaluated seven machine learning models against a favorite-wins baseline for predicting ATP match outcomes from pre-match features. Logistic regression, a decision tree, a random forest, gradient boosting, KNN, a linear SVM, and a neural network all scored roughly 0.63 to 0.66 accuracy, barely above the 0.64 baseline. Cross-validation showed these numbers are stable to about a percentage point. The striking result is that no model, from the simplest to a neural network, pulled ahead, which points to a genuine predictability ceiling. We conclude that the ranking gap carries almost all of the usable signal and that tennis upsets impose a hard limit on how accurate any model can be.</p></div></details>
+  </div>
+
+  <div class="box concept" style="margin-top:26px;">
+    <b>Done with Week 6.</b> You now have seven models, real understanding of how each works, and a rock-solid conclusion. Next session we push everything to GitHub and start the interactive UI. Your project homework this week has two parts: add these four models to your notebook, and start building your README using the skeleton in the project guide.
+  </div>
+</section>
+
+</div>
+
+<script>
+  var tabs = document.querySelectorAll(".tab");
+  var panels = document.querySelectorAll(".panel");
+  var bar = document.getElementById("tabbar");
+  function show(id){
+    tabs.forEach(function(t){ t.classList.toggle("active", t.dataset.target === id); });
+    panels.forEach(function(p){ p.classList.toggle("active", p.id === id); });
+    window.scrollTo({ top: bar.offsetTop, behavior: "smooth" });
+  }
+  tabs.forEach(function(t){ t.addEventListener("click", function(){ show(t.dataset.target); }); });
+  document.querySelectorAll("[data-next]").forEach(function(b){ b.addEventListener("click", function(){ show(b.dataset.next); }); });
+  document.querySelectorAll(".copybtn").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var code = btn.parentElement.querySelector("code").innerText;
+      navigator.clipboard.writeText(code).then(function(){
+        btn.textContent = "Copied"; btn.classList.add("done");
+        setTimeout(function(){ btn.textContent = "Copy"; btn.classList.remove("done"); }, 1500);
+      });
+    });
+  });
+</script>
+</body>
+</html>
