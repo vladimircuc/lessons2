@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ship It: Tooling, GitHub, and the UI</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2430; --border:#30363d;
+    --text:#e6edf3; --muted:#8b949e; --accent:#c9f24d; --accent2:#58a6ff;
+    --code:#0a0e14; --green:#3fb950; --yellow:#d29922; --red:#f85149; --purple:#bc8cff;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.68;padding:0 0 60px;}
+  .wrap{max-width:920px;margin:0 auto;padding:0 20px;}
+  header{border-bottom:1px solid var(--border);background:linear-gradient(180deg,#12160e,#0d1117);padding:34px 0 26px;}
+  .kicker{color:var(--accent);font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 8px;}
+  header h1{margin:0 0 10px;font-size:28px;letter-spacing:-0.5px;}
+  header p{margin:0;color:var(--muted);font-size:14.5px;max-width:770px;}
+  .pill{display:inline-block;background:var(--panel2);border:1px solid var(--border);border-radius:20px;padding:2px 12px;font-size:12px;color:var(--muted);margin-right:6px;}
+
+  #tabbar{position:sticky;top:0;z-index:50;background:rgba(13,17,23,.96);backdrop-filter:blur(6px);border-bottom:1px solid var(--border);}
+  .tabs{max-width:920px;margin:0 auto;padding:8px 14px;display:flex;flex-wrap:wrap;gap:6px;}
+  .tab{background:var(--panel);border:1px solid var(--border);color:var(--muted);font-size:13px;font-weight:600;padding:7px 13px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:7px;transition:.12s;font-family:inherit;}
+  .tab:hover{color:var(--text);border-color:#455063;}
+  .tab .n{font-size:11px;font-weight:800;background:var(--panel2);color:var(--muted);border-radius:5px;padding:1px 6px;min-width:20px;text-align:center;}
+  .tab.active{background:var(--accent);color:#0d1117;border-color:var(--accent);}
+  .tab.active .n{background:rgba(13,17,23,.25);color:#0d1117;}
+
+  .panel{display:none;animation:fade .18s ease;}
+  .panel.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+  .panel-head{padding:26px 0 2px;}
+  .panel-head h2{margin:0;font-size:24px;letter-spacing:-0.3px;}
+  .panel-head .sub{color:var(--muted);margin:8px 0 0;font-size:15px;}
+
+  h3{font-size:15.5px;margin:24px 0 6px;color:var(--text);}
+  h4{font-size:13.5px;margin:18px 0 4px;color:var(--accent2);text-transform:uppercase;letter-spacing:.5px;}
+  p{margin:11px 0;} ul{margin:8px 0;padding-left:22px;} li{margin:6px 0;}
+  ol{margin:8px 0;padding-left:22px;} ol li{margin:8px 0;}
+  .box{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin:16px 0;}
+  .tip{border-left:3px solid var(--accent2);}
+  .warn{border-left:3px solid var(--yellow);}
+  .concept{border-left:3px solid var(--accent);}
+  .star{border-left:3px solid var(--purple);}
+  pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padding:15px 16px;overflow-x:auto;margin:0 0 6px;position:relative;}
+  code{font-family:"SF Mono","Fira Code",Consolas,Menlo,monospace;font-size:13px;color:#c9d1d9;}
+  .copybtn{position:absolute;top:7px;right:7px;background:var(--panel2);border:1px solid var(--border);color:var(--muted);font-size:11px;padding:4px 10px;border-radius:6px;cursor:pointer;transition:.15s;font-family:inherit;}
+  .copybtn:hover{color:var(--text);border-color:var(--accent);}
+  .copybtn.done{color:var(--green);border-color:var(--green);}
+  code.inl{background:var(--panel2);border:1px solid var(--border);border-radius:5px;padding:1px 6px;color:var(--accent);font-size:12.5px;}
+  .os{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;padding:2px 8px;border-radius:4px;margin:0 0 4px;background:var(--panel2);border:1px solid var(--border);color:var(--muted);}
+  .rec{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 8px;border-radius:4px;background:rgba(63,185,80,.15);color:var(--green);border:1px solid var(--green);margin-left:8px;vertical-align:middle;}
+  a{color:var(--accent2);}
+  .idea{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:10px;padding:14px 18px;margin:12px 0;}
+  .idea h4{margin-top:0;color:var(--accent);}
+  .idea.big{border-left-color:var(--purple);}
+  .idea.big h4{color:var(--purple);}
+  .nav{display:flex;justify-content:flex-end;margin:32px 0 10px;padding-top:18px;border-top:1px solid var(--border);}
+  .nextbtn{background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:14px;font-weight:600;padding:10px 18px;border-radius:9px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;transition:.12s;}
+  .nextbtn:hover{border-color:var(--accent);color:var(--accent);}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <p class="kicker">Tennis AI Project &middot; Shipping Guide</p>
+    <h1>From Notebook to a Live, Clickable App</h1>
+    <p>A walkthrough for the session where the project stops being a notebook and becomes a real thing on the internet: connect an AI coding assistant to VS Code, push the repo to GitHub, and build an interactive predictor anyone can play with. Ordered so nothing gets tangled.</p>
+    <div style="margin-top:14px;">
+      <span class="pill">VS Code + AI</span><span class="pill">GitHub</span><span class="pill">Streamlit</span><span class="pill">interactive UI</span>
+    </div>
+  </div>
+</header>
+
+<div id="tabbar">
+  <div class="tabs">
+    <button class="tab active" data-target="t0"><span class="n">0</span>Plan</button>
+    <button class="tab" data-target="t1"><span class="n">1</span>Connect AI</button>
+    <button class="tab" data-target="t2"><span class="n">2</span>GitHub</button>
+    <button class="tab" data-target="t3"><span class="n">3</span>Framework</button>
+    <button class="tab" data-target="t4"><span class="n">4</span>UI ideas</button>
+    <button class="tab" data-target="t5"><span class="n">5</span>Starter</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ============ PLAN ============ -->
+<section class="panel active" id="t0">
+  <div class="panel-head"><h2>The session plan</h2>
+    <p class="sub">Do these in order. Each step makes the next one safe and easy.</p>
+  </div>
+
+  <ol>
+    <li><b>Connect the AI to VS Code.</b> Get to where he can type a request and the assistant edits files in his actual project folder. Everything else depends on this.</li>
+    <li><b>Push to GitHub first.</b> Save the current clean project (notebook, README, charts) as a repo <em>before</em> building anything new. Then every UI experiment is a safe, revertible commit.</li>
+    <li><b>Polish the README with the AI.</b> A gentle, low-risk first task that improves the most important file.</li>
+    <li><b>Build the UI on localhost.</b> The interactive predictor. This is where the session lands.</li>
+  </ol>
+
+  <div class="box star">
+    <b>The one principle to coach the whole time:</b> he uses AI to write code faster, but he <em>reads it, can explain it, and decides what it does</em>. For a college project, "the AI did it" is a bad answer if someone asks how it works. So as the assistant writes each piece, have him pause and understand it. That habit is itself a skill worth teaching this session, and it is what separates using AI well from leaning on it.
+  </div>
+
+  <div class="box tip">
+    <b>Time budget realism:</b> connecting the tooling the first time is fiddly (installs, sign-in, pointing at the folder). Give it room. If you only get through tooling, GitHub, and a first tiny UI, that is a good session.
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t1">Next: Connect AI &rarr;</button></div>
+</section>
+
+<!-- ============ CONNECT AI ============ -->
+<section class="panel" id="t1">
+  <div class="panel-head"><h2>Connect an AI assistant to VS Code</h2>
+    <p class="sub">Three options depending on what he picked. Claude Code is the main path; the other two are fine alternatives.</p>
+  </div>
+
+  <div class="box warn">
+    <b>Heads up on accounts:</b> Claude Code needs a paid Claude plan (Pro or higher), the free plan does not include it. GitHub Copilot is free for students through the GitHub Student Developer Pack, worth applying for since Roman is a student. Cursor has a free tier.
+  </div>
+
+  <h3>Option A &mdash; Claude Code <span class="rec">recommended</span></h3>
+  <p>Anthropic's AI that works right in the terminal and can read and edit the whole project. First make sure VS Code is installed and his project folder is open (File, then Open Folder).</p>
+
+  <h4>Install (native installer, no Node.js needed)</h4>
+  <p class="os">macOS / Linux</p>
+  <pre><button class="copybtn">Copy</button><code>curl -fsSL https://claude.ai/install.sh | bash</code></pre>
+  <p class="os">Windows (PowerShell)</p>
+  <pre><button class="copybtn">Copy</button><code>irm https://claude.ai/install.ps1 | iex</code></pre>
+  <p>Or on Mac with Homebrew: <code class="inl">brew install --cask claude-code</code>.</p>
+
+  <h4>Start it and sign in</h4>
+  <ol>
+    <li>In VS Code, open the built-in terminal: <b>View, then Terminal</b> (or Ctrl + backtick).</li>
+    <li>Make sure the terminal is in his project folder, then type <code class="inl">claude</code> and press Enter.</li>
+    <li>The first run opens a browser to sign in to his Claude account. Approve it, and he is connected.</li>
+    <li>Now he can type requests like "explain what this notebook does" or "create a file app.py that...". Claude Code proposes edits he can accept or reject.</li>
+  </ol>
+  <div class="box tip"><b>Nicer experience:</b> there is also an official Claude Code extension in the VS Code marketplace (search "Claude Code") that gives point-and-click diffs instead of the terminal. Optional, the terminal works fine. Full docs: <a href="https://docs.claude.com/en/docs/claude-code/overview">docs.claude.com/en/docs/claude-code</a>.</div>
+
+  <h3>Option B &mdash; Cursor</h3>
+  <p>An AI-first code editor that looks and feels like VS Code (it is a fork of it). If he would rather have everything built in with no terminal setup, this is the easiest all-in-one.</p>
+  <ol>
+    <li>Download and install Cursor from <a href="https://cursor.com">cursor.com</a>.</li>
+    <li>Open his project folder in it.</li>
+    <li>Press Ctrl + L to open the AI chat panel and start asking. It edits files directly, with accept/reject on changes.</li>
+  </ol>
+
+  <h3>Option C &mdash; GitHub Copilot (VS Code extension)</h3>
+  <ol>
+    <li>In VS Code, open Extensions (the squares icon), search <b>GitHub Copilot</b>, install it.</li>
+    <li>Sign in with his GitHub account when prompted.</li>
+    <li>Open the Copilot Chat panel to ask for code, or get inline suggestions as he types.</li>
+  </ol>
+  <div class="box tip"><b>Student tip:</b> the <a href="https://education.github.com/pack">GitHub Student Developer Pack</a> gives free Copilot and other tools to verified students.</div>
+
+  <div class="nav"><button class="nextbtn" data-next="t2">Next: GitHub &rarr;</button></div>
+</section>
+
+<!-- ============ GITHUB ============ -->
+<section class="panel" id="t2">
+  <div class="panel-head"><h2>Push the project to GitHub</h2>
+    <p class="sub">Do this before the UI work, so the working project is safely saved. Two ways: the easy VS Code button, or the command line.</p>
+  </div>
+
+  <div class="box concept">
+    <b>What GitHub is, in one line:</b> a website that stores his code and its full history. "Pushing" uploads his project to it. Once it is there, the repo link is what goes on college applications, and every future change is saved and revertible.
+  </div>
+
+  <h3>Easiest way &mdash; VS Code's built-in button <span class="rec">recommended</span></h3>
+  <ol>
+    <li>He needs a free GitHub account first (<a href="https://github.com">github.com</a>).</li>
+    <li>In VS Code, click the <b>Source Control</b> icon in the left bar (looks like a branch).</li>
+    <li>Click <b>Publish to GitHub</b>. VS Code handles sign-in through the browser, creates the repo, and uploads everything in one step.</li>
+    <li>Choose a name like <code class="inl">tennis-match-predictor</code> and pick <b>public</b> (so admissions can see it).</li>
+  </ol>
+  <p>That is it. Any later change: type a short message in the Source Control box, click the check to commit, then Sync to push.</p>
+
+  <h3>Command-line way (or let Claude Code run these)</h3>
+  <p>From the terminal in his project folder. He can also just tell Claude Code "commit everything and push it to a new public GitHub repo" and it will run these for him, a great teaching moment.</p>
+  <pre><button class="copybtn">Copy</button><code>git init
+git add .
+git commit -m "Initial commit: tennis match predictor study"
+git branch -M main
+git remote add origin https://github.com/USERNAME/tennis-match-predictor.git
+git push -u origin main</code></pre>
+  <p class="os">before the first commit</p>
+  <p>Add a <code class="inl">.gitignore</code> file so junk does not get uploaded:</p>
+  <pre><button class="copybtn">Copy</button><code>.ipynb_checkpoints/
+__pycache__/
+.DS_Store
+*.pyc</code></pre>
+
+  <div class="box warn">
+    <b>Auth note:</b> if the command line asks for a password, GitHub no longer accepts account passwords there, it wants a personal access token, which is why the <b>Publish to GitHub</b> button is easier (it does auth for you). If he hits friction, fall back to the button.
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t3">Next: Framework &rarr;</button></div>
+</section>
+
+<!-- ============ FRAMEWORK ============ -->
+<section class="panel" id="t3">
+  <div class="panel-head"><h2>What to build the UI in</h2>
+    <p class="sub">The models are Python. You want something that runs them, handles the data, and is interactive, without turning into a full web-dev project.</p>
+  </div>
+
+  <div class="box star">
+    <b>Recommendation: Streamlit.</b> It is a Python library that turns a plain Python script into an interactive web app. He already knows Python and pandas, so there is almost nothing new to learn: no HTML, CSS, or JavaScript required. It runs his actual scikit-learn model, reads his CSV, and gives him sliders, dropdowns, charts, and tables out of the box. It is the standard tool for exactly this kind of ML demo.</p>
+  </div>
+
+  <h4>Why it fits this project</h4>
+  <ul>
+    <li><b>Runs the real model.</b> The app is Python, so it loads his trained model and predicts for real, no need to rebuild anything in another language.</li>
+    <li><b>Handles the data naturally.</b> Same pandas he already uses, so charts and tables from the notebook drop straight in.</li>
+    <li><b>Interactive with one line each.</b> <code class="inl">st.slider(...)</code>, <code class="inl">st.selectbox(...)</code>, <code class="inl">st.bar_chart(...)</code>, done.</li>
+    <li><b>Easy to run and to host.</b> One command locally, and free hosting straight from his GitHub repo (next point).</li>
+  </ul>
+
+  <h4>Run it locally</h4>
+  <pre><button class="copybtn">Copy</button><code>pip install streamlit
+streamlit run app.py</code></pre>
+  <p>That opens the app in his browser at <code class="inl">localhost:8501</code>, updating live as he edits the file. This is the "see it on localhost" he wanted.</p>
+
+  <h4>Host it free (for the application link)</h4>
+  <ul>
+    <li><b>Streamlit Community Cloud</b> connects to his GitHub repo and deploys the app at a public URL for free. Push a change, the site updates.</li>
+    <li><b>Hugging Face Spaces</b> is an equally good free alternative that also hosts Streamlit apps.</li>
+  </ul>
+  <div class="box tip"><b>One honest caveat:</b> free-hosted apps "sleep" after a while and take a few seconds to wake on the first visit. Fine for a demo link. (Check each service's current free-tier terms when you deploy.)</div>
+
+  <h4>The alternatives, briefly</h4>
+  <ul>
+    <li><b>Gradio</b> is like Streamlit but even simpler, aimed purely at "inputs in, prediction out". Great if you want the predictor and nothing else. Streamlit wins if you also want the paper, charts, and a game on the page.</li>
+    <li><b>A plain static web page (GitHub Pages)</b> is the other extreme: no Python server, the logistic regression's math is rewritten in a few lines of JavaScript so it runs in the browser. Upside, the link never sleeps. Downside, it cannot run the tree or neural-net models, only the simple one. A good fallback if hosting a Python app ever becomes a pain.</li>
+    <li><b>Flask / FastAPI</b> are "real" web backends. More powerful, but they make you write routing and HTML yourself. Overkill here.</li>
+  </ul>
+
+  <div class="nav"><button class="nextbtn" data-next="t4">Next: UI ideas &rarr;</button></div>
+</section>
+
+<!-- ============ UI IDEAS ============ -->
+<section class="panel" id="t4">
+  <div class="panel-head"><h2>What to put on the page</h2>
+    <p class="sub">The goal is something a non-technical person (an admissions reader) finds instantly fun, sitting on top of the serious paper.</p>
+  </div>
+
+  <div class="idea big">
+    <h4>&#9733; The centerpiece: a live "Who wins?" predictor</h4>
+    <p style="margin:0 0 8px;">The one thing that makes non-technical people go "oh, cool". The reader sets up a matchup and watches the model react instantly:</p>
+    <ul style="margin:0;">
+      <li><b>Simple version (build this first):</b> two sliders for the players' rankings (and a surface dropdown). A big win-probability bar fills in live, "Player A wins: 68%", as they drag. Instant, visual, satisfying.</li>
+      <li><b>Cooler version (add later):</b> two dropdowns of famous players (Alcaraz, Djokovic, Sinner...) with their rankings pre-filled, so the reader picks "Alcaraz vs Djokovic" and sees the call. Much more relatable than abstract numbers.</li>
+    </ul>
+    <p style="margin:8px 0 0;color:var(--muted);font-size:13px;">Make the probability a big colored bar or a tug-of-war between the two names. The visual is what sells it.</p>
+  </div>
+
+  <div class="idea big">
+    <h4>&#9733; The showstopper: "Can you beat the model?" intuition game</h4>
+    <p style="margin:0 0 8px;">A genuinely engaging mini-game that also teaches the whole point of the study. Show a real past matchup (two players and their rankings, result hidden). The reader guesses the winner. Then reveal what actually happened <em>and</em> what the model predicted. Keep score over several rounds: the reader vs the model.</p>
+    <p style="margin:0;color:var(--muted);font-size:13px;">Why it is brilliant for this project: the reader discovers first-hand that even they can only get ~65% right, and so does the AI. It turns the "predictability ceiling" finding into something they <em>feel</em>, not just read. This is the kind of thing that gets remembered.</p>
+  </div>
+
+  <h3>Supporting pieces (lower effort, round it out)</h3>
+
+  <div class="idea">
+    <h4>"What actually matters" bar</h4>
+    <p style="margin:0;">A single clean bar chart showing ranking dwarfs everything else. Makes the main finding tangible in one glance.</p>
+  </div>
+  <div class="idea">
+    <h4>Model scoreboard</h4>
+    <p style="margin:0;">The seven-model comparison as a tidy bar chart with a one-line caption: "seven very different algorithms, all stuck at the same ceiling". Shows the breadth of work.</p>
+  </div>
+  <div class="idea">
+    <h4>Biggest upsets showcase</h4>
+    <p style="margin:0;">A few cards of the most shocking real results (a low-ranked player beating a top seed), where the model was most confidently wrong. Fun, human, and honestly illustrates why tennis is hard to predict.</p>
+  </div>
+  <div class="idea">
+    <h4>The paper itself</h4>
+    <p style="margin:0;">His README write-up, laid out as readable sections on the page, with the charts inline. The app <em>is</em> the paper, plus the interactive toys on top.</p>
+  </div>
+
+  <div class="box concept">
+    <b>Suggested build order for the app:</b> (1) the page shell with the paper text and charts, (2) the simple slider predictor, (3) the intuition game, (4) the famous-players dropdown and any extra visuals. Ship each piece working before starting the next, committing to GitHub as you go.
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t5">Next: Starter &rarr;</button></div>
+</section>
+
+<!-- ============ STARTER ============ -->
+<section class="panel" id="t5">
+  <div class="panel-head"><h2>Starter kit for the build</h2>
+    <p class="sub">Save the model, hand the AI a clear brief, and know what the app skeleton looks like so he can steer it.</p>
+  </div>
+
+  <h3>1 &nbsp;Save the trained model (in the notebook)</h3>
+  <p>The app should load a ready-made model, not retrain every time. For the predictor, a small logistic regression on one or two intuitive inputs (the ranking gap, optionally surface) keeps the interface clean. Save it with <code class="inl">joblib</code>:</p>
+  <pre><button class="copybtn">Copy</button><code>import joblib
+from sklearn.linear_model import LogisticRegression
+
+# a simple, explainable model on just the ranking gap (great for a demo UI)
+ui_model = LogisticRegression(max_iter=1000).fit(train[["rank_diff"]], train["target"])
+joblib.dump(ui_model, "model.joblib")
+print("saved model.joblib")</code></pre>
+  <p class="os">note</p>
+  <p>Using one feature keeps the app dead simple (the user just sets two rankings). It scores near the baseline, which is completely fine for a demo, the full seven-model comparison still lives in the notebook and the paper. He can add features to the UI model later if he wants.</p>
+
+  <h3>2 &nbsp;A prompt to give the AI to start the app</h3>
+  <p>Paste something like this to Claude Code / Cursor / Copilot. Specific briefs get much better results than "build me a UI".</p>
+  <pre><button class="copybtn">Copy</button><code>Create a Streamlit app in app.py for my tennis match predictor.
+
+Context:
+- model.joblib is a scikit-learn LogisticRegression trained on one feature,
+  rank_diff = player A's ranking minus player B's ranking.
+- Lower ranking number = better player.
+
+The app should have:
+1. A title and a short intro paragraph.
+2. Two sliders: "Player A ranking" and "Player B ranking" (1 to 200).
+3. Compute rank_diff = rank_a - rank_b, get the model's probability that
+   player A wins with predict_proba, and show it as a big percentage plus a
+   progress bar.
+4. A one-line explanation of who the model favors and why.
+
+Keep it clean and well commented. Explain each part so I understand it.</code></pre>
+  <div class="box star"><b>Coach the habit here:</b> when the AI returns the code, have Roman read it line by line and explain it back to you before running it. If a line is unclear, he asks the AI "what does this line do?". That is the whole skill.</div>
+
+  <h3>3 &nbsp;What the skeleton looks like</h3>
+  <p>So you both recognize whether the AI produced something sane. A first <code class="inl">app.py</code> is about this short:</p>
+  <pre><button class="copybtn">Copy</button><code>import streamlit as st
+import joblib
+
+model = joblib.load("model.joblib")
+
+st.title("ATP Tennis Match Predictor")
+st.write("Set two players' rankings and see who the model favors.")
+
+rank_a = st.slider("Player A ranking", 1, 200, 10)
+rank_b = st.slider("Player B ranking", 1, 200, 50)
+
+rank_diff = rank_a - rank_b
+prob_a = model.predict_proba([[rank_diff]])[0][1]
+
+st.metric("Player A win probability", f"{prob_a*100:.0f}%")
+st.progress(prob_a)
+
+if prob_a > 0.5:
+    st.write(f"The model favors Player A ({prob_a*100:.0f}%).")
+else:
+    st.write(f"The model favors Player B ({(1-prob_a)*100:.0f}%).")</code></pre>
+  <p>Run it with <code class="inl">streamlit run app.py</code> and it opens on localhost. From here, he grows it with the AI: nicer visuals, the famous-players dropdown, the intuition game, the charts, the paper text.</p>
+
+  <div class="box tip">
+    <b>Commit as you go:</b> each time a piece works (the predictor, then the game, then the charts), commit and push. If an AI change breaks something, he can roll back to the last working version. That safety net is exactly why we pushed to GitHub before starting.
+  </div>
+
+  <div class="box concept" style="margin-top:20px;">
+    <b>Where this lands:</b> by the end he has a live app on localhost (and hostable from his repo) with a working predictor, the paper, and at least one delightful interactive piece. Next sessions: add the game and the famous-players matchup, then deploy so the college-application link is live.
+  </div>
+</section>
+
+</div>
+
+<script>
+  var tabs = document.querySelectorAll(".tab");
+  var panels = document.querySelectorAll(".panel");
+  var bar = document.getElementById("tabbar");
+  function show(id){
+    tabs.forEach(function(t){ t.classList.toggle("active", t.dataset.target === id); });
+    panels.forEach(function(p){ p.classList.toggle("active", p.id === id); });
+    window.scrollTo({ top: bar.offsetTop, behavior: "smooth" });
+  }
+  tabs.forEach(function(t){ t.addEventListener("click", function(){ show(t.dataset.target); }); });
+  document.querySelectorAll("[data-next]").forEach(function(b){ b.addEventListener("click", function(){ show(b.dataset.next); }); });
+  document.querySelectorAll(".copybtn").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var code = btn.parentElement.querySelector("code").innerText;
+      navigator.clipboard.writeText(code).then(function(){
+        btn.textContent = "Copied"; btn.classList.add("done");
+        setTimeout(function(){ btn.textContent = "Copy"; btn.classList.remove("done"); }, 1500);
+      });
+    });
+  });
+</script>
+</body>
+</html>
