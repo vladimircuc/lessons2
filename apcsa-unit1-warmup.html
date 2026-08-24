@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AP CSA Unit 1 Warm-Up</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#14161d;
+  --panel:#1b1e27;
+  --panel2:#222633;
+  --line:#2c3140;
+  --ink:#e9ebf2;
+  --dim:#98a1b5;
+  --amber:#ffb454;
+  --good:#6fe3a4;
+  --bad:#ff8a8a;
+  --code:#0f1219;
+  --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --display:'Space Grotesk',var(--sans);
+  --mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:16px;
+  line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:800px;margin:0 auto;padding:48px 22px 90px;}
+
+/* ---------- header ---------- */
+.eyebrow{
+  font-family:var(--mono);
+  font-size:12px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--amber);
+  margin:0 0 14px;
+}
+h1{
+  font-family:var(--display);
+  font-weight:700;
+  font-size:clamp(30px,6vw,44px);
+  line-height:1.1;
+  letter-spacing:-.02em;
+  margin:0 0 18px;
+}
+.lede{
+  color:var(--dim);
+  font-size:16.5px;
+  max-width:60ch;
+  margin:0 0 14px;
+}
+.lede strong{color:var(--ink);font-weight:500;}
+.lede code{
+  font-family:var(--mono);
+  font-size:14px;
+  background:var(--code);
+  border:1px solid var(--line);
+  border-radius:4px;
+  padding:1px 5px;
+  color:var(--amber);
+}
+.rule{height:1px;background:var(--line);margin:38px 0 0;}
+
+/* ---------- sections ---------- */
+section{margin-top:52px;}
+.sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:8px;flex-wrap:wrap;}
+.sec-num{
+  font-family:var(--mono);
+  font-size:12px;
+  color:var(--amber);
+  border:1px solid var(--line);
+  border-radius:5px;
+  padding:3px 8px;
+  white-space:nowrap;
+}
+h2{
+  font-family:var(--display);
+  font-weight:500;
+  font-size:25px;
+  letter-spacing:-.01em;
+  margin:0;
+}
+.sec-note{color:var(--dim);font-size:15px;margin:0 0 26px;max-width:62ch;}
+
+/* ---------- question card ---------- */
+.q{
+  display:grid;
+  grid-template-columns:46px 1fr;
+  border:1px solid var(--line);
+  border-radius:11px;
+  background:var(--panel);
+  overflow:hidden;
+  margin-bottom:20px;
+}
+.gutter{
+  background:var(--panel2);
+  border-right:1px solid var(--line);
+  font-family:var(--mono);
+  font-size:13px;
+  color:var(--dim);
+  padding-top:20px;
+  text-align:center;
+  user-select:none;
+}
+.qbody{padding:20px 22px;min-width:0;}
+.ask{margin:0 0 14px;font-size:16px;}
+.ask code{
+  font-family:var(--mono);
+  font-size:14.5px;
+  background:var(--code);
+  border:1px solid var(--line);
+  border-radius:4px;
+  padding:1px 5px;
+}
+
+/* ---------- code block ---------- */
+pre{
+  background:var(--code);
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:14px 16px;
+  margin:0 0 14px;
+  overflow-x:auto;
+  font-family:var(--mono);
+  font-size:14px;
+  line-height:1.7;
+  color:#cfd6e4;
+}
+pre .cm{color:#6b7488;font-style:italic;}
+pre .kw{color:#ffb454;}
+pre .st{color:#8fd6a0;}
+
+/* ---------- options ---------- */
+.opts{display:flex;flex-direction:column;gap:8px;}
+.opt{
+  font-family:var(--mono);
+  font-size:14px;
+  text-align:left;
+  background:var(--code);
+  border:1px solid var(--line);
+  color:var(--ink);
+  padding:10px 14px;
+  border-radius:8px;
+  cursor:pointer;
+  transition:border-color .15s ease,background .15s ease;
+}
+.opt:hover:not(:disabled){border-color:var(--amber);}
+.opt:focus-visible{outline:2px solid var(--amber);outline-offset:2px;}
+.opt:disabled{cursor:default;}
+.opt.correct{border-color:var(--good);background:rgba(111,227,164,.10);color:var(--good);}
+.opt.wrong{border-color:var(--bad);background:rgba(255,138,138,.10);color:var(--bad);}
+.opt.faded{opacity:.42;}
+
+/* ---------- feedback + reveal ---------- */
+.fb{
+  display:none;
+  border-left:3px solid var(--amber);
+  background:rgba(255,180,84,.06);
+  padding:13px 16px;
+  border-radius:0 8px 8px 0;
+  margin-top:14px;
+  color:var(--dim);
+  font-size:15px;
+}
+.fb strong{color:var(--ink);font-weight:600;}
+.fb code{font-family:var(--mono);font-size:13.5px;color:var(--amber);}
+.fb.show{display:block;animation:rise .22s ease;}
+@keyframes rise{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:none;}}
+
+.reveal{
+  font-family:var(--mono);
+  font-size:12.5px;
+  letter-spacing:.03em;
+  background:transparent;
+  border:1px dashed var(--line);
+  color:var(--amber);
+  padding:8px 15px;
+  border-radius:8px;
+  cursor:pointer;
+  transition:border-color .15s ease;
+}
+.reveal:hover{border-color:var(--amber);border-style:solid;}
+.reveal:focus-visible{outline:2px solid var(--amber);outline-offset:2px;}
+
+.answer{display:none;margin-top:15px;}
+.answer.show{display:block;animation:rise .22s ease;}
+.answer .label{
+  font-family:var(--mono);
+  font-size:11.5px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--good);
+  display:block;
+  margin-bottom:8px;
+}
+.answer pre{border-color:rgba(111,227,164,.28);}
+.why{color:var(--dim);font-size:15px;margin:0;}
+.why code{font-family:var(--mono);font-size:13.5px;color:var(--amber);}
+
+/* ---------- tips ---------- */
+.tip{
+  border:1px solid var(--line);
+  border-radius:11px;
+  background:var(--panel);
+  padding:20px 22px;
+  margin-bottom:16px;
+}
+.tip h3{
+  font-family:var(--display);
+  font-weight:500;
+  font-size:18px;
+  margin:0 0 9px;
+  display:flex;
+  gap:11px;
+  align-items:baseline;
+}
+.tip h3 .n{font-family:var(--mono);font-size:13px;color:var(--amber);flex:none;}
+.tip p{margin:0;color:var(--dim);font-size:15.5px;}
+.tip p + p{margin-top:9px;}
+.tip code{
+  font-family:var(--mono);
+  font-size:13.5px;
+  background:var(--code);
+  border:1px solid var(--line);
+  border-radius:4px;
+  padding:1px 5px;
+  color:var(--amber);
+}
+.tip strong{color:var(--ink);font-weight:600;}
+
+.closer{
+  border:1px solid var(--line);
+  border-left:3px solid var(--amber);
+  border-radius:0 11px 11px 0;
+  background:var(--panel);
+  padding:22px;
+  margin-top:34px;
+}
+.closer p{margin:0;color:var(--dim);font-size:15.5px;}
+.closer p + p{margin-top:10px;}
+.closer strong{color:var(--ink);font-weight:600;}
+
+@media (max-width:560px){
+  .wrap{padding:34px 15px 70px;}
+  .q{grid-template-columns:36px 1fr;}
+  .qbody{padding:16px 15px;}
+  pre{font-size:13px;}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important;}
+  html{scroll-behavior:auto;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">AP Computer Science A &middot; Unit 1</p>
+  <h1>Warm-up:<br>Using Objects and Methods</h1>
+  <p class="lede">Hi Lilah. This is just a quick warm-up so I can see what you already have down and where I can actually be useful. <strong>Nothing here is graded</strong>, and you are not supposed to know all of it.</p>
+  <p class="lede">Say your answer out loud before you click or reveal anything, and guess when you're not sure. A confident wrong answer tells me more than a blank one. We'll jump around and skip plenty, so don't worry about finishing every question.</p>
+  <p class="lede">Everything here is Unit 1 only, so there are no <code>if</code> statements and no loops anywhere. Those are Unit 2.</p>
+  <div class="rule"></div>
+
+  <!-- ================= PART 1 ================= -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">PART 1</span>
+      <h2>Quick checks</h2>
+    </div>
+    <p class="sec-note">Pick an answer, then click it to see what Java actually does.</p>
+
+    <!-- Q1 -->
+    <div class="q">
+      <div class="gutter">01</div>
+      <div class="qbody">
+        <p class="ask">What value ends up in <code>x</code>?</p>
+<pre><span class="kw">int</span> x = 7 / 2;</pre>
+        <div class="opts" data-correct="0">
+          <button class="opt">3</button>
+          <button class="opt">3.5</button>
+          <button class="opt">4</button>
+          <button class="opt">2</button>
+        </div>
+        <div class="fb"><strong>3.</strong> Both sides are whole numbers, so Java does integer division and throws the remainder away. It does not round. The <code>.5</code> is simply deleted.</div>
+      </div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="q">
+      <div class="gutter">02</div>
+      <div class="qbody">
+        <p class="ask">What prints?</p>
+<pre>System.out.println(<span class="st">"Total: "</span> + 5 + 2);</pre>
+        <div class="opts" data-correct="1">
+          <button class="opt">Total: 7</button>
+          <button class="opt">Total: 52</button>
+          <button class="opt">Total: 5 2</button>
+          <button class="opt">Total: 25</button>
+        </div>
+        <div class="fb"><strong>Total: 52.</strong> The <code>+</code> operator works left to right. <code>"Total: " + 5</code> builds the text <code>"Total: 5"</code>, and then the 2 gets stuck onto the end of that. Once a String is involved, <code>+</code> means glue, not add. To add first, use parentheses: <code>"Total: " + (5 + 2)</code>.</div>
+      </div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="q">
+      <div class="gutter">03</div>
+      <div class="qbody">
+        <p class="ask">What value does <code>(int) 8.97</code> produce?</p>
+        <div class="opts" data-correct="1">
+          <button class="opt">9</button>
+          <button class="opt">8</button>
+          <button class="opt">8.0</button>
+          <button class="opt">9.0</button>
+        </div>
+        <div class="fb"><strong>8.</strong> Casting to <code>int</code> chops off everything after the decimal point. It never rounds, no matter how close the number is to the next one up. If you want 9, that's <code>Math.round</code>.</div>
+      </div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="q">
+      <div class="gutter">04</div>
+      <div class="qbody">
+        <p class="ask">What value ends up in <code>result</code>?</p>
+<pre><span class="kw">double</span> result = 5 / 2;</pre>
+        <div class="opts" data-correct="2">
+          <button class="opt">2.5</button>
+          <button class="opt">2</button>
+          <button class="opt">2.0</button>
+          <button class="opt">3.0</button>
+        </div>
+        <div class="fb"><strong>2.0.</strong> This one catches almost everybody. The division happens <em>first</em>, and <code>5 / 2</code> is still int division, so it produces 2. Only afterward does that 2 get stored in a double, which makes it 2.0. Declaring the variable as <code>double</code> does not fix the math, it just changes where the answer lands.</div>
+      </div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="q">
+      <div class="gutter">05</div>
+      <div class="qbody">
+        <p class="ask">Given <code>String word = "computer";</code> what does <code>word.substring(0, 3)</code> return?</p>
+        <div class="opts" data-correct="1">
+          <button class="opt">"comp"</button>
+          <button class="opt">"com"</button>
+          <button class="opt">"omp"</button>
+          <button class="opt">"ompu"</button>
+        </div>
+        <div class="fb"><strong>"com".</strong> Substring starts at the first index and stops <em>right before</em> the second one. So you get indexes 0, 1, and 2. Handy shortcut: the length of what comes back is always the second number minus the first.</div>
+      </div>
+    </div>
+
+    <!-- Q6 -->
+    <div class="q">
+      <div class="gutter">06</div>
+      <div class="qbody">
+        <p class="ask">After these three lines run, what is <code>count</code>?</p>
+<pre><span class="kw">int</span> count = 10;
+count += 5;
+count -= 2;</pre>
+        <div class="opts" data-correct="2">
+          <button class="opt">10</button>
+          <button class="opt">15</button>
+          <button class="opt">13</button>
+          <button class="opt">3</button>
+        </div>
+        <div class="fb"><strong>13.</strong> <code>+=</code> and <code>-=</code> update the variable in place. <code>count += 5</code> is just shorthand for <code>count = count + 5</code>. So 10 becomes 15, then 15 becomes 13.</div>
+      </div>
+    </div>
+
+    <!-- Q7 -->
+    <div class="q">
+      <div class="gutter">07</div>
+      <div class="qbody">
+        <p class="ask">Two Strings, <code>a</code> and <code>b</code>. Which line correctly checks whether they hold the same text?</p>
+        <div class="opts" data-correct="2">
+          <button class="opt">a == b</button>
+          <button class="opt">a = b</button>
+          <button class="opt">a.equals(b)</button>
+          <button class="opt">a.same(b)</button>
+        </div>
+        <div class="fb"><strong>a.equals(b).</strong> On Strings, <code>==</code> asks whether the two are the exact same object sitting in the same spot in memory, which is almost never the question you meant to ask. A single <code>=</code> is assignment, and <code>.same()</code> is not a real method.</div>
+      </div>
+    </div>
+
+    <!-- Q8 -->
+    <div class="q">
+      <div class="gutter">08</div>
+      <div class="qbody">
+        <p class="ask">What does <code>Math.pow(2, 3)</code> return?</p>
+        <div class="opts" data-correct="2">
+          <button class="opt">6</button>
+          <button class="opt">9</button>
+          <button class="opt">8.0</button>
+          <button class="opt">8</button>
+        </div>
+        <div class="fb"><strong>8.0.</strong> It raises the first number to the power of the second, so 2 cubed is 8. The part worth memorizing is that <code>Math.pow</code> always hands back a double, so the value is 8.0 and not 8. That matters the moment you try to store it in an <code>int</code>.</div>
+      </div>
+    </div>
+
+    <!-- Q9 -->
+    <div class="q">
+      <div class="gutter">09</div>
+      <div class="qbody">
+        <p class="ask">Given <code>String name = "Lilah";</code> which one is a valid way to call <code>toUpperCase</code>?</p>
+        <div class="opts" data-correct="0">
+          <button class="opt">name.toUpperCase()</button>
+          <button class="opt">String.toUpperCase(name)</button>
+          <button class="opt">toUpperCase(name)</button>
+          <button class="opt">name.String.toUpperCase()</button>
+        </div>
+        <div class="fb"><strong>name.toUpperCase().</strong> <code>toUpperCase</code> belongs to the object, so you put the dot after the variable. <code>Math</code> methods work the opposite way, <code>Math.abs(-4)</code>, because you never build a Math object. Knowing which methods go on an object and which go on a class is most of what Unit 1 is testing.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PART 2 ================= -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">PART 2</span>
+      <h2>Spot the bug</h2>
+    </div>
+    <p class="sec-note">Each of these has exactly one thing wrong. Tell me what it is and how you'd fix it, then reveal.</p>
+
+    <!-- B1 -->
+    <div class="q">
+      <div class="gutter">01</div>
+      <div class="qbody">
+        <p class="ask">This should print <code>3.5</code>, but it prints <code>3.0</code>.</p>
+<pre><span class="kw">double</span> average = 7 / 2;
+System.out.println(average);</pre>
+        <button class="reveal">show the fix</button>
+        <div class="answer">
+          <span class="label">Fix</span>
+<pre><span class="kw">double</span> average = 7.0 / 2;</pre>
+          <p class="why">One side has to be a decimal or Java sticks with int division. <code>7.0 / 2</code> works, and so does <code>(double) 7 / 2</code>. Storing the result in a double is too late, the damage is already done on the right-hand side.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- B2 -->
+    <div class="q">
+      <div class="gutter">02</div>
+      <div class="qbody">
+        <p class="ask">This one won't even compile.</p>
+<pre><span class="kw">int</span> price = 4.99;</pre>
+        <button class="reveal">show the fix</button>
+        <div class="answer">
+          <span class="label">Fix</span>
+<pre><span class="kw">double</span> price = 4.99;</pre>
+          <p class="why">An <code>int</code> cannot hold a decimal, and Java refuses to quietly throw away part of your number. It makes you say so on purpose. If you genuinely wanted 4, you'd have to write <code>int price = (int) 4.99;</code> so the loss is visible in the code.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- B3 -->
+    <div class="q">
+      <div class="gutter">03</div>
+      <div class="qbody">
+        <p class="ask">This is supposed to check whether what was typed matches the answer. Both hold the text "Lilah", but it prints <code>false</code>.</p>
+<pre><span class="kw">String</span> typed = <span class="kw">new</span> <span class="kw">String</span>(<span class="st">"Lilah"</span>);
+<span class="kw">String</span> correct = <span class="st">"Lilah"</span>;
+System.out.println(typed == correct);</pre>
+        <button class="reveal">show the fix</button>
+        <div class="answer">
+          <span class="label">Fix</span>
+<pre>System.out.println(typed.equals(correct));</pre>
+          <p class="why">The two Strings hold identical characters, but they are two separate objects in two separate places. <code>==</code> compares the places, so it says false. <code>.equals()</code> compares the characters, which is what you actually wanted. Use <code>.equals()</code> for text every single time.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- B4 -->
+    <div class="q">
+      <div class="gutter">04</div>
+      <div class="qbody">
+        <p class="ask">This should print <code>LILAH</code>, but it prints <code>lilah</code>.</p>
+<pre><span class="kw">String</span> name = <span class="st">"lilah"</span>;
+name.toUpperCase();
+System.out.println(name);</pre>
+        <button class="reveal">show the fix</button>
+        <div class="answer">
+          <span class="label">Fix</span>
+<pre>name = name.toUpperCase();</pre>
+          <p class="why">A String can never be changed once it exists. <code>toUpperCase()</code> doesn't edit <code>name</code>, it builds a brand new String and hands it back to you. If you don't catch it in a variable, it's thrown on the floor. Same story for <code>substring</code>, <code>trim</code>, <code>replace</code>, and every other String method.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- B5 -->
+    <div class="q">
+      <div class="gutter">05</div>
+      <div class="qbody">
+        <p class="ask">This should store 12 as a positive distance.</p>
+<pre><span class="kw">int</span> diff = -12;
+<span class="kw">int</span> distance = Math.abs;</pre>
+        <button class="reveal">show the fix</button>
+        <div class="answer">
+          <span class="label">Fix</span>
+<pre><span class="kw">int</span> distance = Math.abs(diff);</pre>
+          <p class="why">A method call always needs parentheses and whatever it's supposed to work on. <code>Math.abs</code> on its own is just a name with nothing attached, not a value. The parentheses are what actually run the thing.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- B6 -->
+    <div class="q">
+      <div class="gutter">06</div>
+      <div class="qbody">
+        <p class="ask">This should print the first five characters, <code>impor</code>. It prints <code>mpor</code> instead.</p>
+<pre><span class="kw">String</span> word = <span class="st">"important"</span>;
+System.out.println(word.substring(1, 5));</pre>
+        <button class="reveal">show the fix</button>
+        <div class="answer">
+          <span class="label">Fix</span>
+<pre>System.out.println(word.substring(0, 5));</pre>
+          <p class="why">Indexes start at 0, not 1, so starting at 1 skips the <code>i</code>. Sanity check as you go: the number of characters you get back is the second number minus the first. <code>(1, 5)</code> gives you 4 characters, <code>(0, 5)</code> gives you 5.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PART 3 ================= -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">PART 3</span>
+      <h2>Write it yourself</h2>
+    </div>
+    <p class="sec-note">Short ones. Talk me through your thinking as you go, and it's fine if the syntax isn't perfect.</p>
+
+    <!-- W1 -->
+    <div class="q">
+      <div class="gutter">01</div>
+      <div class="qbody">
+        <p class="ask">A notebook costs $12.75 and you're buying 3 of them. Declare the variables you need, work out the total, and print a sentence like <code>3 items cost $38.25</code>.</p>
+        <button class="reveal">show one way to do it</button>
+        <div class="answer">
+          <span class="label">One way</span>
+<pre><span class="kw">double</span> price = 12.75;
+<span class="kw">int</span> quantity = 3;
+<span class="kw">double</span> total = price * quantity;
+
+System.out.println(quantity + <span class="st">" items cost $"</span> + total);</pre>
+          <p class="why">Notice that <code>price * quantity</code> mixes a double with an int. Java quietly promotes the int, so the result is a double and you keep the cents. This is the one place mixing types works in your favor.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- W2 -->
+    <div class="q">
+      <div class="gutter">02</div>
+      <div class="qbody">
+        <p class="ask">Given <code>String fullName = "Lilah Martinez";</code> print just the first name.</p>
+        <button class="reveal">show one way to do it</button>
+        <div class="answer">
+          <span class="label">The quick way</span>
+<pre>System.out.println(fullName.substring(0, 5));</pre>
+          <span class="label" style="margin-top:14px;">The better way</span>
+<pre><span class="kw">int</span> space = fullName.indexOf(<span class="st">" "</span>);
+System.out.println(fullName.substring(0, space));</pre>
+          <p class="why">Both print <code>Lilah</code>, but the first only works for a five-letter name. The second finds where the space actually is and stops right before it, so it works for any name you feed it. On the AP exam, the version that doesn't hardcode numbers is the one they're after.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- W3 -->
+    <div class="q">
+      <div class="gutter">03</div>
+      <div class="qbody">
+        <p class="ask">You have two test scores, 88 and 93. Print the average as a decimal, not a whole number.</p>
+        <button class="reveal">show one way to do it</button>
+        <div class="answer">
+          <span class="label">One way</span>
+<pre><span class="kw">int</span> first = 88;
+<span class="kw">int</span> second = 93;
+<span class="kw">double</span> average = (first + second) / 2.0;
+
+System.out.println(<span class="st">"Average: "</span> + average);</pre>
+          <p class="why">The <code>2.0</code> is doing all the work here. Divide by plain <code>2</code> and you get 90 instead of 90.5, because both sides would be ints. The parentheses matter too, they make the addition happen before the division.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- W4 -->
+    <div class="q">
+      <div class="gutter">04</div>
+      <div class="qbody">
+        <p class="ask">Given <code>String word = "banana";</code> print how many characters it has, then print its last character.</p>
+        <button class="reveal">show one way to do it</button>
+        <div class="answer">
+          <span class="label">One way</span>
+<pre><span class="kw">String</span> word = <span class="st">"banana"</span>;
+
+System.out.println(word.length());
+System.out.println(word.substring(word.length() - 1));</pre>
+          <p class="why">Six characters, last one is <code>a</code>. The last index is always <code>length() - 1</code>, because counting starts at 0 while <code>length()</code> starts at 1. That off-by-one is going to follow you all year, so it's worth getting comfortable with now. Also, <code>substring</code> with only one number means "go from here to the end."</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PART 4 ================= -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-num">PART 4</span>
+      <h2>Seven things worth knowing</h2>
+    </div>
+    <p class="sec-note">None of this is complicated. It's just the stuff that costs people points over and over.</p>
+
+    <div class="tip">
+      <h3><span class="n">01</span> Two whole numbers in, one whole number out</h3>
+      <p>Any time both sides of a division are integers, Java throws away the remainder. <code>7 / 2</code> is 3. <code>1 / 2</code> is 0. To get decimals, make one side a decimal: <code>7.0 / 2</code> or <code>(double) a / b</code>.</p>
+      <p>This single rule causes more wrong answers in Unit 1 than everything else combined, so when a question involves division, check the types before you do the math.</p>
+    </div>
+
+    <div class="tip">
+      <h3><span class="n">02</span> Casting chops, <strong>Math.round</strong> rounds</h3>
+      <p><code>(int) 9.99</code> is 9, not 10. If you want real rounding, go through <code>Math.round</code> first: <code>(int) Math.round(9.99)</code>.</p>
+      <p>The extra <code>(int)</code> in front looks redundant but isn't. <code>Math.round</code> hands back a wider number type, so you need the cast to fit it into an <code>int</code>.</p>
+    </div>
+
+    <div class="tip">
+      <h3><span class="n">03</span> Strings count from zero and substring stops early</h3>
+      <p>In <code>"computer"</code>, the <code>c</code> sits at index 0 and the last character sits at index <code>length() - 1</code>. <code>substring(2, 5)</code> gives you indexes 2, 3, and 4, never 5.</p>
+      <p>Quick check you can do in your head: the result is always as long as the second number minus the first.</p>
+    </div>
+
+    <div class="tip">
+      <h3><span class="n">04</span> A String method never changes the original</h3>
+      <p>Strings are read-only once they exist. <code>name.toUpperCase()</code> doesn't touch <code>name</code>, it returns a new String. You have to catch it: <code>name = name.toUpperCase();</code></p>
+      <p>If a line calls a String method and doesn't assign the result to anything, that line does nothing at all. Worth scanning for whenever code "isn't updating."</p>
+    </div>
+
+    <div class="tip">
+      <h3><span class="n">05</span> Dot on a class vs. dot on an object</h3>
+      <p><code>Math.abs(-4)</code> puts the dot after a class name. <code>word.length()</code> puts it after a variable holding an object. Both are method calls, but they're different kinds.</p>
+      <p>The rule of thumb: if you had to build the thing before you could use it, you call methods on the thing. <code>Math</code> is a toolbox you never build a copy of, so you call methods straight on the name.</p>
+    </div>
+
+    <div class="tip">
+      <h3><span class="n">06</span> <strong>==</strong> and <strong>.equals()</strong> ask different questions</h3>
+      <p>For <code>int</code> and <code>double</code>, <code>==</code> is exactly right. For Strings it asks "are these literally the same object," which is a different question from "do they say the same thing."</p>
+      <p>Rule you can follow without thinking: numbers get <code>==</code>, text gets <code>.equals()</code>.</p>
+    </div>
+
+    <div class="tip">
+      <h3><span class="n">07</span> Read code like a machine, not like a sentence</h3>
+      <p>When a question has you stuck, stop reading it as a whole and trace it one line at a time. Write each variable in the margin and cross out the old value every time it changes.</p>
+      <p>Most Unit 1 multiple choice isn't testing whether you're clever, it's testing whether you'll actually do that instead of skimming. Slow tracing beats fast reading every time.</p>
+    </div>
+
+    <div class="closer">
+      <p><strong>That's it.</strong> If a bunch of this felt obvious, good, that means we get to spend our time on the parts of the course that actually bite.</p>
+      <p>The place people usually hit a wall is Unit 2, loops and conditionals, which is probably a few weeks out for you. The plan is to stay a half step ahead of your class so that when your teacher introduces something new, it already looks familiar.</p>
+    </div>
+  </section>
+
+</div>
+
+<script>
+document.querySelectorAll('.opts').forEach(function (group) {
+  var correct = parseInt(group.dataset.correct, 10);
+  var opts = Array.prototype.slice.call(group.querySelectorAll('.opt'));
+  var fb = group.parentElement.querySelector('.fb');
+
+  opts.forEach(function (btn, i) {
+    btn.addEventListener('click', function () {
+      opts.forEach(function (b, j) {
+        b.disabled = true;
+        if (j === correct) {
+          b.classList.add('correct');
+        } else if (j === i) {
+          b.classList.add('wrong');
+        } else {
+          b.classList.add('faded');
+        }
+      });
+      if (fb) fb.classList.add('show');
+    });
+  });
+});
+
+document.querySelectorAll('.reveal').forEach(function (btn) {
+  var label = btn.textContent;
+  btn.addEventListener('click', function () {
+    var answer = btn.parentElement.querySelector('.answer');
+    var open = answer.classList.toggle('show');
+    btn.textContent = open ? 'hide' : label;
+  });
+});
+</script>
+</body>
+</html>
