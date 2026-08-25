@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>v2 Week 1 - Feature Engineering & Elo</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2430; --border:#30363d;
+    --text:#e6edf3; --muted:#8b949e; --accent:#c9f24d; --accent2:#58a6ff;
+    --code:#0a0e14; --green:#3fb950; --yellow:#d29922; --red:#f85149; --clay:#e07b39; --purple:#bc8cff;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.68;padding:0 0 60px;}
+  .wrap{max-width:920px;margin:0 auto;padding:0 20px;}
+  header{border-bottom:1px solid var(--border);background:linear-gradient(180deg,#12160e,#0d1117);padding:34px 0 26px;}
+  .kicker{color:var(--accent);font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 8px;}
+  header h1{margin:0 0 10px;font-size:28px;letter-spacing:-0.5px;}
+  header p{margin:0;color:var(--muted);font-size:14.5px;max-width:770px;}
+  .pill{display:inline-block;background:var(--panel2);border:1px solid var(--border);border-radius:20px;padding:2px 12px;font-size:12px;color:var(--muted);margin-right:6px;}
+
+  #tabbar{position:sticky;top:0;z-index:50;background:rgba(13,17,23,.96);backdrop-filter:blur(6px);border-bottom:1px solid var(--border);}
+  .tabs{max-width:920px;margin:0 auto;padding:8px 14px;display:flex;flex-wrap:wrap;gap:6px;}
+  .tab{background:var(--panel);border:1px solid var(--border);color:var(--muted);font-size:13px;font-weight:600;padding:7px 13px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:7px;transition:.12s;font-family:inherit;}
+  .tab:hover{color:var(--text);border-color:#455063;}
+  .tab .n{font-size:11px;font-weight:800;background:var(--panel2);color:var(--muted);border-radius:5px;padding:1px 6px;min-width:20px;text-align:center;}
+  .tab.active{background:var(--accent);color:#0d1117;border-color:var(--accent);}
+  .tab.active .n{background:rgba(13,17,23,.25);color:#0d1117;}
+
+  .panel{display:none;animation:fade .18s ease;}
+  .panel.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+  .panel-head{padding:26px 0 2px;}
+  .panel-head h2{margin:0;font-size:24px;letter-spacing:-0.3px;}
+  .panel-head .sub{color:var(--muted);margin:8px 0 0;font-size:15px;}
+
+  h3{font-size:15px;margin:24px 0 6px;color:var(--text);}
+  p{margin:11px 0;} ul{margin:8px 0;padding-left:22px;} li{margin:6px 0;}
+  .box{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin:16px 0;}
+  .tip{border-left:3px solid var(--accent2);}
+  .warn{border-left:3px solid var(--yellow);}
+  .concept{border-left:3px solid var(--accent);}
+  .why{border-left:3px solid var(--clay);}
+  .danger{border-left:3px solid var(--red);}
+  .cell-label{font-size:11px;color:var(--accent);font-weight:700;letter-spacing:0.5px;margin:18px 0 4px;text-transform:uppercase;}
+  pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padding:15px 16px;overflow-x:auto;margin:0 0 6px;position:relative;}
+  code{font-family:"SF Mono","Fira Code",Consolas,Menlo,monospace;font-size:13.5px;color:#c9d1d9;}
+  .copybtn{position:absolute;top:7px;right:7px;background:var(--panel2);border:1px solid var(--border);color:var(--muted);font-size:11px;padding:4px 10px;border-radius:6px;cursor:pointer;transition:.15s;font-family:inherit;}
+  .copybtn:hover{color:var(--text);border-color:var(--accent);}
+  .copybtn.done{color:var(--green);border-color:var(--green);}
+  .out{color:var(--muted);font-size:13px;margin:2px 0 14px;padding-left:12px;border-left:2px solid var(--border);}
+  .out b{color:var(--text);font-weight:600;}
+  code.inl{background:var(--panel2);border:1px solid var(--border);border-radius:5px;padding:1px 6px;color:var(--accent);font-size:12.5px;}
+
+  .figure{background:#0b0f16;border:1px solid var(--border);border-radius:12px;padding:18px 16px 10px;margin:18px 0;text-align:center;}
+  .figure svg{max-width:100%;height:auto;}
+  .figure .cap{color:var(--muted);font-size:12.5px;margin:10px 6px 4px;line-height:1.5;}
+
+  .practice-head{margin:30px 0 4px;font-size:13px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--accent);display:flex;align-items:center;gap:10px;}
+  .practice-head::before{content:"";flex:0 0 26px;height:2px;background:var(--accent);}
+  .ex{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:10px;padding:14px 18px;margin:12px 0;}
+  .ex.wr{border-left-color:var(--purple);}
+  .ex p{margin:0;}
+  .qn{font-weight:700;color:var(--accent);margin-right:6px;}
+  .ex.wr .qn{color:var(--purple);}
+  .wtag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 8px;border-radius:4px;margin-left:8px;background:rgba(188,140,255,.15);color:var(--purple);border:1px solid var(--purple);vertical-align:middle;}
+  details.sol{margin:10px 0 0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  details.sol summary{cursor:pointer;padding:9px 14px;background:var(--panel2);font-weight:600;font-size:12.5px;color:var(--green);user-select:none;list-style:none;}
+  details.sol summary::-webkit-details-marker{display:none;}
+  details.sol summary::before{content:"\25B8  ";color:var(--muted);}
+  details.sol[open] summary::before{content:"\25BE  ";}
+  details.sol.ex-ans summary{color:var(--purple);}
+  details.sol .sb{padding:8px 14px 10px;}
+  .sb .note{color:var(--muted);font-size:12.5px;margin:6px 0 0;padding-left:10px;border-left:2px solid var(--border);}
+  .sb .exans{font-size:13.5px;color:var(--text);margin:0;font-style:italic;}
+  .sb .exans::before{content:"Example answer: ";font-style:normal;font-weight:700;color:var(--purple);}
+
+  .nav{display:flex;justify-content:flex-end;margin:32px 0 10px;padding-top:18px;border-top:1px solid var(--border);}
+  .nextbtn{background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:14px;font-weight:600;padding:10px 18px;border-radius:9px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;transition:.12s;}
+  .nextbtn:hover{border-color:var(--accent);color:var(--accent);}
+  a{color:var(--accent2);}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <p class="kicker">Tennis AI Project &middot; v2 &middot; Week 1</p>
+    <h1>Feature Engineering: The Chronological Loop &amp; Elo</h1>
+    <p>New chapter. Last time you proved seven models all hit the same ceiling because the features were thin. Now you fix that. This whole v2 is about building better features from the match history, and it starts with the one pattern that every feature we add will use, taught through the most important feature of all: Elo ratings.</p>
+    <div style="margin-top:14px;">
+      <span class="pill">the loop pattern</span><span class="pill">leakage</span><span class="pill">Elo</span><span class="pill">dynamic K</span><span class="pill">measure the lift</span>
+    </div>
+  </div>
+</header>
+
+<div id="tabbar">
+  <div class="tabs">
+    <button class="tab active" data-target="t0"><span class="n">0</span>Start</button>
+    <button class="tab" data-target="t1"><span class="n">1</span>The pattern</button>
+    <button class="tab" data-target="t2"><span class="n">2</span>Elo idea</button>
+    <button class="tab" data-target="t3"><span class="n">3</span>Build Elo</button>
+    <button class="tab" data-target="t4"><span class="n">4</span>Dynamic K</button>
+    <button class="tab" data-target="t5"><span class="n">5</span>Measure</button>
+    <button class="tab" data-target="t6"><span class="n">R</span>Review</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ============ START ============ -->
+<section class="panel active" id="t0">
+  <div class="panel-head"><h2>Start here: a fresh project</h2>
+    <p class="sub">New folder, same data, and a clear goal: beat the baseline by building better features.</p>
+  </div>
+
+  <div class="box concept">
+    <b>The big idea for all of v2.</b> You already learned that swapping algorithms did nothing, everything landed near 0.64. That is because the models were fed thin features. The real craft of data science is <b>feature engineering</b>: building better inputs from the raw data. That is what actually moves the needle, and it is what this whole chapter teaches. Our target is to climb from the 63.7% baseline toward the mid-60s, which is close to what professional betting markets reach.
+  </div>
+
+  <p>Load the same 2000-2024 dataset into a fresh notebook. It is already cleaned and reframed (it has <code class="inl">target</code> and <code class="inl">winner_is_A</code> from v1), so we can go straight to features.</p>
+  <pre><button class="copybtn">Copy</button><code>import pandas as pd
+import numpy as np
+from collections import defaultdict, deque
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+
+df = pd.read_csv("atp_2000_2024_model_ready.csv", low_memory=False)
+df["tourney_date"] = pd.to_datetime(df["tourney_date"])
+
+# put the matches in the order they were actually played
+df = df.sort_values(["tourney_date", "match_num"]).reset_index(drop=True)
+print(df.shape)</code></pre>
+  <p class="out">Sorting into true chronological order is the first step, and it is not optional. Every feature this chapter builds walks the matches in the order they happened.</p>
+
+  <h3>Re-establish the baseline and your current model</h3>
+  <pre><button class="copybtn">Copy</button><code>cut = int(len(df) * 0.8)
+train, test = df.iloc[:cut], df.iloc[cut:]
+
+baseline_acc = accuracy_score(test["target"], (test["rank_diff"] < 0).astype(int))
+rank_model = LogisticRegression(max_iter=1000).fit(train[["rank_diff"]], train["target"])
+rank_acc = accuracy_score(test["target"], rank_model.predict(test[["rank_diff"]]))
+print("baseline:", round(baseline_acc, 3), " rank model:", round(rank_acc, 3))</code></pre>
+  <p class="out">You should see roughly <b>0.637</b> and <b>0.636</b>. That is the number to beat. Keep these two around, every lesson measures the new feature against them.</p>
+
+  <div class="box danger">
+    <b>The rule that governs this entire chapter: no leakage.</b> A feature may only use information that existed <em>before</em> the match was played. When you build a feature from history, you must record its value <b>before</b> you update it with the match result. Get this backwards even once and your accuracy will look amazing and be completely fake, because the model would be peeking at the answer. Every loop we write follows the same safe order: <b>read first, update after.</b>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t1">Next: The pattern &rarr;</button></div>
+</section>
+
+<!-- ============ THE PATTERN ============ -->
+<section class="panel" id="t1">
+  <div class="panel-head"><h2>The chronological loop</h2>
+    <p class="sub">Learn the one pattern behind every history feature, using the simplest possible example first.</p>
+  </div>
+
+  <div class="box concept">
+    <b>The pattern, in plain words.</b> Walk through the matches in date order. Keep a running record of each player's current state in a dictionary. For each match: (1) <b>read</b> both players' current values and store them as the feature for this match, then (2) <b>update</b> the record using who won. Because you read before you update, the feature never contains the result of the match it describes. That is the whole trick, and it is leakage-safe by construction.
+  </div>
+
+  <p>Let's build the simplest feature there is to see the mechanism clearly: <b>experience</b>, how many matches each player has played so far.</p>
+
+  <p class="cell-label">Cell &middot; experience (matches played before this match)</p>
+  <pre><button class="copybtn">Copy</button><code>matches_played = defaultdict(int)          # running count per player, starts at 0
+exp_w = np.zeros(len(df))                   # winner's count before the match
+exp_l = np.zeros(len(df))                   # loser's count before the match
+
+for i, row in enumerate(df.itertuples(index=False)):
+    w, l = row.winner_id, row.loser_id
+    # 1) READ: record each player's count BEFORE this match
+    exp_w[i] = matches_played[w]
+    exp_l[i] = matches_played[l]
+    # 2) UPDATE: now that the match happened, add one to each
+    matches_played[w] += 1
+    matches_played[l] += 1</code></pre>
+  <div class="box tip"><b>Two things worth knowing.</b> <code class="inl">defaultdict(int)</code> is a dictionary that returns 0 for any player you have not seen yet, so you never have to check "is this a new player". And <code class="inl">df.itertuples()</code> walks the rows quickly; <code class="inl">row.winner_id</code> reads a column from the current row.</p></div>
+
+  <h3>Turn it into a feature the model can use</h3>
+  <p>Right now <code class="inl">exp_w</code> and <code class="inl">exp_l</code> are from the winner's and loser's side, which would leak (the model could guess the winner). So convert to A-vs-B, the same trick you used for <code class="inl">rank_diff</code>: A's value minus B's value.</p>
+  <pre><button class="copybtn">Copy</button><code>is_A = df["winner_is_A"].values.astype(bool)
+df["exp_diff"] = np.where(is_A, exp_w - exp_l, exp_l - exp_w)</code></pre>
+
+  <p class="cell-label">Cell &middot; does it help?</p>
+  <pre><button class="copybtn">Copy</button><code>train, test = df.iloc[:cut], df.iloc[cut:]
+m = LogisticRegression(max_iter=1000).fit(train[["exp_diff"]], train["target"])
+print("experience only:", round(accuracy_score(test["target"], m.predict(test[["exp_diff"]])), 3))</code></pre>
+  <p class="out">About <b>0.57</b>, better than a coin flip but weak on its own. That is fine. The point of this feature is to teach the loop, and it does. The next feature, built with the exact same pattern, is far more powerful.</p>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex"><p><span class="qn">1.</span>Build a different history feature with the same loop: each player's <b>total wins so far</b>. Track a <code class="inl">wins</code> dictionary, record <code class="inl">wins_w[i]</code> and <code class="inl">wins_l[i]</code> before updating, then add one win to the winner only. Make an <code class="inl">A</code>-vs-<code class="inl">B</code> <code class="inl">wins_diff</code> column.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>wins = defaultdict(int)
+wins_w = np.zeros(len(df)); wins_l = np.zeros(len(df))
+for i, row in enumerate(df.itertuples(index=False)):
+    w, l = row.winner_id, row.loser_id
+    wins_w[i] = wins[w]        # read before
+    wins_l[i] = wins[l]
+    wins[w] += 1               # only the winner gains a win
+df["wins_diff"] = np.where(is_A, wins_w - wins_l, wins_l - wins_w)</code></pre>
+    <p class="note">Same read-then-update shape, only the update rule changed (winner only).</p></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">2.</span>In a <b>markdown cell</b>, explain why we record the feature value <em>before</em> updating it, and what would go wrong if we updated first. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">We record before updating because a feature is only allowed to use information from before the match. If we updated first, the value would already include the result of the current match, so the model would effectively see who won before predicting it. That is leakage, and it would make the accuracy look great in testing but fail completely on real future matches where the result is not yet known.</p></div></details>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t2">Next: Elo idea &rarr;</button></div>
+</section>
+
+<!-- ============ ELO IDEA ============ -->
+<section class="panel" id="t2">
+  <div class="panel-head"><h2>What Elo actually is</h2>
+    <p class="sub">A skill rating that updates after every match. It is the single biggest upgrade over raw ranking, and it uses the exact loop you just learned.</p>
+  </div>
+
+  <div class="box concept">
+    <b>The idea.</b> Every player has a rating number (everyone starts at 1500). Before a match, the two ratings predict the result: the bigger the gap, the more likely the higher-rated player wins. After the match, both ratings update. Win against someone stronger and you gain a lot; lose to someone weaker and you drop a lot; expected results barely move the needle. Do this across 71,000 matches and the ratings settle into a genuine measure of skill, one that reacts to current form instead of lagging like the official points-based ranking.
+  </div>
+
+  <h3>Step 1: ratings predict the match (the expected score)</h3>
+  <p>A rating gap converts to a win probability with this S-shaped curve:</p>
+  <div class="figure">
+    <svg viewBox="0 0 640 290" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+      <!-- axes -->
+      <line x1="70" y1="250" x2="610" y2="250" stroke="#30363d"/>
+      <line x1="335" y1="40" x2="335" y2="255" stroke="#30363d" stroke-dasharray="4 4"/>
+      <!-- y ticks -->
+      <text x="60" y="150" fill="#8b949e" font-size="10" text-anchor="end">0.5</text>
+      <text x="60" y="60" fill="#8b949e" font-size="10" text-anchor="end">1.0</text>
+      <text x="60" y="245" fill="#8b949e" font-size="10" text-anchor="end">0.0</text>
+      <line x1="66" y1="145" x2="74" y2="145" stroke="#8b949e"/>
+      <!-- the logistic curve -->
+      <polyline points="70,231 136,218 202,200 268,174 335,145 401,116 467,90 533,72 600,59"
+        fill="none" stroke="#c9f24d" stroke-width="2.5"/>
+      <!-- midpoint dot -->
+      <circle cx="335" cy="145" r="4" fill="#c9f24d"/>
+      <!-- +200 marker -->
+      <circle cx="467" cy="90" r="4" fill="#58a6ff"/>
+      <line x1="467" y1="90" x2="467" y2="250" stroke="#58a6ff" stroke-width="1" stroke-dasharray="3 3"/>
+      <text x="474" y="86" fill="#58a6ff" font-size="11">+200 higher &#8594; ~76%</text>
+      <text x="343" y="135" fill="#c9f24d" font-size="11">equal ratings &#8594; 50%</text>
+      <!-- axis labels -->
+      <text x="340" y="278" fill="#8b949e" font-size="11.5" text-anchor="middle">your rating minus their rating  &#8594;</text>
+      <text x="30" y="150" fill="#8b949e" font-size="11.5" text-anchor="middle" transform="rotate(-90 30 150)">chance you win</text>
+    </svg>
+    <p class="cap">Equal ratings mean a 50/50 match. The further your rating is above your opponent's, the closer your win chance gets to 100%. This is the "expected score", written <code style="color:#c9f24d">expected = 1 / (1 + 10^((their_rating - your_rating) / 400))</code>.</p>
+  </div>
+
+  <h3>Step 2: the result updates both ratings</h3>
+  <div class="figure">
+    <svg viewBox="0 0 640 200" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+      <!-- rating number line -->
+      <line x1="60" y1="110" x2="600" y2="110" stroke="#30363d" stroke-width="2"/>
+      <text x="60" y="135" fill="#8b949e" font-size="10">lower</text>
+      <text x="600" y="135" fill="#8b949e" font-size="10" text-anchor="end">higher rating</text>
+      <!-- winner moves right -->
+      <circle cx="300" cy="110" r="8" fill="#3fb950"/>
+      <line x1="312" y1="110" x2="388" y2="110" stroke="#3fb950" stroke-width="2.5" marker-end="url(#g)"/>
+      <text x="300" y="90" fill="#3fb950" font-size="11" text-anchor="middle">winner</text>
+      <text x="350" y="150" fill="#3fb950" font-size="10.5" text-anchor="middle">+ gains</text>
+      <!-- loser moves left -->
+      <circle cx="360" cy="110" r="8" fill="#f85149"/>
+      <line x1="348" y1="110" x2="272" y2="110" stroke="#f85149" stroke-width="2.5" marker-end="url(#r)"/>
+      <text x="360" y="90" fill="#f85149" font-size="11" text-anchor="middle">loser</text>
+      <text x="310" y="168" fill="#f85149" font-size="10.5" text-anchor="middle">- drops</text>
+      <text x="335" y="30" fill="#e6edf3" font-size="13" text-anchor="middle">new rating = old rating + K &#215; (actual - expected)</text>
+      <text x="335" y="50" fill="#8b949e" font-size="11" text-anchor="middle">the bigger the surprise, the bigger the move</text>
+      <defs>
+        <marker id="g" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#3fb950"/></marker>
+        <marker id="r" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#f85149"/></marker>
+      </defs>
+    </svg>
+    <p class="cap">The winner gains and the loser drops by the same amount: <b>K</b> times the surprise. "Actual" is 1 for the winner and 0 for the loser. If a win was fully expected (expected near 1), the change is tiny; a big upset moves both ratings a lot. <b>K</b> is the step size, how fast ratings react.</p>
+  </div>
+
+  <div class="box tip"><b>Why this beats the official ranking:</b> ATP ranking is a points system based on which tournaments you won over the last 52 weeks, so it lags and rewards showing up. Elo reacts to every single result against the specific quality of the opponent, so it tracks who is actually playing well right now.</p></div>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex wr"><p><span class="qn">1.</span>In a <b>markdown cell</b>, explain the phrase <code class="inl">K &#215; (actual - expected)</code> in your own words: what "actual" and "expected" are, and why an upset changes the ratings more than an expected result. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">"Actual" is what happened, 1 if the player won and 0 if they lost. "Expected" is the win chance the ratings predicted before the match, between 0 and 1. The rating changes by K times the difference between them. If a heavy favorite wins, expected was near 1 and actual is 1, so the difference is tiny and the rating barely moves. If an underdog wins, expected was low but actual is 1, so the difference is large and both ratings move a lot, which is the model quickly correcting its estimate of their skill.</p></div></details>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t3">Next: Build Elo &rarr;</button></div>
+</section>
+
+<!-- ============ BUILD ELO ============ -->
+<section class="panel" id="t3">
+  <div class="panel-head"><h2>Build Elo on the match history</h2>
+    <p class="sub">The same read-then-update loop, now with the Elo formulas inside it.</p>
+  </div>
+
+  <p>Everyone starts at 1500. For each match, in date order: read both ratings (that is the pre-match feature), compute the expected score, then update both ratings by <code class="inl">K &#215; (actual - expected)</code>.</p>
+
+  <p class="cell-label">Cell &middot; overall Elo, fixed step size</p>
+  <pre><button class="copybtn">Copy</button><code>elo = defaultdict(lambda: 1500.0)          # every player starts at 1500
+elo_w = np.zeros(len(df))                   # winner's rating BEFORE the match
+elo_l = np.zeros(len(df))                   # loser's rating BEFORE the match
+K = 32                                      # step size (fixed for now)
+
+for i, row in enumerate(df.itertuples(index=False)):
+    w, l = row.winner_id, row.loser_id
+    a, b = elo[w], elo[l]
+    # 1) READ: pre-match ratings are the feature
+    elo_w[i] = a
+    elo_l[i] = b
+    # 2) UPDATE: expected score for the winner, then move both ratings
+    expected_w = 1 / (1 + 10 ** ((b - a) / 400))
+    elo[w] = a + K * (1 - expected_w)       # winner: actual = 1
+    elo[l] = b - K * (1 - expected_w)       # loser drops by the same amount
+
+# turn into an A-vs-B feature
+df["elo_diff"] = np.where(is_A, elo_w - elo_l, elo_l - elo_w)</code></pre>
+  <p class="out">Same shape as the experience loop, just more math in the update step. It runs over all 71,000 matches in about a second.</p>
+
+  <h3>Sanity check: do the ratings make sense?</h3>
+  <p>Before trusting a feature, look at it. The highest final ratings should be players you recognize.</p>
+  <pre><button class="copybtn">Copy</button><code>names = df.drop_duplicates("winner_id").set_index("winner_id")["winner_name"]
+top = pd.Series(elo).sort_values(ascending=False).head(5)
+for pid, rating in top.items():
+    print(names.get(pid, pid), round(rating))</code></pre>
+  <p class="out">You should see the greats at the top, Djokovic, Sinner, Federer, Alcaraz, Medvedev. That is your evidence the ratings are meaningful, not noise.</p>
+
+  <div class="box tip"><b>Habit worth keeping:</b> every time you engineer a feature, eyeball it with a quick check like this. A feature that looks wrong here will only cause confusion later.</p></div>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex"><p><span class="qn">1.</span>Print the current Elo of one specific famous player over time is complex, so do something simpler: find how many unique players have a rating in your <code class="inl">elo</code> dictionary, and the highest and lowest final ratings.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>ratings = pd.Series(elo)
+print("players:", len(ratings))
+print("highest:", round(ratings.max()), " lowest:", round(ratings.min()))</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">2.</span>Try a different step size. Rebuild Elo with <code class="inl">K = 12</code> (a slower, steadier rating) into a new column <code class="inl">elo_diff_k12</code>, so you can compare later. (Copy the loop, change K, and the column name.)</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>elo = defaultdict(lambda: 1500.0)
+ew = np.zeros(len(df)); el = np.zeros(len(df)); K = 12
+for i, row in enumerate(df.itertuples(index=False)):
+    w, l = row.winner_id, row.loser_id
+    a, b = elo[w], elo[l]
+    ew[i] = a; el[i] = b
+    exp = 1 / (1 + 10 ** ((b - a) / 400))
+    elo[w] = a + K * (1 - exp); elo[l] = b - K * (1 - exp)
+df["elo_diff_k12"] = np.where(is_A, ew - el, el - ew)</code></pre>
+    <p class="note">You now have two Elo columns built with different step sizes. Which K is best? That question is exactly what the next tab answers.</p></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">3.</span>In a <b>markdown cell</b>, explain what the number <code class="inl">1500</code> is and why every player starts there. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">1500 is just the starting rating everyone is given before they have played any matches, a neutral middle value. Two players both at 1500 are predicted to be a 50/50 match, which is the right assumption when we know nothing about them yet. As players win and lose, their ratings move away from 1500 toward their true skill level.</p></div></details>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t4">Next: Dynamic K &rarr;</button></div>
+</section>
+
+<!-- ============ DYNAMIC K ============ -->
+<section class="panel" id="t4">
+  <div class="panel-head"><h2>Dynamic K: better ratings for new players</h2>
+    <p class="sub">One upgrade that makes Elo noticeably sharper, straight from professional sports-rating systems.</p>
+  </div>
+
+  <div class="box why">
+    <b>The problem with a fixed step size.</b> A brand-new player starts at 1500, but their true skill is unknown. With a small fixed K, their rating crawls toward reality over dozens of matches, so it is wrong for a long time. With a large fixed K, established stars bounce around too much after a single loss. You cannot win with one fixed number. The fix: make K <b>large when a player is new</b> (so their rating finds its level fast) and <b>small once they are established</b> (so it stays stable).
+  </div>
+
+  <p>A simple, battle-tested formula does exactly that. K starts high and shrinks as a player plays more matches:</p>
+  <pre><button class="copybtn">Copy</button><code>def dynamic_k(matches_played):
+    return 250 / ((matches_played + 5) ** 0.4)</code></pre>
+  <p>A player's first match uses K near 130 (moves fast); after 100 matches, K is down around 35 (steady). You track each player's match count as you go, the same counter from the experience feature, and feed it in.</p>
+
+  <p class="cell-label">Cell &middot; Elo with a dynamic step size</p>
+  <pre><button class="copybtn">Copy</button><code>elo = defaultdict(lambda: 1500.0)
+games = defaultdict(int)                     # matches played so far, per player
+elo_w = np.zeros(len(df)); elo_l = np.zeros(len(df))
+
+def dynamic_k(n):
+    return 250 / ((n + 5) ** 0.4)
+
+for i, row in enumerate(df.itertuples(index=False)):
+    w, l = row.winner_id, row.loser_id
+    a, b = elo[w], elo[l]
+    elo_w[i] = a; elo_l[i] = b               # READ first
+    expected_w = 1 / (1 + 10 ** ((b - a) / 400))
+    elo[w] = a + dynamic_k(games[w]) * (1 - expected_w)   # each player's own K
+    elo[l] = b - dynamic_k(games[l]) * (1 - expected_w)
+    games[w] += 1; games[l] += 1             # UPDATE the counts after
+
+df["elo_diff"] = np.where(is_A, elo_w - elo_l, elo_l - elo_w)   # overwrite with the better version</code></pre>
+  <p class="out">Notice each player uses <em>their own</em> K based on how many matches they have played. This is the version of <code class="inl">elo_diff</code> you keep going forward.</p>
+
+  <div class="box tip"><b>Why <code class="inl">+ 5</code> and <code class="inl">** 0.4</code>?</b> The <code class="inl">+ 5</code> stops the very first match from using an enormous K, and the <code class="inl">0.4</code> power controls how quickly K shrinks. These are tuned constants from established rating systems; you do not need to derive them, just understand that they make K start high and taper.</p></div>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex"><p><span class="qn">1.</span>Print what <code class="inl">dynamic_k</code> returns for a player with 0, 10, 50, and 200 matches played, to see the taper.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>for n in [0, 10, 50, 200]:
+    print(f"{n:4} matches -> K = {dynamic_k(n):.1f}")</code></pre>
+    <p class="note">K falls from about 130 down toward the 30s, exactly the "fast when new, steady when established" behavior.</p></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">2.</span>In a <b>markdown cell</b>, explain in your own words why a new player should have a higher K than a veteran. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">A new player's rating starts at a guess of 1500 that is probably wrong, so we want it to move quickly toward their real skill, which means a high K. A veteran has played many matches, so their rating is already an accurate estimate, and we do not want one surprising result to swing it too far, which means a low K. Dynamic K gives each player the right amount of reactivity for how much we already know about them.</p></div></details>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t5">Next: Measure &rarr;</button></div>
+</section>
+
+<!-- ============ MEASURE ============ -->
+<section class="panel" id="t5">
+  <div class="panel-head"><h2>Did it work? Measure the lift</h2>
+    <p class="sub">Every lesson ends here: compare the new feature to the baseline and write down what you found.</p>
+  </div>
+
+  <p class="cell-label">Cell &middot; Elo vs the baseline</p>
+  <pre><button class="copybtn">Copy</button><code>train, test = df.iloc[:cut], df.iloc[cut:]
+
+# Elo as a pure rule: whoever has the higher rating wins (no model at all)
+elo_rule = accuracy_score(test["target"], (test["elo_diff"] > 0).astype(int))
+
+# Elo through a logistic regression
+elo_model = LogisticRegression(max_iter=1000).fit(train[["elo_diff"]], train["target"])
+elo_acc = accuracy_score(test["target"], elo_model.predict(test[["elo_diff"]]))
+
+print("baseline (ATP rank):   ", round(baseline_acc, 3))
+print("rank model:            ", round(rank_acc, 3))
+print("Elo rule (no model):   ", round(elo_rule, 3))
+print("Elo model:             ", round(elo_acc, 3))</code></pre>
+  <p class="out">You should see the baseline near <b>0.637</b> and the Elo model near <b>0.643</b>. A real, honest improvement from a single engineered feature, and Elo already beats raw ranking.</p>
+
+  <div class="box why">
+    <b>Read this result honestly.</b> Elo alone lifts you about half a point above the baseline. That is small but real, and it matters for two reasons. First, Elo is a genuinely better skill measure than the official ranking, which the numbers confirm. Second, it is the <b>foundation</b>: the bigger gains come from stacking more features on top. Next lesson you split Elo by surface and add recent form, and the number climbs further. Over the chapter, these stack toward the mid-60s.
+  </div>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex"><p><span class="qn">1.</span>Compare your two step sizes from earlier. Fit a logistic regression on <code class="inl">elo_diff_k12</code> and one on your dynamic-K <code class="inl">elo_diff</code>, and print both accuracies. Which K wins?</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>for col in ["elo_diff_k12", "elo_diff"]:
+    m = LogisticRegression(max_iter=1000).fit(train[[col]], train["target"])
+    print(col, round(accuracy_score(test["target"], m.predict(test[[col]])), 4))</code></pre>
+    <p class="note">The dynamic-K version should edge out the fixed one, which is why we keep it.</p></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">2.</span>In a <b>markdown cell</b>, write 3 to 4 sentences for your report describing this result: what Elo is, that it beat the baseline, by how much, and why the lift is modest. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">We replaced the official ATP ranking with an Elo rating computed over the full match history, where each player's rating rises and falls after every match based on the result and the opponent's strength. Using a dynamic step size so new players' ratings adjust faster, the Elo model reached about 64.3% accuracy versus a 63.7% baseline. This confirms Elo is a better skill measure than raw ranking, though the lift is small because a single rating still cannot capture surface, form, or matchup history. Those features are added in later steps and are expected to push the accuracy higher.</p></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">3.</span>In a <b>markdown cell</b>, answer: your Elo rule (higher rating wins) and the baseline (higher rank wins) are both simple "pick the favorite" rules. Why might Elo's version be slightly better? <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">Both rules just pick the favorite, but they disagree on who the favorite is. The ATP ranking is based on tournament points over the past year and lags behind current form, while Elo updates after every match against the specific quality of each opponent. So when a player is rising or falling in real skill, Elo notices sooner, and picking its favorite is right slightly more often.</p></div></details>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t6">Next: Review &rarr;</button></div>
+</section>
+
+<!-- ============ REVIEW ============ -->
+<section class="panel" id="t6">
+  <div class="panel-head"><h2>Review: 10 questions</h2>
+    <p class="sub">Code and writing mixed. Put <span style="color:var(--purple);font-weight:700;">write it</span> answers in markdown cells. These are homework part one; the project (adding these features to your v2 notebook) is part two.</p>
+  </div>
+
+  <div class="ex"><p><span class="qn">1.</span>Load the data and put it in true chronological order.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>df = pd.read_csv("atp_2000_2024_model_ready.csv", low_memory=False)
+df["tourney_date"] = pd.to_datetime(df["tourney_date"])
+df = df.sort_values(["tourney_date", "match_num"]).reset_index(drop=True)</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">2.</span>Write the read-then-update loop for the <b>experience</b> feature (matches played before each match).</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>played = defaultdict(int)
+ew = np.zeros(len(df)); el = np.zeros(len(df))
+for i, row in enumerate(df.itertuples(index=False)):
+    ew[i] = played[row.winner_id]; el[i] = played[row.loser_id]
+    played[row.winner_id] += 1; played[row.loser_id] += 1</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">3.</span>Write the expected-score formula for a player rated <code class="inl">a</code> against one rated <code class="inl">b</code>.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>expected = 1 / (1 + 10 ** ((b - a) / 400))</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">4.</span>Build overall Elo with a fixed <code class="inl">K = 32</code> and make an <code class="inl">A</code>-vs-<code class="inl">B</code> <code class="inl">elo_diff</code> column.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>elo = defaultdict(lambda: 1500.0)
+ew = np.zeros(len(df)); el = np.zeros(len(df)); K = 32
+for i, row in enumerate(df.itertuples(index=False)):
+    a, b = elo[row.winner_id], elo[row.loser_id]
+    ew[i] = a; el[i] = b
+    exp = 1 / (1 + 10 ** ((b - a) / 400))
+    elo[row.winner_id] = a + K * (1 - exp); elo[row.loser_id] = b - K * (1 - exp)
+is_A = df["winner_is_A"].values.astype(bool)
+df["elo_diff"] = np.where(is_A, ew - el, el - ew)</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">5.</span>Write the dynamic-K function and print its value at 0 and 100 matches.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>def dynamic_k(n):
+    return 250 / ((n + 5) ** 0.4)
+print(dynamic_k(0), dynamic_k(100))</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">6.</span>Fit a logistic regression on <code class="inl">elo_diff</code> and print its test accuracy against the baseline.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>train, test = df.iloc[:cut], df.iloc[cut:]
+m = LogisticRegression(max_iter=1000).fit(train[["elo_diff"]], train["target"])
+print("elo:", round(accuracy_score(test["target"], m.predict(test[["elo_diff"]])), 3),
+      " baseline:", round(baseline_acc, 3))</code></pre></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">7.</span>Explain the read-then-update rule and why it prevents leakage. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">In each loop step we first read the players' current values and store them as the feature, and only then update those values with the match result. This guarantees the feature for a match contains only information from before that match. If we updated first, the feature would include the outcome we are trying to predict, which is leakage and produces fake accuracy that collapses on real future data.</p></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">8.</span>Explain why Elo is generally a better skill measure than the official ATP ranking. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">The ATP ranking is a points system based on results across the past year, so it lags behind and rewards playing many tournaments. Elo updates after every single match according to the strength of the opponent beaten or lost to, so it reacts quickly to a player's current level. That makes it a sharper estimate of who is actually playing well right now.</p></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">9.</span>Explain dynamic K: what it does and why new and established players should be treated differently. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">Dynamic K changes the rating step size based on how many matches a player has played. New players get a large K so their rating moves quickly from the default 1500 toward their true skill, while experienced players get a small K so their well-established rating stays stable and does not swing on a single surprising result. It gives each player the right reactivity for how much data we already have on them.</p></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">10.</span>Write a short "Feature 1" section for your report: the Elo feature, the result vs baseline, and what comes next. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">Our first engineered feature replaces the official ranking with an Elo rating built over the entire match history, updated after each match with a dynamic step size so newer players adjust faster. Higher-rated players are predicted to win, and through a logistic regression this reached about 64.3% accuracy compared with a 63.7% favorite-wins baseline. Elo is a small but genuine improvement and a better skill measure than raw ranking. The next features, surface-specific Elo and recent form, build on this foundation and are expected to raise the accuracy further.</p></div></details>
+  </div>
+
+  <div class="box concept" style="margin-top:26px;">
+    <b>Done with v2 Week 1.</b> You learned the read-then-update loop that every history feature uses, built Elo with a dynamic step size, and confirmed it beats the baseline. Homework: add these to your v2 notebook (project guide), and next lesson we split Elo by surface and add recent form to push the number higher.
+  </div>
+</section>
+
+</div>
+
+<script>
+  var tabs = document.querySelectorAll(".tab");
+  var panels = document.querySelectorAll(".panel");
+  var bar = document.getElementById("tabbar");
+  function show(id){
+    tabs.forEach(function(t){ t.classList.toggle("active", t.dataset.target === id); });
+    panels.forEach(function(p){ p.classList.toggle("active", p.id === id); });
+    window.scrollTo({ top: bar.offsetTop, behavior: "smooth" });
+  }
+  tabs.forEach(function(t){ t.addEventListener("click", function(){ show(t.dataset.target); }); });
+  document.querySelectorAll("[data-next]").forEach(function(b){ b.addEventListener("click", function(){ show(b.dataset.next); }); });
+  document.querySelectorAll(".copybtn").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var code = btn.parentElement.querySelector("code").innerText;
+      navigator.clipboard.writeText(code).then(function(){
+        btn.textContent = "Copied"; btn.classList.add("done");
+        setTimeout(function(){ btn.textContent = "Copy"; btn.classList.remove("done"); }, 1500);
+      });
+    });
+  });
+</script>
+</body>
+</html>

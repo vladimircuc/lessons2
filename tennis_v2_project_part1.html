@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project v2 - Feature Engineering (Part 1)</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2430; --border:#30363d;
+    --text:#e6edf3; --muted:#8b949e; --accent:#c9f24d; --accent2:#58a6ff;
+    --code:#0a0e14; --green:#3fb950; --yellow:#d29922; --red:#f85149; --purple:#bc8cff;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.68;padding:0 0 60px;}
+  .wrap{max-width:920px;margin:0 auto;padding:0 20px;}
+  header{border-bottom:1px solid var(--border);background:linear-gradient(180deg,#0e1512,#0d1117);padding:34px 0 26px;}
+  .kicker{color:var(--accent);font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 8px;}
+  header h1{margin:0 0 10px;font-size:28px;letter-spacing:-0.5px;}
+  header p{margin:0;color:var(--muted);font-size:14.5px;max-width:770px;}
+  .pill{display:inline-block;background:var(--panel2);border:1px solid var(--border);border-radius:20px;padding:2px 12px;font-size:12px;color:var(--muted);margin-right:6px;}
+  .pill.proj{background:rgba(188,140,255,.14);color:var(--purple);border-color:var(--purple);}
+
+  #tabbar{position:sticky;top:0;z-index:50;background:rgba(13,17,23,.96);backdrop-filter:blur(6px);border-bottom:1px solid var(--border);}
+  .tabs{max-width:920px;margin:0 auto;padding:8px 14px;display:flex;flex-wrap:wrap;gap:6px;}
+  .tab{background:var(--panel);border:1px solid var(--border);color:var(--muted);font-size:13px;font-weight:600;padding:7px 13px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:7px;transition:.12s;font-family:inherit;}
+  .tab:hover{color:var(--text);border-color:#455063;}
+  .tab .n{font-size:11px;font-weight:800;background:var(--panel2);color:var(--muted);border-radius:5px;padding:1px 6px;min-width:20px;text-align:center;}
+  .tab.active{background:var(--accent);color:#0d1117;border-color:var(--accent);}
+  .tab.active .n{background:rgba(13,17,23,.25);color:#0d1117;}
+
+  .panel{display:none;animation:fade .18s ease;}
+  .panel.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+  .panel-head{padding:26px 0 2px;}
+  .panel-head h2{margin:0;font-size:24px;letter-spacing:-0.3px;}
+  .panel-head .sub{color:var(--muted);margin:8px 0 0;font-size:15px;}
+
+  h3{font-size:15px;margin:24px 0 6px;color:var(--text);}
+  p{margin:11px 0;} ul{margin:8px 0;padding-left:22px;} li{margin:6px 0;}
+  ol{margin:8px 0;padding-left:22px;} ol li{margin:8px 0;}
+  .box{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin:16px 0;}
+  .tip{border-left:3px solid var(--accent2);}
+  .warn{border-left:3px solid var(--yellow);}
+  .concept{border-left:3px solid var(--accent);}
+  .proj{border-left:3px solid var(--purple);}
+  .danger{border-left:3px solid var(--red);}
+  pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padding:15px 16px;overflow-x:auto;margin:0 0 6px;position:relative;}
+  code{font-family:"SF Mono","Fira Code",Consolas,Menlo,monospace;font-size:13px;color:#c9d1d9;}
+  .copybtn{position:absolute;top:7px;right:7px;background:var(--panel2);border:1px solid var(--border);color:var(--muted);font-size:11px;padding:4px 10px;border-radius:6px;cursor:pointer;transition:.15s;font-family:inherit;}
+  .copybtn:hover{color:var(--text);border-color:var(--accent);}
+  .copybtn.done{color:var(--green);border-color:var(--green);}
+  code.inl{background:var(--panel2);border:1px solid var(--border);border-radius:5px;padding:1px 6px;color:var(--accent);font-size:12.5px;}
+
+  .task{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:10px;padding:16px 18px;margin:16px 0;}
+  .task .th{font-size:11px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--accent);margin:0 0 6px;}
+  .task p{margin:6px 0;}
+  details.sol{margin:12px 0 0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  details.sol summary{cursor:pointer;padding:9px 14px;background:var(--panel2);font-weight:600;font-size:12.5px;color:var(--green);user-select:none;list-style:none;}
+  details.sol summary::-webkit-details-marker{display:none;}
+  details.sol summary::before{content:"\25B8  ";color:var(--muted);}
+  details.sol[open] summary::before{content:"\25BE  ";}
+  details.sol .sb{padding:8px 14px 10px;}
+  .see{background:rgba(63,185,80,.07);border:1px solid rgba(63,185,80,.35);border-radius:8px;padding:12px 16px;margin:12px 0 0;}
+  .see .lbl{font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--green);margin:0 0 4px;}
+  .see p{margin:0;font-size:13.5px;color:var(--text);}
+  .see code.inl{color:var(--green);}
+
+  .nav{display:flex;justify-content:flex-end;margin:32px 0 10px;padding-top:18px;border-top:1px solid var(--border);}
+  .nextbtn{background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:14px;font-weight:600;padding:10px 18px;border-radius:9px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;transition:.12s;}
+  .nextbtn:hover{border-color:var(--accent);color:var(--accent);}
+  a{color:var(--accent2);}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <p class="kicker">Tennis AI Project &middot; v2 Project Notebook</p>
+    <h1>Build v2: Feature Engineering, Part 1</h1>
+    <p>Start a fresh notebook for the upgraded model and add your first engineered features: experience (to learn the loop) and Elo (the real upgrade). Same read-then-update pattern from the lesson, now in your own project. By the end you will have measured Elo beating the baseline.</p>
+    <div style="margin-top:14px;">
+      <span class="pill proj">tennis_predictor_v2.ipynb</span><span class="pill">the loop</span><span class="pill">Elo</span><span class="pill">measure</span>
+    </div>
+  </div>
+</header>
+
+<div id="tabbar">
+  <div class="tabs">
+    <button class="tab active" data-target="t0"><span class="n">0</span>Set up</button>
+    <button class="tab" data-target="t1"><span class="n">1</span>The loop</button>
+    <button class="tab" data-target="t2"><span class="n">2</span>Elo</button>
+    <button class="tab" data-target="t3"><span class="n">3</span>Measure</button>
+    <button class="tab" data-target="t4"><span class="n">4</span>Submit</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ============ SET UP ============ -->
+<section class="panel active" id="t0">
+  <div class="panel-head"><h2>Set up the v2 project</h2>
+    <p class="sub">A new folder and a fresh notebook, reusing your clean dataset.</p>
+  </div>
+
+  <ol>
+    <li>Make a new project folder, for example <code class="inl">tennis-predictor-v2</code>.</li>
+    <li>Copy your <code class="inl">atp_2000_2024_model_ready.csv</code> into it (or into a <code class="inl">data/</code> subfolder). It is already cleaned and reframed, so we build straight on top of it.</li>
+    <li>Create a new notebook, <code class="inl">tennis_predictor_v2.ipynb</code>.</li>
+  </ol>
+
+  <p class="cell-label" style="text-transform:uppercase;font-size:11px;font-weight:700;color:var(--accent);">Cell 1 &middot; imports + load + chronological order</p>
+  <pre><button class="copybtn">Copy</button><code>import pandas as pd
+import numpy as np
+from collections import defaultdict, deque
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+
+df = pd.read_csv("atp_2000_2024_model_ready.csv", low_memory=False)
+df["tourney_date"] = pd.to_datetime(df["tourney_date"])
+df = df.sort_values(["tourney_date", "match_num"]).reset_index(drop=True)
+
+is_A = df["winner_is_A"].values.astype(bool)   # used to build A-vs-B features
+print(df.shape)</code></pre>
+  <div class="see"><p class="lbl">You should see</p><p><code class="inl">(71463, 58)</code>. The matches are now in the order they were played, which every feature below depends on.</p></div>
+
+  <p class="cell-label" style="text-transform:uppercase;font-size:11px;font-weight:700;color:var(--accent);">Cell 2 &middot; baseline + current model (the numbers to beat)</p>
+  <pre><button class="copybtn">Copy</button><code>cut = int(len(df) * 0.8)
+train, test = df.iloc[:cut], df.iloc[cut:]
+
+baseline_acc = accuracy_score(test["target"], (test["rank_diff"] < 0).astype(int))
+rank_model = LogisticRegression(max_iter=1000).fit(train[["rank_diff"]], train["target"])
+rank_acc = accuracy_score(test["target"], rank_model.predict(test[["rank_diff"]]))
+print("baseline:", round(baseline_acc, 3), " rank model:", round(rank_acc, 3))</code></pre>
+  <div class="see"><p class="lbl">You should see</p><p>About <code class="inl">0.637</code> and <code class="inl">0.636</code>. Keep <code class="inl">baseline_acc</code> around, every measurement compares to it.</p></div>
+
+  <div class="box danger"><b>Remember the rule:</b> every feature reads its value <em>before</em> updating with the match result. Read first, update after. No exceptions.</div>
+
+  <div class="nav"><button class="nextbtn" data-next="t1">Next: The loop &rarr;</button></div>
+</section>
+
+<!-- ============ THE LOOP ============ -->
+<section class="panel" id="t1">
+  <div class="panel-head"><h2>Feature 1: experience (learn the loop)</h2>
+    <p class="sub">Warm up with the simplest feature so the pattern is solid before Elo.</p>
+  </div>
+
+  <div class="task">
+    <p class="th">Your task</p>
+    <p>Walk the matches in order. For each one, record how many matches each player has played so far (before this match), then add one to each. Convert to an A-vs-B <code class="inl">exp_diff</code> column.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>matches_played = defaultdict(int)
+exp_w = np.zeros(len(df)); exp_l = np.zeros(len(df))
+
+for i, row in enumerate(df.itertuples(index=False)):
+    w, l = row.winner_id, row.loser_id
+    exp_w[i] = matches_played[w]     # READ before
+    exp_l[i] = matches_played[l]
+    matches_played[w] += 1           # UPDATE after
+    matches_played[l] += 1
+
+df["exp_diff"] = np.where(is_A, exp_w - exp_l, exp_l - exp_w)</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>No output, this creates the <code class="inl">exp_diff</code> column. Quick check: <code class="inl">df["exp_diff"].describe()</code> should show a mix of positive and negative values centered near zero.</p></div>
+
+  <div class="task">
+    <p class="th">Quick check</p>
+    <p>Fit a logistic regression on <code class="inl">exp_diff</code> alone and print its accuracy.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>train, test = df.iloc[:cut], df.iloc[cut:]
+m = LogisticRegression(max_iter=1000).fit(train[["exp_diff"]], train["target"])
+print("experience only:", round(accuracy_score(test["target"], m.predict(test[["exp_diff"]])), 3))</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>About <code class="inl">0.57</code>. Weak on its own, but it proved the loop works. Now the same pattern with real power.</p></div>
+
+  <div class="nav"><button class="nextbtn" data-next="t2">Next: Elo &rarr;</button></div>
+</section>
+
+<!-- ============ ELO ============ -->
+<section class="panel" id="t2">
+  <div class="panel-head"><h2>Feature 2: Elo (dynamic K)</h2>
+    <p class="sub">The main event. Same loop, with the Elo update and a per-player step size.</p>
+  </div>
+
+  <div class="task">
+    <p class="th">Task A &middot; build Elo</p>
+    <p>Everyone starts at 1500. For each match: read both ratings, compute the expected score, update both by <code class="inl">dynamic_k &#215; (actual - expected)</code>, and track each player's match count to feed the dynamic K. Make an <code class="inl">elo_diff</code> column.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>elo = defaultdict(lambda: 1500.0)
+games = defaultdict(int)
+elo_w = np.zeros(len(df)); elo_l = np.zeros(len(df))
+
+def dynamic_k(n):
+    return 250 / ((n + 5) ** 0.4)
+
+for i, row in enumerate(df.itertuples(index=False)):
+    w, l = row.winner_id, row.loser_id
+    a, b = elo[w], elo[l]
+    elo_w[i] = a; elo_l[i] = b                       # READ first
+    expected_w = 1 / (1 + 10 ** ((b - a) / 400))
+    elo[w] = a + dynamic_k(games[w]) * (1 - expected_w)
+    elo[l] = b - dynamic_k(games[l]) * (1 - expected_w)
+    games[w] += 1; games[l] += 1                     # UPDATE after
+
+df["elo_diff"] = np.where(is_A, elo_w - elo_l, elo_l - elo_w)</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>No output, but it runs over all matches in about a second and creates <code class="inl">elo_diff</code>.</p></div>
+
+  <div class="task">
+    <p class="th">Task B &middot; sanity check the ratings</p>
+    <p>Print the five highest final Elo ratings with player names. They should be stars, that is how you know the feature is real.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>names = df.drop_duplicates("winner_id").set_index("winner_id")["winner_name"]
+top = pd.Series(elo).sort_values(ascending=False).head(5)
+for pid, rating in top.items():
+    print(names.get(pid, pid), round(rating))</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>Djokovic, Sinner, Federer, Alcaraz, Medvedev at the top. If you see unknown names or nonsense, something in the loop is off, check the read-then-update order.</p></div>
+
+  <div class="nav"><button class="nextbtn" data-next="t3">Next: Measure &rarr;</button></div>
+</section>
+
+<!-- ============ MEASURE ============ -->
+<section class="panel" id="t3">
+  <div class="panel-head"><h2>Measure the lift &amp; write it up</h2>
+    <p class="sub">Compare to the baseline and record the result for your report.</p>
+  </div>
+
+  <div class="task">
+    <p class="th">Task A &middot; the comparison</p>
+    <p>Print the baseline, the Elo rule (higher rating wins), and the Elo model, together.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>train, test = df.iloc[:cut], df.iloc[cut:]
+elo_rule = accuracy_score(test["target"], (test["elo_diff"] > 0).astype(int))
+elo_model = LogisticRegression(max_iter=1000).fit(train[["elo_diff"]], train["target"])
+elo_acc = accuracy_score(test["target"], elo_model.predict(test[["elo_diff"]]))
+
+print("baseline:  ", round(baseline_acc, 3))
+print("Elo rule:  ", round(elo_rule, 3))
+print("Elo model: ", round(elo_acc, 3))</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>Baseline near <code class="inl">0.637</code>, Elo model near <code class="inl">0.643</code>. A real, honest lift from one engineered feature, and Elo beats raw ranking.</p></div>
+
+  <div class="task">
+    <p class="th">Task B &middot; write the result</p>
+    <p>In a <b>markdown cell</b>, write 3 to 4 sentences: what Elo is, that it beat the baseline and by how much, and why the lift is modest (a single rating misses surface, form, and matchups). This paragraph goes straight into your v2 README later.</p>
+    <details class="sol"><summary>What to include</summary><div class="sb"><p style="font-size:13px;color:var(--muted);margin:0;">Name the feature (Elo over full history, dynamic step size), state the numbers (~0.643 vs 0.637 baseline), say it confirms Elo is a better skill measure than ranking, and note the next features (surface Elo, recent form) are expected to push it higher.</p></div></details>
+  </div>
+
+  <div class="box concept"><b>The v2 story so far:</b> you found the ceiling in v1, and now you are engineering your way toward it, one measured feature at a time. Keeping this running record of "feature, lift, why" is exactly what turns the notebook into a paper.</div>
+
+  <div class="nav"><button class="nextbtn" data-next="t4">Next: Submit &rarr;</button></div>
+</section>
+
+<!-- ============ SUBMIT ============ -->
+<section class="panel" id="t4">
+  <div class="panel-head"><h2>Bring this back next session</h2>
+    <p class="sub">Checklist for your v2 notebook.</p>
+  </div>
+  <div class="box proj">
+    <b>You should have:</b>
+    <ul style="margin:8px 0 0;">
+      <li>A fresh <code class="inl">tennis_predictor_v2.ipynb</code> that loads the data in chronological order and rebuilds the baseline.</li>
+      <li>The <code class="inl">exp_diff</code> feature (experience), built with the read-then-update loop.</li>
+      <li>The <code class="inl">elo_diff</code> feature with dynamic K, sanity-checked against the top players.</li>
+      <li>The measurement cell and a markdown write-up of the Elo result.</li>
+    </ul>
+  </div>
+  <div class="box concept">
+    <b>Next lesson:</b> we split Elo into surface-specific ratings (clay, grass, hard) and add recent form, then measure how much higher they push the accuracy. Same loop, more features, number keeps climbing toward the mid-60s.
+  </div>
+  <div class="box tip">
+    <b>Turn it in:</b> send me your updated <code class="inl">tennis_predictor_v2.ipynb</code> so I can check the loops are leakage-safe before we build on them. Reminder: this is homework part two; part one is the 10 review questions at the end of the lesson.
+  </div>
+</section>
+
+</div>
+
+<script>
+  var tabs = document.querySelectorAll(".tab");
+  var panels = document.querySelectorAll(".panel");
+  var bar = document.getElementById("tabbar");
+  function show(id){
+    tabs.forEach(function(t){ t.classList.toggle("active", t.dataset.target === id); });
+    panels.forEach(function(p){ p.classList.toggle("active", p.id === id); });
+    window.scrollTo({ top: bar.offsetTop, behavior: "smooth" });
+  }
+  tabs.forEach(function(t){ t.addEventListener("click", function(){ show(t.dataset.target); }); });
+  document.querySelectorAll("[data-next]").forEach(function(b){ b.addEventListener("click", function(){ show(b.dataset.next); }); });
+  document.querySelectorAll(".copybtn").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var code = btn.parentElement.querySelector("code").innerText;
+      navigator.clipboard.writeText(code).then(function(){
+        btn.textContent = "Copied"; btn.classList.add("done");
+        setTimeout(function(){ btn.textContent = "Copy"; btn.classList.remove("done"); }, 1500);
+      });
+    });
+  });
+</script>
+</body>
+</html>
