@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>v2 Week 2 - Surface Elo & Recent Form</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2430; --border:#30363d;
+    --text:#e6edf3; --muted:#8b949e; --accent:#c9f24d; --accent2:#58a6ff;
+    --code:#0a0e14; --green:#3fb950; --yellow:#d29922; --red:#f85149; --clay:#e07b39; --purple:#bc8cff;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.68;padding:0 0 60px;}
+  .wrap{max-width:920px;margin:0 auto;padding:0 20px;}
+  header{border-bottom:1px solid var(--border);background:linear-gradient(180deg,#12160e,#0d1117);padding:34px 0 26px;}
+  .kicker{color:var(--accent);font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 8px;}
+  header h1{margin:0 0 10px;font-size:28px;letter-spacing:-0.5px;}
+  header p{margin:0;color:var(--muted);font-size:14.5px;max-width:770px;}
+  .pill{display:inline-block;background:var(--panel2);border:1px solid var(--border);border-radius:20px;padding:2px 12px;font-size:12px;color:var(--muted);margin-right:6px;}
+
+  #tabbar{position:sticky;top:0;z-index:50;background:rgba(13,17,23,.96);backdrop-filter:blur(6px);border-bottom:1px solid var(--border);}
+  .tabs{max-width:920px;margin:0 auto;padding:8px 14px;display:flex;flex-wrap:wrap;gap:6px;}
+  .tab{background:var(--panel);border:1px solid var(--border);color:var(--muted);font-size:13px;font-weight:600;padding:7px 13px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:7px;transition:.12s;font-family:inherit;}
+  .tab:hover{color:var(--text);border-color:#455063;}
+  .tab .n{font-size:11px;font-weight:800;background:var(--panel2);color:var(--muted);border-radius:5px;padding:1px 6px;min-width:20px;text-align:center;}
+  .tab.active{background:var(--accent);color:#0d1117;border-color:var(--accent);}
+  .tab.active .n{background:rgba(13,17,23,.25);color:#0d1117;}
+
+  .panel{display:none;animation:fade .18s ease;}
+  .panel.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+  .panel-head{padding:26px 0 2px;}
+  .panel-head h2{margin:0;font-size:24px;letter-spacing:-0.3px;}
+  .panel-head .sub{color:var(--muted);margin:8px 0 0;font-size:15px;}
+
+  h3{font-size:15px;margin:24px 0 6px;color:var(--text);}
+  p{margin:11px 0;} ul{margin:8px 0;padding-left:22px;} li{margin:6px 0;}
+  .box{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin:16px 0;}
+  .tip{border-left:3px solid var(--accent2);}
+  .warn{border-left:3px solid var(--yellow);}
+  .concept{border-left:3px solid var(--accent);}
+  .why{border-left:3px solid var(--clay);}
+  .cell-label{font-size:11px;color:var(--accent);font-weight:700;letter-spacing:0.5px;margin:18px 0 4px;text-transform:uppercase;}
+  pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padding:15px 16px;overflow-x:auto;margin:0 0 6px;position:relative;}
+  code{font-family:"SF Mono","Fira Code",Consolas,Menlo,monospace;font-size:13.5px;color:#c9d1d9;}
+  .copybtn{position:absolute;top:7px;right:7px;background:var(--panel2);border:1px solid var(--border);color:var(--muted);font-size:11px;padding:4px 10px;border-radius:6px;cursor:pointer;transition:.15s;font-family:inherit;}
+  .copybtn:hover{color:var(--text);border-color:var(--accent);}
+  .copybtn.done{color:var(--green);border-color:var(--green);}
+  .out{color:var(--muted);font-size:13px;margin:2px 0 14px;padding-left:12px;border-left:2px solid var(--border);}
+  .out b{color:var(--text);font-weight:600;}
+  code.inl{background:var(--panel2);border:1px solid var(--border);border-radius:5px;padding:1px 6px;color:var(--accent);font-size:12.5px;}
+
+  .figure{background:#0b0f16;border:1px solid var(--border);border-radius:12px;padding:18px 16px 10px;margin:18px 0;text-align:center;}
+  .figure svg{max-width:100%;height:auto;}
+  .figure .cap{color:var(--muted);font-size:12.5px;margin:10px 6px 4px;line-height:1.5;}
+
+  table.rank{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px;}
+  table.rank th{text-align:left;color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px;padding:6px 10px;border-bottom:1px solid var(--border);}
+  table.rank td{padding:7px 10px;border-bottom:1px solid #21262d;}
+  table.rank td.s{color:var(--accent);font-weight:700;}
+  table.rank td.e{color:var(--muted);font-variant-numeric:tabular-nums;}
+  .hl{color:var(--clay);font-weight:700;}
+
+  .practice-head{margin:30px 0 4px;font-size:13px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--accent);display:flex;align-items:center;gap:10px;}
+  .practice-head::before{content:"";flex:0 0 26px;height:2px;background:var(--accent);}
+  .ex{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:10px;padding:14px 18px;margin:12px 0;}
+  .ex.wr{border-left-color:var(--purple);}
+  .ex p{margin:0;}
+  .qn{font-weight:700;color:var(--accent);margin-right:6px;}
+  .ex.wr .qn{color:var(--purple);}
+  .wtag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 8px;border-radius:4px;margin-left:8px;background:rgba(188,140,255,.15);color:var(--purple);border:1px solid var(--purple);vertical-align:middle;}
+  details.sol{margin:10px 0 0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  details.sol summary{cursor:pointer;padding:9px 14px;background:var(--panel2);font-weight:600;font-size:12.5px;color:var(--green);user-select:none;list-style:none;}
+  details.sol summary::-webkit-details-marker{display:none;}
+  details.sol summary::before{content:"\25B8  ";color:var(--muted);}
+  details.sol[open] summary::before{content:"\25BE  ";}
+  details.sol.ex-ans summary{color:var(--purple);}
+  details.sol .sb{padding:8px 14px 10px;}
+  .sb .note{color:var(--muted);font-size:12.5px;margin:6px 0 0;padding-left:10px;border-left:2px solid var(--border);}
+  .sb .exans{font-size:13.5px;color:var(--text);margin:0;font-style:italic;}
+  .sb .exans::before{content:"Example answer: ";font-style:normal;font-weight:700;color:var(--purple);}
+
+  .nav{display:flex;justify-content:flex-end;margin:32px 0 10px;padding-top:18px;border-top:1px solid var(--border);}
+  .nextbtn{background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:14px;font-weight:600;padding:10px 18px;border-radius:9px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;transition:.12s;}
+  .nextbtn:hover{border-color:var(--accent);color:var(--accent);}
+  a{color:var(--accent2);}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <p class="kicker">Tennis AI Project &middot; v2 &middot; Week 2</p>
+    <h1>Surface Elo &amp; Recent Form</h1>
+    <p>Two new features on the same read-then-update loop, and the session where the number first jumps. You split Elo into one rating per surface (a big idea, one tiny code change) and add recent form using a new tool, the rolling window. You also learn the honest half of feature engineering: measuring whether a feature that sounds smart actually helps.</p>
+    <div style="margin-top:14px;">
+      <span class="pill">surface Elo</span><span class="pill">pair keys</span><span class="pill">rolling window</span><span class="pill">recent form</span><span class="pill">measure honestly</span>
+    </div>
+  </div>
+</header>
+
+<div id="tabbar">
+  <div class="tabs">
+    <button class="tab active" data-target="t0"><span class="n">0</span>Start</button>
+    <button class="tab" data-target="t1"><span class="n">1</span>Surface Elo</button>
+    <button class="tab" data-target="t2"><span class="n">2</span>Surface check</button>
+    <button class="tab" data-target="t3"><span class="n">3</span>Recent form</button>
+    <button class="tab" data-target="t4"><span class="n">4</span>Measure</button>
+    <button class="tab" data-target="t5"><span class="n">R</span>Review</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ============ START ============ -->
+<section class="panel active" id="t0">
+  <div class="panel-head"><h2>Start here</h2>
+    <p class="sub">Reload the data and rebuild last week's Elo so we can stack on top of it.</p>
+  </div>
+
+  <pre><button class="copybtn">Copy</button><code>import pandas as pd
+import numpy as np
+from collections import defaultdict, deque
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+
+df = pd.read_csv("atp_2000_2024_model_ready.csv", low_memory=False)
+df["tourney_date"] = pd.to_datetime(df["tourney_date"])
+df = df.sort_values(["tourney_date", "match_num"]).reset_index(drop=True)
+is_A = df["winner_is_A"].values.astype(bool)
+cut = int(len(df) * 0.8)
+
+def dynamic_k(n):
+    return 250 / ((n + 5) ** 0.4)
+
+# rebuild overall Elo from last week
+elo = defaultdict(lambda: 1500.0); games = defaultdict(int)
+elo_w = np.zeros(len(df)); elo_l = np.zeros(len(df))
+for i, row in enumerate(df.itertuples(index=False)):
+    w, l = row.winner_id, row.loser_id
+    a, b = elo[w], elo[l]
+    elo_w[i] = a; elo_l[i] = b
+    exp = 1 / (1 + 10 ** ((b - a) / 400))
+    elo[w] = a + dynamic_k(games[w]) * (1 - exp)
+    elo[l] = b - dynamic_k(games[l]) * (1 - exp)
+    games[w] += 1; games[l] += 1
+df["elo_diff"] = np.where(is_A, elo_w - elo_l, elo_l - elo_w)
+
+baseline_acc = accuracy_score(df.iloc[cut:]["target"], (df.iloc[cut:]["rank_diff"] < 0).astype(int))
+print("baseline:", round(baseline_acc, 3))</code></pre>
+  <p class="out">Baseline near <b>0.637</b>, and <code class="inl">elo_diff</code> is back. Now we add to it.</p>
+
+  <div class="box concept"><b>Today's plan:</b> build surface Elo (the win), build recent form (a new technique), then measure both honestly. One will move the number, one mostly will not, and knowing the difference is the real skill.</div>
+
+  <div class="nav"><button class="nextbtn" data-next="t1">Next: Surface Elo &rarr;</button></div>
+</section>
+
+<!-- ============ SURFACE ELO ============ -->
+<section class="panel" id="t1">
+  <div class="panel-head"><h2>Surface-specific Elo</h2>
+    <p class="sub">A big idea with a one-line code change: give every player a separate rating on each surface.</p>
+  </div>
+
+  <div class="box concept">
+    <b>Why.</b> Surfaces play completely differently. Clay is slow and rewards patient defenders; grass is fast and rewards big serves; hard is in between. A player can be elite on one and ordinary on another, so a single Elo blurs those together and throws away real signal. The fix: keep one rating per player <em>per surface</em>, and when two players meet on clay, read and update only their clay ratings.
+  </div>
+
+  <h3>The only new idea: a pair key</h3>
+  <p>Last week the ratings dictionary was keyed by player: <code class="inl">elo[player_id]</code>. This week it is keyed by the <b>pair</b> of player and surface: <code class="inl">surface_elo[(player_id, surface)]</code>. That tuple key is the entire change. Everything else is the same loop.</p>
+
+  <p class="cell-label">Cell &middot; surface Elo</p>
+  <pre><button class="copybtn">Copy</button><code>surface_elo = defaultdict(lambda: 1500.0)     # keyed by (player, surface)
+surface_games = defaultdict(int)               # match count per (player, surface)
+selo_w = np.zeros(len(df)); selo_l = np.zeros(len(df))
+
+for i, row in enumerate(df.itertuples(index=False)):
+    w, l, s = row.winner_id, row.loser_id, row.surface
+    a, b = surface_elo[(w, s)], surface_elo[(l, s)]     # this surface only
+    selo_w[i] = a; selo_l[i] = b                         # READ first
+    exp = 1 / (1 + 10 ** ((b - a) / 400))
+    surface_elo[(w, s)] = a + dynamic_k(surface_games[(w, s)]) * (1 - exp)
+    surface_elo[(l, s)] = b - dynamic_k(surface_games[(l, s)]) * (1 - exp)
+    surface_games[(w, s)] += 1; surface_games[(l, s)] += 1
+
+df["surface_elo_diff"] = np.where(is_A, selo_w - selo_l, selo_l - selo_w)</code></pre>
+  <p class="out">Same read-then-update shape as overall Elo. The only differences: the key is <code class="inl">(player, surface)</code>, and each surface rating uses its own match count for the step size.</p>
+
+  <div class="box tip"><b>Notice a trade-off you just created:</b> splitting into three ratings means each one is trained on only part of a player's matches, so surface Elo is a bit noisier per match than overall Elo, especially on surfaces a player rarely plays. Hold that thought, the next tab measures whether it is worth it.</p></div>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex"><p><span class="qn">1.</span>How many <code class="inl">(player, surface)</code> ratings did you create? Print the count, and the list of surfaces in the data with how many matches each has.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>print("surface ratings:", len(surface_elo))
+print(df["surface"].value_counts())</code></pre>
+    <p class="note">You will see Hard, Clay, Grass, and a little old Carpet. Hard has the most matches by far.</p></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">2.</span>In a <b>markdown cell</b>, explain the one code change from overall Elo to surface Elo, and why it makes sense for tennis. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">The only change is the dictionary key: instead of storing one rating per player, we store one rating per player-and-surface pair. This makes sense because tennis surfaces play very differently and a player's skill is not the same on all of them, so a clay rating and a grass rating capture something a single overall rating cannot. When two players meet, we use only their ratings for the surface they are actually playing on.</p></div></details>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t2">Next: Surface check &rarr;</button></div>
+</section>
+
+<!-- ============ SURFACE CHECK ============ -->
+<section class="panel" id="t2">
+  <div class="panel-head"><h2>Does surface Elo make sense, and does it help?</h2>
+    <p class="sub">Sanity-check the ratings, then measure whether "more specific" actually beats "general."</p>
+  </div>
+
+  <h3>Sanity check: the best players per surface</h3>
+  <p>If surface Elo is real, the top of each surface should match tennis reality. Look at the top three per surface (players with at least 50 matches on it):</p>
+  <pre><button class="copybtn">Copy</button><code>names = df.drop_duplicates("winner_id").set_index("winner_id")["winner_name"]
+for surf in ["Clay", "Grass", "Hard"]:
+    ratings = {pid: v for (pid, s), v in surface_elo.items()
+               if s == surf and surface_games[(pid, surf)] >= 50}
+    top = pd.Series(ratings).sort_values(ascending=False).head(3)
+    print(surf, "->", [f"{names.get(p, p)} {round(v)}" for p, v in top.items()])</code></pre>
+  <p class="out">You should see something like this, and it is exactly right:</p>
+
+  <table class="rank">
+    <tr><th>Surface</th><th>#1</th><th>#2</th><th>#3</th></tr>
+    <tr><td class="s">Clay</td><td><span class="hl">Nadal</span> <span style="color:#8b949e">2255</span></td><td>Djokovic 2150</td><td>Tsitsipas 2100</td></tr>
+    <tr><td class="s">Grass</td><td>Djokovic 2211</td><td>Federer 2102</td><td><span class="hl">Nadal</span> <span style="color:#8b949e">1970</span></td></tr>
+    <tr><td class="s">Hard</td><td>Sinner 2282</td><td>Djokovic 2264</td><td>Federer 2200</td></tr>
+  </table>
+
+  <div class="box why">
+    <b>This is the whole argument for surface Elo in one picture.</b> Nadal is the runaway number one on clay at <span class="hl">2255</span>, but on grass he drops to third at <span class="hl">1970</span>, a gap of nearly 300 Elo points, which is the difference between a heavy favorite and an underdog. A single overall rating would average those into one blurry number and miss it entirely. Federer and Djokovic top grass; Sinner and Djokovic top hard. The ratings match what any tennis fan knows, which is how you trust a feature.
+  </div>
+
+  <h3>But does it improve predictions?</h3>
+  <p>Here is the honest test. Compare overall Elo alone, surface Elo alone, and the two together:</p>
+  <pre><button class="copybtn">Copy</button><code>train, test = df.iloc[:cut], df.iloc[cut:]
+def acc(cols):
+    m = LogisticRegression(max_iter=1000).fit(train[cols], train["target"])
+    return round(accuracy_score(test["target"], m.predict(test[cols])), 4)
+
+print("overall Elo alone: ", acc(["elo_diff"]))
+print("surface Elo alone: ", acc(["surface_elo_diff"]))
+print("both together:     ", acc(["elo_diff", "surface_elo_diff"]))</code></pre>
+  <p class="out">Roughly <b>0.6425</b>, <b>0.6414</b>, and <b>0.6461</b>. Read that carefully: surface Elo <em>alone</em> is slightly worse than overall Elo alone, but the two <em>together</em> beat both.</p>
+
+  <div class="box concept">
+    <b>The insight.</b> Surface Elo alone is noisier (each rating sees only part of the data), so on its own it does not win. But it carries information overall Elo lacks, how a player does on <em>this specific surface</em>. Overall Elo carries the broad skill signal. Give the model both the general and the specific signal and it does better than with either alone. "More specific" is not automatically better; the win comes from combining specific and general.
+  </div>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex"><p><span class="qn">1.</span>Find the single best clay player and their clay rating, then print that same player's grass rating to see the drop yourself.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>clay = {pid: v for (pid, s), v in surface_elo.items() if s == "Clay" and surface_games[(pid,"Clay")] >= 50}
+best_id = pd.Series(clay).idxmax()
+print(names.get(best_id), "clay:", round(surface_elo[(best_id, "Clay")]),
+      " grass:", round(surface_elo[(best_id, "Grass")]))</code></pre></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">2.</span>In a <b>markdown cell</b>, explain why surface Elo alone loses to overall Elo alone, yet the two together win. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">Surface Elo splits each player's matches across three separate ratings, so each rating is built on less data and is noisier, which is why on its own it is slightly worse than a single overall rating trained on everything. But surface Elo knows something overall Elo does not, namely how good a player is on this particular surface. When the model gets both, it uses overall Elo for broad skill and surface Elo for the surface adjustment, so together they beat either one alone.</p></div></details>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t3">Next: Recent form &rarr;</button></div>
+</section>
+
+<!-- ============ RECENT FORM ============ -->
+<section class="panel" id="t3">
+  <div class="panel-head"><h2>Recent form and the rolling window</h2>
+    <p class="sub">A new tool: a record that remembers only the last few matches and forgets the rest.</p>
+  </div>
+
+  <div class="box concept">
+    <b>The idea.</b> Elo measures long-run skill and moves slowly on purpose. Recent form asks a different question: is this player hot or cold <em>right now</em>? You measure it as the win rate over their last handful of matches, say the last 10.
+  </div>
+
+  <h3>The new technique: a rolling window</h3>
+  <p>Last week your records grew forever (total matches, full Elo history). Form is different, you only want the <b>most recent 10</b> results. That calls for a rolling window: a list that automatically drops its oldest item when a new one arrives and it is full.</p>
+
+  <div class="figure">
+    <svg viewBox="0 0 660 200" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+      <text x="330" y="24" fill="#8b949e" font-size="11.5" text-anchor="middle">a player's results over time  &#8594;</text>
+      <!-- older (dropped) squares, faded -->
+      <g opacity="0.28">
+        <rect x="20" y="70" width="30" height="30" rx="4" fill="#3fb950"/>
+        <rect x="56" y="70" width="30" height="30" rx="4" fill="#f85149"/>
+        <rect x="92" y="70" width="30" height="30" rx="4" fill="#3fb950"/>
+      </g>
+      <text x="71" y="128" fill="#8b949e" font-size="10" text-anchor="middle">older, forgotten</text>
+      <!-- window box -->
+      <rect x="132" y="60" width="422" height="50" rx="8" fill="none" stroke="#c9f24d" stroke-width="2" stroke-dasharray="6 4"/>
+      <text x="343" y="52" fill="#c9f24d" font-size="11" text-anchor="middle">last 10 kept &#8594; win rate = form</text>
+      <!-- the 10 kept squares -->
+      <g>
+        <rect x="140" y="70" width="30" height="30" rx="4" fill="#3fb950"/>
+        <rect x="176" y="70" width="30" height="30" rx="4" fill="#3fb950"/>
+        <rect x="212" y="70" width="30" height="30" rx="4" fill="#f85149"/>
+        <rect x="248" y="70" width="30" height="30" rx="4" fill="#3fb950"/>
+        <rect x="284" y="70" width="30" height="30" rx="4" fill="#f85149"/>
+        <rect x="320" y="70" width="30" height="30" rx="4" fill="#3fb950"/>
+        <rect x="356" y="70" width="30" height="30" rx="4" fill="#3fb950"/>
+        <rect x="392" y="70" width="30" height="30" rx="4" fill="#3fb950"/>
+        <rect x="428" y="70" width="30" height="30" rx="4" fill="#f85149"/>
+        <rect x="464" y="70" width="30" height="30" rx="4" fill="#3fb950"/>
+      </g>
+      <!-- new match coming in -->
+      <line x1="600" y1="85" x2="512" y2="85" stroke="#58a6ff" stroke-width="2" marker-end="url(#b)"/>
+      <text x="600" y="70" fill="#58a6ff" font-size="10.5" text-anchor="end">new result in</text>
+      <text x="155" y="150" fill="#f85149" font-size="10" text-anchor="middle">oldest drops out</text>
+      <line x1="155" y1="112" x2="155" y2="135" stroke="#f85149" stroke-width="1.5" marker-end="url(#r2)"/>
+      <text x="510" y="150" fill="#3fb950" font-size="10">green = win, red = loss</text>
+      <defs>
+        <marker id="b" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#58a6ff"/></marker>
+        <marker id="r2" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#f85149"/></marker>
+      </defs>
+    </svg>
+    <p class="cap">A rolling window of the last 10 matches. When a new result comes in, the oldest slides out, so the window always reflects current form. Python's <code style="color:#c9f24d">deque(maxlen=10)</code> does this automatically.</p>
+  </div>
+
+  <p class="cell-label">Cell &middot; recent form (last-10 win rate)</p>
+  <pre><button class="copybtn">Copy</button><code>recent = defaultdict(lambda: deque(maxlen=10))   # last 10 results per player
+form_w = np.full(len(df), 0.5)                    # default 0.5 when no history yet
+form_l = np.full(len(df), 0.5)
+
+for i, row in enumerate(df.itertuples(index=False)):
+    w, l = row.winner_id, row.loser_id
+    if recent[w]:                                 # READ: win rate over the window
+        form_w[i] = sum(recent[w]) / len(recent[w])
+    if recent[l]:
+        form_l[i] = sum(recent[l]) / len(recent[l])
+    recent[w].append(1)                           # UPDATE: winner gets a 1, loser a 0
+    recent[l].append(0)
+
+df["form_diff"] = np.where(is_A, form_w - form_l, form_l - form_w)</code></pre>
+  <div class="box tip"><b>Two details.</b> <code class="inl">deque(maxlen=10)</code> is the rolling window, appending an 11th item silently drops the 1st. And a player with no matches yet has an empty window, so we default their form to <code class="inl">0.5</code>, a neutral "we do not know."</p></div>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex"><p><span class="qn">1.</span>Build a <b>longer</b> form window, the last 25 matches, into a column <code class="inl">form25_diff</code>, so you can compare window sizes later. (Copy the loop, change <code class="inl">maxlen</code> and the column name.)</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>recent = defaultdict(lambda: deque(maxlen=25))
+fw = np.full(len(df), 0.5); fl = np.full(len(df), 0.5)
+for i, row in enumerate(df.itertuples(index=False)):
+    w, l = row.winner_id, row.loser_id
+    if recent[w]: fw[i] = sum(recent[w]) / len(recent[w])
+    if recent[l]: fl[i] = sum(recent[l]) / len(recent[l])
+    recent[w].append(1); recent[l].append(0)
+df["form25_diff"] = np.where(is_A, fw - fl, fl - fw)</code></pre></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">2.</span>In a <b>markdown cell</b>, explain what a rolling window is and why form needs one but total wins does not. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">A rolling window keeps only the most recent items and drops older ones as new ones arrive. Form needs one because "recent form" is about how a player is doing lately, so results from years ago should not count, only the last handful. Total wins is a lifetime count where every match should be included forever, so it just grows and never forgets. The two features ask different questions, so they use different kinds of memory.</p></div></details>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t4">Next: Measure &rarr;</button></div>
+</section>
+
+<!-- ============ MEASURE ============ -->
+<section class="panel" id="t4">
+  <div class="panel-head"><h2>Measure the lift, honestly</h2>
+    <p class="sub">Stack the features one at a time and read the result without flinching.</p>
+  </div>
+
+  <p class="cell-label">Cell &middot; the stack</p>
+  <pre><button class="copybtn">Copy</button><code>train, test = df.iloc[:cut], df.iloc[cut:]
+def acc(cols):
+    m = LogisticRegression(max_iter=1000).fit(train[cols], train["target"])
+    return round(accuracy_score(test["target"], m.predict(test[cols])), 4)
+
+print("baseline:               ", round(baseline_acc, 4))
+print("Elo:                    ", acc(["elo_diff"]))
+print("Elo + surface Elo:      ", acc(["elo_diff", "surface_elo_diff"]))
+print("Elo + surface + form:   ", acc(["elo_diff", "surface_elo_diff", "form_diff"]))</code></pre>
+  <p class="out">Roughly: baseline <b>0.637</b>, Elo <b>0.643</b>, Elo + surface <b>0.646</b>, and Elo + surface + form <b>0.645</b>.</p>
+
+  <div class="box why">
+    <b>Two honest findings, both worth stating in your report.</b><br>
+    <b>1. Surface Elo helps.</b> Adding it took you from 0.643 to about 0.646, the biggest single jump of the project so far. The general-plus-specific combination is a real win.<br>
+    <b>2. Recent form does not.</b> Adding form on top barely changed the number (and nudged it down slightly). That is not a bug, it is a genuine result: Elo already updates after every match, so "recent form" is largely information the model already has. A feature that duplicates what you already know does not add much.
+  </div>
+
+  <div class="box concept">
+    <b>This is real data science.</b> Half the job is inventing features; the other half is measuring them and being willing to say "that one did not help." Surface Elo earns its place in the final model. Form is a judgment call, keep it if you like, but the honest report says it added nothing. Learning to tell those apart, with a measurement instead of a hunch, is exactly the skill this chapter is building.
+  </div>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex"><p><span class="qn">1.</span>Compare your two form windows. Test <code class="inl">form_diff</code> (last 10) and <code class="inl">form25_diff</code> (last 25) each added on top of Elo + surface. Does a longer window help?</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>print("+ form (10):", acc(["elo_diff", "surface_elo_diff", "form_diff"]))
+print("+ form (25):", acc(["elo_diff", "surface_elo_diff", "form25_diff"]))</code></pre>
+    <p class="note">Both land in about the same place. The window size is not the problem, form itself is redundant with Elo.</p></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">2.</span>In a <b>markdown cell</b>, write a "Feature 2" report section: surface Elo (what it is, that it gave the biggest jump), and recent form (that you tested it and it did not add, and why). <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">Our second round of features added surface-specific Elo and recent form. Surface Elo keeps a separate rating per player on each surface, which the ratings confirm makes sense (Nadal is number one on clay but well down on grass). Combined with overall Elo it lifted accuracy from about 0.643 to 0.646, the biggest single gain so far, because it adds surface-specific information on top of broad skill. Recent form, a rolling last-10 win rate, was also tested but did not improve accuracy, because Elo already updates after every match and so already captures a player's current form. We keep surface Elo and treat form as optional.</p></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">3.</span>In a <b>markdown cell</b>, answer: why is it valuable to report a feature that did <em>not</em> work, rather than quietly dropping it? <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">Reporting a feature that did not work shows honest, careful analysis and explains why, which is more convincing than only presenting wins. It demonstrates that decisions were made by measurement rather than guesswork, and it teaches the reader something real about the problem, that Elo already captures recent form. Good science reports what was tried and what the evidence showed, not just the results that happened to help.</p></div></details>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t5">Next: Review &rarr;</button></div>
+</section>
+
+<!-- ============ REVIEW ============ -->
+<section class="panel" id="t5">
+  <div class="panel-head"><h2>Review: 10 questions</h2>
+    <p class="sub">Code and writing mixed. <span style="color:var(--purple);font-weight:700;">write it</span> answers go in markdown cells. Homework part one; the project (adding these to your v2 notebook) is part two.</p>
+  </div>
+
+  <div class="ex"><p><span class="qn">1.</span>What is the one code change that turns overall Elo into surface Elo? Show the dictionary key.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code># overall: elo[player_id]
+# surface: surface_elo[(player_id, surface)]   # a (player, surface) tuple key</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">2.</span>Write the surface Elo loop and build <code class="inl">surface_elo_diff</code>.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>surface_elo = defaultdict(lambda: 1500.0); sg = defaultdict(int)
+sw = np.zeros(len(df)); sl = np.zeros(len(df))
+for i, row in enumerate(df.itertuples(index=False)):
+    w, l, s = row.winner_id, row.loser_id, row.surface
+    a, b = surface_elo[(w, s)], surface_elo[(l, s)]
+    sw[i] = a; sl[i] = b
+    exp = 1 / (1 + 10 ** ((b - a) / 400))
+    surface_elo[(w, s)] = a + dynamic_k(sg[(w, s)]) * (1 - exp)
+    surface_elo[(l, s)] = b - dynamic_k(sg[(l, s)]) * (1 - exp)
+    sg[(w, s)] += 1; sg[(l, s)] += 1
+df["surface_elo_diff"] = np.where(is_A, sw - sl, sl - sw)</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">3.</span>Print the top 3 players on Clay by surface Elo (min 50 clay matches).</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>clay = {p: v for (p, s), v in surface_elo.items() if s == "Clay" and sg[(p,"Clay")] >= 50}
+print(pd.Series(clay).sort_values(ascending=False).head(3))</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">4.</span>Build recent form (last-10 win rate) and make <code class="inl">form_diff</code>.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>recent = defaultdict(lambda: deque(maxlen=10))
+fw = np.full(len(df), 0.5); fl = np.full(len(df), 0.5)
+for i, row in enumerate(df.itertuples(index=False)):
+    w, l = row.winner_id, row.loser_id
+    if recent[w]: fw[i] = sum(recent[w]) / len(recent[w])
+    if recent[l]: fl[i] = sum(recent[l]) / len(recent[l])
+    recent[w].append(1); recent[l].append(0)
+df["form_diff"] = np.where(is_A, fw - fl, fl - fw)</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">5.</span>Measure Elo, Elo + surface, and Elo + surface + form together.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>train, test = df.iloc[:cut], df.iloc[cut:]
+def acc(cols):
+    m = LogisticRegression(max_iter=1000).fit(train[cols], train["target"])
+    return round(accuracy_score(test["target"], m.predict(test[cols])), 4)
+print(acc(["elo_diff"]), acc(["elo_diff","surface_elo_diff"]), acc(["elo_diff","surface_elo_diff","form_diff"]))</code></pre></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">6.</span>Why does splitting Elo by surface make each rating noisier? <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">A single overall rating is updated from all of a player's matches, but a surface rating only updates from their matches on that one surface, which is a smaller number of matches. With less data behind it, each surface rating is a less certain estimate of skill, so it is noisier, especially on surfaces a player rarely plays.</p></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">7.</span>Explain why surface Elo alone can lose to overall Elo alone, yet both together win. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">Surface Elo alone is noisier because it is built on less data, so by itself it is slightly worse than a single overall rating. But it holds information overall Elo lacks, how a player performs on this specific surface. Giving the model both lets it combine broad skill from overall Elo with the surface adjustment from surface Elo, which beats either one on its own.</p></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">8.</span>What is a rolling window, and why does form use one while total wins does not? <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">A rolling window keeps only the most recent items and forgets older ones as new results arrive. Form uses one because it measures how a player is doing lately, so only the last several matches should count. Total wins is a lifetime tally that should include every match forever, so it grows without forgetting. The features ask different questions and so need different memory.</p></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">9.</span>Recent form did not improve accuracy. Explain why, given how Elo works. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">Elo updates after every single match, rising with wins and falling with losses, so a player who is on a hot streak already has a rising Elo. That means "recent form" is largely the same information Elo has already absorbed. Adding a feature that duplicates what the model already knows gives it nothing new, which is why accuracy did not improve.</p></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">10.</span>Write the "Feature 2" section for your report, covering both surface Elo (the win) and form (the honest null result). <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">In the second stage we added surface-specific Elo and recent form. Surface Elo gives each player a rating per surface, and the ratings pass a sanity check (Nadal leads on clay but falls on grass). Combined with overall Elo it produced the largest single accuracy gain of the study, from about 0.643 to 0.646, by supplying surface information on top of general skill. Recent form, a rolling last-10 win rate, was tested but did not improve accuracy because Elo already reflects a player's current form after every match. We therefore keep surface Elo in the model and report form as a feature that, though reasonable, added no measurable value.</p></div></details>
+  </div>
+
+  <div class="box concept" style="margin-top:26px;">
+    <b>Done with v2 Week 2.</b> You learned pair keys (surface Elo) and rolling windows (form), got the biggest jump of the project from surface Elo, and practiced the honest half of the craft by measuring a feature and reporting that it did not help. Homework: add both to your v2 notebook (project guide). Next lesson: head-to-head and rest, matchup and fatigue context.
+  </div>
+</section>
+
+</div>
+
+<script>
+  var tabs = document.querySelectorAll(".tab");
+  var panels = document.querySelectorAll(".panel");
+  var bar = document.getElementById("tabbar");
+  function show(id){
+    tabs.forEach(function(t){ t.classList.toggle("active", t.dataset.target === id); });
+    panels.forEach(function(p){ p.classList.toggle("active", p.id === id); });
+    window.scrollTo({ top: bar.offsetTop, behavior: "smooth" });
+  }
+  tabs.forEach(function(t){ t.addEventListener("click", function(){ show(t.dataset.target); }); });
+  document.querySelectorAll("[data-next]").forEach(function(b){ b.addEventListener("click", function(){ show(b.dataset.next); }); });
+  document.querySelectorAll(".copybtn").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var code = btn.parentElement.querySelector("code").innerText;
+      navigator.clipboard.writeText(code).then(function(){
+        btn.textContent = "Copied"; btn.classList.add("done");
+        setTimeout(function(){ btn.textContent = "Copy"; btn.classList.remove("done"); }, 1500);
+      });
+    });
+  });
+</script>
+</body>
+</html>
