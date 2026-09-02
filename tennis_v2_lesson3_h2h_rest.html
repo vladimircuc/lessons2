@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>v2 Week 3 - Head-to-Head & Rest</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2430; --border:#30363d;
+    --text:#e6edf3; --muted:#8b949e; --accent:#c9f24d; --accent2:#58a6ff;
+    --code:#0a0e14; --green:#3fb950; --yellow:#d29922; --red:#f85149; --clay:#e07b39; --purple:#bc8cff;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.68;padding:0 0 60px;}
+  .wrap{max-width:920px;margin:0 auto;padding:0 20px;}
+  header{border-bottom:1px solid var(--border);background:linear-gradient(180deg,#12160e,#0d1117);padding:34px 0 26px;}
+  .kicker{color:var(--accent);font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 8px;}
+  header h1{margin:0 0 10px;font-size:28px;letter-spacing:-0.5px;}
+  header p{margin:0;color:var(--muted);font-size:14.5px;max-width:770px;}
+  .pill{display:inline-block;background:var(--panel2);border:1px solid var(--border);border-radius:20px;padding:2px 12px;font-size:12px;color:var(--muted);margin-right:6px;}
+
+  #tabbar{position:sticky;top:0;z-index:50;background:rgba(13,17,23,.96);backdrop-filter:blur(6px);border-bottom:1px solid var(--border);}
+  .tabs{max-width:920px;margin:0 auto;padding:8px 14px;display:flex;flex-wrap:wrap;gap:6px;}
+  .tab{background:var(--panel);border:1px solid var(--border);color:var(--muted);font-size:13px;font-weight:600;padding:7px 13px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:7px;transition:.12s;font-family:inherit;}
+  .tab:hover{color:var(--text);border-color:#455063;}
+  .tab .n{font-size:11px;font-weight:800;background:var(--panel2);color:var(--muted);border-radius:5px;padding:1px 6px;min-width:20px;text-align:center;}
+  .tab.active{background:var(--accent);color:#0d1117;border-color:var(--accent);}
+  .tab.active .n{background:rgba(13,17,23,.25);color:#0d1117;}
+
+  .panel{display:none;animation:fade .18s ease;}
+  .panel.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+  .panel-head{padding:26px 0 2px;}
+  .panel-head h2{margin:0;font-size:24px;letter-spacing:-0.3px;}
+  .panel-head .sub{color:var(--muted);margin:8px 0 0;font-size:15px;}
+
+  h3{font-size:15px;margin:24px 0 6px;color:var(--text);}
+  p{margin:11px 0;} ul{margin:8px 0;padding-left:22px;} li{margin:6px 0;}
+  .box{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin:16px 0;}
+  .tip{border-left:3px solid var(--accent2);}
+  .warn{border-left:3px solid var(--yellow);}
+  .concept{border-left:3px solid var(--accent);}
+  .why{border-left:3px solid var(--clay);}
+  .danger{border-left:3px solid var(--red);}
+  .cell-label{font-size:11px;color:var(--accent);font-weight:700;letter-spacing:0.5px;margin:18px 0 4px;text-transform:uppercase;}
+  pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padding:15px 16px;overflow-x:auto;margin:0 0 6px;position:relative;}
+  code{font-family:"SF Mono","Fira Code",Consolas,Menlo,monospace;font-size:13.5px;color:#c9d1d9;}
+  .copybtn{position:absolute;top:7px;right:7px;background:var(--panel2);border:1px solid var(--border);color:var(--muted);font-size:11px;padding:4px 10px;border-radius:6px;cursor:pointer;transition:.15s;font-family:inherit;}
+  .copybtn:hover{color:var(--text);border-color:var(--accent);}
+  .copybtn.done{color:var(--green);border-color:var(--green);}
+  .out{color:var(--muted);font-size:13px;margin:2px 0 14px;padding-left:12px;border-left:2px solid var(--border);}
+  .out b{color:var(--text);font-weight:600;}
+  code.inl{background:var(--panel2);border:1px solid var(--border);border-radius:5px;padding:1px 6px;color:var(--accent);font-size:12.5px;}
+
+  .figure{background:#0b0f16;border:1px solid var(--border);border-radius:12px;padding:18px 16px 10px;margin:18px 0;text-align:center;}
+  .figure svg{max-width:100%;height:auto;}
+  .figure .cap{color:var(--muted);font-size:12.5px;margin:10px 6px 4px;line-height:1.5;}
+
+  table.rank{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px;}
+  table.rank th{text-align:left;color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px;padding:6px 10px;border-bottom:1px solid var(--border);}
+  table.rank td{padding:7px 10px;border-bottom:1px solid #21262d;}
+  table.rank td.s{color:var(--accent);font-weight:700;}
+
+  .practice-head{margin:30px 0 4px;font-size:13px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--accent);display:flex;align-items:center;gap:10px;}
+  .practice-head::before{content:"";flex:0 0 26px;height:2px;background:var(--accent);}
+  .ex{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:10px;padding:14px 18px;margin:12px 0;}
+  .ex.wr{border-left-color:var(--purple);}
+  .ex p{margin:0;}
+  .qn{font-weight:700;color:var(--accent);margin-right:6px;}
+  .ex.wr .qn{color:var(--purple);}
+  .wtag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 8px;border-radius:4px;margin-left:8px;background:rgba(188,140,255,.15);color:var(--purple);border:1px solid var(--purple);vertical-align:middle;}
+  details.sol{margin:10px 0 0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  details.sol summary{cursor:pointer;padding:9px 14px;background:var(--panel2);font-weight:600;font-size:12.5px;color:var(--green);user-select:none;list-style:none;}
+  details.sol summary::-webkit-details-marker{display:none;}
+  details.sol summary::before{content:"\25B8  ";color:var(--muted);}
+  details.sol[open] summary::before{content:"\25BE  ";}
+  details.sol.ex-ans summary{color:var(--purple);}
+  details.sol .sb{padding:8px 14px 10px;}
+  .sb .note{color:var(--muted);font-size:12.5px;margin:6px 0 0;padding-left:10px;border-left:2px solid var(--border);}
+  .sb .exans{font-size:13.5px;color:var(--text);margin:0;font-style:italic;}
+  .sb .exans::before{content:"Example answer: ";font-style:normal;font-weight:700;color:var(--purple);}
+
+  .nav{display:flex;justify-content:flex-end;margin:32px 0 10px;padding-top:18px;border-top:1px solid var(--border);}
+  .nextbtn{background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:14px;font-weight:600;padding:10px 18px;border-radius:9px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;transition:.12s;}
+  .nextbtn:hover{border-color:var(--accent);color:var(--accent);}
+  a{color:var(--accent2);}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <p class="kicker">Tennis AI Project &middot; v2 &middot; Week 3</p>
+    <h1>Head-to-Head &amp; Rest: Matchup and Fatigue</h1>
+    <p>Two context features that go beyond raw skill: the prior record between these two specific players, and how rested each one is. Both use the loop you know. The real new skill this week is defensive coding: history features are full of edge cases (a player's first match, two players who have never met, a comeback after years off), and handling them well is what separates a feature that works from one that quietly breaks.</p>
+    <div style="margin-top:14px;">
+      <span class="pill">head-to-head</span><span class="pill">rest / fatigue</span><span class="pill">edge cases</span><span class="pill">defensive coding</span>
+    </div>
+  </div>
+</header>
+
+<div id="tabbar">
+  <div class="tabs">
+    <button class="tab active" data-target="t0"><span class="n">0</span>Start</button>
+    <button class="tab" data-target="t1"><span class="n">1</span>Head-to-head</button>
+    <button class="tab" data-target="t2"><span class="n">2</span>Rest</button>
+    <button class="tab" data-target="t3"><span class="n">3</span>Edge cases</button>
+    <button class="tab" data-target="t4"><span class="n">4</span>Measure</button>
+    <button class="tab" data-target="t5"><span class="n">R</span>Review</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ============ START ============ -->
+<section class="panel active" id="t0">
+  <div class="panel-head"><h2>Start here</h2>
+    <p class="sub">Rebuild your features so far in one pass, so we can stack on them.</p>
+  </div>
+
+  <p>This single loop rebuilds overall Elo, surface Elo, and experience together (all the established features), so you have them ready.</p>
+  <pre><button class="copybtn">Copy</button><code>import pandas as pd
+import numpy as np
+from collections import defaultdict, deque
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+
+df = pd.read_csv("atp_2000_2024_model_ready.csv", low_memory=False)
+df["tourney_date"] = pd.to_datetime(df["tourney_date"])
+df = df.sort_values(["tourney_date", "match_num"]).reset_index(drop=True)
+is_A = df["winner_is_A"].values.astype(bool)
+cut = int(len(df) * 0.8)
+
+def dynamic_k(n):
+    return 250 / ((n + 5) ** 0.4)
+
+elo = defaultdict(lambda: 1500.0);         games = defaultdict(int)
+surface_elo = defaultdict(lambda: 1500.0); surface_games = defaultdict(int)
+played = defaultdict(int)
+elo_w = np.zeros(len(df)); elo_l = np.zeros(len(df))
+selo_w = np.zeros(len(df)); selo_l = np.zeros(len(df))
+exp_w = np.zeros(len(df)); exp_l = np.zeros(len(df))
+
+for i, row in enumerate(df.itertuples(index=False)):
+    w, l, s = row.winner_id, row.loser_id, row.surface
+    a, b = elo[w], elo[l]
+    elo_w[i] = a; elo_l[i] = b
+    sa, sb = surface_elo[(w, s)], surface_elo[(l, s)]
+    selo_w[i] = sa; selo_l[i] = sb
+    exp_w[i] = played[w]; exp_l[i] = played[l]
+    # updates
+    e = 1 / (1 + 10 ** ((b - a) / 400))
+    elo[w] = a + dynamic_k(games[w]) * (1 - e); elo[l] = b - dynamic_k(games[l]) * (1 - e)
+    games[w] += 1; games[l] += 1
+    se = 1 / (1 + 10 ** ((sb - sa) / 400))
+    surface_elo[(w, s)] = sa + dynamic_k(surface_games[(w, s)]) * (1 - se)
+    surface_elo[(l, s)] = sb - dynamic_k(surface_games[(l, s)]) * (1 - se)
+    surface_games[(w, s)] += 1; surface_games[(l, s)] += 1
+    played[w] += 1; played[l] += 1
+
+df["elo_diff"] = np.where(is_A, elo_w - elo_l, elo_l - elo_w)
+df["surface_elo_diff"] = np.where(is_A, selo_w - selo_l, selo_l - selo_w)
+df["exp_diff"] = np.where(is_A, exp_w - exp_l, exp_l - exp_w)
+
+baseline_acc = accuracy_score(df.iloc[cut:]["target"], (df.iloc[cut:]["rank_diff"] < 0).astype(int))
+print("baseline:", round(baseline_acc, 3))</code></pre>
+  <p class="out">Baseline near <b>0.637</b>, and your three features are back. Now add matchup and fatigue.</p>
+
+  <div class="nav"><button class="nextbtn" data-next="t1">Next: Head-to-head &rarr;</button></div>
+</section>
+
+<!-- ============ HEAD TO HEAD ============ -->
+<section class="panel" id="t1">
+  <div class="panel-head"><h2>Head-to-head</h2>
+    <p class="sub">Some players just match up badly against particular opponents. The prior record between two players captures that.</p>
+  </div>
+
+  <div class="box concept">
+    <b>The idea.</b> Rankings and Elo say who is better overall, but tennis has matchup effects: a lefty's spin that troubles one opponent, a game style another player cannot solve. The head-to-head record (how many times A has beaten B before) captures that pairwise history that a single rating cannot.
+  </div>
+
+  <h3>The new idea: a key made of two players</h3>
+  <p>Surface Elo used a <code class="inl">(player, surface)</code> key. Head-to-head uses an <b>ordered pair of players</b>: <code class="inl">h2h[(winner, loser)]</code> counts how many times the first beat the second. The feature is A's prior wins over B minus B's prior wins over A.</p>
+
+  <p class="cell-label">Cell &middot; head-to-head</p>
+  <pre><button class="copybtn">Copy</button><code>h2h = defaultdict(int)                       # h2h[(x, y)] = times x has beaten y
+h2h_w = np.zeros(len(df))                     # winner's prior edge over loser
+
+for i, row in enumerate(df.itertuples(index=False)):
+    w, l = row.winner_id, row.loser_id
+    # READ: prior record BEFORE this match (0 if they have never met)
+    h2h_w[i] = h2h[(w, l)] - h2h[(l, w)]
+    # UPDATE: the winner now leads by one more
+    h2h[(w, l)] += 1
+
+df["h2h_diff"] = np.where(is_A, h2h_w, -h2h_w)</code></pre>
+  <div class="box tip"><b>The never-met case handles itself.</b> If A and B have never played, both <code class="inl">h2h[(w,l)]</code> and <code class="inl">h2h[(l,w)]</code> are 0 (that is what <code class="inl">defaultdict(int)</code> returns), so <code class="inl">h2h_diff</code> is 0, a neutral "no history." That is exactly what you want, and it happens for free.</p></div>
+
+  <h3>Sanity check: a famous rivalry</h3>
+  <pre><button class="copybtn">Copy</button><code>rivalry = df[df["winner_name"].isin(["Novak Djokovic", "Rafael Nadal"]) &
+             df["loser_name"].isin(["Novak Djokovic", "Rafael Nadal"])]
+print("Djokovic wins:", (rivalry["winner_name"] == "Novak Djokovic").sum())
+print("Nadal wins:   ", (rivalry["winner_name"] == "Rafael Nadal").sum())</code></pre>
+  <p class="out">About <b>30 to 29</b> in the data, one of the closest great rivalries in the sport. Matching real history is how you know the feature is right.</p>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex"><p><span class="qn">1.</span>What fraction of the <b>test</b> matches are a first meeting (head-to-head of 0)? Print it.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>test = df.iloc[cut:]
+print("first meetings:", round((test["h2h_diff"] == 0).mean(), 3))</code></pre>
+    <p class="note">About 0.61, most matchups are brand new, which limits how much h2h can help.</p></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">2.</span>In a <b>markdown cell</b>, explain why head-to-head might add information that Elo and surface Elo miss. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">Elo and surface Elo measure how good each player is in general and on a surface, but they treat every opponent the same. Head-to-head captures matchup effects specific to two players, like a playing style or spin that consistently troubles one of them. So even when two players have similar ratings, their past meetings can reveal that one tends to beat the other, which the ratings alone would not show.</p></div></details>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t2">Next: Rest &rarr;</button></div>
+</section>
+
+<!-- ============ REST ============ -->
+<section class="panel" id="t2">
+  <div class="panel-head"><h2>Rest and fatigue</h2>
+    <p class="sub">Days since a player's last match. A tired player who just played a five-setter may be at a disadvantage.</p>
+  </div>
+
+  <div class="figure">
+    <svg viewBox="0 0 640 150" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+      <line x1="40" y1="80" x2="600" y2="80" stroke="#30363d" stroke-width="2"/>
+      <!-- past matches -->
+      <circle cx="90" cy="80" r="7" fill="#8b949e"/>
+      <circle cx="180" cy="80" r="7" fill="#8b949e"/>
+      <circle cx="250" cy="80" r="7" fill="#8b949e"/>
+      <text x="250" y="62" fill="#8b949e" font-size="10" text-anchor="middle">last match</text>
+      <!-- gap -->
+      <line x1="258" y1="80" x2="512" y2="80" stroke="#c9f24d" stroke-width="2" stroke-dasharray="5 4"/>
+      <text x="385" y="70" fill="#c9f24d" font-size="11" text-anchor="middle">rest = days in this gap</text>
+      <!-- this match -->
+      <circle cx="520" cy="80" r="9" fill="#c9f24d"/>
+      <text x="520" y="105" fill="#c9f24d" font-size="10" text-anchor="middle">this match</text>
+      <text x="40" y="120" fill="#8b949e" font-size="10">earlier</text>
+      <text x="600" y="120" fill="#8b949e" font-size="10" text-anchor="end">now</text>
+    </svg>
+    <p class="cap">Rest is simply the number of days between a player's previous match and this one. You get it by remembering each player's last match date and subtracting.</p>
+  </div>
+
+  <p class="cell-label">Cell &middot; rest (days since last match)</p>
+  <pre><button class="copybtn">Copy</button><code>last_date = {}                               # each player's most recent match date
+rest_w = np.zeros(len(df)); rest_l = np.zeros(len(df))
+
+for i, row in enumerate(df.itertuples(index=False)):
+    w, l, d = row.winner_id, row.loser_id, row.tourney_date
+    # READ: days since last match (default 30 if this is their first match)
+    rest_w[i] = (d - last_date[w]).days if w in last_date else 30
+    rest_l[i] = (d - last_date[l]).days if l in last_date else 30
+    # UPDATE: record this match as their latest
+    last_date[w] = d; last_date[l] = d
+
+df["rest_diff"] = np.where(is_A, rest_w - rest_l, rest_l - rest_w)</code></pre>
+  <div class="box tip"><b>The first-match case.</b> A player appearing for the first time has no previous match, so <code class="inl">w in last_date</code> is false and we default their rest to 30 days, a typical gap. Without that default, subtracting from a missing date would crash. Choosing a sensible default is the heart of defensive coding, which is the next tab.</p></div>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex"><p><span class="qn">1.</span>Look at the spread of rest days. Print the min and max of the raw <code class="inl">rest_w</code> values. Anything surprising?</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>print("min rest:", int(rest_w.min()), " max rest:", int(rest_w.max()))</code></pre>
+    <p class="note">The max is enormous, thousands of days. Those are players returning after long injury layoffs. Whether to treat that as an outlier is the exact question in the next tab.</p></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">2.</span>In a <b>markdown cell</b>, give one reason more rest could <em>help</em> a player and one reason it could <em>hurt</em>. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">More rest can help because the player is recovered and fresh rather than tired from a recent long match, so they have more energy. But too much rest can hurt because a very long gap often means the player is returning from injury and is rusty, out of match practice, and not at full sharpness. So rest is not simply good or bad, and the model has to learn the pattern from the data.</p></div></details>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t3">Next: Edge cases &rarr;</button></div>
+</section>
+
+<!-- ============ EDGE CASES ============ -->
+<section class="panel" id="t3">
+  <div class="panel-head"><h2>Edge cases and defensive coding</h2>
+    <p class="sub">The real skill of history features: handling the messy cases without crashing or lying.</p>
+  </div>
+
+  <div class="box concept">
+    <b>Why this matters.</b> Real data is full of "what happens when...". If you do not decide, the code either crashes or silently produces a wrong number. Every history feature you build should answer: what is the value the very first time I see this player or pair? You have already hit three cases:
+    <ul style="margin:8px 0 0;">
+      <li><b>New player, no experience:</b> count defaults to 0 (from <code class="inl">defaultdict(int)</code>).</li>
+      <li><b>Two players who never met:</b> head-to-head defaults to 0, a neutral "no history."</li>
+      <li><b>A player's first match:</b> rest defaults to 30 days, a typical gap, instead of crashing on a missing date.</li>
+    </ul>
+  </div>
+
+  <h3>The subtle one: is a big number an outlier, or real signal?</h3>
+  <p>Your rest values reach into the thousands of days (injury comebacks). The instinct is to treat those as outliers and cap them, say at 60 days. But <b>test before you assume.</b> Compare capped rest to raw rest:</p>
+  <pre><button class="copybtn">Copy</button><code>rest_w_cap = np.minimum(rest_w, 60)          # cap each value at 60 days
+rest_l_cap = np.minimum(rest_l, 60)
+df["rest_cap_diff"] = np.where(is_A, rest_w_cap - rest_l_cap, rest_l_cap - rest_w_cap)
+
+train, test = df.iloc[:cut], df.iloc[cut:]
+def acc(cols):
+    m = LogisticRegression(max_iter=1000).fit(train[cols], train["target"])
+    return round(accuracy_score(test["target"], m.predict(test[cols])), 4)
+
+base_cols = ["elo_diff", "surface_elo_diff"]
+print("+ rest (raw):   ", acc(base_cols + ["rest_diff"]))
+print("+ rest (capped):", acc(base_cols + ["rest_cap_diff"]))</code></pre>
+  <p class="out">The capped version scores <b>lower</b> (about 0.6465 vs 0.6479 raw). Capping <em>hurt</em>.</p>
+
+  <div class="box why">
+    <b>The lesson.</b> Those huge rest values were not noise, they were signal: a player returning after a very long layoff really is more likely to lose, and capping threw that information away. This is one of the most important habits in the whole craft: <b>do not clean data on instinct, test whether the "cleaning" actually helps.</b> Here, keeping the raw values is the right call, and only a measurement told you that.
+  </div>
+
+  <div class="box tip">
+    <b>A defensive-coding checklist</b> for any future feature:
+    <ul style="margin:8px 0 0;">
+      <li>What is the value the first time I see this player or pair? (pick a sensible default)</li>
+      <li>Could a lookup crash on missing data? (guard it, like <code class="inl">if w in last_date</code>)</li>
+      <li>Are there extreme values? (look at min and max, then <em>test</em> whether handling them helps)</li>
+    </ul>
+  </div>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex wr"><p><span class="qn">1.</span>In a <b>markdown cell</b>, explain why capping the rest values hurt accuracy, and what general lesson it teaches about cleaning data. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">Capping hurt because the very large rest values were not random noise, they marked players returning from long injury layoffs, who tend to be rusty and lose more often. That is real predictive signal, and capping erased it by squashing every long gap down to the same value. The general lesson is that you should not remove or cap unusual values just because they look extreme; you should test whether the change actually improves the model, because sometimes the outliers carry the most information.</p></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">2.</span>Try a different rest default for first matches. Rebuild rest using a default of 7 days instead of 30 and measure it on top of Elo + surface. Does the default choice matter much?</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>last_date = {}; rw = np.zeros(len(df)); rl = np.zeros(len(df))
+for i, row in enumerate(df.itertuples(index=False)):
+    w, l, d = row.winner_id, row.loser_id, row.tourney_date
+    rw[i] = (d - last_date[w]).days if w in last_date else 7
+    rl[i] = (d - last_date[l]).days if l in last_date else 7
+    last_date[w] = d; last_date[l] = d
+df["rest7_diff"] = np.where(is_A, rw - rl, rl - rw)
+print(acc(["elo_diff", "surface_elo_diff", "rest7_diff"]))</code></pre>
+    <p class="note">Barely changes. First matches are a small slice, so the exact default is not critical, but it must be something sensible so the code runs.</p></div></details>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t4">Next: Measure &rarr;</button></div>
+</section>
+
+<!-- ============ MEASURE ============ -->
+<section class="panel" id="t4">
+  <div class="panel-head"><h2>Measure the lift</h2>
+    <p class="sub">Add head-to-head, rest, and experience, and see the climb.</p>
+  </div>
+
+  <p class="cell-label">Cell &middot; the stack</p>
+  <pre><button class="copybtn">Copy</button><code>train, test = df.iloc[:cut], df.iloc[cut:]
+def acc(cols):
+    m = LogisticRegression(max_iter=1000).fit(train[cols], train["target"])
+    return round(accuracy_score(test["target"], m.predict(test[cols])), 4)
+
+base = ["elo_diff", "surface_elo_diff"]
+print("baseline:                    ", round(baseline_acc, 4))
+print("Elo + surface (from W2):     ", acc(base))
+print("+ head-to-head:              ", acc(base + ["h2h_diff"]))
+print("+ rest:                      ", acc(base + ["rest_diff"]))
+print("+ experience:                ", acc(base + ["exp_diff"]))
+print("+ all three:                 ", acc(base + ["h2h_diff", "rest_diff", "exp_diff"]))</code></pre>
+  <p class="out">Roughly: Elo + surface <b>0.646</b>, and each feature adds a little, reaching about <b>0.649</b> with all three. Small individual gains that stack into a real one.</p>
+
+  <div class="box concept">
+    <b>Honest read.</b> None of these three is a blockbuster on its own, matchup and fatigue are secondary to skill, which Elo already captures well. But together they nudge the number up another third of a point, and they are all legitimate, leakage-safe, verifiable features. Two lessons of Elo work plus this puts you around <b>0.649</b>, well above the 0.637 baseline and closing in on the mid-60s ceiling.
+  </div>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex"><p><span class="qn">1.</span>Which of the three added the most on its own? Print all three single-feature additions side by side and compare.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>for f in ["h2h_diff", "rest_diff", "exp_diff"]:
+    print(f, acc(base + [f]))</code></pre>
+    <p class="note">They are all close; rest and head-to-head edge slightly ahead of experience, which Elo already reflects.</p></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">2.</span>In a <b>markdown cell</b>, write a "Feature 3" report section covering head-to-head, rest, and experience: what each is and that together they added a small but real gain. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">The third round added three context features: head-to-head (the prior record between the two players), rest (days since each player's last match), and experience (matches played so far). Each captures something skill ratings miss, matchup effects, fatigue, and match-toughness. Individually the gains were small, since Elo already captures overall skill well, but together they raised accuracy from about 0.646 to 0.649. We also found that most matchups are first meetings and that long rest gaps are real signal rather than noise, so we kept the raw rest values.</p></div></details>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t5">Next: Review &rarr;</button></div>
+</section>
+
+<!-- ============ REVIEW ============ -->
+<section class="panel" id="t5">
+  <div class="panel-head"><h2>Review: 10 questions</h2>
+    <p class="sub">Code and writing mixed. <span style="color:var(--purple);font-weight:700;">write it</span> answers go in markdown cells. Homework part one; the project is part two.</p>
+  </div>
+
+  <div class="ex"><p><span class="qn">1.</span>Write the head-to-head loop and build <code class="inl">h2h_diff</code>.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>h2h = defaultdict(int); hw = np.zeros(len(df))
+for i, row in enumerate(df.itertuples(index=False)):
+    w, l = row.winner_id, row.loser_id
+    hw[i] = h2h[(w, l)] - h2h[(l, w)]
+    h2h[(w, l)] += 1
+df["h2h_diff"] = np.where(is_A, hw, -hw)</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">2.</span>Why does the never-met case need no special code? Explain in a comment.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code># defaultdict(int) returns 0 for an unseen key, so if two players
+# have never met, both h2h[(w,l)] and h2h[(l,w)] are 0, giving a
+# neutral h2h_diff of 0 automatically.</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">3.</span>Write the rest loop with a sensible default for first matches, and build <code class="inl">rest_diff</code>.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>last_date = {}; rw = np.zeros(len(df)); rl = np.zeros(len(df))
+for i, row in enumerate(df.itertuples(index=False)):
+    w, l, d = row.winner_id, row.loser_id, row.tourney_date
+    rw[i] = (d - last_date[w]).days if w in last_date else 30
+    rl[i] = (d - last_date[l]).days if l in last_date else 30
+    last_date[w] = d; last_date[l] = d
+df["rest_diff"] = np.where(is_A, rw - rl, rl - rw)</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">4.</span>Print the Djokovic vs Nadal head-to-head from the data as a sanity check.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>r = df[df["winner_name"].isin(["Novak Djokovic","Rafael Nadal"]) &
+       df["loser_name"].isin(["Novak Djokovic","Rafael Nadal"])]
+print("Djokovic:", (r["winner_name"]=="Novak Djokovic").sum(),
+      " Nadal:", (r["winner_name"]=="Rafael Nadal").sum())</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">5.</span>Measure Elo + surface, then add head-to-head, rest, and experience together.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>train, test = df.iloc[:cut], df.iloc[cut:]
+def acc(cols):
+    m = LogisticRegression(max_iter=1000).fit(train[cols], train["target"])
+    return round(accuracy_score(test["target"], m.predict(test[cols])), 4)
+base = ["elo_diff", "surface_elo_diff"]
+print(acc(base), acc(base + ["h2h_diff", "rest_diff", "exp_diff"]))</code></pre></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">6.</span>Why might head-to-head add information that Elo misses? <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">Elo measures overall skill but treats all opponents the same, while head-to-head captures matchup effects between two specific players, such as a style or spin that troubles one of them. So even with similar ratings, past meetings can show one player tends to beat the other.</p></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">7.</span>Name the three edge cases you handled this week and the default each uses. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">A new player with no experience defaults to a count of 0. Two players who have never met default to a head-to-head of 0, meaning no history. A player's first match has no previous date, so rest defaults to 30 days instead of crashing. Each default is a neutral, sensible value that lets the loop run correctly.</p></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">8.</span>Capping the rest values made accuracy worse. Explain why. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">The very large rest values marked players returning from long injury layoffs, who tend to be rusty and lose more, so they carried real predictive signal. Capping squashed all those long gaps to the same value and erased that information, which lowered accuracy. It shows that extreme values are not always noise.</p></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">9.</span>State the general rule about cleaning or capping data that this week taught. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">Do not remove, cap, or transform unusual values on instinct. Always test whether the change actually improves the model, because sometimes the extreme values hold the most useful information. Let a measurement, not a hunch, decide how to handle the data.</p></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">10.</span>Write the "Feature 3" report section for head-to-head, rest, and experience. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">The third stage added three context features: head-to-head record between the two players, rest measured as days since each player's last match, and experience as career matches played. Each captures something the skill ratings miss, namely matchup history, fatigue, and match-toughness. The individual gains were small because Elo already captures overall skill, but together they lifted accuracy from about 0.646 to 0.649. We also confirmed most matchups are first meetings and that long rest gaps are genuine signal, so we kept the raw values rather than capping them.</p></div></details>
+  </div>
+
+  <div class="box concept" style="margin-top:26px;">
+    <b>Done with v2 Week 3.</b> You added matchup and fatigue features, learned the two-player key, and, most importantly, learned to handle edge cases and to test data-cleaning choices instead of guessing. You are at about 0.649. Homework: add these to your v2 notebook. Next lesson: career serve stats, the last feature family, and an honest test of whether playing-style numbers help.
+  </div>
+</section>
+
+</div>
+
+<script>
+  var tabs = document.querySelectorAll(".tab");
+  var panels = document.querySelectorAll(".panel");
+  var bar = document.getElementById("tabbar");
+  function show(id){
+    tabs.forEach(function(t){ t.classList.toggle("active", t.dataset.target === id); });
+    panels.forEach(function(p){ p.classList.toggle("active", p.id === id); });
+    window.scrollTo({ top: bar.offsetTop, behavior: "smooth" });
+  }
+  tabs.forEach(function(t){ t.addEventListener("click", function(){ show(t.dataset.target); }); });
+  document.querySelectorAll("[data-next]").forEach(function(b){ b.addEventListener("click", function(){ show(b.dataset.next); }); });
+  document.querySelectorAll(".copybtn").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var code = btn.parentElement.querySelector("code").innerText;
+      navigator.clipboard.writeText(code).then(function(){
+        btn.textContent = "Copied"; btn.classList.add("done");
+        setTimeout(function(){ btn.textContent = "Copy"; btn.classList.remove("done"); }, 1500);
+      });
+    });
+  });
+</script>
+</body>
+</html>

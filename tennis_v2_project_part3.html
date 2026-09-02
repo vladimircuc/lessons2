@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project v2 - Feature Engineering (Part 3)</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2430; --border:#30363d;
+    --text:#e6edf3; --muted:#8b949e; --accent:#c9f24d; --accent2:#58a6ff;
+    --code:#0a0e14; --green:#3fb950; --yellow:#d29922; --red:#f85149; --purple:#bc8cff;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.68;padding:0 0 60px;}
+  .wrap{max-width:920px;margin:0 auto;padding:0 20px;}
+  header{border-bottom:1px solid var(--border);background:linear-gradient(180deg,#0e1512,#0d1117);padding:34px 0 26px;}
+  .kicker{color:var(--accent);font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 8px;}
+  header h1{margin:0 0 10px;font-size:28px;letter-spacing:-0.5px;}
+  header p{margin:0;color:var(--muted);font-size:14.5px;max-width:770px;}
+  .pill{display:inline-block;background:var(--panel2);border:1px solid var(--border);border-radius:20px;padding:2px 12px;font-size:12px;color:var(--muted);margin-right:6px;}
+  .pill.proj{background:rgba(188,140,255,.14);color:var(--purple);border-color:var(--purple);}
+
+  #tabbar{position:sticky;top:0;z-index:50;background:rgba(13,17,23,.96);backdrop-filter:blur(6px);border-bottom:1px solid var(--border);}
+  .tabs{max-width:920px;margin:0 auto;padding:8px 14px;display:flex;flex-wrap:wrap;gap:6px;}
+  .tab{background:var(--panel);border:1px solid var(--border);color:var(--muted);font-size:13px;font-weight:600;padding:7px 13px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:7px;transition:.12s;font-family:inherit;}
+  .tab:hover{color:var(--text);border-color:#455063;}
+  .tab .n{font-size:11px;font-weight:800;background:var(--panel2);color:var(--muted);border-radius:5px;padding:1px 6px;min-width:20px;text-align:center;}
+  .tab.active{background:var(--accent);color:#0d1117;border-color:var(--accent);}
+  .tab.active .n{background:rgba(13,17,23,.25);color:#0d1117;}
+
+  .panel{display:none;animation:fade .18s ease;}
+  .panel.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+  .panel-head{padding:26px 0 2px;}
+  .panel-head h2{margin:0;font-size:24px;letter-spacing:-0.3px;}
+  .panel-head .sub{color:var(--muted);margin:8px 0 0;font-size:15px;}
+
+  h3{font-size:15px;margin:24px 0 6px;color:var(--text);}
+  p{margin:11px 0;} ul{margin:8px 0;padding-left:22px;} li{margin:6px 0;}
+  ol{margin:8px 0;padding-left:22px;} ol li{margin:8px 0;}
+  .box{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin:16px 0;}
+  .tip{border-left:3px solid var(--accent2);}
+  .concept{border-left:3px solid var(--accent);}
+  .proj{border-left:3px solid var(--purple);}
+  .why{border-left:3px solid #e07b39;}
+  pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padding:15px 16px;overflow-x:auto;margin:0 0 6px;position:relative;}
+  code{font-family:"SF Mono","Fira Code",Consolas,Menlo,monospace;font-size:13px;color:#c9d1d9;}
+  .copybtn{position:absolute;top:7px;right:7px;background:var(--panel2);border:1px solid var(--border);color:var(--muted);font-size:11px;padding:4px 10px;border-radius:6px;cursor:pointer;transition:.15s;font-family:inherit;}
+  .copybtn:hover{color:var(--text);border-color:var(--accent);}
+  .copybtn.done{color:var(--green);border-color:var(--green);}
+  code.inl{background:var(--panel2);border:1px solid var(--border);border-radius:5px;padding:1px 6px;color:var(--accent);font-size:12.5px;}
+
+  .task{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:10px;padding:16px 18px;margin:16px 0;}
+  .task .th{font-size:11px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--accent);margin:0 0 6px;}
+  .task p{margin:6px 0;}
+  details.sol{margin:12px 0 0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  details.sol summary{cursor:pointer;padding:9px 14px;background:var(--panel2);font-weight:600;font-size:12.5px;color:var(--green);user-select:none;list-style:none;}
+  details.sol summary::-webkit-details-marker{display:none;}
+  details.sol summary::before{content:"\25B8  ";color:var(--muted);}
+  details.sol[open] summary::before{content:"\25BE  ";}
+  details.sol .sb{padding:8px 14px 10px;}
+  .see{background:rgba(63,185,80,.07);border:1px solid rgba(63,185,80,.35);border-radius:8px;padding:12px 16px;margin:12px 0 0;}
+  .see .lbl{font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--green);margin:0 0 4px;}
+  .see p{margin:0;font-size:13.5px;color:var(--text);}
+  .see code.inl{color:var(--green);}
+
+  .nav{display:flex;justify-content:flex-end;margin:32px 0 10px;padding-top:18px;border-top:1px solid var(--border);}
+  .nextbtn{background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:14px;font-weight:600;padding:10px 18px;border-radius:9px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;transition:.12s;}
+  .nextbtn:hover{border-color:var(--accent);color:var(--accent);}
+  a{color:var(--accent2);}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <p class="kicker">Tennis AI Project &middot; v2 Project Notebook</p>
+    <h1>Build v2: Feature Engineering, Part 3</h1>
+    <p>Add head-to-head and rest to your v2 notebook, handle their edge cases cleanly, and test whether capping the rest outliers helps (it does not). Small, honest gains that stack toward the ceiling.</p>
+    <div style="margin-top:14px;">
+      <span class="pill proj">tennis_predictor_v2.ipynb</span><span class="pill">head-to-head</span><span class="pill">rest</span><span class="pill">edge cases</span>
+    </div>
+  </div>
+</header>
+
+<div id="tabbar">
+  <div class="tabs">
+    <button class="tab active" data-target="t0"><span class="n">0</span>Continue</button>
+    <button class="tab" data-target="t1"><span class="n">1</span>Head-to-head</button>
+    <button class="tab" data-target="t2"><span class="n">2</span>Rest</button>
+    <button class="tab" data-target="t3"><span class="n">3</span>Measure</button>
+    <button class="tab" data-target="t4"><span class="n">4</span>Submit</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ============ CONTINUE ============ -->
+<section class="panel active" id="t0">
+  <div class="panel-head"><h2>Continue your v2 notebook</h2>
+    <p class="sub">Run all cells so <code class="inl">elo_diff</code>, <code class="inl">surface_elo_diff</code>, <code class="inl">exp_diff</code>, the baseline, and <code class="inl">is_A</code> are ready.</p>
+  </div>
+  <p>From Parts 1 and 2 you should have Elo, surface Elo, experience, the baseline, and <code class="inl">is_A</code>. Run All Cells, then add the two new features below.</p>
+  <div class="box concept"><b>This week's additions:</b> a head-to-head section, a rest section, a short edge-case test (capping), and an updated measurement cell.</div>
+  <div class="nav"><button class="nextbtn" data-next="t1">Next: Head-to-head &rarr;</button></div>
+</section>
+
+<!-- ============ HEAD TO HEAD ============ -->
+<section class="panel" id="t1">
+  <div class="panel-head"><h2>Feature 5: head-to-head</h2>
+    <p class="sub">The prior record between the two specific players. Key made of two players.</p>
+  </div>
+
+  <div class="task">
+    <p class="th">Task A &middot; build it</p>
+    <p>Track <code class="inl">h2h[(x, y)]</code> = times x has beaten y. Read the prior edge before the match, then give the winner one more.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>h2h = defaultdict(int)
+h2h_w = np.zeros(len(df))
+for i, row in enumerate(df.itertuples(index=False)):
+    w, l = row.winner_id, row.loser_id
+    h2h_w[i] = h2h[(w, l)] - h2h[(l, w)]     # READ prior edge (0 if never met)
+    h2h[(w, l)] += 1                          # UPDATE
+df["h2h_diff"] = np.where(is_A, h2h_w, -h2h_w)</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>No output; it creates <code class="inl">h2h_diff</code>. The never-met case is handled automatically: <code class="inl">defaultdict(int)</code> returns 0, so no prior history gives a neutral 0.</p></div>
+
+  <div class="task">
+    <p class="th">Task B &middot; sanity check</p>
+    <p>Print the Djokovic vs Nadal record in the data.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>r = df[df["winner_name"].isin(["Novak Djokovic","Rafael Nadal"]) &
+       df["loser_name"].isin(["Novak Djokovic","Rafael Nadal"])]
+print("Djokovic:", (r["winner_name"]=="Novak Djokovic").sum(),
+      " Nadal:", (r["winner_name"]=="Rafael Nadal").sum())</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>About <b>30 to 29</b>, matching their real, famously close rivalry.</p></div>
+
+  <div class="nav"><button class="nextbtn" data-next="t2">Next: Rest &rarr;</button></div>
+</section>
+
+<!-- ============ REST ============ -->
+<section class="panel" id="t2">
+  <div class="panel-head"><h2>Feature 6: rest</h2>
+    <p class="sub">Days since each player's last match, with a default for first matches.</p>
+  </div>
+
+  <div class="task">
+    <p class="th">Task A &middot; build it</p>
+    <p>Remember each player's last match date; rest is today's date minus that. Default to 30 days for a first match so the code does not crash.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>last_date = {}
+rest_w = np.zeros(len(df)); rest_l = np.zeros(len(df))
+for i, row in enumerate(df.itertuples(index=False)):
+    w, l, d = row.winner_id, row.loser_id, row.tourney_date
+    rest_w[i] = (d - last_date[w]).days if w in last_date else 30
+    rest_l[i] = (d - last_date[l]).days if l in last_date else 30
+    last_date[w] = d; last_date[l] = d
+df["rest_diff"] = np.where(is_A, rest_w - rest_l, rest_l - rest_w)</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>No output; it creates <code class="inl">rest_diff</code>. Check the spread with <code class="inl">int(rest_w.max())</code>, it is huge (injury comebacks), which the next task investigates.</p></div>
+
+  <div class="task">
+    <p class="th">Task B &middot; test the outliers (do not just cap them)</p>
+    <p>Cap rest at 60 days and compare to the raw version on top of Elo + surface. Does capping help?</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>rest_w_cap = np.minimum(rest_w, 60); rest_l_cap = np.minimum(rest_l, 60)
+df["rest_cap_diff"] = np.where(is_A, rest_w_cap - rest_l_cap, rest_l_cap - rest_w_cap)
+
+train, test = df.iloc[:cut], df.iloc[cut:]
+def acc(cols):
+    m = LogisticRegression(max_iter=1000).fit(train[cols], train["target"])
+    return round(accuracy_score(test["target"], m.predict(test[cols])), 4)
+base = ["elo_diff", "surface_elo_diff"]
+print("raw:   ", acc(base + ["rest_diff"]))
+print("capped:", acc(base + ["rest_cap_diff"]))</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>Capped (~<b>0.6465</b>) is <b>lower</b> than raw (~<b>0.6479</b>). The big rest values are real signal (rusty comebacks), so capping hurts. Keep the raw values, and note this in your report.</p></div>
+
+  <div class="box why"><b>The habit to keep:</b> never clean or cap data on instinct. Test whether the change helps first, because outliers sometimes carry the most signal.</div>
+
+  <div class="nav"><button class="nextbtn" data-next="t3">Next: Measure &rarr;</button></div>
+</section>
+
+<!-- ============ MEASURE ============ -->
+<section class="panel" id="t3">
+  <div class="panel-head"><h2>Measure the stack &amp; write it up</h2>
+    <p class="sub">Add all three context features and record the climb.</p>
+  </div>
+
+  <div class="task">
+    <p class="th">Task A &middot; the stack</p>
+    <p>Compare Elo + surface, then each of head-to-head, rest, experience, then all three together.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>base = ["elo_diff", "surface_elo_diff"]
+print("baseline:      ", round(baseline_acc, 4))
+print("Elo + surface: ", acc(base))
+print("+ h2h:         ", acc(base + ["h2h_diff"]))
+print("+ rest:        ", acc(base + ["rest_diff"]))
+print("+ experience:  ", acc(base + ["exp_diff"]))
+print("+ all three:   ", acc(base + ["h2h_diff", "rest_diff", "exp_diff"]))</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>About <code class="inl">0.646</code> rising to <code class="inl">0.649</code> with all three. Small individual gains that stack into a real one.</p></div>
+
+  <div class="task">
+    <p class="th">Task B &middot; write the result</p>
+    <p>In a <b>markdown cell</b>, write your "Feature 3" section: head-to-head, rest, and experience, that together they added a small but real gain, and the finding that capping rest hurt. This goes into your v2 README.</p>
+    <details class="sol"><summary>What to include</summary><div class="sb"><p style="font-size:13px;color:var(--muted);margin:0;">Name the three features and what each captures (matchup, fatigue, match-toughness). State the gain (0.646 to 0.649). Note most matchups are first meetings, and that long rest gaps are real signal so you kept the raw values.</p></div></details>
+  </div>
+
+  <div class="box concept"><b>Running tally:</b> baseline 0.637 &rarr; Elo 0.643 &rarr; + surface 0.646 &rarr; + context 0.649. Steady, honest progress toward the mid-60s ceiling. One feature family left.</div>
+
+  <div class="nav"><button class="nextbtn" data-next="t4">Next: Submit &rarr;</button></div>
+</section>
+
+<!-- ============ SUBMIT ============ -->
+<section class="panel" id="t4">
+  <div class="panel-head"><h2>Bring this back next session</h2>
+    <p class="sub">Checklist for your v2 notebook.</p>
+  </div>
+  <div class="box proj">
+    <b>You should have:</b>
+    <ul style="margin:8px 0 0;">
+      <li><code class="inl">h2h_diff</code>, built with a two-player key and sanity-checked on Djokovic vs Nadal.</li>
+      <li><code class="inl">rest_diff</code>, with a sensible first-match default, plus the capping test showing raw beats capped.</li>
+      <li>The stacked measurement cell and a markdown write-up covering the small gains and the capping finding.</li>
+    </ul>
+  </div>
+  <div class="box concept">
+    <b>Next lesson:</b> career serve statistics, a player's historical ace rate, first-serve win percentage, and break-point-save rate coming into a match. It teaches running rates and a small-sample guard, and it is an honest test of whether playing-style numbers help on top of everything else.
+  </div>
+  <div class="box tip">
+    <b>Turn it in:</b> send me your updated <code class="inl">tennis_predictor_v2.ipynb</code> so I can check the two-player key and the rest guard are leakage-safe. Reminder: this is homework part two; part one is the 10 review questions in the lesson.
+  </div>
+</section>
+
+</div>
+
+<script>
+  var tabs = document.querySelectorAll(".tab");
+  var panels = document.querySelectorAll(".panel");
+  var bar = document.getElementById("tabbar");
+  function show(id){
+    tabs.forEach(function(t){ t.classList.toggle("active", t.dataset.target === id); });
+    panels.forEach(function(p){ p.classList.toggle("active", p.id === id); });
+    window.scrollTo({ top: bar.offsetTop, behavior: "smooth" });
+  }
+  tabs.forEach(function(t){ t.addEventListener("click", function(){ show(t.dataset.target); }); });
+  document.querySelectorAll("[data-next]").forEach(function(b){ b.addEventListener("click", function(){ show(b.dataset.next); }); });
+  document.querySelectorAll(".copybtn").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var code = btn.parentElement.querySelector("code").innerText;
+      navigator.clipboard.writeText(code).then(function(){
+        btn.textContent = "Copied"; btn.classList.add("done");
+        setTimeout(function(){ btn.textContent = "Copy"; btn.classList.remove("done"); }, 1500);
+      });
+    });
+  });
+</script>
+</body>
+</html>
