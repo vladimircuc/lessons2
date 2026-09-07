@@ -1,0 +1,1493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Week 1, Session 1: How a packet is built and delivered</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#141922; --bg2:#1a212d; --bg3:#222b3a; --line:#2d394d; --line2:#3a4a63;
+  --text:#e6e9ef; --muted:#9aa5b6; --accent:#6ea8fe; --accent2:#3b6fd3;
+  --eth:#4fc1c8; --ip:#f2b64c; --tcp:#b48cf2; --data:#7fd48a; --arp:#f28b82; --icmp:#f0a1d4;
+  --ok:#5ed39a; --bad:#f07178; --warn:#f2b64c;
+  --sans:'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono:'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+  --r:10px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto} *{transition:none!important;animation:none!important}}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:17px;line-height:1.6}
+a{color:var(--accent)}
+code,pre,kbd,.mono{font-family:var(--mono)}
+code{background:var(--bg3);padding:.1em .4em;border-radius:5px;font-size:.92em}
+pre{background:#0f131a;border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;overflow:auto;font-size:.88em;line-height:1.55;position:relative;margin:14px 0}
+pre code{background:none;padding:0;font-size:inherit}
+pre .copy{position:absolute;top:8px;right:8px;background:var(--bg3);color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:3px 9px;font:inherit;font-size:.8em;cursor:pointer}
+pre .copy:hover{color:var(--text);border-color:var(--line2)}
+.wrap{max-width:1040px;margin:0 auto;padding:0 22px}
+.prose{max-width:74ch}
+h1{font-size:2.1rem;line-height:1.15;margin:.2em 0 .3em;font-weight:600;letter-spacing:-.01em}
+h2{font-size:1.55rem;margin:.2em 0 .6em;font-weight:600;letter-spacing:-.01em}
+h3{font-size:1.15rem;margin:1.6em 0 .5em;font-weight:600}
+p{margin:.7em 0}
+ul,ol{padding-left:1.3em}
+li{margin:.3em 0}
+.top{padding:34px 0 0;background:linear-gradient(180deg,#171d28,var(--bg))}
+.top .meta{color:var(--muted);margin:0;font-size:.95rem}
+.lede{color:var(--muted);font-size:1.1rem;max-width:66ch;margin-bottom:22px}
+.tabs{display:flex;gap:4px;overflow-x:auto;padding:0 0 0;scrollbar-width:thin}
+.tabs button{background:none;border:0;border-bottom:3px solid transparent;color:var(--muted);font:inherit;font-size:.95rem;padding:10px 12px;cursor:pointer;white-space:nowrap;border-radius:6px 6px 0 0}
+.tabs button:hover{color:var(--text);background:var(--bg2)}
+.tabs button[aria-selected="true"]{color:var(--text);border-bottom-color:var(--accent)}
+.tabs button .n{color:var(--muted);font-family:var(--mono);font-size:.8em;margin-right:6px}
+.sticky{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
+main{padding:30px 0 60px}
+.pane{display:none}
+.pane.active{display:block}
+.pane-nav{display:flex;justify-content:space-between;gap:12px;margin-top:44px;padding-top:20px;border-top:1px solid var(--line)}
+.pane-nav button{background:var(--bg2);border:1px solid var(--line);color:var(--text);font:inherit;padding:10px 16px;border-radius:8px;cursor:pointer}
+.pane-nav button:hover{border-color:var(--line2);background:var(--bg3)}
+.pane-nav .spacer{flex:1}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible,.byte:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.callout{border-left:3px solid var(--accent);background:var(--bg2);padding:12px 16px;border-radius:0 var(--r) var(--r) 0;margin:18px 0;max-width:74ch}
+.callout.warn{border-left-color:var(--warn)}
+.callout.key{border-left-color:var(--data)}
+.callout p:first-child{margin-top:0}.callout p:last-child{margin-bottom:0}
+
+table.t{border-collapse:collapse;width:100%;margin:16px 0;font-size:.95rem}
+table.t th,table.t td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}
+table.t th{color:var(--muted);font-weight:500}
+table.t td.lay{font-weight:600;white-space:nowrap}
+.sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:7px;vertical-align:-1px}
+.c-eth{color:var(--eth)}.c-ip{color:var(--ip)}.c-tcp{color:var(--tcp)}.c-data{color:var(--data)}.c-arp{color:var(--arp)}
+.bg-eth{background:var(--eth)}.bg-ip{background:var(--ip)}.bg-tcp{background:var(--tcp)}.bg-data{background:var(--data)}.bg-arp{background:var(--arp)}.bg-icmp{background:var(--icmp)}
+
+/* widgets */
+.widget{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:18px;margin:22px 0}
+.widget h4{margin:0 0 10px;font-size:1rem;font-weight:600;color:var(--muted)}
+.w-controls{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:end;margin-bottom:14px}
+.w-controls label{display:flex;flex-direction:column;gap:4px;font-size:.85rem;color:var(--muted)}
+.w-controls input,.w-controls select{background:var(--bg);color:var(--text);border:1px solid var(--line2);border-radius:7px;padding:7px 9px;font:inherit;font-size:.95rem;min-width:120px}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.btn{background:var(--accent2);border:1px solid transparent;color:#fff;font:inherit;font-size:.92rem;padding:8px 14px;border-radius:8px;cursor:pointer}
+.btn:hover{background:var(--accent)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.ghost{background:transparent;border-color:var(--line2);color:var(--text)}
+.btn.ghost:hover{background:var(--bg3)}
+.w-note{background:var(--bg);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;margin:14px 0 0;min-height:52px;font-size:.98rem}
+.w-note strong{color:var(--accent)}
+.toggle{display:inline-flex;align-items:center;gap:8px;font-size:.9rem;color:var(--muted);cursor:pointer}
+.toggle input{accent-color:var(--accent);width:16px;height:16px}
+
+/* encapsulation builder */
+.encap-stage{background:var(--bg);border:1px solid var(--line);border-radius:var(--r);padding:16px;min-height:120px;overflow-x:auto}
+.layer-box{display:flex;align-items:stretch;border-radius:8px;border:1.5px solid;padding:8px;gap:8px;min-width:max-content}
+.layer-box .hdr{display:flex;flex-direction:column;justify-content:center;padding:8px 10px;border-radius:6px;font-family:var(--mono);font-size:.8rem;line-height:1.35;color:#0e1218;cursor:pointer;min-width:118px;border:2px solid transparent}
+.layer-box .hdr small{opacity:.75}
+.layer-box .hdr.sel{border-color:#fff}
+.layer-box .trl{display:flex;align-items:center;padding:8px 10px;border-radius:6px;font-family:var(--mono);font-size:.8rem;color:#0e1218;opacity:.75}
+.layer-box.eth{border-color:var(--eth)}.layer-box.eth .hdr,.layer-box.eth .trl{background:var(--eth)}
+.layer-box.ip{border-color:var(--ip)}.layer-box.ip .hdr{background:var(--ip)}
+.layer-box.tcp{border-color:var(--tcp)}.layer-box.tcp .hdr{background:var(--tcp)}
+.layer-box.udp{border-color:var(--tcp)}.layer-box.udp .hdr{background:var(--tcp)}
+.data-box{display:flex;align-items:center;background:rgba(127,212,138,.14);border:1.5px solid var(--data);border-radius:8px;padding:8px 12px;font-family:var(--mono);font-size:.85rem;color:var(--data);white-space:pre}
+.encap-sizes{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:12px;font-family:var(--mono);font-size:.85rem;color:var(--muted)}
+.encap-sizes b{color:var(--text);font-weight:500}
+.fields{margin-top:14px;display:none}
+.fields.show{display:block}
+.fields table{width:100%;border-collapse:collapse;font-size:.9rem}
+.fields th,.fields td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.fields th{color:var(--muted);font-weight:500}
+.fields td.val{font-family:var(--mono);font-size:.85rem;white-space:nowrap}
+.fields td.why{color:var(--muted)}
+
+/* hex decoder */
+.hex-wrap{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px}
+@media (max-width:900px){.hex-wrap{grid-template-columns:1fr}}
+.hex-grid{background:#0f131a;border:1px solid var(--line);border-radius:var(--r);padding:12px;font-family:var(--mono);font-size:.86rem;overflow-x:auto}
+.hex-row{display:flex;gap:2px;align-items:center;line-height:1.9}
+.hex-row .off{color:var(--muted);width:44px;flex:none;margin-right:8px}
+.hex-row .gap{width:10px;flex:none}
+.byte{display:inline-block;width:24px;text-align:center;border-radius:4px;cursor:pointer;color:#0e1218;opacity:.82;user-select:none}
+.byte.eth{background:var(--eth)}.byte.ip{background:var(--ip)}.byte.tcp{background:var(--tcp)}.byte.data{background:var(--data)}
+.byte.hl{opacity:1;box-shadow:0 0 0 2px #fff inset}
+.byte.dim{opacity:.28}
+.byte.wrong{background:var(--bad)!important;opacity:1}
+.hex-row .asc{color:var(--muted);margin-left:14px;white-space:pre;display:none}
+.hex-grid.ascii .hex-row .asc{display:inline}
+.legend{display:flex;flex-wrap:wrap;gap:10px 16px;font-size:.85rem;color:var(--muted);align-items:center}
+.hex-info{background:var(--bg);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;min-height:112px;font-size:.93rem}
+.hex-info .fname{font-weight:600}
+.hex-info .fval{font-family:var(--mono);font-size:.88rem;margin:4px 0}
+.hex-info .fwhy{color:var(--muted);font-size:.88rem}
+.hex-fieldlist{margin-top:10px;display:flex;flex-direction:column;gap:3px;max-height:340px;overflow:auto}
+.hex-fieldlist button{background:none;border:0;color:var(--text);font:inherit;font-size:.86rem;text-align:left;padding:5px 8px;border-radius:6px;cursor:pointer;display:flex;justify-content:space-between;gap:8px}
+.hex-fieldlist button:hover{background:var(--bg3)}
+.hex-fieldlist button .rng{color:var(--muted);font-family:var(--mono);font-size:.8rem}
+.hex-quiz{background:var(--bg);border:1px solid var(--accent2);border-radius:var(--r);padding:12px 14px;margin-bottom:10px;display:none}
+.hex-quiz.show{display:block}
+.hex-quiz .score{color:var(--muted);font-size:.85rem}
+
+/* sandbox + journey */
+.two-col{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px}
+@media (max-width:900px){.two-col{grid-template-columns:1fr}}
+svg.topo{width:100%;height:auto;background:var(--bg);border:1px solid var(--line);border-radius:var(--r)}
+svg.topo text{font-family:var(--mono);font-size:11px;fill:var(--text)}
+svg.topo text.lbl{font-family:var(--sans);font-size:13px;font-weight:600}
+svg.topo text.mut{fill:var(--muted)}
+svg.topo .node{fill:var(--bg3);stroke:var(--line2);stroke-width:1.5}
+svg.topo .node.on{stroke:var(--accent);stroke-width:2.5}
+svg.topo .link{stroke:var(--line2);stroke-width:3}
+svg.topo .link.on{stroke:var(--accent)}
+svg.topo .link.arp{stroke:var(--arp)}
+svg.topo .link.icmp{stroke:var(--icmp)}
+svg.topo .link.eth{stroke:var(--eth)}
+.tables{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.mini{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:.82rem}
+.mini h5{margin:0 0 6px;font-size:.82rem;font-weight:600;color:var(--muted)}
+.mini table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:.78rem}
+.mini td{padding:2px 4px;border-bottom:1px dashed var(--line)}
+.mini td.new{color:var(--ok)}
+.mini .empty{color:var(--muted);font-style:italic}
+.log{background:#0f131a;border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;font-size:.88rem;max-height:230px;overflow:auto;margin-top:12px}
+.log div{padding:4px 0;border-bottom:1px solid var(--line)}
+.log div:last-child{border-bottom:0}
+.log .who{font-family:var(--mono);font-size:.8rem;margin-right:8px;padding:1px 6px;border-radius:4px;color:#0e1218}
+.log .cur{background:rgba(110,168,254,.12)}
+.framecard{font-family:var(--mono);font-size:.8rem;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-top:10px;display:grid;grid-template-columns:auto 1fr;gap:2px 12px}
+.framecard span:nth-child(odd){color:var(--muted)}
+.hdrpanel{display:grid;grid-template-columns:1fr;gap:8px}
+.hdrpanel .hp{border:1px solid var(--line);border-left:4px solid;border-radius:8px;padding:8px 10px;background:var(--bg);font-family:var(--mono);font-size:.8rem;display:grid;grid-template-columns:auto 1fr;gap:2px 10px;opacity:.35}
+.hdrpanel .hp.on{opacity:1}
+.hdrpanel .hp.eth{border-left-color:var(--eth)}.hdrpanel .hp.ip{border-left-color:var(--ip)}.hdrpanel .hp.tcp{border-left-color:var(--tcp)}.hdrpanel .hp.data{border-left-color:var(--data)}
+.hdrpanel .hp .k{color:var(--muted)}
+.hdrpanel .hp .chg{color:var(--warn);font-weight:600}
+.hdrpanel .hp .same{color:var(--ok)}
+.hdrpanel .ttl{font-family:var(--sans);font-size:.85rem;color:var(--muted);margin:2px 0}
+.stepbar{display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap}
+.stepbar .prog{color:var(--muted);font-size:.85rem;font-family:var(--mono)}
+.linkpanels{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:700px){.linkpanels{grid-template-columns:1fr}}
+
+/* tcp stepper */
+.seq{display:grid;grid-template-columns:110px 1fr 110px;gap:0 8px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r);padding:14px 12px}
+.seq .col h5{margin:0 0 4px;font-size:.9rem}
+.seq .col .st{font-family:var(--mono);font-size:.78rem;color:var(--warn);min-height:20px}
+.seq .mid{display:flex;flex-direction:column;gap:6px;min-height:60px}
+.arrow{display:grid;grid-template-columns:1fr;font-family:var(--mono);font-size:.8rem;padding:4px 6px;border-radius:6px;background:var(--bg2)}
+.arrow .line{display:flex;align-items:center;gap:6px}
+.arrow .line .ln{flex:1;height:2px;background:var(--tcp);position:relative}
+.arrow.r .line .ln::after{content:"";position:absolute;right:-1px;top:-4px;border:5px solid transparent;border-left-color:var(--tcp)}
+.arrow.l .line .ln::before{content:"";position:absolute;left:-1px;top:-4px;border:5px solid transparent;border-right-color:var(--tcp)}
+.arrow.lost .line .ln{background:repeating-linear-gradient(90deg,var(--bad) 0 6px,transparent 6px 12px)}
+.arrow.lost .line .ln::after,.arrow.lost .line .ln::before{display:none}
+.arrow .desc{color:var(--muted);font-family:var(--sans);font-size:.85rem;margin-top:2px}
+.arrow.cur{outline:1.5px solid var(--accent)}
+.arrow .td{color:var(--data)}
+.seq .col.left{text-align:right}
+
+/* checks */
+.check{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:20px 0;max-width:74ch}
+.check .check-q{margin:0 0 12px;font-weight:500}
+.check .check-q::before{content:"Check";display:inline-block;font-size:.75rem;color:var(--accent);border:1px solid var(--accent2);border-radius:5px;padding:0 7px;margin-right:10px;vertical-align:2px;font-weight:500}
+.check-opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.check-opts button{background:var(--bg);border:1px solid var(--line2);color:var(--text);font:inherit;font-size:.95rem;padding:9px 12px;border-radius:8px;cursor:pointer;text-align:left}
+.check-opts button:hover{border-color:var(--accent)}
+.check-opts button.ok{border-color:var(--ok);background:rgba(94,211,154,.12)}
+.check-opts button.no{border-color:var(--bad);background:rgba(240,113,120,.12);color:var(--muted)}
+.check-opts button:disabled{cursor:default}
+.check-fb{margin-top:12px;font-size:.95rem;display:none;color:var(--text)}
+.check-fb.show{display:block}
+.check-fb .v{font-weight:600;margin-right:6px}
+.check-fb .v.ok{color:var(--ok)}.check-fb .v.no{color:var(--bad)}
+
+details.reveal{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:0 16px;margin:12px 0;max-width:74ch}
+details.reveal summary{cursor:pointer;padding:12px 0;font-weight:500;color:var(--accent)}
+details.reveal[open] summary{border-bottom:1px solid var(--line)}
+details.reveal .body{padding:6px 0 14px}
+.problem{margin:22px 0;max-width:74ch}
+.problem .pq{font-weight:500}
+.hw{list-style:none;padding:0;max-width:74ch}
+.hw li{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:12px 0;display:grid;grid-template-columns:28px 1fr;gap:10px}
+.hw li input{width:18px;height:18px;margin-top:4px;accent-color:var(--accent)}
+.hw li h4{margin:0 0 4px;font-size:1rem}
+.hw li p{margin:.3em 0}
+.hw .deliver{color:var(--muted);font-size:.92rem}
+.hw .deliver b{color:var(--text);font-weight:500}
+.rubric{list-style:none;padding:0;max-width:74ch}
+.rubric li{padding:7px 0 7px 30px;border-bottom:1px solid var(--line);position:relative}
+.rubric li::before{content:"";position:absolute;left:4px;top:13px;width:14px;height:14px;border:1.5px solid var(--line2);border-radius:4px}
+.small{font-size:.9rem;color:var(--muted)}
+.tutor{border:1px dashed var(--line2);border-radius:10px;padding:0 16px;margin-top:30px;max-width:74ch}
+.tutor summary{color:var(--muted);padding:10px 0;cursor:pointer;font-size:.9rem}
+.tutor .body{padding:4px 0 14px;font-size:.93rem}
+.kv{font-family:var(--mono);font-size:.84rem;background:#0f131a;border:1px solid var(--line);border-radius:8px;padding:10px 12px;white-space:pre;overflow:auto}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <p class="meta">Network interview prep. Week 1 of 5, session 1 of 2.</p>
+    <h1>How a packet is built and delivered</h1>
+    <p class="lede">By the end of this session you can take one message, wrap it in real headers, hand it to a switch, and explain every decision along the way out loud. That narration is the thing Meta actually grades.</p>
+  </div>
+  <div class="sticky">
+    <nav class="wrap tabs" role="tablist" aria-label="Sections" id="tabs">
+      <button role="tab" data-p="p0"><span class="n">0</span>Start</button>
+      <button role="tab" data-p="p1"><span class="n">1</span>Layers</button>
+      <button role="tab" data-p="p2"><span class="n">2</span>Encapsulation</button>
+      <button role="tab" data-p="p3"><span class="n">3</span>Same-subnet delivery</button>
+      <button role="tab" data-p="p4"><span class="n">4</span>TCP</button>
+      <button role="tab" data-p="p5"><span class="n">5</span>One packet, one journey</button>
+      <button role="tab" data-p="p6"><span class="n">6</span>Lab</button>
+      <button role="tab" data-p="p7"><span class="n">7</span>Practice</button>
+      <button role="tab" data-p="p8"><span class="n">8</span>Homework</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- ===================== 0 START ===================== -->
+<section class="pane" id="p0">
+  <div class="prose">
+    <h2>Start here</h2>
+    <p>You already know how to write software. This week you learn what happens to the bytes after <code>send()</code> returns. Nothing here is hard. It is just a set of moving parts you have never had to look at, and the interview will ask you to look at them under pressure.</p>
+
+    <h3>What this session covers</h3>
+    <ol>
+      <li>Why networking is layered, and the three questions each layer answers.</li>
+      <li>Encapsulation: how one message becomes a frame of real bytes, and how the receiver unwraps it.</li>
+      <li>Same-subnet delivery: ARP, MAC addresses, and what a switch actually does.</li>
+      <li>TCP: the handshake, sequence numbers, and why UDP exists.</li>
+      <li>The full journey of one packet, narrated the way you will narrate it in the interview.</li>
+    </ol>
+    <p>Then a lab where you build two hosts on your own laptop and capture the exchange, a practice set, and homework.</p>
+
+    <h3>How to use this page</h3>
+    <ul>
+      <li>Every section has at least one widget. Poke at it. Break it. The widgets are the lesson; the prose is the caption.</li>
+      <li>Checks are short multiple choice. Answer before reading on. Getting one wrong is useful, so don't look things up first.</li>
+      <li>The same four colors mean the same four things everywhere on this page: <span class="c-eth">Ethernet</span>, <span class="c-ip">IP</span>, <span class="c-tcp">TCP or UDP</span>, and <span class="c-data">your data</span>. When you see a color, you know the layer.</li>
+    </ul>
+
+    <h3>Set up before the lab</h3>
+    <p>You need a Linux shell with root. Native Linux or WSL2 on Windows both work. Install these:</p>
+    <pre class="cmd"><code>sudo apt update &amp;&amp; sudo apt install -y iproute2 tcpdump python3 wireshark</code></pre>
+    <p>Wireshark is optional today. If the GUI is awkward on WSL2, read captures with <code>tcpdump -r</code> instead. Check that namespaces work:</p>
+    <pre class="cmd"><code>sudo ip netns add test &amp;&amp; sudo ip netns list &amp;&amp; sudo ip netns del test</code></pre>
+    <p>If that prints <code>test</code>, you're ready.</p>
+
+    <div class="callout key">
+      <p>The one idea to carry through the whole week: a packet is a nested set of headers, and each header carries exactly one field that tells the receiver which layer to hand the rest to. Everything else is detail.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 1 LAYERS ===================== -->
+<section class="pane" id="p1">
+  <div class="prose">
+    <h2>Layers</h2>
+    <p>Networking is layered for the same reason your code is. Each layer has one job, a contract with the layer above it, and a contract with the layer below it. Swap Wi-Fi for Ethernet and TCP does not notice. Swap TCP for UDP and Ethernet does not notice. That independence is the entire point.</p>
+
+    <h3>Two models, one stack</h3>
+    <p>The OSI model has seven layers and shows up on every whiteboard. The TCP/IP model has four and is what real systems actually implement. Learn both names, but think in TCP/IP.</p>
+  </div>
+
+  <table class="t">
+    <thead><tr><th>OSI</th><th>TCP/IP</th><th>Job</th><th>Unit</th><th>Addressed by</th><th>Examples</th></tr></thead>
+    <tbody>
+      <tr><td class="lay">7 Application</td><td rowspan="3">Application</td><td>What the program says</td><td>Data</td><td></td><td>HTTP, DNS, SSH, SMTP</td></tr>
+      <tr><td class="lay">6 Presentation</td><td>Encoding, encryption</td><td></td><td></td><td>TLS, JSON, gzip</td></tr>
+      <tr><td class="lay">5 Session</td><td>Dialogue control</td><td></td><td></td><td>Rarely a separate thing</td></tr>
+      <tr><td class="lay c-tcp"><span class="sw bg-tcp"></span>4 Transport</td><td class="c-tcp">Transport</td><td>Which program on the machine; reliability if wanted</td><td>Segment (TCP), datagram (UDP)</td><td>Port</td><td>TCP, UDP</td></tr>
+      <tr><td class="lay c-ip"><span class="sw bg-ip"></span>3 Network</td><td class="c-ip">Internet</td><td>Which machine, anywhere in the world; the next hop</td><td>Packet</td><td>IP address</td><td>IPv4, IPv6, ICMP</td></tr>
+      <tr><td class="lay c-eth"><span class="sw bg-eth"></span>2 Data link</td><td rowspan="2" class="c-eth">Link</td><td>Which machine on this wire or Wi-Fi segment</td><td>Frame</td><td>MAC address</td><td>Ethernet, 802.11, ARP</td></tr>
+      <tr><td class="lay">1 Physical</td><td>Bits on a medium</td><td>Bit</td><td></td><td>Copper, fiber, radio</td></tr>
+    </tbody>
+  </table>
+
+  <div class="prose">
+    <h3>The three questions</h3>
+    <p>Three of these layers carry an address, and each address answers a different question:</p>
+    <ul>
+      <li><strong class="c-eth">Layer 2, MAC address:</strong> which machine on <em>this</em> wire? Only meaningful within one network segment. Rewritten at every router.</li>
+      <li><strong class="c-ip">Layer 3, IP address:</strong> which machine <em>anywhere</em>? Stays the same from source to destination across the whole internet.</li>
+      <li><strong class="c-tcp">Layer 4, port:</strong> which <em>program</em> on that machine? 80 means the web server, 22 means SSH, 51234 means some browser tab.</li>
+    </ul>
+    <p>When you're debugging, the first move is always to place the symptom on a layer. "Ping works but curl doesn't" is a layer 4 or higher problem. "Ping fails but ARP resolves" is layer 3. "ARP never gets an answer" is layer 2 or 1. Nobody at Meta cares whether you can recite layers 5 and 6. They care that you do this sorting fast.</p>
+
+    <h3>The programmer's translation</h3>
+    <p>Encapsulation is nested structs. A routing table is a longest-prefix-match lookup, which you would implement as a trie. A switch's MAC table is a hash map from address to port. Every time a networking concept feels foreign, ask what data structure it is, and it usually stops being foreign.</p>
+  </div>
+
+  <div class="check" data-answer="b">
+    <p class="check-q">Which layer decides the next hop for a packet?</p>
+    <div class="check-opts">
+      <button data-k="a">Data link</button><button data-k="b">Network</button><button data-k="c">Transport</button><button data-k="d">Application</button>
+    </div>
+    <div class="check-fb" data-explain="Routing is a layer 3 decision made on the destination IP. Layer 2 only delivers the frame across one segment once the next hop is known."></div>
+  </div>
+
+  <div class="check" data-answer="c">
+    <p class="check-q">A port number belongs to which layer?</p>
+    <div class="check-opts">
+      <button data-k="a">Layer 2</button><button data-k="b">Layer 3</button><button data-k="c">Layer 4</button><button data-k="d">Layer 7</button>
+    </div>
+    <div class="check-fb" data-explain="Ports live in the TCP and UDP headers. They identify a program on a host, which is the transport layer's job."></div>
+  </div>
+
+  <div class="check" data-answer="a">
+    <p class="check-q">Ping to a server works but an HTTP request to it hangs. Which layer do you suspect first?</p>
+    <div class="check-opts">
+      <button data-k="a">Transport</button><button data-k="b">Network</button><button data-k="c">Data link</button><button data-k="d">Physical</button>
+    </div>
+    <div class="check-fb" data-explain="Ping is ICMP riding on IP. If it works, layers 1 to 3 are delivering packets both ways. The problem is at the transport layer or higher: a closed port, a firewall rule, or a server that isn't listening."></div>
+  </div>
+</section>
+
+<!-- ===================== 2 ENCAPSULATION ===================== -->
+<section class="pane" id="p2">
+  <div class="prose">
+    <h2>Encapsulation</h2>
+    <p>Your program hands the network stack some bytes. On the way down, each layer prepends its own header. On the way up at the other end, each layer reads its header, uses one field to decide who gets the rest, strips the header, and passes the payload up. That's all encapsulation is.</p>
+    <p>Build one below. Type a message, then wrap it one layer at a time. Click any header to see its real fields. Then unwrap it from the receiver's side and watch which field does the routing at each step.</p>
+  </div>
+
+  <div class="widget" id="encap">
+    <h4>Encapsulation builder</h4>
+    <div class="w-controls">
+      <label>Message <input id="encap-msg" value="GET / HTTP/1.1" maxlength="40" spellcheck="false"></label>
+      <label>Transport <select id="encap-proto"><option value="tcp">TCP</option><option value="udp">UDP</option></select></label>
+      <label>Destination port <select id="encap-port"><option value="80">80 (HTTP)</option><option value="443">443 (HTTPS)</option><option value="53">53 (DNS)</option><option value="22">22 (SSH)</option></select></label>
+      <div class="btns">
+        <button class="btn" id="encap-step">Wrap next layer</button>
+        <button class="btn ghost" id="encap-unwrap" disabled>Unwrap (receiver)</button>
+        <button class="btn ghost" id="encap-reset">Reset</button>
+      </div>
+    </div>
+    <div class="encap-stage" id="encap-stage"></div>
+    <div class="encap-sizes" id="encap-sizes"></div>
+    <div class="w-note" id="encap-note"></div>
+    <div class="fields" id="encap-fields"></div>
+  </div>
+
+  <div class="prose">
+    <h3>The demultiplexing field</h3>
+    <p>Notice the pattern when you unwrap. Every header has exactly one field whose job is to say what's inside:</p>
+    <ul>
+      <li><span class="c-eth">Ethernet</span>: <strong>EtherType</strong>. <code>0x0800</code> means IPv4, <code>0x0806</code> means ARP, <code>0x86DD</code> means IPv6.</li>
+      <li><span class="c-ip">IP</span>: <strong>Protocol</strong>. <code>6</code> means TCP, <code>17</code> means UDP, <code>1</code> means ICMP.</li>
+      <li><span class="c-tcp">TCP or UDP</span>: <strong>Destination port</strong>. <code>80</code> means hand it to whatever process bound port 80.</li>
+    </ul>
+    <p>If you remember nothing else about headers, remember those three fields. They are the reason a single NIC can carry a thousand different conversations and every byte ends up at the right program.</p>
+
+    <h3>Now the actual bytes</h3>
+    <p>Diagrams lie a little. Headers are not colored boxes, they're bytes at fixed offsets, and the fields have exact widths. Below is a real 89-byte frame captured from a host sending an HTTP request. Hover any byte to see which field it belongs to. Click a field name to find its bytes. Then hit <em>Quiz me</em> and find fields by hand. Your homework parser will decode this exact frame.</p>
+  </div>
+
+  <div class="widget" id="hexdec">
+    <h4>Hex decoder</h4>
+    <div class="w-controls">
+      <div class="legend">
+        <span><span class="sw bg-eth"></span>Ethernet 14 B</span>
+        <span><span class="sw bg-ip"></span>IPv4 20 B</span>
+        <span><span class="sw bg-tcp"></span>TCP 20 B</span>
+        <span><span class="sw bg-data"></span>Payload 35 B</span>
+      </div>
+      <div class="btns">
+        <button class="btn" id="hex-quiz-btn">Quiz me</button>
+        <button class="btn ghost" id="hex-ascii-btn">Show ASCII</button>
+      </div>
+    </div>
+    <div class="hex-quiz" id="hex-quiz"></div>
+    <div class="hex-wrap">
+      <div class="hex-grid" id="hex-grid" aria-label="Frame bytes"></div>
+      <div>
+        <div class="hex-info" id="hex-info"><span class="fname">Hover or click any byte.</span><div class="fwhy">Offsets are in hex on the left. Each row is 16 bytes.</div></div>
+        <div class="hex-fieldlist" id="hex-fieldlist"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="prose">
+    <div class="callout">
+      <p>Two things to notice in the bytes. The IP total length is <code>0x004b</code> = 75, which is 20 + 20 + 35: it counts everything from the IP header onward but not the Ethernet header, because IP does not know Ethernet exists. And the TCP data offset byte is <code>0x50</code>: the top nibble is 5, meaning five 32-bit words, meaning a 20-byte header. Field widths are not always whole bytes.</p>
+    </div>
+  </div>
+
+  <div class="check" data-answer="b">
+    <p class="check-q">A receiving NIC reads EtherType 0x0800. Which layer gets the payload?</p>
+    <div class="check-opts">
+      <button data-k="a">ARP</button><button data-k="b">IPv4</button><button data-k="c">IPv6</button><button data-k="d">TCP</button>
+    </div>
+    <div class="check-fb" data-explain="0x0800 is IPv4. ARP is 0x0806 and IPv6 is 0x86DD. TCP is never named by EtherType; it's identified one layer up by the IP protocol field."></div>
+  </div>
+
+  <div class="check" data-answer="a">
+    <p class="check-q">Which IP header field tells the receiver the payload is TCP?</p>
+    <div class="check-opts">
+      <button data-k="a">Protocol</button><button data-k="b">EtherType</button><button data-k="c">Destination port</button><button data-k="d">Flags</button>
+    </div>
+    <div class="check-fb" data-explain="Protocol = 6 means TCP, 17 means UDP, 1 means ICMP. EtherType belongs to Ethernet and the port belongs to TCP itself."></div>
+  </div>
+
+  <div class="check" data-answer="b">
+    <p class="check-q">Ethernet, IPv4, and TCP headers with no options. How many bytes of headers before your data?</p>
+    <div class="check-opts">
+      <button data-k="a">40</button><button data-k="b">54</button><button data-k="c">58</button><button data-k="d">64</button>
+    </div>
+    <div class="check-fb" data-explain="14 + 20 + 20 = 54. The 4-byte Ethernet FCS is a trailer after the data, so the whole frame carrying zero bytes of payload is 58 bytes, but only 54 sit before your data."></div>
+  </div>
+</section>
+
+<!-- ===================== 3 SAME-SUBNET DELIVERY ===================== -->
+<section class="pane" id="p3">
+  <div class="prose">
+    <h2>Same-subnet delivery</h2>
+    <p>IP gives you the destination's address. It does not give you the destination's MAC, and a frame cannot leave the NIC without one. Bridging that gap is ARP, and the device in the middle that gets the frame to the right cable is a switch. Both are dumber than people expect, which is exactly why they're fast.</p>
+
+    <h3>The decision every host makes first</h3>
+    <p>Before a host sends anything, it answers one question: <em>is the destination on my subnet?</em> It ANDs the destination IP with its own subnet mask and compares the result to its own network address. If they match, the destination is local and the host sends to it directly. If not, it sends to its default gateway instead. Today everything is local. Session 2 is about the other branch.</p>
+
+    <h3>ARP</h3>
+    <p>ARP maps an IP address to a MAC address on the local segment. The host broadcasts a request to <code>ff:ff:ff:ff:ff:ff</code>: "who has 192.168.1.20? Tell 192.168.1.10." Every host on the segment receives it. Only the owner answers, with a unicast reply straight back: "192.168.1.20 is at 02:00:00:00:00:0b." Both sides cache the result for a while (Linux defaults to about a minute of reachability before it re-checks) so the next packet skips the whole exchange.</p>
+    <p>One detail people miss: the target also caches the <em>requester's</em> mapping, because the request already contained it. That's why in the lab you'll see B reply to A without ever sending its own ARP request.</p>
+
+    <h3>What a switch actually does</h3>
+    <p>A switch has one table: MAC address to port. It fills that table by reading the <strong>source</strong> MAC of every frame that arrives. It forwards by looking up the <strong>destination</strong> MAC. Three cases:</p>
+    <ul>
+      <li>Destination MAC is in the table: send the frame out that one port only.</li>
+      <li>Destination MAC is not in the table: flood the frame out every port except the one it came in on.</li>
+      <li>Destination is the broadcast address: flood.</li>
+    </ul>
+    <p>That's it. A switch does not look at IP addresses, does not change a single byte of the frame, and has no idea what ARP is. It just learned who lives where.</p>
+    <p>Run the sandbox. Send a ping from A to B and step through it. Then send A to B again and see how much less happens. Then A to C. Watch the tables.</p>
+  </div>
+
+  <div class="widget" id="sandbox">
+    <h4>Switch and ARP sandbox</h4>
+    <div class="w-controls">
+      <label>From <select id="sb-from"><option>A</option><option>B</option><option>C</option></select></label>
+      <label>To <select id="sb-to"><option>A</option><option selected>B</option><option>C</option></select></label>
+      <div class="btns">
+        <button class="btn" id="sb-send">Queue a ping</button>
+        <button class="btn" id="sb-step" disabled>Step</button>
+        <button class="btn ghost" id="sb-run" disabled>Run all</button>
+        <button class="btn ghost" id="sb-clear">Clear tables</button>
+      </div>
+    </div>
+    <div class="two-col">
+      <div>
+        <svg class="topo" id="sb-svg" viewBox="0 0 520 250" role="img" aria-label="Three hosts connected to one switch">
+          <rect class="node" id="sb-n-SW" x="200" y="20" width="120" height="50" rx="8"/>
+          <text class="lbl" x="260" y="42" text-anchor="middle">Switch</text>
+          <text class="mut" x="260" y="58" text-anchor="middle">MAC table only</text>
+          <line class="link" id="sb-l-A" x1="230" y1="70" x2="90" y2="170"/>
+          <line class="link" id="sb-l-B" x1="260" y1="70" x2="260" y2="170"/>
+          <line class="link" id="sb-l-C" x1="290" y1="70" x2="430" y2="170"/>
+          <text class="mut" x="150" y="118">port 1</text>
+          <text class="mut" x="268" y="118">port 2</text>
+          <text class="mut" x="340" y="118">port 3</text>
+          <rect class="node" id="sb-n-A" x="30" y="170" width="120" height="60" rx="8"/>
+          <text class="lbl" x="90" y="190" text-anchor="middle">Host A</text>
+          <text x="90" y="206" text-anchor="middle">192.168.1.10</text>
+          <text class="mut" x="90" y="221" text-anchor="middle">02:00:00:00:00:0a</text>
+          <rect class="node" id="sb-n-B" x="200" y="170" width="120" height="60" rx="8"/>
+          <text class="lbl" x="260" y="190" text-anchor="middle">Host B</text>
+          <text x="260" y="206" text-anchor="middle">192.168.1.20</text>
+          <text class="mut" x="260" y="221" text-anchor="middle">02:00:00:00:00:0b</text>
+          <rect class="node" id="sb-n-C" x="370" y="170" width="120" height="60" rx="8"/>
+          <text class="lbl" x="430" y="190" text-anchor="middle">Host C</text>
+          <text x="430" y="206" text-anchor="middle">192.168.1.30</text>
+          <text class="mut" x="430" y="221" text-anchor="middle">02:00:00:00:00:0c</text>
+        </svg>
+        <div class="framecard" id="sb-frame"><span>frame</span><span class="small">nothing in flight</span></div>
+      </div>
+      <div>
+        <div class="tables" id="sb-tables"></div>
+        <div class="log" id="sb-log"><div class="small">Queue a ping, then step through it.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="check" data-answer="b">
+    <p class="check-q">Host A wants to send to B on the same subnet and has no ARP entry for B. What leaves A's NIC first?</p>
+    <div class="check-opts">
+      <button data-k="a">ICMP echo request</button><button data-k="b">ARP request</button><button data-k="c">DNS query</button><button data-k="d">TCP SYN</button>
+    </div>
+    <div class="check-fb" data-explain="Nothing can be framed without a destination MAC, so ARP always goes first on a cold cache. The ICMP or TCP traffic waits until the reply arrives."></div>
+  </div>
+
+  <div class="check" data-answer="c">
+    <p class="check-q">The destination MAC of an ARP request is:</p>
+    <div class="check-opts">
+      <button data-k="a">The gateway's MAC</button><button data-k="b">The target's MAC</button><button data-k="c">The broadcast MAC</button><button data-k="d">The switch's MAC</button>
+    </div>
+    <div class="check-fb" data-explain="The whole point of the request is that you don't know the target's MAC yet, so it goes to ff:ff:ff:ff:ff:ff and every host on the segment sees it. The reply is unicast."></div>
+  </div>
+
+  <div class="check" data-answer="b">
+    <p class="check-q">A switch receives a unicast frame for a MAC that is not in its table. It:</p>
+    <div class="check-opts">
+      <button data-k="a">Drops it</button><button data-k="b">Floods it</button><button data-k="c">Sends an ARP request</button><button data-k="d">Looks up the IP</button>
+    </div>
+    <div class="check-fb" data-explain="Unknown destination means flood out every port except the ingress port. The switch never sends ARP itself and never reads IP headers. When the destination eventually replies, the switch learns its port from the source MAC."></div>
+  </div>
+</section>
+
+<!-- ===================== 4 TCP ===================== -->
+<section class="pane" id="p4">
+  <div class="prose">
+    <h2>TCP</h2>
+    <p>IP delivers packets on a best-effort basis: they can arrive out of order, duplicated, or not at all. TCP sits on top and turns that into a reliable, ordered byte stream. It does that with three tools: a handshake to agree on starting numbers, sequence numbers on every byte, and acknowledgments that say "I have everything up to here."</p>
+
+    <h3>The handshake</h3>
+    <p>Three messages. The client sends <strong>SYN</strong> with a random initial sequence number. The server answers <strong>SYN-ACK</strong>: its own random sequence number, plus an ack of the client's number plus one. The client sends <strong>ACK</strong>. Both sides now know each other's starting point and the connection is established. Random starting numbers, not zero, so that a late packet from an old connection can't be mistaken for a new one.</p>
+    <p>Step through it below. Watch the ack number: it is always "the next byte I expect from you." Then switch the scenario to a lost SYN-ACK and see what the client does about it, and to a closed port and see how the server refuses.</p>
+  </div>
+
+  <div class="widget" id="tcpstep">
+    <h4>Handshake, data, and teardown</h4>
+    <div class="w-controls">
+      <label>Scenario <select id="tcp-scn"><option value="normal">Normal connection</option><option value="lost">SYN-ACK is lost</option><option value="closed">Port is closed</option></select></label>
+      <label class="toggle"><input type="checkbox" id="tcp-rel"> Relative sequence numbers (Wireshark style)</label>
+      <div class="btns">
+        <button class="btn" id="tcp-next">Next</button>
+        <button class="btn ghost" id="tcp-prev" disabled>Back</button>
+        <button class="btn ghost" id="tcp-reset">Reset</button>
+      </div>
+    </div>
+    <div class="seq">
+      <div class="col left"><h5>Client</h5><div class="st" id="tcp-cst">CLOSED</div><div class="small mono" id="tcp-cisn"></div></div>
+      <div class="mid" id="tcp-mid"></div>
+      <div class="col"><h5>Server :80</h5><div class="st" id="tcp-sst">LISTEN</div><div class="small mono" id="tcp-sisn"></div></div>
+    </div>
+    <div class="w-note" id="tcp-note"></div>
+  </div>
+
+  <div class="prose">
+    <h3>Reading the numbers</h3>
+    <ul>
+      <li>The ack number is cumulative. If I ack 1000, I have every byte below 1000. One lost segment holds the ack in place until it's retransmitted.</li>
+      <li>SYN and FIN each consume one sequence number even though they carry no data. That's why the SYN-ACK acks x+1.</li>
+      <li>Wireshark shows relative numbers by default, starting at 0, so the math is readable. <code>tcpdump</code> does the same after the handshake unless you pass <code>-S</code>. The real numbers are 32-bit and random.</li>
+      <li>A lost SYN-ACK looks like a client sending the same SYN again and again, at roughly 0, 1, 3, and 7 seconds. The gaps double each time. That's exponential backoff and you will see it in captures.</li>
+      <li>RST means "no connection here, stop." A closed port answers a SYN with RST-ACK immediately. A firewall that drops silently produces no reply at all, which is why "connection refused" and "connection timed out" are different symptoms.</li>
+    </ul>
+
+    <h3>TCP vs UDP</h3>
+    <table class="t">
+      <thead><tr><th></th><th>TCP</th><th>UDP</th></tr></thead>
+      <tbody>
+        <tr><td>Connection</td><td>Handshake first</td><td>None, just send</td></tr>
+        <tr><td>Delivery</td><td>Reliable, ordered, retransmits</td><td>Best effort, may drop or reorder</td></tr>
+        <tr><td>Header</td><td>20 bytes minimum</td><td>8 bytes</td></tr>
+        <tr><td>Flow and congestion control</td><td>Yes</td><td>No</td></tr>
+        <tr><td>Good for</td><td>Web, SSH, email, anything that must be complete</td><td>DNS, video calls, games, anything where late data is useless</td></tr>
+      </tbody>
+    </table>
+    <p>UDP is not "worse TCP." A video call would rather drop a frame than pause the whole stream to retransmit it. DNS would rather ask again than spend a handshake on a 50-byte question. Choose by what the application does when a packet is late.</p>
+  </div>
+
+  <div class="check" data-answer="b">
+    <p class="check-q">In the handshake, the second message is:</p>
+    <div class="check-opts">
+      <button data-k="a">SYN</button><button data-k="b">SYN-ACK</button><button data-k="c">ACK</button><button data-k="d">FIN</button>
+    </div>
+    <div class="check-fb" data-explain="Client SYN, server SYN-ACK, client ACK. The server's SYN-ACK does two jobs in one segment: it acknowledges the client's sequence number and announces its own."></div>
+  </div>
+
+  <div class="check" data-answer="b">
+    <p class="check-q">A client sends SYN with sequence number 1000. The server's SYN-ACK carries which ack number?</p>
+    <div class="check-opts">
+      <button data-k="a">1000</button><button data-k="b">1001</button><button data-k="c">2000</button><button data-k="d">0</button>
+    </div>
+    <div class="check-fb" data-explain="The SYN consumes one sequence number, so the next byte the server expects is 1001. Ack always means 'next expected.'"></div>
+  </div>
+
+  <div class="check" data-answer="b">
+    <p class="check-q">Which transport fits a live video call best?</p>
+    <div class="check-opts">
+      <button data-k="a">TCP</button><button data-k="b">UDP</button><button data-k="c">ICMP</button><button data-k="d">ARP</button>
+    </div>
+    <div class="check-fb" data-explain="A late video frame is useless, so pausing to retransmit it would only add lag. UDP lets the application drop it and move on. ICMP and ARP aren't transports at all."></div>
+  </div>
+
+  <div class="check" data-answer="a">
+    <p class="check-q">A client sends a SYN and immediately gets RST-ACK back. What happened?</p>
+    <div class="check-opts">
+      <button data-k="a">Nothing listens on that port</button><button data-k="b">A firewall dropped the SYN</button><button data-k="c">The SYN-ACK was lost</button><button data-k="d">ARP failed</button>
+    </div>
+    <div class="check-fb" data-explain="RST is the host saying 'no socket here.' A silent firewall drop or a lost SYN-ACK would produce a timeout and retransmitted SYNs, not an immediate reply. If ARP had failed, the SYN would never have left the segment."></div>
+  </div>
+</section>
+
+<!-- ===================== 5 JOURNEY ===================== -->
+<section class="pane" id="p5">
+  <div class="prose">
+    <h2>One packet, one journey</h2>
+    <p>Now put it all together. This is the answer to "walk me through what happens when a host sends a request," and it is also the skeleton of every troubleshooting question you'll get: trace the packet, find the step where it dies.</p>
+    <p>Step through it with a cold ARP cache first. Then warm. Then flip to the different-subnet preview and pay attention to exactly which fields change at the router. Session 2 covers that path in depth; today you just need to see it once.</p>
+  </div>
+
+  <div class="widget" id="journey">
+    <h4>Packet journey</h4>
+    <div class="w-controls">
+      <label>Destination <select id="jn-mode"><option value="local">Same subnet: A to B</option><option value="routed">Different subnet: A to B via router (preview)</option></select></label>
+      <label class="toggle"><input type="checkbox" id="jn-warm"> ARP cache already warm</label>
+      <div class="btns">
+        <button class="btn" id="jn-next">Next step</button>
+        <button class="btn ghost" id="jn-prev" disabled>Back</button>
+        <button class="btn ghost" id="jn-reset">Reset</button>
+      </div>
+    </div>
+    <svg class="topo" id="jn-svg" viewBox="0 0 640 150" role="img" aria-label="Packet path topology"></svg>
+    <div class="stepbar"><span class="prog" id="jn-prog"></span></div>
+    <div class="w-note" id="jn-note"></div>
+    <div class="linkpanels" id="jn-panels" style="margin-top:14px"></div>
+  </div>
+
+  <div class="prose">
+    <div class="callout key">
+      <p>The observation that carries the whole course: across the switch, not one byte changed. Across the router, both MAC addresses changed, the TTL dropped by one, the IP checksum was recomputed, and the IP addresses and ports did not move. Layer 2 is hop by hop. Layer 3 is end to end. Everything else in networking is a footnote to that sentence.</p>
+    </div>
+
+    <h3>The narration, in order</h3>
+    <p>This is the shape of a complete answer. Learn the order, not the words. In the interview you say it slowly, you name the layer at each step, and you say what you would check if that step failed.</p>
+    <ol>
+      <li>Application hands data to a socket: destination IP and port are known.</li>
+      <li>Transport adds the TCP header: source port picked, destination port set. If TCP, the handshake happens before any data.</li>
+      <li>Network adds the IP header: source and destination IP, TTL, protocol.</li>
+      <li>Host decides local or remote by ANDing the destination with its mask.</li>
+      <li>Host resolves the next hop's MAC with ARP, from cache or by asking.</li>
+      <li>Link adds the Ethernet header and the frame goes on the wire.</li>
+      <li>Switch learns the source MAC, looks up the destination MAC, forwards or floods. Changes nothing.</li>
+      <li>(Remote only) Router accepts the frame, looks up the destination in its routing table, decrements TTL, rewrites both MACs, sends on the next link.</li>
+      <li>Destination NIC accepts on MAC match, EtherType picks IP, protocol picks TCP, destination port picks the socket.</li>
+      <li>Data arrives in the application's <code>recv()</code>.</li>
+    </ol>
+  </div>
+
+  <div class="check" data-answer="d">
+    <p class="check-q">A frame travels from A to B through one switch on the same subnet. Which field changes on the way?</p>
+    <div class="check-opts">
+      <button data-k="a">Source MAC</button><button data-k="b">Destination IP</button><button data-k="c">TTL</button><button data-k="d">None of them</button>
+    </div>
+    <div class="check-fb" data-explain="A switch is a layer 2 forwarder. It reads MACs to decide where to send the frame and rewrites nothing. TTL and MAC rewrites only happen at a router."></div>
+  </div>
+
+  <div class="check" data-answer="b">
+    <p class="check-q">How does a host decide whether the destination is on its own subnet?</p>
+    <div class="check-opts">
+      <button data-k="a">It sends an ARP request</button><button data-k="b">It applies its subnet mask</button><button data-k="c">It asks DNS</button><button data-k="d">It checks the switch's table</button>
+    </div>
+    <div class="check-fb" data-explain="Destination IP AND subnet mask gives the destination's network. If it equals the host's own network, the destination is local. ARP happens after that decision, not before, and hosts can't see the switch's table."></div>
+  </div>
+
+  <div class="check" data-answer="c">
+    <p class="check-q">A sends to a host on a different subnet. The frame leaving A has which destination MAC?</p>
+    <div class="check-opts">
+      <button data-k="a">The remote host's MAC</button><button data-k="b">The broadcast MAC</button><button data-k="c">The gateway's MAC</button><button data-k="d">The switch's MAC</button>
+    </div>
+    <div class="check-fb" data-explain="MAC addresses only work on the local segment, so A frames the packet to its gateway. The destination IP inside stays the remote host's address the whole way. Switches don't have a MAC that traffic is addressed to."></div>
+  </div>
+</section>
+
+<!-- ===================== 6 LAB ===================== -->
+<section class="pane" id="p6">
+  <div class="prose">
+    <h2>Lab 1: two hosts, one wire, every packet</h2>
+    <p>Linux network namespaces give you a complete, separate network stack: its own interfaces, routing table, ARP cache. Two namespaces joined by a virtual cable is two computers as far as the packets are concerned, and it costs nothing. This is how you prove every claim on this page.</p>
+    <p>Run every command yourself. Don't paste the whole block. Read each line and say what it does before you hit enter.</p>
+
+    <h3>Part 1: build the network</h3>
+    <pre class="cmd"><code>sudo ip netns add hostA
+sudo ip netns add hostB
+sudo ip link add vethA type veth peer name vethB
+sudo ip link set vethA netns hostA
+sudo ip link set vethB netns hostB
+sudo ip -n hostA addr add 192.168.1.10/24 dev vethA
+sudo ip -n hostB addr add 192.168.1.20/24 dev vethB
+sudo ip -n hostA link set vethA up
+sudo ip -n hostB link set vethB up
+sudo ip -n hostA link set lo up
+sudo ip -n hostB link set lo up</code></pre>
+    <p>What you built: two namespaces, a veth pair (a virtual Ethernet cable with an interface at each end), one end moved into each namespace, an address on each, everything brought up. Check it:</p>
+    <pre class="cmd"><code>sudo ip -n hostA addr show vethA
+sudo ip -n hostB addr show vethB</code></pre>
+    <p>Write down both MAC addresses (the <code>link/ether</code> line). You'll need them to read the capture.</p>
+
+    <h3>Part 2: capture a ping</h3>
+    <p>Open two terminals. In the first, start listening inside hostB:</p>
+    <pre class="cmd"><code>sudo ip netns exec hostB tcpdump -i vethB -e -n</code></pre>
+    <p><code>-e</code> prints the Ethernet header (the MACs), <code>-n</code> skips name lookups so you see raw addresses. In the second terminal, ping from hostA:</p>
+    <pre class="cmd"><code>sudo ip netns exec hostA ping -c 3 192.168.1.20</code></pre>
+    <p>Expected output in the tcpdump terminal, with your MACs in place of these:</p>
+    <pre><code>02:.. > ff:ff:ff:ff:ff:ff, ethertype ARP (0x0806), length 42: Request who-has 192.168.1.20 tell 192.168.1.10, length 28
+02:.. > 02:.., ethertype ARP (0x0806), length 42: Reply 192.168.1.20 is-at 02:.., length 28
+02:.. > 02:.., ethertype IPv4 (0x0800), length 98: 192.168.1.10 > 192.168.1.20: ICMP echo request, id 4213, seq 1, length 64
+02:.. > 02:.., ethertype IPv4 (0x0800), length 98: 192.168.1.20 > 192.168.1.10: ICMP echo reply, id 4213, seq 1, length 64
+...</code></pre>
+
+    <h3>What to look for</h3>
+    <ul>
+      <li>The ARP request goes to the broadcast MAC. The reply comes back unicast. Confirm both against your written-down MACs.</li>
+      <li>EtherType flips from <code>0x0806</code> to <code>0x0800</code> between ARP and ICMP. That is the demux field doing its job.</li>
+      <li>Frame length 98. Explain it: 14 Ethernet + 20 IP + 8 ICMP + 56 bytes of ping payload. The <code>length 64</code> at the end is the ICMP part alone.</li>
+      <li>Now look at the ARP caches on both sides. B has an entry for A even though B never asked:</li>
+    </ul>
+    <pre class="cmd"><code>sudo ip -n hostA neigh
+sudo ip -n hostB neigh</code></pre>
+    <ul>
+      <li>Run the ping again. No ARP this time. Then flush A's cache and ping once more, and ARP is back:</li>
+    </ul>
+    <pre class="cmd"><code>sudo ip -n hostA neigh flush all
+sudo ip netns exec hostA ping -c 1 192.168.1.20</code></pre>
+
+    <h3>Part 3: capture a real TCP handshake</h3>
+    <p>Start a web server inside hostB, then fetch from hostA while capturing. This time save the capture to a file too.</p>
+    <pre class="cmd"><code>sudo ip netns exec hostB python3 -m http.server 8080 --bind 192.168.1.20</code></pre>
+    <p>Second terminal, capture to a file (and to the screen with <code>-v</code> if you like):</p>
+    <pre class="cmd"><code>sudo ip netns exec hostB tcpdump -i vethB -n -w lab1.pcap</code></pre>
+    <p>Third terminal:</p>
+    <pre class="cmd"><code>sudo ip netns exec hostA curl -s http://192.168.1.20:8080/ | head -3</code></pre>
+    <p>Stop tcpdump with Ctrl-C, then read the file. <code>-S</code> shows absolute sequence numbers; drop it to see relative ones like Wireshark.</p>
+    <pre class="cmd"><code>tcpdump -r lab1.pcap -n -S | head -12</code></pre>
+    <p>Find the three handshake lines: <code>Flags [S]</code>, then <code>Flags [S.]</code>, then <code>Flags [.]</code>. Check that the SYN-ACK's ack equals the SYN's seq plus one. Find the <code>[P.]</code> segment that carries the GET, then the FINs at the end. If you have Wireshark, <code>wireshark lab1.pcap</code> and expand the first SYN to see the exact header layout you decoded in the widget.</p>
+
+    <h3>Clean up</h3>
+    <pre class="cmd"><code>sudo ip netns del hostA
+sudo ip netns del hostB</code></pre>
+    <p>Deleting a namespace deletes everything inside it, including its end of the veth pair, which deletes the other end too.</p>
+
+    <div class="callout warn">
+      <p>WSL2 notes: everything here works on the stock WSL2 kernel. If <code>tcpdump</code> complains about permissions, you forgot <code>sudo</code>. If <code>wireshark</code> won't open a window, copy the pcap to your Windows side with <code>cp lab1.pcap /mnt/c/Users/&lt;you&gt;/Desktop/</code> and open it there.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 7 PRACTICE ===================== -->
+<section class="pane" id="p7">
+  <div class="prose">
+    <h2>Practice</h2>
+    <p>Work each one on paper or out loud before opening the solution. Interview answers are spoken, so say them, don't just think them.</p>
+  </div>
+
+  <div class="problem">
+    <p class="pq">1. A host sends a 120-byte HTTP request over TCP over IPv4 over Ethernet, no options anywhere. How many bytes go on the wire? What does the IP total length field say?</p>
+    <details class="reveal"><summary>Show solution</summary><div class="body">
+      <p>On the wire: 14 + 20 + 20 + 120 + 4 (FCS) = 178 bytes. tcpdump reports 174 because it usually doesn't see the FCS; the NIC strips it.</p>
+      <p>IP total length = 20 + 20 + 120 = 160. It counts from the IP header on and knows nothing about Ethernet.</p>
+    </div></details>
+  </div>
+
+  <div class="problem">
+    <p class="pq">2. A frame arrives with EtherType 0x0806. What's inside? Does it have an IP header? Does it have a TCP header?</p>
+    <details class="reveal"><summary>Show solution</summary><div class="body">
+      <p>0x0806 is ARP. ARP is its own protocol sitting directly on Ethernet. There is no IP header and no TCP header. That's why ARP can't cross a router: there's no IP address on the packet for a router to route.</p>
+    </div></details>
+  </div>
+
+  <div class="problem">
+    <p class="pq">3. In the lab, host B ended up with A's MAC in its ARP cache even though B never sent an ARP request. Explain.</p>
+    <details class="reveal"><summary>Show solution</summary><div class="body">
+      <p>A's ARP request contained A's own IP and MAC in the sender fields. B needed A's MAC to send the reply, so it cached the mapping from the request. Free information, so it kept it.</p>
+    </div></details>
+  </div>
+
+  <div class="problem">
+    <p class="pq">4. A capture shows a client sending a SYN, then the identical SYN one second later, then again two seconds after that. What happened and what would you check?</p>
+    <details class="reveal"><summary>Show solution</summary><div class="body">
+      <p>No SYN-ACK came back inside the retransmission timer, so the client retried with exponential backoff. Either the SYN never reached the server, or the SYN-ACK never made it back, or the server silently dropped it (a firewall that drops rather than rejects). Check: can the server see the SYN arrive (tcpdump on the server side)? Is anything listening on that port (<code>ss -ltn</code>)? Is there a firewall rule dropping it? A closed port with no firewall would have answered RST instead of staying silent.</p>
+    </div></details>
+  </div>
+
+  <div class="problem">
+    <p class="pq">5. tcpdump on B shows ICMP requests and replies between A and B, but no ARP traffic at all. Is something wrong?</p>
+    <details class="reveal"><summary>Show solution</summary><div class="body">
+      <p>No. Both caches were already warm from an earlier exchange, so no ARP was needed. To see it again, flush A's neighbor table and repeat.</p>
+    </div></details>
+  </div>
+
+  <div class="problem">
+    <p class="pq">6. A switch's table says host A is on port 1. A frame arrives on port 3 with A's MAC as the source. What does the switch do?</p>
+    <details class="reveal"><summary>Show solution</summary><div class="body">
+      <p>It updates the entry: A is now on port 3. The switch trusts source MACs unconditionally, which is why a laptop can be unplugged and moved to another port and keep working. It's also why MAC spoofing is trivial on a plain switch.</p>
+    </div></details>
+  </div>
+
+  <div class="problem">
+    <p class="pq">7. Two symptoms: (a) ping to a server works but <code>curl</code> to port 8080 hangs for a minute then times out. (b) ping works and <code>curl</code> fails instantly with "connection refused." Place each on a layer and name the most likely cause.</p>
+    <details class="reveal"><summary>Show solution</summary><div class="body">
+      <p>Both are transport layer or above, because IP delivery works in both directions (ping succeeded). (a) A timeout means the SYNs got no answer: usually a firewall dropping traffic to 8080. (b) Refused means the server answered with RST: the host is reachable but nothing is bound to 8080, or the service is bound only to localhost.</p>
+    </div></details>
+  </div>
+
+  <div class="problem">
+    <p class="pq">8. A and B share a subnet and a switch. A has a cold ARP cache. A runs <code>curl http://B/</code> and the server replies with a small page. List every frame on the wire, in order, until the connection closes.</p>
+    <details class="reveal"><summary>Show solution</summary><div class="body">
+      <ol>
+        <li>ARP request, A to broadcast: who has B?</li>
+        <li>ARP reply, B to A: B is at its MAC.</li>
+        <li>TCP SYN, A to B.</li>
+        <li>TCP SYN-ACK, B to A.</li>
+        <li>TCP ACK, A to B. Connection established.</li>
+        <li>TCP PSH-ACK, A to B, carrying the GET.</li>
+        <li>TCP ACK, B to A (often merged with the next one).</li>
+        <li>TCP PSH-ACK, B to A, carrying the response.</li>
+        <li>TCP ACK, A to B.</li>
+        <li>FIN-ACK, ACK, FIN-ACK, ACK: four segments to close, two in each direction. Who closes first depends on the server and on HTTP keep-alive.</li>
+      </ol>
+      <p>Compare with your lab1.pcap. The real one will have a few extra ACKs; the order of the big pieces is the same.</p>
+    </div></details>
+  </div>
+
+  <div class="prose">
+    <h3>Narration rubric</h3>
+    <p>Record yourself explaining what happens when a laptop on 192.168.1.10 requests a page from a server on 192.168.1.20, cold caches. Then listen back and tick what you covered. A complete answer at this week's level has all ten.</p>
+  </div>
+  <ul class="rubric">
+    <li>Named the layer at each step, not just the protocol.</li>
+    <li>Said the application hands data to a socket with a known IP and port.</li>
+    <li>Said TCP needs a handshake before data, and described the three messages.</li>
+    <li>Said the host checks whether the destination is local using the mask.</li>
+    <li>Said ARP resolves the destination's MAC, and that the request is broadcast and the reply unicast.</li>
+    <li>Said the frame carries destination MAC, source MAC, and EtherType.</li>
+    <li>Said the switch learns from source MACs and forwards on destination MAC, and changes nothing.</li>
+    <li>Said the receiver demultiplexes: EtherType, then protocol, then port.</li>
+    <li>Said what the ack number in the handshake means.</li>
+    <li>For at least one step, said what you would check if it failed.</li>
+  </ul>
+</section>
+
+<!-- ===================== 8 HOMEWORK ===================== -->
+<section class="pane" id="p8">
+  <div class="prose">
+    <h2>Homework, due at session 2</h2>
+    <p>About three to four hours total. Every item produces something you send me or bring to the session, so I can check it in five minutes and we spend the hour on new material.</p>
+  </div>
+
+  <ul class="hw">
+    <li><input type="checkbox" aria-label="done"><div>
+      <h4>1. Lab 1 writeup</h4>
+      <p>Complete all three parts of the lab. Save <code>lab1.pcap</code>.</p>
+      <p class="deliver"><b>Send:</b> the pcap, plus five lines in plain text: what the ARP request asked, who answered and how you know, what one ICMP frame looked like, the three handshake lines with the seq and ack numbers, and one thing that surprised you.</p>
+    </div></li>
+
+    <li><input type="checkbox" aria-label="done"><div>
+      <h4>2. Frame parser in Python</h4>
+      <p>Decode the frame from the hex decoder widget using only the <code>struct</code> module. No Scapy, no dpkt. Print every field with its name and value for the Ethernet, IPv4, and TCP headers, then the payload as text. Aim for about 40 lines.</p>
+      <pre class="cmd"><code>import struct
+
+FRAME = bytes.fromhex(
+    "3c22fba1b2c3000c294f8e350800"
+    "4500004b1c46400040069af8c0a8010ac0a80114"
+    "c82200501a2b3c4d5e6f7a8b501801f64c490000"
+    "474554202f20485454502f312e310d0a486f73743a206c61622e6c6f63616c0d0a0d0a"
+)
+
+# Your code here. Suggested approach:
+# 1. Slice FRAME[0:14] and unpack with "!6s6sH".
+# 2. Slice the next 20 bytes and unpack with "!BBHHHBBH4s4s". Split the first byte into version and IHL.
+# 3. Use IHL to find where TCP starts. Unpack 20 bytes with "!HHIIBBHHH". Split data offset and flags.
+# 4. Everything after the TCP header (data offset * 4) is payload.</code></pre>
+      <p>Your output should match the field values the widget shows. Use the <em>Quiz me</em> mode to check yourself.</p>
+      <p><strong>Stretch:</strong> verify the IPv4 header checksum. Sum the header as 16-bit words with the checksum field zeroed, fold the carries back in, take the ones' complement, and confirm you get <code>0x9af8</code>. Add a second stretch if you're bored: make the parser read frames from <code>lab1.pcap</code> (look up the pcap file format; the per-packet header is 16 bytes).</p>
+      <p class="deliver"><b>Send:</b> the script and its output.</p>
+    </div></li>
+
+    <li><input type="checkbox" aria-label="done"><div>
+      <h4>3. Narration, version 1</h4>
+      <p>Record a voice memo, three minutes maximum, explaining what happens when a laptop on 192.168.1.10 fetches a web page from 192.168.1.20 with cold caches. Use the rubric in Practice. Listen to it once before you send it and note what you'd fix.</p>
+      <p class="deliver"><b>Send:</b> the recording and your one-line self-critique.</p>
+    </div></li>
+
+    <li><input type="checkbox" aria-label="done"><div>
+      <h4>4. Anki deck 1</h4>
+      <p>Copy the block below into a text file, then in Anki: File, Import, pick the file, field separator Tab. Ten minutes a day, every day. This is the boring part and it's also where the fast recall in the interview comes from.</p>
+      <pre class="cmd"><code>OSI layer 1	Physical
+OSI layer 2	Data link
+OSI layer 3	Network
+OSI layer 4	Transport
+OSI layer 5	Session
+OSI layer 6	Presentation
+OSI layer 7	Application
+The four TCP/IP model layers	Link, Internet, Transport, Application
+Unit of data at layer 2	Frame
+Unit of data at layer 3	Packet
+Unit of data at TCP layer 4	Segment
+Address used at layer 2	MAC address
+Address used at layer 3	IP address
+Address used at layer 4	Port
+Ethernet header size	14 bytes (plus 4-byte FCS trailer)
+IPv4 header minimum size	20 bytes
+TCP header minimum size	20 bytes
+UDP header size	8 bytes
+Standard Ethernet MTU	1500 bytes
+EtherType for IPv4	0x0800
+EtherType for ARP	0x0806
+EtherType for IPv6	0x86DD
+IP protocol number for ICMP	1
+IP protocol number for TCP	6
+IP protocol number for UDP	17
+Default TTL on Linux	64
+Broadcast MAC address	ff:ff:ff:ff:ff:ff
+What ARP maps	IPv4 address to MAC address
+ARP request destination	Broadcast MAC
+ARP reply destination	Unicast to the requester
+Layer 2 demultiplexing field	EtherType
+Layer 3 demultiplexing field	Protocol
+Layer 4 demultiplexing field	Destination port
+A switch learns MACs from	The source MAC of arriving frames
+A switch forwards based on	The destination MAC
+Switch action for an unknown destination MAC	Flood out all ports except ingress
+First handshake message	SYN
+Second handshake message	SYN-ACK
+Third handshake message	ACK
+If SYN seq is x, the SYN-ACK ack is	x + 1
+Meaning of the TCP ack number	Next byte I expect from you
+TCP flag that ends a connection gracefully	FIN
+TCP flag that aborts a connection	RST
+SYN to a closed port gets	RST-ACK
+SYN dropped by a firewall gets	Nothing (timeout, retransmits)
+Connectionless transport protocol	UDP
+Port 22	SSH
+Port 53	DNS
+Port 80	HTTP
+Port 443	HTTPS
+Ports 67 and 68	DHCP server and client
+tcpdump flag to print MAC addresses	-e
+tcpdump flag to skip name resolution	-n
+tcpdump flag to write a capture file	-w
+tcpdump flag to read a capture file	-r
+Frame size of a default Linux ping on Ethernet	98 bytes (14 + 20 + 8 + 56)</code></pre>
+      <p class="deliver"><b>Send:</b> a screenshot of your Anki stats after five days.</p>
+    </div></li>
+
+    <li><input type="checkbox" aria-label="done"><div>
+      <h4>5. Pre-read for session 2: binary</h4>
+      <p>Session 2 is subnetting and it starts at CIDR, not at counting. Make sure the counting is automatic. Convert by hand, no calculator: 192, 168, 10, 255, 128, 224, 240, 172, 100, 63 to 8-bit binary. Then 11000000, 10101000, 00001010, 11111111, 11111000, 11100000, 10000000, 11111110, 01100100, 00111111 back to decimal. Time yourself on the second pass.</p>
+      <p class="deliver"><b>Bring:</b> the sheet and your time.</p>
+    </div></li>
+  </ul>
+
+  <details class="tutor">
+    <summary>Tutor notes (for me, not you)</summary>
+    <div class="body">
+      <p><strong>Parser check.</strong> Correct output for the homework frame:</p>
+      <div class="kv">Ethernet  dst=3c:22:fb:a1:b2:c3  src=00:0c:29:4f:8e:35  type=0x0800
+IPv4      ver=4  ihl=5 (20 B)  total_len=75  id=0x1c46  flags=DF  frag=0  ttl=64
+          proto=6  checksum=0x9af8  src=192.168.1.10  dst=192.168.1.20
+TCP       sport=51234  dport=80  seq=439041101 (0x1a2b3c4d)  ack=1584364171 (0x5e6f7a8b)
+          data_offset=5 (20 B)  flags=PSH,ACK (0x18)  window=502  checksum=0x4c49  urg=0
+Payload   35 bytes  GET / HTTP/1.1\r\nHost: lab.local\r\n\r\n</div>
+      <p>Common mistakes: forgetting <code>!</code> (network byte order) in the struct format, so ports and lengths come out byte-swapped; slicing IP at a fixed 14 instead of using IHL; reading flags from the data-offset byte. If she got the IP checksum stretch, she zeroed bytes 24 and 25 before summing.</p>
+      <p><strong>Lab check.</strong> The pcap should show: one ARP request to broadcast, one unicast reply, ICMP frames of 98 bytes, a clean [S] / [S.] / [.] handshake with ack = seq + 1, a [P.] carrying <code>GET / HTTP/1.1</code>, and four FIN/ACK segments. If she flushed the cache before part 3, there will be a second ARP pair before the SYN. Ask her to explain 98.</p>
+      <p><strong>Narration check.</strong> Use the ten-item rubric. The usual gaps: skipping the local-or-remote decision, saying the switch "routes" or "reads the IP," and never saying what to check on failure. If she hits eight or more, she's ahead of pace.</p>
+      <p><strong>Pacing.</strong> If session 1 runs long, cut the TCP vs UDP table and the lost SYN-ACK scenario; both come back in week 3. Do not cut the journey widget or lab part 2.</p>
+    </div>
+  </details>
+</section>
+
+</main>
+
+<script>
+(function(){
+'use strict';
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const hx = (n,w) => '0x' + n.toString(16).padStart(w,'0');
+const MAC = {A:'02:00:00:00:00:0a', B:'02:00:00:00:00:0b', C:'02:00:00:00:00:0c', R0:'02:00:00:00:00:01', R1:'02:00:00:00:00:02', BC:'ff:ff:ff:ff:ff:ff'};
+
+/* ---------------- tabs ---------------- */
+const panes = [...document.querySelectorAll('.pane')];
+const tabs = [...document.querySelectorAll('#tabs button')];
+const titleOf = i => tabs[i].textContent.replace(/^\d+/,'').trim();
+function show(id, push){
+  panes.forEach(p => p.classList.toggle('active', p.id === id));
+  tabs.forEach(t => t.setAttribute('aria-selected', t.dataset.p === id ? 'true' : 'false'));
+  if(push !== false) history.replaceState(null, '', '#' + id);
+  window.scrollTo({top:0});
+  const t = tabs.find(t => t.dataset.p === id); if(t && t.scrollIntoView) t.scrollIntoView({block:'nearest', inline:'nearest'});
+}
+tabs.forEach(t => t.addEventListener('click', () => show(t.dataset.p)));
+panes.forEach((p,i) => {
+  const nav = document.createElement('div'); nav.className = 'pane-nav';
+  if(i > 0){ const b = document.createElement('button'); b.textContent = 'Back: ' + titleOf(i-1); b.onclick = () => show(panes[i-1].id); nav.appendChild(b); }
+  const sp = document.createElement('div'); sp.className = 'spacer'; nav.appendChild(sp);
+  if(i < panes.length-1){ const b = document.createElement('button'); b.textContent = 'Next: ' + titleOf(i+1); b.onclick = () => show(panes[i+1].id); nav.appendChild(b); }
+  p.appendChild(nav);
+});
+const h = location.hash.slice(1);
+show(panes.some(p => p.id === h) ? h : 'p0', false);
+
+/* ---------------- copy buttons ---------------- */
+document.querySelectorAll('pre.cmd').forEach(pre => {
+  const b = document.createElement('button'); b.className = 'copy'; b.type = 'button'; b.textContent = 'Copy';
+  b.addEventListener('click', () => {
+    const txt = pre.querySelector('code').textContent;
+    navigator.clipboard.writeText(txt).then(() => { b.textContent = 'Copied'; setTimeout(() => b.textContent = 'Copy', 1200); });
+  });
+  pre.appendChild(b);
+});
+
+/* ---------------- checks ---------------- */
+document.querySelectorAll('.check').forEach(ch => {
+  const ans = ch.dataset.answer, fb = ch.querySelector('.check-fb');
+  const opts = [...ch.querySelectorAll('.check-opts button')];
+  opts.forEach(b => b.addEventListener('click', () => {
+    if(ch.dataset.done) return;
+    if(b.dataset.k === ans){
+      b.classList.add('ok'); ch.dataset.done = '1'; opts.forEach(o => o.disabled = true);
+      fb.innerHTML = '<span class="v ok">Correct.</span>' + esc(fb.dataset.explain);
+    } else {
+      b.classList.add('no'); b.disabled = true;
+      fb.innerHTML = '<span class="v no">Not that one.</span> Try again.';
+    }
+    fb.classList.add('show');
+  }));
+});
+
+/* ---------------- encapsulation builder ---------------- */
+(function(){
+  const stage = $('encap-stage'), sizes = $('encap-sizes'), note = $('encap-note'), fields = $('encap-fields');
+  const msgI = $('encap-msg'), protoS = $('encap-proto'), portS = $('encap-port');
+  const bStep = $('encap-step'), bUn = $('encap-unwrap'), bReset = $('encap-reset');
+  let level = 0, dir = 'send', sel = null;
+  const enc = new TextEncoder();
+  function model(){
+    const data = msgI.value.length ? msgI.value : ' ';
+    const dlen = enc.encode(data).length, proto = protoS.value, port = +portS.value;
+    const l4len = proto === 'tcp' ? 20 : 8, iplen = 20 + l4len + dlen;
+    return {data, dlen, proto, port, l4len, iplen, total: 14 + iplen, totalFcs: 18 + iplen};
+  }
+  const portName = {80:'HTTP', 443:'HTTPS', 53:'DNS', 22:'SSH'};
+  function table(layer, m){
+    const R = (n,v,w) => `<tr><td>${n}</td><td class="val">${v}</td><td class="why">${w}</td></tr>`;
+    let rows = '', title = '';
+    if(layer === 'data'){ title = 'Payload'; rows = R('Bytes', m.dlen, 'Whatever the application wrote. The network never interprets it.') + R('Content', esc(m.data), 'Shown as text here; on the wire it is just bytes.'); }
+    if(layer === 'l4' && m.proto === 'tcp'){ title = 'TCP header, 20 bytes';
+      rows = R('Source port', 51234, 'Picked by the OS from the ephemeral range. Identifies your socket for the reply.')
+        + R('Destination port', m.port + ' (' + portName[m.port] + ')', 'Which program on the server. Layer 4 demux field.')
+        + R('Sequence number', 439041101, 'Stream position of the first payload byte. Random start, agreed in the handshake.')
+        + R('Acknowledgment number', 1584364171, 'Next byte expected from the other side.')
+        + R('Data offset', '5 (20 bytes)', 'Header length in 32-bit words, because options can extend it.')
+        + R('Flags', 'PSH, ACK', 'Control bits: SYN, ACK, FIN, RST, PSH, URG.')
+        + R('Window', 502, 'How much more the sender can receive right now. Flow control.')
+        + R('Checksum', '(computed)', 'Covers header, payload, and a pseudo-header with both IPs.')
+        + R('Urgent pointer', 0, 'Rarely used.'); }
+    if(layer === 'l4' && m.proto === 'udp'){ title = 'UDP header, 8 bytes';
+      rows = R('Source port', 51234, 'Ephemeral, so replies find your socket.')
+        + R('Destination port', m.port + ' (' + portName[m.port] + ')', 'Which program on the server.')
+        + R('Length', 8 + m.dlen, 'Header plus payload.')
+        + R('Checksum', '(computed)', 'Optional in IPv4. That is the entire protocol.'); }
+    if(layer === 'ip'){ title = 'IPv4 header, 20 bytes';
+      rows = R('Version', 4, 'IPv4.') + R('IHL', '5 (20 bytes)', 'Header length in 32-bit words.')
+        + R('DSCP / ECN', 0, 'Quality-of-service marking, usually zero.')
+        + R('Total length', m.iplen, 'IP header + everything inside. Knows nothing about Ethernet.')
+        + R('Identification', hx(0x1c46,4), 'Groups fragments of one original packet.')
+        + R('Flags', 'DF', "Don't fragment. Nearly all TCP traffic sets it.")
+        + R('Fragment offset', 0, 'Where this piece sits if fragmented.')
+        + R('TTL', 64, 'Every router subtracts one. At zero the packet is dropped. Stops loops.')
+        + R('Protocol', m.proto === 'tcp' ? '6 (TCP)' : '17 (UDP)', 'Layer 3 demux field.')
+        + R('Header checksum', '(computed)', 'IP header only. Recomputed at every hop because TTL changes.')
+        + R('Source address', '192.168.1.10', 'End to end. Never rewritten by routers.')
+        + R('Destination address', '192.168.1.20', 'End to end. Routers route on this.'); }
+    if(layer === 'eth'){ title = 'Ethernet header, 14 bytes (+ 4-byte trailer)';
+      rows = R('Destination MAC', MAC.B, 'Which NIC on this wire should accept it. Rewritten at every router.')
+        + R('Source MAC', MAC.A, 'Who put it on this wire. Switches learn from it.')
+        + R('EtherType', '0x0800 (IPv4)', 'Layer 2 demux field.')
+        + R('FCS (trailer)', 'CRC-32', 'Computed by the NIC. A corrupted frame is silently dropped.'); }
+    return `<table><thead><tr><th colspan="3">${title}</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+  function noteFor(m){
+    const P = m.proto.toUpperCase();
+    if(dir === 'send'){
+      return [
+        `Your program called <strong>send()</strong> with ${m.dlen} bytes. This is the payload. Nothing about the network exists yet.`,
+        m.proto === 'tcp'
+          ? `<strong>TCP</strong> wrapped it. The header names the destination program (port ${m.port}) and the source program (an ephemeral port), and gives every byte a sequence number so the receiver can put things in order. Now it's a segment.`
+          : `<strong>UDP</strong> wrapped it. Eight bytes: two ports, a length, a checksum. No sequence numbers, no handshake, no retransmission. That is the whole protocol. Now it's a datagram.`,
+        `<strong>IP</strong> wrapped it. It now has a destination anywhere in the world (192.168.1.20), a TTL so it can't loop forever, and a protocol field saying "${P} is inside." Now it's a packet.`,
+        `<strong>Ethernet</strong> wrapped it. Destination and source MAC for this one wire, EtherType 0x0800 saying "IPv4 is inside," and a CRC trailer. Now it's a frame, ${m.totalFcs} bytes, and the NIC can send it. Click any header to see its fields, or unwrap it from the receiver's side.`
+      ][level];
+    }
+    return [
+      `<strong>${P}</strong> on the receiver: destination port is ${m.port} and a process has it open. Deliver the bytes to that socket. The program's recv() returns exactly the ${m.dlen} bytes the sender wrote. Three headers, three demux fields, one delivery.`,
+      `<strong>IPv4</strong> on the receiver: destination address is mine. Protocol is ${m.proto === 'tcp' ? 6 : 17}, so hand the payload to ${P}. IP header discarded.`,
+      `<strong>Ethernet</strong> on the receiver's NIC: destination MAC matches mine and the CRC checks out, so keep it. EtherType is 0x0800, so hand the payload to IPv4. Ethernet header discarded.`,
+      ``
+    ][level];
+  }
+  function render(){
+    const m = model();
+    let inner = `<div class="data-box" data-l="data">${esc(m.data)}</div>`;
+    if(level >= 1) inner = `<div class="layer-box ${m.proto}"><div class="hdr ${sel==='l4'?'sel':''}" data-l="l4" tabindex="0">${m.proto.toUpperCase()} header<small>${m.l4len} bytes</small></div>${inner}</div>`;
+    if(level >= 2) inner = `<div class="layer-box ip"><div class="hdr ${sel==='ip'?'sel':''}" data-l="ip" tabindex="0">IPv4 header<small>20 bytes</small></div>${inner}</div>`;
+    if(level >= 3) inner = `<div class="layer-box eth"><div class="hdr ${sel==='eth'?'sel':''}" data-l="eth" tabindex="0">Ethernet header<small>14 bytes</small></div>${inner}<div class="trl">FCS 4</div></div>`;
+    stage.innerHTML = inner;
+    const parts = [`payload <b>${m.dlen}</b>`];
+    if(level >= 1) parts.push(`+ ${m.proto.toUpperCase()} <b>${m.l4len}</b>`);
+    if(level >= 2) parts.push(`+ IPv4 <b>20</b>`);
+    if(level >= 3) parts.push(`+ Ethernet <b>14</b> + FCS <b>4</b>`);
+    const tot = m.dlen + (level>=1?m.l4len:0) + (level>=2?20:0) + (level>=3?18:0);
+    parts.push(`= <b>${tot} bytes</b>`);
+    if(level >= 2) parts.push(`IP total length field = <b>${m.iplen}</b>`);
+    sizes.innerHTML = parts.join(' &nbsp; ');
+    note.innerHTML = noteFor(m);
+    const maxSel = ['data','l4','ip','eth'];
+    if(sel && maxSel.indexOf(sel) > level) sel = null;
+    fields.classList.toggle('show', !!sel);
+    fields.innerHTML = sel ? table(sel, m) : '';
+    bStep.disabled = level >= 3; bUn.disabled = level <= 0;
+    bStep.textContent = level === 0 ? 'Wrap in ' + m.proto.toUpperCase() : level === 1 ? 'Wrap in IPv4' : level === 2 ? 'Wrap in Ethernet' : 'Frame complete';
+  }
+  stage.addEventListener('click', e => { const t = e.target.closest('[data-l]'); if(!t) return; sel = sel === t.dataset.l ? null : t.dataset.l; render(); });
+  stage.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ const t = e.target.closest('[data-l]'); if(t){ e.preventDefault(); sel = t.dataset.l; render(); } } });
+  bStep.addEventListener('click', () => { if(level < 3){ level++; dir = 'send'; render(); } });
+  bUn.addEventListener('click', () => { if(level > 0){ level--; dir = 'recv'; render(); } });
+  bReset.addEventListener('click', () => { level = 0; dir = 'send'; sel = null; render(); });
+  [msgI, protoS, portS].forEach(el => el.addEventListener('input', render));
+  render();
+})();
+
+/* ---------------- hex decoder ---------------- */
+(function(){
+  const B = [0x3c,0x22,0xfb,0xa1,0xb2,0xc3,0x00,0x0c,0x29,0x4f,0x8e,0x35,0x08,0x00,0x45,0x00,0x00,0x4b,0x1c,0x46,0x40,0x00,0x40,0x06,0x9a,0xf8,0xc0,0xa8,0x01,0x0a,0xc0,0xa8,0x01,0x14,0xc8,0x22,0x00,0x50,0x1a,0x2b,0x3c,0x4d,0x5e,0x6f,0x7a,0x8b,0x50,0x18,0x01,0xf6,0x4c,0x49,0x00,0x00,0x47,0x45,0x54,0x20,0x2f,0x20,0x48,0x54,0x54,0x50,0x2f,0x31,0x2e,0x31,0x0d,0x0a,0x48,0x6f,0x73,0x74,0x3a,0x20,0x6c,0x61,0x62,0x2e,0x6c,0x6f,0x63,0x61,0x6c,0x0d,0x0a,0x0d,0x0a];
+  const u16 = o => (B[o]<<8)|B[o+1], u32 = o => ((B[o]<<24)>>>0) + (B[o+1]<<16) + (B[o+2]<<8) + B[o+3];
+  const mac = o => B.slice(o,o+6).map(x=>x.toString(16).padStart(2,'0')).join(':');
+  const ip = o => B.slice(o,o+4).join('.');
+  const F = [
+    {n:'Destination MAC', o:0, l:6, L:'eth', v:()=>mac(0), w:'Which NIC on this wire should accept the frame.'},
+    {n:'Source MAC', o:6, l:6, L:'eth', v:()=>mac(6), w:'Who sent it. The switch learns this address on the ingress port.'},
+    {n:'EtherType', o:12, l:2, L:'eth', v:()=>hx(u16(12),4)+' = IPv4', w:'Layer 2 demux field: what protocol is inside.'},
+    {n:'Version / IHL', o:14, l:1, L:'ip', v:()=>hx(B[14],2)+' = version '+(B[14]>>4)+', IHL '+(B[14]&15)+' ('+(B[14]&15)*4+' bytes)', w:'Two 4-bit fields in one byte. IHL tells you where the header ends.'},
+    {n:'DSCP / ECN', o:15, l:1, L:'ip', v:()=>hx(B[15],2), w:'Quality-of-service marking. Usually zero.'},
+    {n:'Total length', o:16, l:2, L:'ip', v:()=>hx(u16(16),4)+' = '+u16(16)+' bytes', w:'IP header plus everything inside: 20 + 20 + 35. Excludes Ethernet.'},
+    {n:'Identification', o:18, l:2, L:'ip', v:()=>hx(u16(18),4), w:'Groups fragments that belong to one original packet.'},
+    {n:'Flags / Fragment offset', o:20, l:2, L:'ip', v:()=>hx(u16(20),4)+' = DF set, offset 0', w:'Top 3 bits are flags. 0x4000 is Don\'t Fragment.'},
+    {n:'TTL', o:22, l:1, L:'ip', v:()=>hx(B[22],2)+' = '+B[22], w:'Each router subtracts one. At zero: drop it, send back ICMP time exceeded.'},
+    {n:'Protocol', o:23, l:1, L:'ip', v:()=>B[23]+' = TCP', w:'Layer 3 demux field. 6 TCP, 17 UDP, 1 ICMP.'},
+    {n:'Header checksum', o:24, l:2, L:'ip', v:()=>hx(u16(24),4), w:'Covers the IP header only. Recomputed at every hop because TTL changes.'},
+    {n:'Source IP', o:26, l:4, L:'ip', v:()=>ip(26), w:'End-to-end sender. Never rewritten by a router.'},
+    {n:'Destination IP', o:30, l:4, L:'ip', v:()=>ip(30), w:'End-to-end receiver. Routers route on this.'},
+    {n:'Source port', o:34, l:2, L:'tcp', v:()=>hx(u16(34),4)+' = '+u16(34), w:'Ephemeral port for the client socket.'},
+    {n:'Destination port', o:36, l:2, L:'tcp', v:()=>hx(u16(36),4)+' = '+u16(36)+' (HTTP)', w:'Layer 4 demux field: which program.'},
+    {n:'Sequence number', o:38, l:4, L:'tcp', v:()=>hx(u32(38),8)+' = '+u32(38), w:'Stream position of the first payload byte.'},
+    {n:'Acknowledgment number', o:42, l:4, L:'tcp', v:()=>hx(u32(42),8)+' = '+u32(42), w:'Next byte expected from the server.'},
+    {n:'Data offset / reserved', o:46, l:1, L:'tcp', v:()=>hx(B[46],2)+' = '+(B[46]>>4)+' words = '+(B[46]>>4)*4+'-byte header', w:'Top nibble is header length in 32-bit words.'},
+    {n:'Flags', o:47, l:1, L:'tcp', v:()=>hx(B[47],2)+' = PSH, ACK', w:'Bit 4 is ACK (0x10), bit 3 is PSH (0x08). SYN is 0x02, FIN 0x01, RST 0x04.'},
+    {n:'Window', o:48, l:2, L:'tcp', v:()=>hx(u16(48),4)+' = '+u16(48), w:'Receive window for flow control, before scaling.'},
+    {n:'Checksum', o:50, l:2, L:'tcp', v:()=>hx(u16(50),4), w:'Covers TCP header, payload, and a pseudo-header with both IPs.'},
+    {n:'Urgent pointer', o:52, l:2, L:'tcp', v:()=>hx(u16(52),4), w:'Rarely used.'},
+    {n:'Payload', o:54, l:35, L:'data', v:()=>'"GET / HTTP/1.1\\r\\nHost: lab.local\\r\\n\\r\\n"', w:'The HTTP request, 35 bytes. Everything before it was overhead.'}
+  ];
+  const fieldOf = i => F.find(f => i >= f.o && i < f.o + f.l);
+  const grid = $('hex-grid'), info = $('hex-info'), list = $('hex-fieldlist'), quizBox = $('hex-quiz');
+  let pinned = null, quiz = null;
+  // grid
+  let html = '';
+  for(let r = 0; r < B.length; r += 16){
+    let row = `<div class="hex-row"><span class="off">${r.toString(16).padStart(4,'0')}</span>`;
+    for(let i = r; i < Math.min(r+16, B.length); i++){
+      if(i === r+8) row += '<span class="gap"></span>';
+      row += `<span class="byte ${fieldOf(i).L}" data-i="${i}" tabindex="0" role="button" aria-label="byte ${i}">${B[i].toString(16).padStart(2,'0')}</span>`;
+    }
+    const asc = B.slice(r, r+16).map(x => x >= 32 && x < 127 ? String.fromCharCode(x) : '.').join('');
+    row += `<span class="asc">${esc(asc)}</span></div>`;
+    html += row;
+  }
+  grid.innerHTML = html;
+  const bytes = [...grid.querySelectorAll('.byte')];
+  list.innerHTML = F.map((f,i) => `<button data-f="${i}"><span class="c-${f.L}">${f.n}</span><span class="rng">${f.o}${f.l>1?' to '+(f.o+f.l-1):''}</span></button>`).join('');
+  function paint(f){
+    bytes.forEach(b => { const i = +b.dataset.i; b.classList.toggle('hl', !!f && i >= f.o && i < f.o+f.l); b.classList.toggle('dim', !!f && !(i >= f.o && i < f.o+f.l)); });
+    if(f) info.innerHTML = `<div class="fname c-${f.L}">${f.n}</div><div class="fval">${esc(f.v())}</div><div class="fwhy">${esc(f.w)} Bytes ${f.o}${f.l>1?' to '+(f.o+f.l-1):''}, ${f.l} byte${f.l>1?'s':''}.</div>`;
+    else info.innerHTML = '<span class="fname">Hover or click any byte.</span><div class="fwhy">Offsets are in hex on the left. Each row is 16 bytes.</div>';
+  }
+  grid.addEventListener('mouseover', e => { const b = e.target.closest('.byte'); if(!b || quiz) return; paint(fieldOf(+b.dataset.i)); });
+  grid.addEventListener('mouseleave', () => { if(!quiz) paint(pinned); });
+  grid.addEventListener('focusin', e => { const b = e.target.closest('.byte'); if(b && !quiz) paint(fieldOf(+b.dataset.i)); });
+  function clickByte(i){
+    const f = fieldOf(i);
+    if(quiz){
+      if(f === quiz.target){
+        quiz.score++; paint(f);
+        quizBox.innerHTML = `<div>Yes, that's ${f.n}.</div><div class="score">${quiz.score} correct of ${quiz.i+1}</div>`;
+        qTimer = setTimeout(nextQ, 800);
+      } else {
+        const b = bytes[i]; b.classList.add('wrong'); setTimeout(() => b.classList.remove('wrong'), 700);
+        quizBox.innerHTML = `<div>Find any byte of: <strong>${quiz.target.n}</strong></div><div class="score">That byte is part of ${f.n}. Try again. ${quiz.score} correct of ${quiz.i}</div>`;
+      }
+      return;
+    }
+    pinned = pinned === f ? null : f; paint(pinned);
+  }
+  grid.addEventListener('click', e => { const b = e.target.closest('.byte'); if(b) clickByte(+b.dataset.i); });
+  grid.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ const b = e.target.closest('.byte'); if(b){ e.preventDefault(); clickByte(+b.dataset.i); } } });
+  list.addEventListener('click', e => { const b = e.target.closest('button'); if(!b || quiz) return; const f = F[+b.dataset.f]; pinned = pinned === f ? null : f; paint(pinned); });
+  let qTimer = null;
+  function nextQ(){
+    qTimer = null; if(!quiz) return;
+    quiz.i++;
+    if(quiz.i >= quiz.order.length){
+      quizBox.innerHTML = `<div>Done. ${quiz.score} of ${quiz.order.length}.${quiz.score === quiz.order.length ? ' Now write the parser.' : ' Run it again until it\'s clean.'}</div>`;
+      quiz = null; paint(null); $('hex-quiz-btn').textContent = 'Quiz me'; return;
+    }
+    quiz.target = F[quiz.order[quiz.i]]; paint(null);
+    quizBox.innerHTML = `<div>Find any byte of: <strong>${quiz.target.n}</strong></div><div class="score">${quiz.i+1} of ${quiz.order.length}. ${quiz.score} correct so far.</div>`;
+  }
+  $('hex-quiz-btn').addEventListener('click', () => {
+    if(quiz){ quiz = null; if(qTimer){ clearTimeout(qTimer); qTimer = null; } quizBox.classList.remove('show'); paint(pinned); $('hex-quiz-btn').textContent = 'Quiz me'; return; }
+    const order = F.map((_,i) => i).sort(() => Math.random() - .5).slice(0, 8);
+    quiz = {order, i:-1, score:0, target:null}; pinned = null; quizBox.classList.add('show'); $('hex-quiz-btn').textContent = 'Stop quiz'; nextQ();
+  });
+  $('hex-ascii-btn').addEventListener('click', e => { grid.classList.toggle('ascii'); e.target.textContent = grid.classList.contains('ascii') ? 'Hide ASCII' : 'Show ASCII'; });
+  paint(null);
+})();
+
+/* ---------------- switch + ARP sandbox ---------------- */
+(function(){
+  const H = {A:{ip:'192.168.1.10', mac:MAC.A, port:1}, B:{ip:'192.168.1.20', mac:MAC.B, port:2}, C:{ip:'192.168.1.30', mac:MAC.C, port:3}};
+  const byMac = m => Object.keys(H).find(k => H[k].mac === m);
+  let sw = {}, arp = {A:{}, B:{}, C:{}}, queue = [], logEl = $('sb-log'), tablesEl = $('sb-tables'), frameEl = $('sb-frame');
+  let fresh = new Set(), timer = null;
+  const svg = $('sb-svg');
+  function clearHi(){ svg.querySelectorAll('.link').forEach(l => l.classList.remove('on','arp','icmp')); svg.querySelectorAll('.node').forEach(n => n.classList.remove('on')); }
+  function tables(){
+    const swRows = Object.keys(sw).sort((a,b) => sw[a]-sw[b]).map(m => `<tr><td>port ${sw[m]}</td><td class="${fresh.has('sw:'+m)?'new':''}">${m}${byMac(m)?' ('+byMac(m)+')':''}</td></tr>`).join('');
+    let out = `<div class="mini"><h5>Switch MAC table</h5><table>${swRows || '<tr><td class="empty">empty</td></tr>'}</table></div>`;
+    for(const h of ['A','B','C']){
+      const rows = Object.keys(arp[h]).map(ip => `<tr><td>${ip}</td><td class="${fresh.has(h+':'+ip)?'new':''}">${arp[h][ip]}</td></tr>`).join('');
+      out += `<div class="mini"><h5>ARP cache ${h}</h5><table>${rows || '<tr><td class="empty">empty</td></tr>'}</table></div>`;
+    }
+    tablesEl.innerHTML = out;
+  }
+  function addLog(who, cls, text, cur){
+    const d = document.createElement('div'); if(cur) d.className = 'cur';
+    d.innerHTML = `<span class="who bg-${cls}">${who}</span>${text}`; logEl.appendChild(d); logEl.scrollTop = logEl.scrollHeight;
+  }
+  function setBtns(){ $('sb-step').disabled = !queue.length; $('sb-run').disabled = !queue.length; }
+  function queuePing(){
+    const s = $('sb-from').value, d = $('sb-to').value;
+    if(s === d){ addLog('note','icmp','Pick two different hosts.'); return; }
+    const S = H[s], D = H[d];
+    if(!arp[s][D.ip]){
+      queue.push({kind:'arp', from:s, dst:MAC.BC, src:S.mac, body:`who has ${D.ip}? tell ${S.ip}`, text:`${s} has no ARP entry for ${D.ip}, so it broadcasts an ARP request.`});
+      queue.push({kind:'arp', from:d, dst:S.mac, src:D.mac, body:`${D.ip} is at ${D.mac}`, pre:() => { arp[d][S.ip] = S.mac; fresh.add(d+':'+S.ip); },
+        text:`${d} owns ${D.ip}, so it answers unicast to ${S.mac}. It also caches ${s}'s mapping straight from the request. The other host ignores the request.`,
+        post:() => { arp[s][D.ip] = D.mac; fresh.add(s+':'+D.ip); }});
+    } else {
+      queue.push({kind:'note', text:`${s} already has ${D.ip} cached as ${D.mac}. No ARP this time.`});
+    }
+    queue.push({kind:'icmp', from:s, dst:D.mac, src:S.mac, body:`echo request ${S.ip} to ${D.ip}`, text:`${s} sends the ping, unicast to ${D.mac}.`});
+    queue.push({kind:'icmp', from:d, dst:S.mac, src:D.mac, body:`echo reply ${D.ip} to ${S.ip}`, text:`${d} answers the ping, unicast to ${S.mac}.`});
+    addLog('queue','icmp',`Queued: ping ${s} to ${d} (${queue.length} steps pending).`); setBtns();
+  }
+  function step(){
+    if(!queue.length) return;
+    logEl.querySelectorAll('.cur').forEach(x => x.classList.remove('cur'));
+    fresh.clear(); clearHi();
+    const q = queue.shift();
+    if(q.kind === 'note'){ addLog('note','icmp', q.text, true); frameEl.innerHTML = '<span>frame</span><span class="small">nothing in flight</span>'; tables(); setBtns(); return; }
+    q.pre && q.pre();
+    const inPort = H[q.from].port;
+    const learned = sw[q.src] !== inPort; if(learned){ sw[q.src] = inPort; fresh.add('sw:'+q.src); }
+    let ports, how;
+    if(q.dst === MAC.BC){ ports = [1,2,3].filter(p => p !== inPort); how = `Destination is broadcast: flood out ports ${ports.join(' and ')}.`; }
+    else if(sw[q.dst] === undefined){ ports = [1,2,3].filter(p => p !== inPort); how = `Destination ${q.dst} is unknown: flood out ports ${ports.join(' and ')}.`; }
+    else { ports = [sw[q.dst]]; how = `Destination ${q.dst} is known on port ${ports[0]}: forward there only.`; }
+    q.post && q.post();
+    addLog(q.from, q.kind, q.text, true);
+    addLog('SW', q.kind, `Frame in on port ${inPort}. ${learned ? `Learned ${q.src} on port ${inPort}.` : `${q.src} already known on port ${inPort}.`} ${how}`, true);
+    svg.querySelector('#sb-n-' + q.from).classList.add('on'); svg.querySelector('#sb-n-SW').classList.add('on');
+    svg.querySelector('#sb-l-' + q.from).classList.add('on', q.kind);
+    ports.forEach(p => { const h = Object.keys(H).find(k => H[k].port === p); svg.querySelector('#sb-l-' + h).classList.add('on', q.kind); if(q.dst === MAC.BC || q.dst === H[h].mac) svg.querySelector('#sb-n-' + h).classList.add('on'); });
+    frameEl.innerHTML = `<span>dst MAC</span><span>${q.dst}${q.dst===MAC.BC?' (broadcast)':''}</span><span>src MAC</span><span>${q.src}</span><span>EtherType</span><span>${q.kind==='arp'?'0x0806 ARP':'0x0800 IPv4 (ICMP inside)'}</span><span>body</span><span>${q.body}</span>`;
+    tables(); setBtns();
+  }
+  $('sb-send').addEventListener('click', queuePing);
+  $('sb-step').addEventListener('click', step);
+  $('sb-run').addEventListener('click', () => { if(timer) return; timer = setInterval(() => { step(); if(!queue.length){ clearInterval(timer); timer = null; } }, 900); });
+  $('sb-clear').addEventListener('click', () => { if(timer){ clearInterval(timer); timer = null; } sw = {}; arp = {A:{},B:{},C:{}}; queue = []; fresh.clear(); clearHi(); logEl.innerHTML = '<div class="small">Tables cleared. Queue a ping.</div>'; frameEl.innerHTML = '<span>frame</span><span class="small">nothing in flight</span>'; tables(); setBtns(); });
+  tables(); setBtns();
+})();
+
+/* ---------------- TCP stepper ---------------- */
+(function(){
+  const cISN = 439041100, sISN = 1584364170;
+  const FL = {'SYN':'[S]','SYN-ACK':'[S.]','ACK':'[.]','PSH-ACK':'[P.]','FIN-ACK':'[F.]','RST-ACK':'[R.]'};
+  function build(scn){
+    const S = (dir, flags, seq, ack, len, cst, sst, note, lost) => ({dir, flags, seq, ack, len: len||0, cst, sst, note, lost: !!lost});
+    if(scn === 'normal') return [
+      S('r','SYN', cISN, null, 0, 'SYN-SENT', 'LISTEN', 'The client picks a random initial sequence number and sends SYN. No data can flow yet.'),
+      S('l','SYN-ACK', sISN, cISN+1, 0, 'SYN-SENT', 'SYN-RECEIVED', 'The server picks its own random ISN and acks the client\'s ISN plus one. The SYN consumed one sequence number even though it carried no data.'),
+      S('r','ACK', cISN+1, sISN+1, 0, 'ESTABLISHED', 'ESTABLISHED', 'The client acks the server\'s ISN plus one. Both sides are ESTABLISHED. Three segments, zero bytes of application data.'),
+      S('r','PSH-ACK', cISN+1, sISN+1, 35, 'ESTABLISHED', 'ESTABLISHED', 'The client sends the 35-byte GET. Its seq is still ISN + 1 because the bare ACK carried no data.'),
+      S('l','ACK', sISN+1, cISN+36, 0, 'ESTABLISHED', 'ESTABLISHED', 'The server acks up to ISN + 36: "I have the first 35 bytes; send me the 36th." Acks are cumulative.'),
+      S('l','PSH-ACK', sISN+1, cISN+36, 200, 'ESTABLISHED', 'ESTABLISHED', 'The server sends a 200-byte response. Its own seq starts at its own ISN + 1.'),
+      S('r','ACK', cISN+36, sISN+201, 0, 'ESTABLISHED', 'ESTABLISHED', 'The client acks all 200 bytes.'),
+      S('r','FIN-ACK', cISN+36, sISN+201, 0, 'FIN-WAIT-1', 'ESTABLISHED', 'The client is done sending and sends FIN. FIN also consumes one sequence number.'),
+      S('l','ACK', sISN+201, cISN+37, 0, 'FIN-WAIT-2', 'CLOSE-WAIT', 'The server acks the FIN. The connection is half closed: the server can still send.'),
+      S('l','FIN-ACK', sISN+201, cISN+37, 0, 'FIN-WAIT-2', 'LAST-ACK', 'The server sends its own FIN.'),
+      S('r','ACK', cISN+37, sISN+202, 0, 'TIME-WAIT', 'CLOSED', 'The client acks. The server is CLOSED. The client sits in TIME-WAIT for 60 seconds so any late segments from this connection die harmlessly, then closes too.')
+    ];
+    if(scn === 'lost') return [
+      S('r','SYN', cISN, null, 0, 'SYN-SENT', 'LISTEN', 'The client sends SYN and starts a retransmission timer, about one second.'),
+      S('l','SYN-ACK', sISN, cISN+1, 0, 'SYN-SENT', 'SYN-RECEIVED', 'The server answers, but the SYN-ACK is dropped somewhere on the path. The client sees nothing.', true),
+      S('r','SYN', cISN, null, 0, 'SYN-SENT', 'SYN-RECEIVED', 'The timer fires. The client resends the identical SYN, same sequence number. If this one also got no answer, the next wait would be about 2 seconds, then 4.'),
+      S('l','SYN-ACK', sISN, cISN+1, 0, 'SYN-SENT', 'SYN-RECEIVED', 'The server sees the retransmitted SYN and answers again with the same SYN-ACK.'),
+      S('r','ACK', cISN+1, sISN+1, 0, 'ESTABLISHED', 'ESTABLISHED', 'This one arrives. Established, one second late. In a capture, two identical SYNs about a second apart is the fingerprint of this.')
+    ];
+    return [
+      S('r','SYN', cISN, null, 0, 'SYN-SENT', 'CLOSED', 'The SYN arrives at port 80, but no process has that port open.'),
+      S('l','RST-ACK', 0, cISN+1, 0, 'CLOSED', 'CLOSED', 'The kernel answers RST-ACK immediately: "nothing here." The client reports connection refused. No retransmits, no timeout. Compare with a firewall that drops silently: that looks like the lost SYN-ACK scenario instead.')
+    ];
+  }
+  let steps = build('normal'), cur = -1;
+  const mid = $('tcp-mid'), note = $('tcp-note');
+  function fmt(st){
+    const rel = $('tcp-rel').checked;
+    const seq = st.seq === null ? null : (rel ? st.seq - (st.dir === 'r' ? cISN : sISN) : st.seq);
+    const ack = st.ack === null ? null : (rel ? st.ack - (st.dir === 'r' ? sISN : cISN) : st.ack);
+    return {seq, ack};
+  }
+  function render(){
+    let html = '';
+    for(let i = 0; i <= cur; i++){
+      const st = steps[i], {seq, ack} = fmt(st);
+      let td = `Flags ${FL[st.flags]}`;
+      if(st.len) td += `, seq ${seq}:${seq+st.len}`; else if(st.flags !== 'ACK') td += `, seq ${seq}`;
+      if(ack !== null) td += `, ack ${ack}`;
+      if(st.len) td += `, length ${st.len}`;
+      html += `<div class="arrow ${st.dir} ${st.lost?'lost':''} ${i===cur?'cur':''}"><div class="line">${st.dir==='l'?'<span>'+st.flags+'</span>':''}<span class="ln"></span>${st.dir==='r'?'<span>'+st.flags+'</span>':''}</div><div class="td">${td}${st.lost?' &nbsp; (lost)':''}</div></div>`;
+    }
+    mid.innerHTML = html || '<div class="small">Press Next.</div>';
+    const st = cur >= 0 ? steps[cur] : null;
+    $('tcp-cst').textContent = st ? st.cst : 'CLOSED';
+    $('tcp-sst').textContent = st ? st.sst : ($('tcp-scn').value === 'closed' ? 'CLOSED (nothing listening)' : 'LISTEN');
+    const rel = $('tcp-rel').checked;
+    $('tcp-cisn').textContent = rel ? 'ISN shown as 0' : 'ISN ' + cISN;
+    $('tcp-sisn').textContent = rel ? 'ISN shown as 0' : 'ISN ' + sISN;
+    note.innerHTML = st ? `<strong>${cur+1} of ${steps.length}.</strong> ${st.note}` : 'Client is CLOSED. Server is listening on port 80. Press Next to send the first SYN. The line under each arrow is what tcpdump prints for that segment.';
+    $('tcp-next').disabled = cur >= steps.length - 1; $('tcp-prev').disabled = cur < 0;
+  }
+  $('tcp-next').addEventListener('click', () => { if(cur < steps.length-1){ cur++; render(); } });
+  $('tcp-prev').addEventListener('click', () => { if(cur >= 0){ cur--; render(); } });
+  $('tcp-reset').addEventListener('click', () => { cur = -1; render(); });
+  $('tcp-scn').addEventListener('change', () => { steps = build($('tcp-scn').value); cur = -1; render(); });
+  $('tcp-rel').addEventListener('change', render);
+  render();
+})();
+
+/* ---------------- packet journey ---------------- */
+(function(){
+  const svg = $('jn-svg'), note = $('jn-note'), prog = $('jn-prog'), panels = $('jn-panels');
+  const A = {ip:'192.168.1.10', mac:MAC.A}, Bl = {ip:'192.168.1.20', mac:MAC.B}, Br = {ip:'10.0.0.20', mac:MAC.B};
+  const R0 = {ip:'192.168.1.1', mac:MAC.R0}, R1 = {ip:'10.0.0.1', mac:MAC.R1};
+  let mode = 'local', warm = false, steps = [], cur = 0;
+  const clone = o => JSON.parse(JSON.stringify(o));
+  function build(){
+    const routed = mode === 'routed', B = routed ? Br : Bl;
+    const out = [];
+    let p1 = {data:'GET / HTTP/1.1 (35 bytes)', tcp:null, ip:null, eth:null}, p2 = null;
+    const push = (text, nodes, links, chg) => out.push({text, nodes:nodes||[], links:links||[], p1:clone(p1), p2:p2?clone(p2):null, chg:chg||[]});
+    push(`<strong>Application.</strong> A program on A calls send() on a socket connected to ${B.ip} port 80, with 35 bytes: GET / HTTP/1.1. Nothing about the network exists yet.`, ['A']);
+    p1.tcp = {sport:51234, dport:80};
+    push(`<strong>Transport.</strong> TCP adds its header: source port 51234 from the ephemeral range, destination port 80. The handshake already happened; this is the data segment.`, ['A']);
+    p1.ip = {src:A.ip, dst:B.ip, ttl:64, proto:'6 (TCP)'};
+    push(`<strong>Network.</strong> IP adds its header: source ${A.ip}, destination ${B.ip}, TTL 64, protocol 6.`, ['A']);
+    if(!routed){
+      push(`<strong>Decision.</strong> Is ${B.ip} local? ${B.ip} AND 255.255.255.0 = 192.168.1.0. A's own network is 192.168.1.0. Match: the next hop is the destination itself.`, ['A']);
+      if(warm) push(`<strong>ARP.</strong> A checks its cache for ${B.ip}. Hit: ${B.mac}. No request needed.`, ['A']);
+      else {
+        push(`<strong>ARP.</strong> A checks its cache for ${B.ip}. Miss. It broadcasts: who has ${B.ip}? tell ${A.ip}. The switch floods it to everyone.`, ['A','SW','B'], [['1','arp'],['2','arp']]);
+        push(`<strong>ARP.</strong> B answers unicast: ${B.ip} is at ${B.mac}. A caches it.`, ['B','SW','A'], [['2','arp'],['1','arp']]);
+      }
+      p1.eth = {dst:B.mac, src:A.mac, type:'0x0800'};
+      push(`<strong>Link.</strong> Ethernet adds its header: destination ${B.mac} (B), source ${A.mac}, EtherType 0x0800. 89 bytes plus CRC. The frame goes on the wire.`, ['A'], [['1','eth']]);
+      push(`<strong>Switch.</strong> The frame arrives on port 1. The switch learns ${A.mac} is on port 1, looks up ${B.mac}: port 2. Forwards out port 2 only. Not one byte of the frame changed.`, ['SW'], [['1','eth'],['2','eth']]);
+      push(`<strong>B, link.</strong> Destination MAC is mine and the CRC is valid: accept. EtherType 0x0800: hand it to IPv4.`, ['B'], [['2','eth']]);
+      push(`<strong>B, network.</strong> Destination ${B.ip} is mine. Protocol 6: hand it to TCP.`, ['B']);
+      push(`<strong>B, transport.</strong> Destination port 80, a web server has it open, the sequence number fits the stream. Deliver 35 bytes to the socket. recv() returns GET / HTTP/1.1.`, ['B']);
+    } else {
+      push(`<strong>Decision.</strong> Is ${B.ip} local? ${B.ip} AND 255.255.255.0 = 10.0.0.0. A's network is 192.168.1.0. No match: not local. Routing table says default via ${R0.ip}. The next hop is the gateway. The destination IP in the header does not change.`, ['A']);
+      if(warm) push(`<strong>ARP.</strong> A checks its cache for the gateway ${R0.ip}, not for B. Hit: ${R0.mac}.`, ['A']);
+      else {
+        push(`<strong>ARP.</strong> A ARPs for the gateway, not for B: who has ${R0.ip}? B's MAC would be useless here because B is not on this wire.`, ['A','SW','R'], [['1','arp'],['2','arp']]);
+        push(`<strong>ARP.</strong> The router's eth0 answers: ${R0.ip} is at ${R0.mac}. A caches it.`, ['R','SW','A'], [['2','arp'],['1','arp']]);
+      }
+      p1.eth = {dst:R0.mac, src:A.mac, type:'0x0800'};
+      push(`<strong>Link 1.</strong> Ethernet header: destination ${R0.mac} (the router), source ${A.mac}, EtherType 0x0800. The frame is addressed to the router at layer 2 and to B at layer 3.`, ['A'], [['1','eth']]);
+      push(`<strong>Switch.</strong> Learns A on port 1, knows the router on port 2, forwards. Nothing changed.`, ['SW'], [['1','eth'],['2','eth']]);
+      p2 = {data:p1.data, tcp:clone(p1.tcp), ip:clone(p1.ip), eth:null}; p2.ip.ttl = 63;
+      push(`<strong>Router, eth0.</strong> Destination MAC is mine: accept. IP destination ${B.ip} is not mine, and I'm a router, so look it up: 10.0.0.0/24 is directly connected on eth1. TTL 64 becomes 63. The IP header checksum is recomputed. The Ethernet header is thrown away.`, ['R'], [['2','eth']], ['ip.ttl']);
+      if(warm) push(`<strong>ARP on eth1.</strong> The router checks its cache for ${B.ip}. Hit: ${B.mac}.`, ['R']);
+      else push(`<strong>ARP on eth1.</strong> The router asks: who has ${B.ip}? B answers: ${B.mac}. The router caches it.`, ['R','B'], [['3','arp']]);
+      p2.eth = {dst:B.mac, src:R1.mac, type:'0x0800'};
+      push(`<strong>Link 2.</strong> The router builds a brand new frame: destination ${B.mac} (B), source ${R1.mac} (its own eth1). The same IP packet is inside, TTL 63. Compare the two links: both MACs changed, TTL changed, checksum changed. IP addresses and ports are identical.`, ['R'], [['3','eth']], ['eth.dst','eth.src','ip.ttl']);
+      push(`<strong>B.</strong> MAC mine, EtherType IPv4, IP mine, protocol TCP, port 80. Delivered. Two Ethernet frames carried one IP packet.`, ['B'], [['3','eth']], ['eth.dst','eth.src','ip.ttl']);
+    }
+    return out;
+  }
+  function node(id, x, w, title, l2, l3, l4){
+    return `<rect class="node" id="jn-n-${id}" x="${x}" y="40" width="${w}" height="${l4?92:70}" rx="8"/>
+      <text class="lbl" x="${x+w/2}" y="60" text-anchor="middle">${title}</text>
+      <text x="${x+w/2}" y="77" text-anchor="middle">${l2}</text>
+      <text class="mut" x="${x+w/2}" y="92" text-anchor="middle">${l3}</text>${l4?`<text x="${x+w/2}" y="109" text-anchor="middle">${l4[0]}</text><text class="mut" x="${x+w/2}" y="124" text-anchor="middle">${l4[1]}</text>`:''}`;
+  }
+  function drawTopo(){
+    if(mode === 'local'){
+      svg.setAttribute('viewBox','0 0 640 150');
+      svg.innerHTML = `<line class="link" id="jn-l-1" x1="150" y1="75" x2="270" y2="75"/><line class="link" id="jn-l-2" x1="370" y1="75" x2="490" y2="75"/>
+        <text class="mut" x="210" y="65" text-anchor="middle">port 1</text><text class="mut" x="430" y="65" text-anchor="middle">port 2</text>
+        ${node('A',30,120,'Host A',A.ip,A.mac)}${node('SW',270,100,'Switch','','MAC table')}${node('B',490,120,'Host B',Bl.ip,Bl.mac)}`;
+    } else {
+      svg.setAttribute('viewBox','0 0 640 150');
+      svg.innerHTML = `<line class="link" id="jn-l-1" x1="130" y1="75" x2="200" y2="75"/><line class="link" id="jn-l-2" x1="290" y1="75" x2="345" y2="75"/><line class="link" id="jn-l-3" x1="495" y1="75" x2="520" y2="75"/>
+        <text class="mut" x="165" y="65" text-anchor="middle">port 1</text><text class="mut" x="318" y="65" text-anchor="middle">port 2</text>
+        ${node('A',10,120,'Host A',A.ip,A.mac)}${node('SW',200,90,'Switch','','MAC table')}${node('R',345,150,'Router','eth0 '+R0.ip,R0.mac,['eth1 '+R1.ip,R1.mac])}${node('B',520,118,'Host B',Br.ip,Br.mac)}`;
+    }
+  }
+  function panel(title, p, base, chg){
+    if(!p) return `<div><div class="hdrpanel"><div class="ttl">${title}</div><div class="hp eth"><span class="k">waiting</span><span></span></div></div></div>`;
+    const cell = (layer, key, label, val) => {
+      const k = layer+'.'+key; let cls = '';
+      if(val !== undefined && val !== null && base){ if(chg.includes(k)) cls = 'chg'; else if(p.eth && ['ip.src','ip.dst','tcp.sport','tcp.dport'].includes(k)) cls = 'same'; }
+      return `<span class="k">${label}</span><span class="${cls}">${val === undefined || val === null ? '…' : val}${cls==='chg'?' (changed)':cls==='same'?' (same)':''}</span>`;
+    };
+    const eth = p.eth || {}, ip = p.ip || {}, tcp = p.tcp || {};
+    return `<div><div class="hdrpanel"><div class="ttl">${title}</div>
+      <div class="hp eth ${p.eth?'on':''}">${cell('eth','dst','dst MAC',eth.dst)}${cell('eth','src','src MAC',eth.src)}${cell('eth','type','EtherType',eth.type)}</div>
+      <div class="hp ip ${p.ip?'on':''}">${cell('ip','src','src IP',ip.src)}${cell('ip','dst','dst IP',ip.dst)}${cell('ip','ttl','TTL',ip.ttl)}${cell('ip','proto','protocol',ip.proto)}</div>
+      <div class="hp tcp ${p.tcp?'on':''}">${cell('tcp','sport','src port',tcp.sport)}${cell('tcp','dport','dst port',tcp.dport)}</div>
+      <div class="hp data on"><span class="k">payload</span><span>${p.data}</span></div></div></div>`;
+  }
+  function render(){
+    const st = steps[cur];
+    svg.querySelectorAll('.node').forEach(n => n.classList.toggle('on', st.nodes.includes(n.id.replace('jn-n-',''))));
+    svg.querySelectorAll('.link').forEach(l => { l.classList.remove('on','arp','eth'); const m = st.links.find(x => 'jn-l-'+x[0] === l.id); if(m) l.classList.add('on', m[1]); });
+    note.innerHTML = st.text; prog.textContent = `Step ${cur+1} of ${steps.length}`;
+    if(mode === 'local') panels.innerHTML = panel('Frame on the wire', st.p1, null, []);
+    else panels.innerHTML = panel('Link 1: A to router', st.p1, null, []) + panel('Link 2: router to B', st.p2, st.p1, st.chg);
+    $('jn-next').disabled = cur >= steps.length-1; $('jn-prev').disabled = cur <= 0;
+  }
+  function reset(){ steps = build(); cur = 0; drawTopo(); render(); }
+  $('jn-next').addEventListener('click', () => { if(cur < steps.length-1){ cur++; render(); } });
+  $('jn-prev').addEventListener('click', () => { if(cur > 0){ cur--; render(); } });
+  $('jn-reset').addEventListener('click', reset);
+  $('jn-mode').addEventListener('change', e => { mode = e.target.value; reset(); });
+  $('jn-warm').addEventListener('change', e => { warm = e.target.checked; reset(); });
+  reset();
+})();
+
+})();
+</script>
+</body>
+</html>
