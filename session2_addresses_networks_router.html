@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 2: Addresses, networks, and the router</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f4f0e6; --card:#fffdf7; --card2:#faf6ec; --ink:#1e2530; --ink2:#5d6675; --rule:#e2dbcb; --rule2:#c9bfa9;
+  --blue:#2b55b8; --blue2:#1f4192; --blue-soft:#e8eefb;
+  --letter:#ffe08a; --letter-d:#7a5a00; --tcp:#d3c4ff; --tcp-d:#4a2f9e; --ip:#ffbe95; --ip-d:#9a3d10; --eth:#9fe0d8; --eth-d:#0e5f5a;
+  --ok:#2f9e5b; --ok-soft:#e5f5eb; --bad:#d64545; --bad-soft:#fbe9e9;
+  --sans:'Atkinson Hyperlegible', 'Segoe UI', system-ui, sans-serif;
+  --mono:'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+  --hand:'Caveat', 'Segoe Print', 'Bradley Hand', cursive;
+}
+*{box-sizing:border-box;min-width:0}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:18px;line-height:1.65}
+.wrap{max-width:820px;margin:0 auto;padding:0 20px}
+h1{font-size:2.2rem;line-height:1.15;margin:.2em 0 .4em;letter-spacing:-.01em}
+h2{font-size:1.7rem;line-height:1.2;margin:.1em 0 .6em;letter-spacing:-.01em}
+h3{font-size:1.2rem;margin:1.5em 0 .4em}
+p{margin:.75em 0;max-width:68ch}
+ul,ol{max-width:68ch;padding-left:1.25em}
+li{margin:.35em 0}
+code{font-family:var(--mono);font-size:.9em;background:var(--card2);border:1px solid var(--rule);border-radius:6px;padding:.05em .4em}
+pre{font-family:var(--mono);font-size:.86rem;line-height:1.55;background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:14px 16px;overflow:auto;position:relative;margin:14px 0}
+pre code{background:none;border:0;padding:0;font-size:inherit}
+pre .copy{position:absolute;top:8px;right:8px;background:var(--card2);border:1px solid var(--rule2);color:var(--ink2);border-radius:8px;padding:3px 10px;font:inherit;font-size:.78rem;cursor:pointer}
+.mono{font-family:var(--mono)}
+.muted{color:var(--ink2)}
+b{font-weight:700}
+.term{font-weight:700;border-bottom:2px solid var(--letter);padding-bottom:1px}
+
+header.top{padding:40px 0 18px}
+header .meta{color:var(--ink2);margin:0;font-size:.98rem}
+.lede{font-size:1.15rem;color:var(--ink2);max-width:62ch}
+.sticky{position:sticky;top:0;z-index:30;background:rgba(244,240,230,.94);backdrop-filter:blur(6px);border-bottom:1px solid var(--rule);padding:10px 0}
+.tabs{display:flex;flex-wrap:wrap;gap:8px}
+.tabs button{font:inherit;font-size:.92rem;border:1.5px solid var(--rule2);background:var(--card);color:var(--ink);padding:7px 14px;border-radius:999px;cursor:pointer}
+.tabs button:hover{border-color:var(--ink2)}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+main{padding:28px 0 60px}
+.pane{display:none}
+.pane.active{display:block}
+.pane-nav{display:flex;justify-content:space-between;gap:12px;margin-top:44px;padding-top:20px;border-top:1px solid var(--rule)}
+.pane-nav button{font:inherit;background:var(--card);border:1.5px solid var(--rule2);color:var(--ink);padding:10px 16px;border-radius:12px;cursor:pointer}
+.pane-nav button:hover{border-color:var(--ink2)}
+.pane-nav .sp{flex:1}
+:where(button,input,select,textarea,summary,[tabindex]):focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+.note{background:var(--card);border:1px solid var(--rule);border-left:6px solid var(--letter);border-radius:0 14px 14px 0;padding:14px 18px;margin:18px 0;max-width:68ch}
+.note.blue{border-left-color:var(--blue)}
+.note p{margin:.3em 0}
+
+table.t{border-collapse:collapse;width:100%;margin:14px 0;font-size:.95rem;background:var(--card);border:1px solid var(--rule);border-radius:12px;overflow:hidden}
+table.t th,table.t td{padding:10px 12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--rule)}
+table.t tr:last-child td{border-bottom:0}
+table.t th{background:var(--card2);font-weight:700;color:var(--ink2)}
+.chip{display:inline-block;padding:1px 9px;border-radius:999px;font-size:.85em;font-weight:700}
+.chip.letter{background:var(--letter);color:var(--letter-d)}.chip.tcp{background:var(--tcp);color:var(--tcp-d)}.chip.ip{background:var(--ip);color:var(--ip-d)}.chip.eth{background:var(--eth);color:var(--eth-d)}
+
+/* widget card */
+.widget{background:var(--card);border:1px solid var(--rule);border-radius:18px;padding:20px;margin:22px 0}
+.widget h4{margin:0 0 4px;font-size:1.05rem}
+.widget .sub{margin:0 0 14px;color:var(--ink2);font-size:.95rem}
+.row{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center}
+.btn{font:inherit;font-size:.95rem;background:var(--blue);color:#fff;border:1.5px solid var(--blue);padding:9px 16px;border-radius:12px;cursor:pointer}
+.btn:hover{background:var(--blue2);border-color:var(--blue2)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.alt{background:var(--card);color:var(--ink);border-color:var(--rule2)}
+.btn.alt:hover{border-color:var(--ink2);background:var(--card2)}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:.88rem;color:var(--ink2)}
+label.f input,label.f select,label.f textarea{font:inherit;font-size:1rem;color:var(--ink);background:var(--card2);border:1.5px solid var(--rule2);border-radius:10px;padding:8px 10px;min-width:160px}
+input[type=range]{accent-color:var(--blue);min-width:140px}
+.story{margin-top:14px}
+.story .text{background:var(--card2);border:1px solid var(--rule);border-radius:14px;padding:14px 16px;font-size:1.05rem;min-height:74px}
+.story .text b{color:var(--blue2)}
+.story .ctrl{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:12px}
+.dots{display:flex;gap:6px;flex-wrap:wrap}
+.dots span{width:9px;height:9px;border-radius:50%;background:var(--rule2)}
+.dots span.on{background:var(--blue)}
+.dots span.done{background:var(--ink2)}
+
+svg.scene{width:100%;height:auto;display:block;background:var(--card2);border:1px solid var(--rule);border-radius:14px}
+svg.scene text{font-family:var(--sans);fill:var(--ink)}
+svg.scene .pc rect,svg.scene .sw rect{fill:var(--card);stroke:var(--ink);stroke-width:2}
+svg.scene .pc .scr{fill:#dfe7f5}
+svg.scene .pc.on rect,svg.scene .sw.on rect{stroke:var(--blue);stroke-width:3.5}
+svg.scene .pc.on .scr{fill:var(--blue-soft)}
+svg.scene .led{fill:var(--rule2)}
+svg.scene .sw.on .led{fill:var(--ok)}
+svg.scene .link{stroke:var(--rule2);stroke-width:4;stroke-linecap:round}
+svg.scene .link.on{stroke:var(--blue)}
+svg.scene .link.shout{stroke:var(--ip-d);stroke-dasharray:7 7}
+svg.scene .env{fill:var(--eth);stroke:var(--eth-d);stroke-width:1.5}
+@media (prefers-reduced-motion:no-preference){ svg.scene .link{transition:stroke .3s} .env-box{animation:pop .25s ease-out} @keyframes pop{from{transform:scale(.96);opacity:.6}to{transform:none;opacity:1}} }
+
+/* packets widget */
+.pk-list{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.pk{background:var(--card2);border:1.5px solid var(--rule2);border-radius:12px;padding:8px 10px 10px;min-width:130px;max-width:100%;flex:1 1 150px}
+.pk .n{display:inline-block;background:var(--ink);color:var(--paper);font-family:var(--mono);font-size:.78rem;border-radius:6px;padding:1px 7px;margin-bottom:6px}
+.pk .body{font-family:var(--hand);font-size:1.35rem;line-height:1.2;overflow-wrap:anywhere;white-space:pre-wrap}
+.pk.lost{border-style:dashed;opacity:.55}
+
+/* addresses widget */
+.addr-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:14px}
+.addr{background:var(--card2);border:1.5px solid var(--rule2);border-radius:14px;padding:14px;cursor:pointer;text-align:left;font:inherit;color:var(--ink)}
+.addr:hover{border-color:var(--ink2)}
+.addr.on{border-color:var(--blue);background:var(--blue-soft)}
+.addr .k{font-size:.85rem;color:var(--ink2);margin-bottom:4px}
+.addr .v{font-family:var(--mono);font-size:.95rem;font-weight:600;overflow-wrap:anywhere}
+.addr .tag{font-size:.85rem;margin-top:6px}
+.match{margin-top:16px;display:grid;gap:10px}
+.mq{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;background:var(--card2);border:1px solid var(--rule);border-radius:12px;padding:10px 12px}
+.mq .q{flex:1 1 220px;font-weight:700}
+.mq button{font:inherit;font-size:.9rem;background:var(--card);border:1.5px solid var(--rule2);border-radius:999px;padding:5px 12px;cursor:pointer;color:var(--ink)}
+.mq button.ok{background:var(--ok-soft);border-color:var(--ok)}
+.mq button.no{background:var(--bad-soft);border-color:var(--bad);color:var(--ink2)}
+.mq button:disabled{cursor:default}
+
+/* envelopes */
+.env-stage{margin-top:14px;display:grid;grid-template-columns:1fr;gap:12px}
+.env-side{font-size:.9rem;color:var(--ink2);display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}
+.env-box{position:relative;border-radius:14px;padding:34px 14px 14px;border:2px solid}
+.env-box::before{content:"";position:absolute;left:0;right:0;top:0;height:28px;background:rgba(0,0,0,.09);clip-path:polygon(0 0,100% 0,50% 100%);border-radius:12px 12px 0 0}
+.env-box .lab{position:absolute;top:6px;left:12px;font-size:.78rem;font-weight:700;letter-spacing:.01em}
+.env-box .addr-lines{font-family:var(--mono);font-size:.82rem;line-height:1.5;margin-bottom:10px;overflow-wrap:anywhere}
+.env-box .addr-lines span{display:block}
+.env-box.tcp{background:var(--tcp);border-color:var(--tcp-d)}.env-box.tcp .lab{color:var(--tcp-d)}
+.env-box.ip{background:var(--ip);border-color:var(--ip-d)}.env-box.ip .lab{color:var(--ip-d)}
+.env-box.eth{background:var(--eth);border-color:var(--eth-d)}.env-box.eth .lab{color:var(--eth-d)}
+.env-box.opened{opacity:.35;padding-top:14px}
+.env-box.opened::before{display:none}
+.env-box.opened .lab{position:static;display:block;margin-bottom:6px}
+.env-box.opened .addr-lines{display:none}
+.letter{background:var(--letter);border:2px dashed var(--letter-d);border-radius:12px;padding:12px 14px;font-family:var(--hand);font-size:1.5rem;line-height:1.25;color:#3b2d00;overflow-wrap:anywhere;white-space:pre-wrap}
+.letter.small{font-size:1.15rem;padding:8px 10px}
+.layers{display:grid;grid-template-columns:1fr;gap:8px;margin:14px 0}
+.layers .ly{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;align-items:baseline;background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:10px 14px}
+.layers .ly .name{font-weight:700;white-space:nowrap}
+.layers .ly .what{color:var(--ink2);font-size:.95rem}
+
+/* same network */
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:14px}
+.mini{background:var(--card2);border:1px solid var(--rule);border-radius:12px;padding:10px 12px;font-size:.9rem}
+.mini h5{margin:0 0 6px;font-size:.9rem}
+.mini table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:.82rem}
+.mini td{padding:3px 4px;border-bottom:1px dashed var(--rule)}
+.mini td.new{color:var(--ok);font-weight:600}
+.mini .empty{color:var(--ink2);font-style:italic;font-family:var(--sans)}
+.wire{margin-top:10px;font-size:.9rem;color:var(--ink2);min-height:24px}
+
+/* chat (TCP/UDP) */
+.chat{display:flex;flex-direction:column;gap:8px;background:var(--card2);border:1px solid var(--rule);border-radius:14px;padding:14px;min-height:120px;margin-top:14px}
+.chat .who{display:flex;justify-content:space-between;font-weight:700;color:var(--ink2);font-size:.9rem;margin-bottom:4px}
+.bub{max-width:min(78%,420px);padding:9px 14px;border-radius:16px;background:var(--card);border:1.5px solid var(--rule2);font-size:1rem}
+.bub.A{align-self:flex-start;border-bottom-left-radius:4px}
+.bub.B{align-self:flex-end;border-bottom-right-radius:4px;background:var(--blue-soft)}
+.bub .tag{display:block;font-family:var(--mono);font-size:.74rem;color:var(--ink2);margin-top:3px}
+.bub.lost{border-style:dashed;border-color:var(--bad);opacity:.7}
+.bub.lost .tag{color:var(--bad)}
+.bub.cur{box-shadow:0 0 0 3px var(--blue-soft)}
+
+/* trip */
+.trip-stack{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px;min-height:40px}
+.tchip{padding:6px 12px;border-radius:999px;font-weight:700;font-size:.9rem;border:2px solid}
+.tchip.letter{background:var(--letter);border-color:var(--letter-d);color:var(--letter-d)}
+.tchip.tcp{background:var(--tcp);border-color:var(--tcp-d);color:var(--tcp-d)}
+.tchip.ip{background:var(--ip);border-color:var(--ip-d);color:var(--ip-d)}
+.tchip.eth{background:var(--eth);border-color:var(--eth-d);color:var(--eth-d)}
+.tchip.off{opacity:.3;text-decoration:line-through}
+.trip-where{font-size:.9rem;color:var(--ink2);margin-top:6px}
+
+/* checks */
+.check{background:var(--card);border:1px solid var(--rule);border-radius:16px;padding:16px 18px;margin:20px 0;max-width:68ch}
+.check .q{margin:0 0 12px;font-weight:700}
+.check .q::before{content:"Quick check";display:inline-block;font-weight:700;font-size:.78rem;color:var(--blue2);background:var(--blue-soft);border-radius:999px;padding:1px 10px;margin-right:10px;vertical-align:2px}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+.opts button{font:inherit;font-size:.95rem;background:var(--card2);border:1.5px solid var(--rule2);color:var(--ink);padding:9px 12px;border-radius:12px;cursor:pointer;text-align:left}
+.opts button:hover{border-color:var(--ink2)}
+.opts button.ok{background:var(--ok-soft);border-color:var(--ok)}
+.opts button.no{background:var(--bad-soft);border-color:var(--bad);color:var(--ink2)}
+.opts button:disabled{cursor:default}
+.fb{margin-top:12px;display:none}
+.fb.show{display:block}
+.fb .v{font-weight:700;margin-right:6px}
+.fb .v.ok{color:var(--ok)}.fb .v.no{color:var(--bad)}
+
+details.reveal{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:0 16px;margin:10px 0;max-width:68ch}
+details.reveal summary{cursor:pointer;padding:12px 0;font-weight:700;color:var(--blue2)}
+details.reveal[open] summary{border-bottom:1px solid var(--rule)}
+details.reveal .body{padding:6px 0 14px}
+.gl{display:grid;grid-template-columns:1fr;gap:8px;max-width:72ch}
+.gl div{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:10px 14px}
+.gl b{display:block;margin-bottom:2px}
+.hw{list-style:none;padding:0;max-width:68ch}
+.hw li{background:var(--card);border:1px solid var(--rule);border-radius:14px;padding:14px 16px;margin:12px 0;display:grid;grid-template-columns:26px 1fr;gap:10px}
+.hw li input{width:18px;height:18px;margin-top:5px;accent-color:var(--blue)}
+.hw li h4{margin:0 0 4px;font-size:1.05rem}
+.hw .send{color:var(--ink2);font-size:.93rem}
+.hw .send b{color:var(--ink)}
+/* flashcards */
+.fc{margin-top:12px;display:grid;gap:10px}
+.fc .card{background:var(--letter);border:2px dashed var(--letter-d);border-radius:14px;min-height:130px;display:flex;align-items:center;justify-content:center;text-align:center;padding:18px;cursor:pointer;font-size:1.15rem;color:#3b2d00}
+.fc .card.back{background:var(--card2);border:2px solid var(--rule2);color:var(--ink)}
+.fc .card small{display:block;color:inherit;opacity:.7;font-size:.8rem;margin-top:6px}
+.tutor{border:1.5px dashed var(--rule2);border-radius:12px;padding:0 16px;margin-top:30px;max-width:68ch}
+.tutor summary{color:var(--ink2);padding:10px 0;cursor:pointer;font-size:.92rem}
+.tutor .body{padding:4px 0 14px;font-size:.95rem}
+@media (max-width:520px){ body{font-size:17px} h1{font-size:1.8rem} h2{font-size:1.45rem} .widget{padding:14px} .env-box{padding:30px 10px 10px} }
+
+/* session 2 additions */
+.bits{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.bit{flex:1 1 64px;max-width:90px;background:var(--card2);border:2px solid var(--rule2);border-radius:12px;padding:10px 6px;text-align:center;cursor:pointer;font:inherit;color:var(--ink)}
+.bit .val{font-family:var(--mono);font-size:.85rem;color:var(--ink2)}
+.bit .sw{display:block;margin:8px auto 0;width:40px;height:22px;border-radius:999px;background:var(--rule2);position:relative;transition:background .15s}
+.bit .sw::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--card);transition:left .15s}
+.bit.on{border-color:var(--blue);background:var(--blue-soft)}
+.bit.on .sw{background:var(--blue)}
+.bit.on .sw::after{left:21px}
+.bit .b{display:block;margin-top:8px;font-family:var(--mono);font-weight:600;font-size:1.1rem}
+.sum{margin-top:14px;font-size:1.15rem}
+.sum .mono{font-weight:600}
+.octets{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:14px}
+.oct{background:var(--card2);border:1px solid var(--rule);border-radius:12px;padding:8px 6px;text-align:center;min-width:0}
+.oct .dec{font-family:var(--mono);font-weight:600;font-size:1rem}
+.oct .bin{display:flex;justify-content:center;gap:2px;margin-top:6px;flex-wrap:wrap}
+.oct .bin span{width:14px;height:20px;border-radius:4px;font-family:var(--mono);font-size:.72rem;display:inline-flex;align-items:center;justify-content:center}
+.oct .bin span.net{background:var(--blue);color:#fff}
+.oct .bin span.host{background:var(--letter);color:var(--letter-d)}
+.oct .lbl{font-size:.75rem;color:var(--ink2);margin-top:4px}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:10px;font-size:.88rem;color:var(--ink2)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:6px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:14px}
+.fact{background:var(--card2);border:1px solid var(--rule);border-radius:12px;padding:8px 10px}
+.fact .k{font-size:.8rem;color:var(--ink2)}
+.fact .v{font-family:var(--mono);font-weight:600;font-size:.98rem;overflow-wrap:anywhere}
+.cmp{display:grid;grid-template-columns:auto repeat(4,minmax(0,1fr));gap:6px;align-items:center;margin-top:14px;font-family:var(--mono);font-size:.9rem}
+.cmp .lab{font-family:var(--sans);font-size:.85rem;color:var(--ink2);text-align:right;padding-right:6px}
+.cmp .cell{background:var(--card2);border:1px solid var(--rule);border-radius:8px;padding:6px 4px;text-align:center;min-width:0}
+.cmp .cell.net{border-color:var(--blue);background:var(--blue-soft)}
+.cmp .cell.host{border-color:var(--letter-d);background:var(--letter);opacity:.6}
+.cmp .cell.bad{border-color:var(--bad);background:var(--bad-soft)}
+.verdict{margin-top:14px;padding:12px 14px;border-radius:12px;font-weight:700;border:2px solid}
+.verdict.same{background:var(--ok-soft);border-color:var(--ok)}
+.verdict.diff{background:var(--ip);border-color:var(--ip-d);color:var(--ip-d)}
+.drill{margin-top:14px}
+.drill .qbox{background:var(--card2);border:1px solid var(--rule);border-radius:14px;padding:16px;font-size:1.15rem}
+.drill .qbox .mono{font-weight:600}
+.drill .meta{display:flex;flex-wrap:wrap;gap:10px 18px;margin:10px 0;font-size:.9rem;color:var(--ink2)}
+.drill .meta b{color:var(--ink)}
+.drill .timer{font-family:var(--mono);font-weight:600}
+.drill .timer.low{color:var(--bad)}
+.drill input[type=text]{font:inherit;font-family:var(--mono);font-size:1.05rem;padding:9px 12px;border:2px solid var(--rule2);border-radius:12px;background:var(--card);flex:1 1 200px;min-width:0}
+.drill .res{margin-top:12px;padding:12px 14px;border-radius:12px;display:none}
+.drill .res.show{display:block}
+.drill .res.ok{background:var(--ok-soft);border:1.5px solid var(--ok)}
+.drill .res.no{background:var(--bad-soft);border:1.5px solid var(--bad)}
+.drill .work{margin-top:10px;font-family:var(--mono);font-size:.88rem;line-height:1.7;white-space:pre-wrap;background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:10px 12px}
+.ports{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;margin-top:12px}
+.port{background:var(--card2);border:2px solid var(--rule2);border-radius:12px;padding:8px;text-align:center}
+.port .name{font-weight:700}
+.port .ip{font-family:var(--mono);font-size:.72rem;color:var(--ink2)}
+.port button{font:inherit;font-size:.82rem;margin-top:6px;border-radius:999px;border:1.5px solid var(--rule2);background:var(--card);padding:3px 10px;cursor:pointer;color:var(--ink)}
+.port.v10{border-color:#2b55b8;background:#e8eefb}.port.v10 button{border-color:#2b55b8;color:#1f4192}
+.port.v20{border-color:#2f9e5b;background:#e5f5eb}.port.v20 button{border-color:#2f9e5b;color:#1e6e3d}
+.port.hear{box-shadow:0 0 0 3px var(--ip)}
+.port.deaf{opacity:.4}
+.tchip.eth.swap{border-style:dashed}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <p class="meta">Network interview prep. Week 1, session 2.</p>
+    <h1>Addresses, networks, and the router</h1>
+    <p class="lede">Last time: envelopes and delivery inside one network. This time: how a computer reads an address, how it knows whether the destination is nearby, and what happens when it isn't.</p>
+  </div>
+</header>
+<div class="sticky"><nav class="wrap tabs" id="tabs" aria-label="Sections">
+  <button data-p="p0">Start</button>
+  <button data-p="p1">Reading an address</button>
+  <button data-p="p2">Network and host</button>
+  <button data-p="p3">Subnet math</button>
+  <button data-p="p4">Near or far?</button>
+  <button data-p="p5">The router</button>
+  <button data-p="p6">Splitting and bundling</button>
+  <button data-p="p7">Glossary</button>
+  <button data-p="p8">Practice and homework</button>
+</nav></div>
+
+<main class="wrap">
+
+<!-- 0 START -->
+<section class="pane" id="p0">
+  <h2>Start here</h2>
+  <p>Session 1 ended with a frame arriving at computer B on the same network. Two questions were left hanging. How did A know B was on the same network in the first place? And what happens when it isn't, when B is on the other side of the building or the other side of the world?</p>
+  <p>Both answers come from the IP address itself, once you know how to read one. So this session starts with reading, moves to a little arithmetic that interviewers love to test, and ends with the device that carries packets between networks: the router.</p>
+
+  <h3>What you'll be able to do after this</h3>
+  <ul>
+    <li>Look at <span class="mono">192.168.1.10/24</span> and say out loud what every part means.</li>
+    <li>Answer "what's the network address, the broadcast, and how many hosts fit" for any /24 to /30 in under 30 seconds.</li>
+    <li>Explain how a laptop decides "send directly" versus "send to the gateway."</li>
+    <li>Tell the story of a packet crossing a router, including exactly which envelope gets replaced and which doesn't.</li>
+    <li>Say what a VLAN is, what LACP is, and what "layer 2 versus layer 3" means about a device.</li>
+  </ul>
+
+  <div class="note">
+    <p><b>Same rules as last time.</b> New terms are <span class="term">underlined</span> the first time and defined in the Glossary. Same four colors for the envelopes. Two new colors this session: <span class="chip" style="background:var(--blue);color:#fff">network bits</span> and <span class="chip letter">host bits</span>, which you'll meet in the second tab.</p>
+  </div>
+</section>
+
+<!-- 1 READING AN ADDRESS -->
+<section class="pane" id="p1">
+  <h2>Reading an IP address</h2>
+  <p>An address like <span class="mono">192.168.1.10</span> looks like four numbers. To the computer it's one number, 32 <span class="term">bits</span> long. A bit is a single one or zero. Thirty-two ones and zeros in a row is impossible to read, so humans split them into four groups of eight, turn each group into an ordinary number, and put dots between them.</p>
+  <p>Each group of eight bits is called an <span class="term">octet</span>. Eight bits can make any number from 0 to 255. That's why you'll never see 256 or 300 in an IP address.</p>
+
+  <h3>Eight light switches</h3>
+  <p>Here's the only piece of <span class="term">binary</span> you need. Picture eight light switches in a row. Each one has a value: 128, 64, 32, 16, 8, 4, 2, 1. The number an octet represents is the sum of the switches that are on. So 192 is 128 + 64, two switches on. And 10 is 8 + 2.</p>
+
+  <div class="widget" id="w-bits">
+    <h4>One octet, eight switches</h4>
+    <p class="sub">Flip switches and watch the number. Or type a number and watch the switches.</p>
+    <div class="row">
+      <label class="f">Decimal (0 to 255)<input type="number" id="bits-dec" min="0" max="255" value="192"></label>
+      <div class="row" style="gap:6px">
+        <button class="btn alt" data-set="192">192</button><button class="btn alt" data-set="168">168</button><button class="btn alt" data-set="10">10</button><button class="btn alt" data-set="255">255</button><button class="btn alt" data-set="0">0</button>
+      </div>
+    </div>
+    <div class="bits" id="bits"></div>
+    <div class="sum" id="bits-sum"></div>
+  </div>
+
+  <h3>Why this matters</h3>
+  <p>Everything in the next two tabs is about which of the 32 switches describe the <em>network</em> and which describe the <em>computer</em>. You can't see that split in decimal. In binary it's obvious. You won't do much binary in the interview, but you need to see it once so the rest isn't magic.</p>
+
+  <div class="note blue">
+    <p><b>IPv6, in one paragraph.</b> Everything above is <span class="term">IPv4</span>. There are only about 4.3 billion 32-bit addresses and the world ran out, so <span class="term">IPv6</span> uses 128 bits and is written in hex, like <span class="mono">2001:db8::1</span>. Same idea, much bigger. You will not be asked to subnet IPv6 this month. Know that it exists, why, and that it looks different.</p>
+  </div>
+
+  <div class="check" data-answer="c">
+    <p class="q">How many bits are in an IPv4 address?</p>
+    <div class="opts"><button data-k="a">8</button><button data-k="b">16</button><button data-k="c">32</button><button data-k="d">64</button></div>
+    <div class="fb" data-explain="Four octets of eight bits each. Thirty-two bits total, which is why the whole thing is really one 32-bit number."></div>
+  </div>
+  <div class="check" data-answer="b">
+    <p class="q">What is the largest number one octet can hold?</p>
+    <div class="opts"><button data-k="a">128</button><button data-k="b">255</button><button data-k="c">256</button><button data-k="d">999</button></div>
+    <div class="fb" data-explain="All eight switches on: 128 + 64 + 32 + 16 + 8 + 4 + 2 + 1 = 255. There are 256 possible values, but they run from 0 to 255."></div>
+  </div>
+</section>
+
+<!-- 2 NETWORK AND HOST -->
+<section class="pane" id="p2">
+  <h2>Network part, host part</h2>
+  <p>An IP address is two things glued together. The front part says <em>which network</em>, like a street name. The back part says <em>which computer</em> on that network, like a house number. Every computer on the same network shares the front part.</p>
+  <p>Where's the split? That's what the <span class="term">subnet mask</span> tells you. The modern way to write it is a slash and a number: <span class="mono">/24</span> means "the first 24 bits are the network part." The other 8 bits are the <span class="term">host</span> part, host being the networking word for a computer. This slash notation is called <span class="term">CIDR</span>, and a network defined this way is called a <span class="term">subnet</span>.</p>
+  <p>You'll also see the mask written the old way, as four octets: <span class="mono">255.255.255.0</span>. It means the same thing as /24. Each 255 is an octet with all eight switches on, saying "this whole octet is network." The 0 says "this whole octet is host."</p>
+  <p>So <span class="mono">192.168.1.10/24</span> reads: network <span class="mono">192.168.1</span>, host <span class="mono">10</span>. Anyone whose address starts with 192.168.1 is on this network and can be reached directly, the way you saw in session 1.</p>
+
+  <div class="widget" id="w-mask">
+    <h4>Slide the split</h4>
+    <p class="sub">Move the slider and watch the network part grow and shrink.</p>
+    <div class="row">
+      <label class="f">Address<input id="mask-ip" value="192.168.1.10" class="mono" spellcheck="false"></label>
+      <label class="f">Prefix: <span id="mask-n" class="mono">/24</span><input type="range" id="mask-pre" min="8" max="30" value="24"></label>
+    </div>
+    <div class="octets" id="mask-oct"></div>
+    <div class="legend"><span><i style="background:var(--blue)"></i>network bits</span><span><i style="background:var(--letter)"></i>host bits</span></div>
+    <div class="facts" id="mask-facts"></div>
+    <p class="muted" id="mask-cap" style="margin:12px 0 0"></p>
+  </div>
+
+  <h3>Two addresses you can't give to a computer</h3>
+  <p>Every subnet has two special addresses. The one with all host bits set to zero is the <span class="term">network address</span>: it's the name of the network itself, <span class="mono">192.168.1.0</span> here. The one with all host bits set to one is the <span class="term">broadcast address</span>, <span class="mono">192.168.1.255</span>: a packet sent there goes to every computer on the network. That's the address ARP shouted to in session 1.</p>
+  <p>Neither can belong to a computer. So a /24 has 256 addresses but only <b>254 usable</b> ones. Interviewers ask this constantly, and "256" is the wrong answer they're fishing for.</p>
+
+  <div class="note">
+    <p><b>Private addresses.</b> Three ranges are reserved for homes and offices and never appear on the public internet: anything starting <span class="mono">10.</span>, anything from <span class="mono">172.16.</span> to <span class="mono">172.31.</span>, and anything starting <span class="mono">192.168.</span>. Your home router swaps them for its one public address on the way out, a trick called <span class="term">NAT</span>. For now the takeaway is simpler: if you see 192.168 or 10-something, you're looking at someone's private network.</p>
+  </div>
+
+  <div class="check" data-answer="c">
+    <p class="q">In <span class="mono">10.0.5.7/24</span>, the host part is:</p>
+    <div class="opts"><button data-k="a">10</button><button data-k="b">0.5</button><button data-k="c">7</button><button data-k="d">5.7</button></div>
+    <div class="fb" data-explain="/24 means the first three octets (24 bits) are the network: 10.0.5. The last octet, 7, is the host."></div>
+  </div>
+  <div class="check" data-answer="c">
+    <p class="q">How many usable host addresses does a /24 have?</p>
+    <div class="opts"><button data-k="a">256</button><button data-k="b">255</button><button data-k="c">254</button><button data-k="d">128</button></div>
+    <div class="fb" data-explain="256 addresses minus the network address and the broadcast address. 254 computers can live in a /24."></div>
+  </div>
+  <div class="check" data-answer="a">
+    <p class="q">Which mask is the same as /24?</p>
+    <div class="opts"><button data-k="a">255.255.255.0</button><button data-k="b">255.255.0.0</button><button data-k="c">255.0.0.0</button><button data-k="d">0.0.0.255</button></div>
+    <div class="fb" data-explain="Three octets of all ones (255) is 24 network bits. 255.255.0.0 would be /16, and 255.0.0.0 would be /8."></div>
+  </div>
+</section>
+
+<!-- 3 SUBNET MATH -->
+<section class="pane" id="p3">
+  <h2>Subnet math</h2>
+  <p>Networks often get split into smaller ones. A /24 with 254 addresses might be cut into two /25s, or four /26s, or sixteen /28s, so that each team or each rack gets its own. When you do that, the split no longer lands neatly on a dot, and you need a little arithmetic to answer the three questions that always come up: <b>what's the network address, what's the broadcast, how many hosts fit</b>.</p>
+
+  <h3>The block size trick</h3>
+  <p>You never need to write out the binary. Here's the shortcut that works for every prefix from /25 to /30.</p>
+  <ol>
+    <li>Find the host bits: <b>32 minus the prefix</b>. For /26 that's 6.</li>
+    <li>The <span class="term">block size</span> is 2 to that power. 2<sup>6</sup> = 64. Networks come in blocks of 64 addresses: they start at 0, 64, 128, 192.</li>
+    <li>Find the block your address falls in. For 192.168.1.100: 100 is between 64 and 127, so the <b>network address</b> is 192.168.1.64.</li>
+    <li>The <b>broadcast</b> is the last address in the block: 192.168.1.127.</li>
+    <li><b>Usable hosts</b> = block size minus 2: 62. First usable .65, last usable .126.</li>
+  </ol>
+  <p>The mask in dotted form is 256 minus the block size in the octet that's being split: 256 minus 64 is 192, so /26 is <span class="mono">255.255.255.192</span>.</p>
+
+  <table class="t">
+    <thead><tr><th>Prefix</th><th>Mask</th><th>Block size</th><th>Usable hosts</th><th>Networks start at</th></tr></thead>
+    <tbody>
+      <tr><td>/24</td><td class="mono">255.255.255.0</td><td>256</td><td>254</td><td>.0</td></tr>
+      <tr><td>/25</td><td class="mono">255.255.255.128</td><td>128</td><td>126</td><td>.0, .128</td></tr>
+      <tr><td>/26</td><td class="mono">255.255.255.192</td><td>64</td><td>62</td><td>.0, .64, .128, .192</td></tr>
+      <tr><td>/27</td><td class="mono">255.255.255.224</td><td>32</td><td>30</td><td>every 32</td></tr>
+      <tr><td>/28</td><td class="mono">255.255.255.240</td><td>16</td><td>14</td><td>every 16</td></tr>
+      <tr><td>/29</td><td class="mono">255.255.255.248</td><td>8</td><td>6</td><td>every 8</td></tr>
+      <tr><td>/30</td><td class="mono">255.255.255.252</td><td>4</td><td>2</td><td>every 4</td></tr>
+    </tbody>
+  </table>
+  <p>Learn this table. It's the whole game. The /30 row is worth noticing: two usable addresses, which is exactly what you need for a cable between two routers, so it shows up everywhere in real networks.</p>
+
+  <div class="widget" id="w-drill">
+    <h4>Subnet drill</h4>
+    <p class="sub">Random questions with a timer. Type the answer and press Enter. Level 1 stays in /24 to /26. Level 2 goes to /30.</p>
+    <div class="row">
+      <label class="f">Level<select id="dr-level"><option value="1">Level 1</option><option value="2">Level 2</option></select></label>
+      <label class="f">Seconds per question<select id="dr-secs"><option>45</option><option selected>30</option><option>20</option></select></label>
+      <button class="btn" id="dr-start">Start</button>
+    </div>
+    <div class="drill" id="drill" style="display:none">
+      <div class="meta"><span>Time <span class="timer" id="dr-timer">30</span></span><span>Streak <b id="dr-streak">0</b></span><span>Correct <b id="dr-score">0</b> of <b id="dr-total">0</b></span></div>
+      <div class="qbox" id="dr-q"></div>
+      <div class="row" style="margin-top:10px" id="dr-inrow">
+        <input type="text" id="dr-in" placeholder="your answer" autocomplete="off" spellcheck="false">
+        <button class="btn" id="dr-check">Check</button>
+        <button class="btn alt" id="dr-skip">Skip</button>
+      </div>
+      <div class="row" style="margin-top:10px;display:none" id="dr-ynrow">
+        <button class="btn" data-yn="yes">Yes, same network</button>
+        <button class="btn" data-yn="no">No, different networks</button>
+      </div>
+      <div class="res" id="dr-res"></div>
+      <div class="row" style="margin-top:10px"><button class="btn alt" id="dr-work">Show the work</button><button class="btn" id="dr-next" style="display:none">Next question</button></div>
+    </div>
+  </div>
+
+  <div class="check" data-answer="c">
+    <p class="q">What is the block size for a /27?</p>
+    <div class="opts"><button data-k="a">8</button><button data-k="b">16</button><button data-k="c">32</button><button data-k="d">64</button></div>
+    <div class="fb" data-explain="32 minus 27 is 5 host bits. 2 to the 5th is 32. Networks start every 32 addresses: .0, .32, .64, and so on."></div>
+  </div>
+  <div class="check" data-answer="b">
+    <p class="q">The network address of <span class="mono">192.168.1.200/26</span> is:</p>
+    <div class="opts"><button data-k="a">192.168.1.128</button><button data-k="b">192.168.1.192</button><button data-k="c">192.168.1.0</button><button data-k="d">192.168.1.200</button></div>
+    <div class="fb" data-explain="/26 has blocks of 64: 0, 64, 128, 192. The number 200 falls in the 192 to 255 block, so the network is .192 and the broadcast is .255."></div>
+  </div>
+  <div class="check" data-answer="a">
+    <p class="q">You need a subnet for a cable between two routers. Which prefix wastes the least?</p>
+    <div class="opts"><button data-k="a">/30</button><button data-k="b">/28</button><button data-k="c">/26</button><button data-k="d">/24</button></div>
+    <div class="fb" data-explain="A /30 has four addresses: network, broadcast, and two usable ones, one for each end of the cable. Nothing wasted."></div>
+  </div>
+</section>
+
+<!-- 4 NEAR OR FAR -->
+<section class="pane" id="p4">
+  <h2>Near or far?</h2>
+  <p>Now the question left over from session 1. Before a computer sends anything, it decides: <em>is the destination on my network?</em> It uses its own address and mask to do it.</p>
+  <ol>
+    <li>Take your own address and keep only the network bits. That's your network.</li>
+    <li>Take the destination address and keep only the network bits, using <em>your</em> mask.</li>
+    <li>Compare. Same? The destination is nearby: send directly, using ARP to get its MAC, exactly like session 1.</li>
+    <li>Different? The destination is on another network. You can't reach it directly. Send it to your <span class="term">default gateway</span> instead.</li>
+  </ol>
+  <p>The default gateway is the router's address on your network, usually something like <span class="mono">192.168.1.1</span>. Your laptop was told the gateway address when it joined the network, right along with its IP and mask. Those three things, IP, mask, gateway, are the whole story of how your laptop knows where it is and where to send things it can't deliver itself.</p>
+
+  <div class="widget" id="w-near">
+    <h4>Same network or not?</h4>
+    <p class="sub">Change the destination and watch the decision.</p>
+    <div class="row">
+      <label class="f">My address<input id="nr-me" value="192.168.1.10" class="mono" spellcheck="false"></label>
+      <label class="f">My prefix<select id="nr-pre"><option>24</option><option>25</option><option>26</option><option>16</option></select></label>
+      <label class="f">Destination<input id="nr-dst" value="192.168.1.77" class="mono" spellcheck="false"></label>
+    </div>
+    <div class="row" style="margin-top:8px;gap:6px">
+      <span class="muted" style="font-size:.9rem">Try:</span>
+      <button class="btn alt" data-dst="192.168.1.77">192.168.1.77</button>
+      <button class="btn alt" data-dst="192.168.2.5">192.168.2.5</button>
+      <button class="btn alt" data-dst="8.8.8.8">8.8.8.8</button>
+      <button class="btn alt" data-dst="192.168.1.200">192.168.1.200</button>
+    </div>
+    <div class="cmp" id="nr-cmp"></div>
+    <div class="legend"><span><i style="background:var(--blue)"></i>network part, compared</span><span><i style="background:var(--letter)"></i>host part, ignored</span></div>
+    <div id="nr-verdict"></div>
+  </div>
+
+  <div class="note blue">
+    <p><b>Where you've seen these three numbers.</b> Open your laptop's Wi-Fi details sometime and you'll find "IP address," "subnet mask," and "router" (or "gateway"). That's this tab, printed on your screen. Nothing else is needed for a computer to send to anywhere in the world.</p>
+  </div>
+
+  <div class="check" data-answer="a">
+    <p class="q"><span class="mono">192.168.1.10/24</span> wants to send to <span class="mono">192.168.1.77</span>. It sends:</p>
+    <div class="opts"><button data-k="a">Directly</button><button data-k="b">To the gateway</button><button data-k="c">As a broadcast</button><button data-k="d">Nowhere, it can't</button></div>
+    <div class="fb" data-explain="Both addresses have the network part 192.168.1, so the destination is on the same network. ARP for its MAC and send directly."></div>
+  </div>
+  <div class="check" data-answer="b">
+    <p class="q"><span class="mono">192.168.1.10/24</span> wants to send to <span class="mono">8.8.8.8</span>. It sends:</p>
+    <div class="opts"><button data-k="a">Directly</button><button data-k="b">To the gateway</button><button data-k="c">As a broadcast</button><button data-k="d">Nowhere, it can't</button></div>
+    <div class="fb" data-explain="The network parts differ (192.168.1 versus 8.8.8), so the destination is far. The packet goes to the default gateway, which knows how to get it further."></div>
+  </div>
+  <div class="check" data-answer="c">
+    <p class="q">Which three settings does a laptop need to send packets anywhere?</p>
+    <div class="opts"><button data-k="a">IP, MAC, port</button><button data-k="b">IP, DNS, VLAN</button><button data-k="c">IP, mask, gateway</button><button data-k="d">Mask, MAC, TTL</button></div>
+    <div class="fb" data-explain="The IP says who you are, the mask says which addresses are nearby, and the gateway says where to send everything else. The MAC comes from the hardware and doesn't need to be configured."></div>
+  </div>
+</section>
+
+<!-- 5 THE ROUTER -->
+<section class="pane" id="p5">
+  <h2>The router</h2>
+  <p>A <span class="term">router</span> is a device with a foot in two or more networks. It has an address on each one. Its whole job is to take packets from one network and pass them into another, one step closer to where they're going. Each step from one router to the next is called a <span class="term">hop</span>.</p>
+
+  <h3>What a router does with a frame</h3>
+  <ol>
+    <li>A frame arrives addressed to the router's MAC. The router's network card keeps it and opens the Ethernet envelope. That envelope is now garbage.</li>
+    <li>The router reads the IP envelope's "To" line. The address isn't the router's own, and that's fine: routers are allowed to forward.</li>
+    <li>It looks the address up in its <span class="term">routing table</span>, a list that says "addresses in this range go out that side." It finds the right side.</li>
+    <li>It lowers a counter on the IP envelope called the <span class="term">TTL</span> by one. TTL starts around 64 and every router subtracts one. If it ever hits zero, the packet is thrown away. This is what stops a packet from circling forever if two routers point at each other by mistake.</li>
+    <li>It puts the packet in a <em>brand new</em> Ethernet envelope: To the next machine's MAC on the other network (found with ARP over there), From the router's own MAC on that side. And sends it.</li>
+  </ol>
+
+  <div class="note">
+    <p><b>The most important sentence in this session.</b> Crossing a router, the Ethernet envelope is thrown away and replaced. The IP envelope keeps the same To and From all the way, only the TTL ticks down. <b>Layer 2 is hop by hop. Layer 3 is end to end.</b> If you remember one line from today, it's that one.</p>
+  </div>
+
+  <div class="widget" id="w-trip">
+    <h4>One request across a router</h4>
+    <p class="sub">A is on 192.168.1.0/24. B is on 10.0.0.0/24. The router sits between them with one address on each side.</p>
+    <svg class="scene" id="trip-svg" viewBox="0 0 640 170" role="img" aria-label="Laptop A, a switch, a router, and laptop B">
+      <line class="link" id="tr-l-1" x1="118" y1="80" x2="180" y2="80"/>
+      <line class="link" id="tr-l-2" x1="290" y1="80" x2="345" y2="80"/>
+      <line class="link" id="tr-l-3" x1="495" y1="80" x2="540" y2="80"/>
+      <g class="pc" id="tr-n-A"><rect class="scr" x="22" y="48" width="94" height="54" rx="6"/><rect x="10" y="102" width="118" height="11" rx="4"/><text x="69" y="70" text-anchor="middle" font-size="15" font-weight="700">A</text><text x="69" y="89" text-anchor="middle" font-size="10.5">192.168.1.10</text><text x="69" y="133" text-anchor="middle" font-size="11" fill="#5d6675">MAC ends ...0a</text></g>
+      <g class="sw" id="tr-n-SW"><rect x="180" y="56" width="110" height="48" rx="8"/><circle class="led" cx="198" cy="93" r="4"/><circle class="led" cx="212" cy="93" r="4"/><text x="235" y="79" text-anchor="middle" font-size="14" font-weight="700">Switch</text></g>
+      <g class="sw" id="tr-n-R"><rect x="345" y="36" width="150" height="86" rx="10"/><text x="420" y="58" text-anchor="middle" font-size="15" font-weight="700">Router</text><text x="420" y="78" text-anchor="middle" font-size="10.5">left side: 192.168.1.1</text><text x="420" y="91" text-anchor="middle" font-size="10" fill="#5d6675">MAC ends ...01</text><text x="420" y="107" text-anchor="middle" font-size="10.5">right side: 10.0.0.1</text><text x="420" y="118" text-anchor="middle" font-size="10" fill="#5d6675">MAC ends ...02</text></g>
+      <g class="pc" id="tr-n-B"><rect class="scr" x="540" y="48" width="90" height="54" rx="6"/><rect x="530" y="102" width="108" height="11" rx="4"/><text x="585" y="70" text-anchor="middle" font-size="15" font-weight="700">B</text><text x="585" y="89" text-anchor="middle" font-size="10.5">10.0.0.20</text><text x="585" y="133" text-anchor="middle" font-size="11" fill="#5d6675">MAC ends ...0b</text></g>
+    </svg>
+    <div class="trip-where" id="trip-where"></div>
+    <div class="trip-stack" id="trip-stack"></div>
+    <div class="story">
+      <div class="text" id="trip-text"></div>
+      <div class="ctrl"><button class="btn alt" id="trip-prev">Back</button><button class="btn" id="trip-next">Next</button><button class="btn alt" id="trip-reset">Replay</button><div class="dots" id="trip-dots"></div></div>
+    </div>
+  </div>
+
+  <h3>Two things people get wrong</h3>
+  <ul>
+    <li>A does <b>not</b> ARP for B. B isn't on A's network, so shouting "who has 10.0.0.20?" on A's network gets silence. A ARPs for the <em>gateway</em>, and the router does its own ARP for B on the other side.</li>
+    <li>The router does <b>not</b> change the destination IP. The To line on the IP envelope says 10.0.0.20 when A writes it and still says 10.0.0.20 when B reads it. Only the Ethernet envelopes change, and only the TTL on the IP envelope moves.</li>
+  </ul>
+
+  <div class="check" data-answer="d">
+    <p class="q">Which envelope does a router throw away and replace?</p>
+    <div class="opts"><button data-k="a">The letter</button><button data-k="b">TCP</button><button data-k="c">IP</button><button data-k="d">Ethernet</button></div>
+    <div class="fb" data-explain="The Ethernet envelope only ever has to cross one cable. At the router it's opened, discarded, and a new one is written for the next cable. The IP envelope travels end to end."></div>
+  </div>
+  <div class="check" data-answer="b">
+    <p class="q">A packet leaves A with TTL 64 and crosses one router. B sees TTL:</p>
+    <div class="opts"><button data-k="a">64</button><button data-k="b">63</button><button data-k="c">1</button><button data-k="d">0</button></div>
+    <div class="fb" data-explain="Every router subtracts one. One router, one tick: 63. If it went through ten routers, B would see 54. A packet that reaches zero is dropped."></div>
+  </div>
+  <div class="check" data-answer="c">
+    <p class="q">A on 192.168.1.10 sends to B on 10.0.0.20. Whose MAC goes on the Ethernet envelope A writes?</p>
+    <div class="opts"><button data-k="a">B's</button><button data-k="b">The switch's</button><button data-k="c">The router's</button><button data-k="d">A's own</button></div>
+    <div class="fb" data-explain="B is on another network, so A can't reach B's MAC. It addresses the frame to its gateway, the router's MAC on A's side, and lets the router take it from there."></div>
+  </div>
+</section>
+
+<!-- 6 SPLITTING AND BUNDLING -->
+<section class="pane" id="p6">
+  <h2>Splitting and bundling a switch</h2>
+  <p>Three more words from the interview list, all about switches. None of them is deep. Each one is a single idea with a name.</p>
+
+  <h3>VLANs: one switch, several rooms</h3>
+  <p>A <span class="term">VLAN</span> splits one physical switch into several separate networks. You tell the switch "ports 1 to 3 are VLAN 10, ports 4 to 6 are VLAN 20," and from then on the two groups can't hear each other at all. A broadcast in VLAN 10 stays in VLAN 10. To get from one VLAN to another, a packet has to go through a router, just like between any two networks. That's the point: it lets you separate the finance team from the guest Wi-Fi without buying a second switch.</p>
+
+  <div class="widget" id="w-vlan">
+    <h4>Draw the walls</h4>
+    <p class="sub">Click a port's VLAN button to move it between VLAN 10 and VLAN 20. Then pick a computer and make it shout.</p>
+    <div class="row">
+      <label class="f">Who shouts (broadcasts)<select id="vl-who"><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option></select></label>
+      <button class="btn" id="vl-shout">Shout</button>
+      <button class="btn alt" id="vl-reset">Reset</button>
+    </div>
+    <div class="ports" id="vl-ports"></div>
+    <div class="story"><div class="text" id="vl-text">Six computers on one switch. Right now A, B, C are in VLAN 10 and D, E, F are in VLAN 20.</div></div>
+  </div>
+
+  <p>Two port words go with this. A port that belongs to one VLAN, where a normal computer plugs in, is an <span class="term">access port</span>. A cable between two switches that has to carry <em>several</em> VLANs at once is a <span class="term">trunk port</span>: every frame crossing it gets a small tag saying which VLAN it belongs to, so the far switch can sort them back out. The tag format is called <span class="term">802.1Q</span>, and people just say "dot1q."</p>
+
+  <h3>LACP: several cables, one link</h3>
+  <p>Sometimes one cable between two switches isn't enough bandwidth, or you don't want one cable failing to cut the connection. So you plug in two or four cables and tell both ends to treat them as one logical link. Traffic is spread across them, and if one dies the others carry on. The bundle is called a <span class="term">port channel</span> (or a LAG), and <span class="term">LACP</span> is the protocol the two ends use to agree on the bundle and notice when a cable in it dies. That's the whole thing.</p>
+
+  <h3>Layer 2 versus layer 3</h3>
+  <p>You'll hear devices described by the layer they work at. A <b>layer 2</b> device forwards using MAC addresses: that's a switch. A <b>layer 3</b> device forwards using IP addresses: that's a router. A <span class="term">layer 3 switch</span> does both in one box, switching within a VLAN and routing between VLANs, and most switches in a data center are layer 3 switches. When someone asks "is that an L2 or L3 problem," they're asking "MAC-level or IP-level."</p>
+
+  <div class="note">
+    <p><b>One more size.</b> Session 1 said packets are about 1,500 bytes. The exact limit a link can carry in one frame is its <span class="term">MTU</span>, and 1,500 bytes is the standard Ethernet MTU. A packet bigger than the MTU has to be split or dropped, and mismatched MTUs are a classic source of "small things work, big things hang." Just know the word and the number for now.</p>
+  </div>
+
+  <div class="check" data-answer="b">
+    <p class="q">A broadcast sent by a computer in VLAN 10 reaches:</p>
+    <div class="opts"><button data-k="a">Every port on the switch</button><button data-k="b">Only VLAN 10 ports</button><button data-k="c">Only the trunk</button><button data-k="d">Only the router</button></div>
+    <div class="fb" data-explain="A VLAN is a separate network inside the switch. Broadcasts stop at its edge. VLAN 20 hears nothing."></div>
+  </div>
+  <div class="check" data-answer="c">
+    <p class="q">LACP is for:</p>
+    <div class="opts"><button data-k="a">Splitting a switch</button><button data-k="b">Assigning IPs</button><button data-k="c">Bundling cables</button><button data-k="d">Finding MACs</button></div>
+    <div class="fb" data-explain="LACP lets two devices treat several cables as one link, for more bandwidth and so a single cable failure doesn't break the connection."></div>
+  </div>
+  <div class="check" data-answer="a">
+    <p class="q">A device that forwards using IP addresses is working at:</p>
+    <div class="opts"><button data-k="a">Layer 3</button><button data-k="b">Layer 2</button><button data-k="c">Layer 4</button><button data-k="d">Layer 1</button></div>
+    <div class="fb" data-explain="IP is layer 3, so a router (or a layer 3 switch doing routing) is a layer 3 device. Plain switches forward on MAC and are layer 2."></div>
+  </div>
+</section>
+
+<!-- 7 GLOSSARY -->
+<section class="pane" id="p7">
+  <h2>Glossary</h2>
+  <p>Every new term from this session, one sentence each. Session 1's terms are in that lesson's glossary.</p>
+  <div class="gl">
+    <div><b>Bit</b>A single one or zero. An IPv4 address is 32 of them.</div>
+    <div><b>Octet</b>Eight bits, written as one number from 0 to 255. An IPv4 address has four.</div>
+    <div><b>Binary</b>Counting with ones and zeros. Each bit in an octet is worth 128, 64, 32, 16, 8, 4, 2, or 1.</div>
+    <div><b>IPv4</b>The 32-bit addresses this course is about, like 192.168.1.10.</div>
+    <div><b>IPv6</b>The newer 128-bit version, written in hex like 2001:db8::1. Exists because IPv4 ran out.</div>
+    <div><b>Subnet mask</b>Says how many of the 32 bits are the network part. Written as /24 or as 255.255.255.0.</div>
+    <div><b>CIDR notation</b>The slash form of the mask: /24 means 24 network bits.</div>
+    <div><b>Subnet</b>One network, as defined by an address and a mask.</div>
+    <div><b>Host</b>The networking word for a computer on a network. Also the name for the last part of an address.</div>
+    <div><b>Network address</b>The address with all host bits zero. It names the network and can't be given to a computer.</div>
+    <div><b>Broadcast address</b>The address with all host bits one. Sending there reaches everyone on the network.</div>
+    <div><b>Usable hosts</b>The addresses in a subnet minus the network and broadcast addresses. A /24 has 254.</div>
+    <div><b>Block size</b>How many addresses a subnet holds: 2 to the number of host bits. Networks start at multiples of it.</div>
+    <div><b>Private address</b>Addresses starting 10., 172.16 to 172.31, or 192.168, reserved for homes and offices.</div>
+    <div><b>NAT</b>The trick a home router uses to let many private addresses share one public one.</div>
+    <div><b>Default gateway</b>The router's address on your network, where you send anything that isn't nearby.</div>
+    <div><b>Router</b>A device with an address on two or more networks that passes packets between them.</div>
+    <div><b>Routing table</b>The router's list of which address ranges go out which side.</div>
+    <div><b>Hop</b>One step from a router to the next.</div>
+    <div><b>TTL (time to live)</b>A counter on the IP envelope that each router lowers by one; at zero the packet is dropped.</div>
+    <div><b>VLAN</b>A way to split one switch into several separate networks that can't hear each other.</div>
+    <div><b>Access port</b>A switch port that belongs to a single VLAN, where a computer plugs in.</div>
+    <div><b>Trunk port</b>A switch port that carries several VLANs at once, with a tag on each frame.</div>
+    <div><b>802.1Q (dot1q)</b>The format of the VLAN tag on a trunk.</div>
+    <div><b>LACP</b>The protocol two devices use to bundle several cables into one logical link.</div>
+    <div><b>Port channel (LAG)</b>The bundle of cables LACP creates.</div>
+    <div><b>Layer 2 device</b>Forwards using MAC addresses. A switch.</div>
+    <div><b>Layer 3 device</b>Forwards using IP addresses. A router.</div>
+    <div><b>Layer 3 switch</b>A switch that can also route between VLANs. Most data center switches.</div>
+    <div><b>MTU</b>The biggest frame a link can carry. 1,500 bytes on standard Ethernet.</div>
+  </div>
+</section>
+
+<!-- 8 PRACTICE + HOMEWORK -->
+<section class="pane" id="p8">
+  <h2>Practice</h2>
+  <p>Out loud first, then open the answer. Same as last time.</p>
+
+  <details class="reveal"><summary>1. What does <span class="mono">192.168.1.10/24</span> mean, piece by piece?</summary><div class="body"><p>The address is 192.168.1.10. The /24 says the first 24 bits, the first three octets, are the network part: 192.168.1. The last octet, 10, is the host part. Every address that starts 192.168.1 is on this network. The network address is 192.168.1.0, the broadcast is 192.168.1.255, and 254 computers can live here.</p></div></details>
+  <details class="reveal"><summary>2. Why does a /24 have 254 usable addresses and not 256?</summary><div class="body"><p>Two of the 256 are reserved: the network address (all host bits zero) names the network, and the broadcast address (all host bits one) means everyone. Neither can be assigned to a computer.</p></div></details>
+  <details class="reveal"><summary>3. How does a laptop decide whether to send directly or to the gateway?</summary><div class="body"><p>It keeps the network bits of its own address and of the destination, using its own mask, and compares. If they match, the destination is on the same network: ARP for its MAC and send directly. If not, send the frame to the default gateway's MAC and let the router take it further. The IP envelope still says the real destination either way.</p></div></details>
+  <details class="reveal"><summary>4. What does a router change on a packet, and what does it leave alone?</summary><div class="body"><p>It throws away the Ethernet envelope and writes a new one for the next cable, with new To and From MACs. It lowers the TTL by one on the IP envelope. It leaves the IP To and From, the TCP envelope, and the letter untouched. Layer 2 is hop by hop; layer 3 is end to end.</p></div></details>
+  <details class="reveal"><summary>5. What is a VLAN for, and what's a trunk?</summary><div class="body"><p>A VLAN splits one physical switch into separate networks that can't hear each other's traffic, so different groups can share hardware without sharing a network. A trunk is a link between switches that carries several VLANs at once, with an 802.1Q tag on each frame saying which VLAN it belongs to.</p></div></details>
+  <details class="reveal"><summary>6. Tell the trip: A on 192.168.1.10 sends a web request to B on 10.0.0.20.</summary><div class="body"><ol>
+    <li>A's browser writes the request. TCP wraps it for port 80. IP wraps that: To 10.0.0.20, From 192.168.1.10, TTL 64.</li>
+    <li>A compares network parts: 10.0.0 is not 192.168.1. Far. Send to the gateway, 192.168.1.1.</li>
+    <li>A ARPs for the gateway's MAC (not B's), then writes the Ethernet envelope To the router's MAC.</li>
+    <li>The switch delivers the frame to the router's port.</li>
+    <li>The router opens and discards the Ethernet envelope, reads To 10.0.0.20, finds in its table that 10.0.0.x is on its other side, lowers TTL to 63.</li>
+    <li>The router ARPs for 10.0.0.20 on that side, writes a new Ethernet envelope To B's MAC, From its own right-side MAC, and sends.</li>
+    <li>B's network card sees its MAC, opens Ethernet, IP sees its own address, TCP sees port 80, the web server gets the letter.</li>
+  </ol></div></details>
+
+  <h3>Quick problems</h3>
+  <p>Do these on paper with the block size trick. Answers hidden below each.</p>
+  <details class="reveal"><summary>a. Network and broadcast of <span class="mono">10.0.0.77/26</span></summary><div class="body"><p>/26 blocks of 64: 0, 64, 128, 192. 77 is in the 64 block. Network 10.0.0.64, broadcast 10.0.0.127, usable .65 to .126 (62 hosts).</p></div></details>
+  <details class="reveal"><summary>b. Are <span class="mono">192.168.1.100</span> and <span class="mono">192.168.1.140</span> on the same network with /26?</summary><div class="body"><p>No. Blocks of 64: 100 is in the 64 to 127 block, 140 is in the 128 to 191 block. Different networks. With /25 (blocks of 128) they'd both be in the 0 to 127 block... except 140 wouldn't. Still no. With /24, yes.</p></div></details>
+  <details class="reveal"><summary>c. How many usable hosts in a /28, and what's the mask?</summary><div class="body"><p>32 minus 28 is 4 host bits. Block size 16, usable 14. Mask 255.255.255.240 (256 minus 16).</p></div></details>
+  <details class="reveal"><summary>d. You need at least 50 hosts in one subnet. Smallest prefix?</summary><div class="body"><p>/26 gives 62 usable, enough. /27 gives only 30. So /26.</p></div></details>
+  <details class="reveal"><summary>e. Network and broadcast of <span class="mono">172.16.5.33/27</span></summary><div class="body"><p>/27 blocks of 32: 0, 32, 64... 33 is in the 32 block. Network 172.16.5.32, broadcast 172.16.5.63, usable .33 to .62.</p></div></details>
+
+  <h2 style="margin-top:44px">Homework</h2>
+  <p>About two hours across the week, plus the daily drill. Send everything before next session.</p>
+
+  <ul class="hw">
+    <li><input type="checkbox" aria-label="done"><div>
+      <h4>1. Subnet drill, every day</h4>
+      <p>Twenty questions a day in the drill widget on the Subnet math tab. Start at Level 1 with 45 seconds. Move to Level 2 when you're getting them all. Move to 30 seconds, then 20, when Level 2 feels easy. By next session the goal is Level 2 at 30 seconds with almost no misses.</p>
+      <p class="send"><b>Send:</b> a screenshot of your score line at the end of each day's twenty.</p>
+    </div></li>
+    <li><input type="checkbox" aria-label="done"><div>
+      <h4>2. Flashcards, ten minutes a day</h4>
+      <p>New deck below, same routine as last week. Keep running last week's deck too; it's only a couple of minutes.</p>
+      <div class="fc" id="fc">
+        <div class="card" id="fc-card" tabindex="0" role="button" aria-label="flashcard"></div>
+        <div class="row"><button class="btn alt" id="fc-prev">Back</button><button class="btn" id="fc-flip">Flip</button><button class="btn alt" id="fc-next">Next</button><span class="muted" id="fc-count"></span><button class="btn alt" id="fc-shuffle">Shuffle</button></div>
+      </div>
+      <details class="reveal" style="margin-top:12px"><summary>Anki import block</summary><div class="body">
+<pre class="cmd"><code>How many bits in an IPv4 address?	32, in four octets of 8
+Range of one octet	0 to 255
+Bit values in an octet	128, 64, 32, 16, 8, 4, 2, 1
+192 in binary	11000000 (128 + 64)
+What does /24 mean?	The first 24 bits are the network part
+/24 as a dotted mask	255.255.255.0
+/16 as a dotted mask	255.255.0.0
+What is the network address?	All host bits zero; names the network; not usable by a computer
+What is the broadcast address?	All host bits one; reaches everyone on the network; not usable by a computer
+Usable hosts in a /24	254
+Usable hosts in a /25	126
+Usable hosts in a /26	62
+Usable hosts in a /27	30
+Usable hosts in a /28	14
+Usable hosts in a /29	6
+Usable hosts in a /30	2
+Mask for /25	255.255.255.128
+Mask for /26	255.255.255.192
+Mask for /27	255.255.255.224
+Mask for /28	255.255.255.240
+Mask for /30	255.255.255.252
+Block size formula	2 to the (32 minus prefix)
+Usable hosts formula	Block size minus 2
+Where do /26 networks start?	.0, .64, .128, .192
+What is a /30 used for?	A cable between two routers: exactly two usable addresses
+Private address ranges	10.x.x.x, 172.16 to 172.31.x.x, 192.168.x.x
+What is NAT?	A router sharing one public address among many private ones
+How does a host decide near or far?	Compare the network bits of its own address and the destination, using its own mask
+What is the default gateway?	The router's address on your network; where you send anything far
+The three settings a host needs	IP address, subnet mask, default gateway
+What does a router do to the Ethernet envelope?	Throws it away and writes a new one for the next cable
+What does a router do to the IP envelope?	Keeps To and From, lowers TTL by one
+What is TTL?	A counter each router lowers by one; the packet is dropped at zero
+Layer 2 is hop by hop; layer 3 is	End to end
+Does A ARP for B on another network?	No. A ARPs for the gateway; the router ARPs for B on the far side
+What is a VLAN?	A way to split one switch into separate networks that can't hear each other
+Access port vs trunk port	Access carries one VLAN to a computer; trunk carries many VLANs between switches, tagged
+What is the VLAN tag standard?	802.1Q (dot1q)
+What is LACP?	The protocol for bundling several cables into one logical link (port channel, LAG)
+Layer 2 device	Switch (forwards on MAC)
+Layer 3 device	Router (forwards on IP)
+What is a layer 3 switch?	A switch that also routes between VLANs
+What is MTU?	The biggest frame a link can carry; 1,500 bytes on standard Ethernet
+IPv6 in one line	128-bit addresses written in hex; exists because IPv4 ran out</code></pre>
+      </div></details>
+      <p class="send"><b>Send:</b> nothing. I'll quiz you at the start of session 3.</p>
+    </div></li>
+    <li><input type="checkbox" aria-label="done"><div>
+      <h4>3. Subnets in Python</h4>
+      <p>Write <code>network_info(cidr)</code> that takes a string like <code>"192.168.1.100/26"</code> and returns the network address, broadcast address, and number of usable hosts. Do it with plain integer math: turn the four octets into one 32-bit number, build the mask from the prefix, and use bitwise AND and OR. No <code>ipaddress</code> module in the solution.</p>
+      <p>Then write <code>same_network(ip_a, ip_b, prefix)</code> that returns True or False. Test both against the five quick problems on this tab.</p>
+      <p><b>Stretch:</b> after you're done, check your answers against Python's built-in <code>ipaddress</code> module and make the comparison part of your tests.</p>
+      <p class="send"><b>Send:</b> the file and its output.</p>
+    </div></li>
+    <li><input type="checkbox" aria-label="done"><div>
+      <h4>4. The cross-network trip, in your own words</h4>
+      <p>Close the page. Write the trip from Practice question 6 in about ten sentences, no notes. Say it out loud once a day, aiming for a minute. Record it once at the end of the week.</p>
+      <p class="send"><b>Send:</b> the written version (first draft) and the one recording.</p>
+    </div></li>
+  </ul>
+
+  <details class="tutor">
+    <summary>Tutor notes (for me)</summary>
+    <div class="body">
+      <p><b>Pacing for 90 minutes.</b> Start 5, Reading an address 10, Network and host 15, Subnet math 25, Near or far 10, The router 15, Splitting and bundling 10. Subnet math is where the time goes; do three drill questions together on screen before letting her loose on it. If short, compress Splitting and bundling to "one sentence each" and lean on the flashcards.</p>
+      <p><b>What "good" looks like in her trip story.</b> The near-or-far comparison comes before any ARP. ARP is for the gateway, not B. The router opens and discards the Ethernet envelope, reads IP, drops TTL, writes a new Ethernet envelope. Destination IP never changes. If she says "layer 2 is hop by hop, layer 3 is end to end" unprompted, she's got it.</p>
+      <p><b>The usual confusions.</b> 256 instead of 254. Thinking the router rewrites the destination IP. Thinking A ARPs for B across the router. Confusing the network address with the first usable address. Thinking a VLAN is a physical thing. Each is a two-minute fix when it appears.</p>
+      <p><b>Python check.</b> <code>network_info("192.168.1.100/26")</code> should give network 192.168.1.64, broadcast 192.168.1.127, 62 hosts. The clean version: <code>int_ip = (a&lt;&lt;24)|(b&lt;&lt;16)|(c&lt;&lt;8)|d</code>, <code>mask = (0xFFFFFFFF &lt;&lt; (32-prefix)) &amp; 0xFFFFFFFF</code>, network = ip &amp; mask, broadcast = network | ~mask &amp; 0xFFFFFFFF. If she uses string splitting on the octets and does the math per octet, that works too but tends to break on prefixes that don't land on an octet boundary; nudge her toward the 32-bit integer.</p>
+      <p><b>Week 2 preview.</b> Routing protocols: how routers build their tables when there's more than one. OSPF first (everyone shares the map), then BGP with most of the time. The router tab here is the foundation; week 2 just asks "how did the routing table get filled in?"</p>
+    </div>
+  </details>
+</section>
+
+</main>
+
+<script>
+(function(){
+'use strict';
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* tabs */
+const panes = [...document.querySelectorAll('.pane')];
+const tabs = [...document.querySelectorAll('#tabs button')];
+function show(id, push){
+  panes.forEach(p => p.classList.toggle('active', p.id === id));
+  tabs.forEach(t => t.setAttribute('aria-selected', t.dataset.p === id ? 'true' : 'false'));
+  if(push !== false) history.replaceState(null, '', '#' + id);
+  window.scrollTo({top:0});
+}
+tabs.forEach(t => t.addEventListener('click', () => show(t.dataset.p)));
+panes.forEach((p, i) => {
+  const nav = document.createElement('div'); nav.className = 'pane-nav';
+  if(i > 0){ const b = document.createElement('button'); b.textContent = 'Back: ' + tabs[i-1].textContent; b.onclick = () => show(panes[i-1].id); nav.appendChild(b); }
+  const sp = document.createElement('div'); sp.className = 'sp'; nav.appendChild(sp);
+  if(i < panes.length-1){ const b = document.createElement('button'); b.textContent = 'Next: ' + tabs[i+1].textContent; b.onclick = () => show(panes[i+1].id); nav.appendChild(b); }
+  p.appendChild(nav);
+});
+const h0 = location.hash.slice(1);
+show(panes.some(p => p.id === h0) ? h0 : 'p0', false);
+
+/* copy buttons */
+document.querySelectorAll('pre.cmd').forEach(pre => {
+  const b = document.createElement('button'); b.className = 'copy'; b.type = 'button'; b.textContent = 'Copy';
+  b.addEventListener('click', () => navigator.clipboard.writeText(pre.querySelector('code').textContent).then(() => { b.textContent = 'Copied'; setTimeout(() => b.textContent = 'Copy', 1200); }));
+  pre.appendChild(b);
+});
+
+/* quick checks */
+document.querySelectorAll('.check').forEach(ch => {
+  const ans = ch.dataset.answer, fb = ch.querySelector('.fb'), opts = [...ch.querySelectorAll('.opts button')];
+  opts.forEach(b => b.addEventListener('click', () => {
+    if(ch.dataset.done) return;
+    if(b.dataset.k === ans){ b.classList.add('ok'); ch.dataset.done = '1'; opts.forEach(o => o.disabled = true); fb.innerHTML = '<span class="v ok">Yes.</span>' + esc(fb.dataset.explain); }
+    else { b.classList.add('no'); b.disabled = true; fb.innerHTML = '<span class="v no">Not that one.</span> Try another.'; }
+    fb.classList.add('show');
+  }));
+});
+
+/* story helper */
+function makeStory(o){
+  let steps = o.steps(), i = 0;
+  function render(){
+    const st = steps[i];
+    o.text.innerHTML = st.text;
+    o.dots.innerHTML = steps.map((_, k) => `<span class="${k < i ? 'done' : k === i ? 'on' : ''}"></span>`).join('');
+    o.prev.disabled = i === 0; o.next.disabled = i === steps.length - 1;
+    o.onStep(i, st, steps);
+  }
+  o.next.addEventListener('click', () => { if(i < steps.length-1){ i++; render(); } });
+  o.prev.addEventListener('click', () => { if(i > 0){ i--; render(); } });
+  o.reset.addEventListener('click', () => { i = 0; render(); });
+  render();
+  return { reload(){ steps = o.steps(); i = 0; render(); } };
+}
+
+/* subnet helpers */
+const ip2int = s => { const p = String(s).trim().split('.'); if(p.length !== 4) return null; let n = 0; for(const x of p){ if(!/^\d{1,3}$/.test(x)) return null; const v = +x; if(v > 255) return null; n = n * 256 + v; } return n; };
+const int2ip = n => [n >>> 24, (n >>> 16) & 255, (n >>> 8) & 255, n & 255].join('.');
+const maskOf = p => p <= 0 ? 0 : ((0xFFFFFFFF << (32 - p)) >>> 0);
+const netOf = (ip, p) => (ip & maskOf(p)) >>> 0;
+const bcOf = (ip, p) => (netOf(ip, p) | (~maskOf(p) >>> 0)) >>> 0;
+
+/* bits */
+(function(){
+  const vals = [128,64,32,16,8,4,2,1]; let n = 192;
+  const box = $('bits'), sum = $('bits-sum'), inp = $('bits-dec');
+  function render(){
+    box.innerHTML = vals.map((v, i) => { const on = (n >> (7-i)) & 1; return `<button class="bit ${on ? 'on' : ''}" data-i="${i}" aria-pressed="${on ? 'true' : 'false'}"><span class="val">${v}</span><span class="sw"></span><span class="b">${on}</span></button>`; }).join('');
+    const parts = vals.filter((v, i) => (n >> (7-i)) & 1);
+    sum.innerHTML = `<span class="mono">${n.toString(2).padStart(8,'0')}</span> = ${parts.length ? parts.join(' + ') : '0'} = <span class="mono">${n}</span>`;
+    if(+inp.value !== n) inp.value = n;
+  }
+  box.addEventListener('click', e => { const b = e.target.closest('.bit'); if(!b) return; n ^= (1 << (7 - +b.dataset.i)); render(); });
+  inp.addEventListener('input', () => { let v = parseInt(inp.value, 10); if(isNaN(v)) return; n = Math.max(0, Math.min(255, v)); render(); });
+  document.querySelectorAll('#w-bits [data-set]').forEach(b => b.addEventListener('click', () => { n = +b.dataset.set; render(); }));
+  render();
+})();
+
+/* mask slider */
+(function(){
+  const ipI = $('mask-ip'), pre = $('mask-pre'), nEl = $('mask-n'), oct = $('mask-oct'), facts = $('mask-facts'), cap = $('mask-cap');
+  function render(){
+    const p = +pre.value; nEl.textContent = '/' + p;
+    const ip = ip2int(ipI.value);
+    if(ip === null){ oct.innerHTML = ''; facts.innerHTML = ''; cap.textContent = 'Type a valid address: four numbers from 0 to 255, separated by dots.'; return; }
+    const mask = maskOf(p), net = netOf(ip, p), bc = bcOf(ip, p), total = 2 ** (32 - p), usable = Math.max(total - 2, 0);
+    const bits = ip.toString(2).padStart(32, '0');
+    oct.innerHTML = [0,1,2,3].map(o => {
+      const b = bits.slice(o*8, o*8+8);
+      const cells = [...b].map((c, k) => `<span class="${o*8+k < p ? 'net' : 'host'}">${c}</span>`).join('');
+      const lbl = o*8+8 <= p ? 'network' : o*8 >= p ? 'host' : 'split here';
+      return `<div class="oct"><div class="dec">${parseInt(b, 2)}</div><div class="bin">${cells}</div><div class="lbl">${lbl}</div></div>`;
+    }).join('');
+    facts.innerHTML = [['Mask', int2ip(mask)], ['Network address', int2ip(net)], ['Broadcast address', int2ip(bc)], ['Addresses in it', total.toLocaleString()], ['Usable hosts', usable.toLocaleString()], ['First to last usable', usable ? int2ip(net+1) + ' to ' + int2ip(bc-1) : 'none']]
+      .map(([k, v]) => `<div class="fact"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
+    cap.textContent = `The first ${p} bits say which network. The last ${32-p} say which computer. That's 2 to the ${32-p}, or ${total.toLocaleString()} addresses, minus the two special ones.`;
+  }
+  ipI.addEventListener('input', render); pre.addEventListener('input', render); render();
+})();
+
+/* near or far */
+(function(){
+  const me = $('nr-me'), pre = $('nr-pre'), dst = $('nr-dst'), cmp = $('nr-cmp'), ver = $('nr-verdict');
+  function render(){
+    const a = ip2int(me.value), b = ip2int(dst.value), p = +pre.value;
+    if(a === null || b === null){ cmp.innerHTML = ''; ver.innerHTML = '<div class="verdict diff">Type two valid addresses.</div>'; return; }
+    const na = netOf(a, p), nb = netOf(b, p), same = na === nb;
+    const octCls = i => { const nbits = Math.max(0, Math.min(8, p - i*8)); return nbits === 0 ? 'host' : 'net'; };
+    const row = (lab, ip, mark) => `<div class="lab">${lab}</div>` + int2ip(ip).split('.').map((o, i) => `<div class="cell ${mark ? (octCls(i) === 'net' && (int2ip(na).split('.')[i] !== int2ip(nb).split('.')[i]) ? 'bad' : octCls(i)) : octCls(i)}">${o}</div>`).join('');
+    cmp.innerHTML = row('My address', a) + row('Destination', b) + row('Mask /' + p, maskOf(p)) + row('My network', na) + row('Their network', nb, true);
+    const gw = int2ip(na + 1);
+    ver.innerHTML = same
+      ? `<div class="verdict same">Same network. Send directly: ARP for ${int2ip(b)}'s MAC and go.</div>`
+      : `<div class="verdict diff">Different network. Send to the default gateway (${gw} here): ARP for the gateway's MAC instead. The IP envelope still says To: ${int2ip(b)}.</div>`;
+  }
+  [me, dst].forEach(el => el.addEventListener('input', render)); pre.addEventListener('change', render);
+  document.querySelectorAll('#w-near [data-dst]').forEach(b => b.addEventListener('click', () => { dst.value = b.dataset.dst; render(); }));
+  render();
+})();
+
+/* drill */
+(function(){
+  const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+  const E = {level:$('dr-level'), secs:$('dr-secs'), start:$('dr-start'), box:$('drill'), timer:$('dr-timer'), streak:$('dr-streak'), score:$('dr-score'), total:$('dr-total'), q:$('dr-q'), inrow:$('dr-inrow'), ynrow:$('dr-ynrow'), inp:$('dr-in'), check:$('dr-check'), skip:$('dr-skip'), res:$('dr-res'), work:$('dr-work'), next:$('dr-next')};
+  let cur = null, timer = null, left = 0, streak = 0, score = 0, total = 0, done = false;
+  function gen(){
+    const level = +E.level.value;
+    const prefixes = level === 1 ? [24,25,26] : [24,25,26,27,28,29,30];
+    const p = prefixes[rnd(0, prefixes.length-1)];
+    const base = Math.random() < 0.5 ? [192,168,rnd(0,20)] : [10,rnd(0,9),rnd(0,9)];
+    const last = rnd(1, 254), ipStr = base.join('.') + '.' + last, ip = ip2int(ipStr);
+    const mask = maskOf(p), net = netOf(ip, p), bc = bcOf(ip, p), block = 2 ** (32 - p);
+    const work = `Prefix /${p}: host bits ${32-p}, block size ${block}\nMask ${int2ip(mask)}\nBlocks start at multiples of ${block} in the last octet\n${last} falls in the block starting at ${net & 255}\nNetwork ${int2ip(net)}\nBroadcast ${int2ip(bc)}\nUsable hosts ${block - 2}`;
+    const t = ['net','bc','hosts','mask','same'][rnd(0, 4)];
+    if(t === 'net') return {q:`What is the <b>network address</b> of <span class="mono">${ipStr}/${p}</span>?`, a:int2ip(net), kind:'text', work};
+    if(t === 'bc') return {q:`What is the <b>broadcast address</b> of <span class="mono">${ipStr}/${p}</span>?`, a:int2ip(bc), kind:'text', work};
+    if(t === 'hosts') return {q:`How many <b>usable host addresses</b> are in a <span class="mono">/${p}</span>?`, a:String(block - 2), kind:'text', work:`Host bits: 32 minus ${p} = ${32-p}\nBlock size: 2 to the ${32-p} = ${block}\nUsable: ${block} minus 2 = ${block - 2}`};
+    if(t === 'mask') return {q:`Write <span class="mono">/${p}</span> as a dotted-decimal mask.`, a:int2ip(mask), kind:'text', work:`Host bits ${32-p}, block size ${block}\nLast octet: 256 minus ${block} = ${256 - block}\nMask ${int2ip(mask)}`};
+    const other = rnd(1, 254), ip2 = base.join('.') + '.' + other, same = netOf(ip2int(ip2), p) === net;
+    return {q:`Are <span class="mono">${ipStr}</span> and <span class="mono">${ip2}</span> on the same network with <span class="mono">/${p}</span>?`, a: same ? 'yes' : 'no', kind:'yn', work:`Block size ${block}\n${last} is in the block starting at ${net & 255}\n${other} is in the block starting at ${netOf(ip2int(ip2), p) & 255}\n${same ? 'Same block, so same network' : 'Different blocks, so different networks'}`};
+  }
+  function stopTimer(){ if(timer){ clearInterval(timer); timer = null; } }
+  function ask(){
+    cur = gen(); done = false; stopTimer();
+    E.q.innerHTML = cur.q; E.res.className = 'res'; E.res.innerHTML = ''; E.next.style.display = 'none'; E.work.style.display = '';
+    E.inrow.style.display = cur.kind === 'text' ? '' : 'none'; E.ynrow.style.display = cur.kind === 'yn' ? '' : 'none';
+    E.inp.value = ''; if(cur.kind === 'text') E.inp.focus();
+    left = +E.secs.value; E.timer.textContent = left; E.timer.classList.remove('low');
+    timer = setInterval(() => { left--; E.timer.textContent = left; if(left <= 5) E.timer.classList.add('low'); if(left <= 0){ stopTimer(); finish(null, true); } }, 1000);
+  }
+  function finish(given, timeout){
+    if(done) return; done = true; stopTimer(); total++;
+    const norm = s => String(s).trim().toLowerCase().replace(/\s+/g, '');
+    const ok = !timeout && given !== null && norm(given) === norm(cur.a);
+    if(ok){ score++; streak++; E.res.className = 'res show ok'; E.res.innerHTML = `<b>Yes.</b> ${esc(cur.a)}.`; }
+    else { streak = 0; E.res.className = 'res show no'; E.res.innerHTML = `<b>${timeout ? "Time's up." : given === null ? 'Skipped.' : 'Not quite.'}</b> The answer is ${esc(cur.a)}.<div class="work">${esc(cur.work)}</div>`; E.work.style.display = 'none'; }
+    E.streak.textContent = streak; E.score.textContent = score; E.total.textContent = total;
+    E.next.style.display = ''; E.next.focus();
+  }
+  E.start.addEventListener('click', () => { streak = score = total = 0; E.streak.textContent = E.score.textContent = E.total.textContent = 0; E.box.style.display = ''; E.start.textContent = 'Restart'; ask(); });
+  E.check.addEventListener('click', () => finish(E.inp.value, false));
+  E.inp.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); if(done) ask(); else finish(E.inp.value, false); } });
+  E.skip.addEventListener('click', () => finish(null, false));
+  E.ynrow.querySelectorAll('button').forEach(b => b.addEventListener('click', () => finish(b.dataset.yn, false)));
+  E.work.addEventListener('click', () => { if(!cur) return; E.res.className = 'res show ' + (done ? E.res.className.includes('ok') ? 'ok' : 'no' : 'no'); E.res.innerHTML = (E.res.innerHTML.includes('class="work"') ? E.res.innerHTML : E.res.innerHTML + `<div class="work">${esc(cur.work)}</div>`); if(!done){ done = true; stopTimer(); total++; streak = 0; E.streak.textContent = streak; E.total.textContent = total; E.res.innerHTML = `<b>Peeked.</b> The answer is ${esc(cur.a)}.<div class="work">${esc(cur.work)}</div>`; E.next.style.display = ''; } E.work.style.display = 'none'; });
+  E.next.addEventListener('click', ask);
+})();
+
+/* trip across a router */
+(function(){
+  const svg = $('trip-svg'), stack = $('trip-stack'), whereEl = $('trip-where');
+  const L = {letter:'the letter', tcp:'TCP envelope: port 80', ip64:'IP envelope: To 10.0.0.20, TTL 64', ip63:'IP envelope: To 10.0.0.20, TTL 63', eth1:'Ethernet envelope: To router ...01', eth2:'Ethernet envelope: To B ...0b'};
+  const C = k => k.startsWith('eth') ? 'eth' : k.startsWith('ip') ? 'ip' : k;
+  const S = (text, nodes, links, where, items) => ({text, nodes, links, where, items});
+  const STEPS = [
+    S('Your browser on A writes the letter for the web server at <b>10.0.0.20</b>.', ['A'], [], 'At A, inside the browser', [['letter']]),
+    S('TCP envelope: for <b>port 80</b>, from port 51234, packet 1.', ['A'], [], 'At A, TCP layer', [['tcp'],['letter']]),
+    S('IP envelope: <b>To 10.0.0.20, From 192.168.1.10, TTL 64</b>.', ['A'], [], 'At A, IP layer', [['ip64'],['tcp'],['letter']]),
+    S('Near or far? A keeps the network bits: mine is 192.168.1, theirs is 10.0.0. <b>Different.</b> So this goes to the default gateway, 192.168.1.1. The IP envelope still says To: 10.0.0.20.', ['A'], [], 'At A, deciding', [['ip64'],['tcp'],['letter']]),
+    S('A doesn\'t have the gateway\'s MAC yet, so it shouts: <b>who has 192.168.1.1?</b> The router answers: MAC ending ...01. A never asks for B\'s MAC. B isn\'t in this room.', ['A','SW','R'], [['1','shout'],['2','shout']], 'At A, ARP for the gateway', [['ip64'],['tcp'],['letter']]),
+    S('Ethernet envelope: <b>To the router\'s MAC ...01</b>, From A\'s ...0a. The frame goes on the wire.', ['A'], [['1','on']], 'Leaving A on cable 1', [['eth1'],['ip64'],['tcp'],['letter']]),
+    S('The switch reads the To MAC, finds the router\'s port, forwards. It changes nothing.', ['SW'], [['1','on'],['2','on']], 'Through the switch', [['eth1'],['ip64'],['tcp'],['letter']]),
+    S('The router\'s card sees its own MAC: mine. It opens the Ethernet envelope and <b>throws it away</b>. It reads the IP envelope: To 10.0.0.20. Not me, but I know where that is: my right side. <b>TTL 64 becomes 63.</b>', ['R'], [['2','on']], 'Inside the router', [['eth1','off'],['ip63'],['tcp'],['letter']]),
+    S('The router needs B\'s MAC on the right-side network, so it shouts over there: <b>who has 10.0.0.20?</b> B answers: ...0b.', ['R','B'], [['3','shout']], 'Router, ARP on the right side', [['ip63'],['tcp'],['letter']]),
+    S('A <b>brand new Ethernet envelope</b>: To B\'s MAC ...0b, From the router\'s right-side MAC ...02. The same IP envelope is inside, TTL 63. Off it goes.', ['R'], [['3','on']], 'Leaving the router on cable 3', [['eth2','swap'],['ip63'],['tcp'],['letter']]),
+    S('B\'s card: my MAC. Opens Ethernet. IP: my address, 10.0.0.20. Opens IP. TCP: port 80. The web server gets the letter. Compare the two Ethernet envelopes: completely different. Compare the IP envelope: same To, same From, TTL one lower.', ['B'], [], 'At B, delivered', [['eth2','off'],['ip63','off'],['tcp','off'],['letter']])
+  ];
+  makeStory({
+    text:$('trip-text'), dots:$('trip-dots'), prev:$('trip-prev'), next:$('trip-next'), reset:$('trip-reset'),
+    steps: () => STEPS,
+    onStep(i, st){
+      svg.querySelectorAll('.pc,.sw').forEach(n => n.classList.toggle('on', st.nodes.includes(n.id.replace('tr-n-',''))));
+      svg.querySelectorAll('.link').forEach(l => { l.classList.remove('on','shout'); const m = st.links.find(x => 'tr-l-' + x[0] === l.id); if(m) l.classList.add(m[1]); });
+      whereEl.textContent = 'Where it is: ' + st.where;
+      stack.innerHTML = st.items.map(([k, mod]) => `<span class="tchip ${C(k)} ${mod || ''}">${L[k]}</span>`).join('');
+    }
+  });
+})();
+
+/* vlan */
+(function(){
+  const hosts = ['A','B','C','D','E','F']; const def = {A:10,B:10,C:10,D:20,E:20,F:20};
+  let vlan = {...def}, hear = null;
+  const ports = $('vl-ports'), text = $('vl-text');
+  function render(){
+    ports.innerHTML = hosts.map((h, i) => `<div class="port v${vlan[h]} ${hear ? (hear.includes(h) ? 'hear' : 'deaf') : ''}"><div class="name">${h}</div><div class="ip">port ${i+1}</div><button data-h="${h}" aria-label="toggle VLAN for ${h}">VLAN ${vlan[h]}</button></div>`).join('');
+  }
+  ports.addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; const h = b.dataset.h; vlan[h] = vlan[h] === 10 ? 20 : 10; hear = null; text.textContent = `Moved ${h} to VLAN ${vlan[h]}. Now shout from someone and see who hears it.`; render(); });
+  $('vl-shout').addEventListener('click', () => {
+    const who = $('vl-who').value, v = vlan[who];
+    const listeners = hosts.filter(h => h !== who && vlan[h] === v), deaf = hosts.filter(h => vlan[h] !== v);
+    hear = [who, ...listeners];
+    text.innerHTML = `<b>${who} shouts.</b> It's in VLAN ${v}. ` + (listeners.length ? `${listeners.join(', ')} hear it.` : 'Nobody else is in that VLAN, so the shout goes nowhere.') + (deaf.length ? ` ${deaf.join(', ')} hear nothing, as if they were plugged into a different switch.` : '');
+    render();
+  });
+  $('vl-reset').addEventListener('click', () => { vlan = {...def}; hear = null; text.textContent = 'Six computers on one switch. A, B, C are in VLAN 10 and D, E, F are in VLAN 20.'; render(); });
+  render();
+})();
+
+/* flashcards */
+(function(){
+  const pre = document.querySelector('#p8 pre.cmd code');
+  let cards = pre.textContent.trim().split('\n').map(l => l.split('\t')).filter(p => p.length === 2);
+  let i = 0, back = false;
+  const card = $('fc-card'), count = $('fc-count');
+  function render(){
+    const c = cards[i];
+    card.classList.toggle('back', back);
+    card.innerHTML = esc(back ? c[1] : c[0]) + `<small>${back ? 'click for the question' : 'click to flip'}</small>`;
+    count.textContent = `${i+1} of ${cards.length}`;
+  }
+  const flip = () => { back = !back; render(); };
+  card.addEventListener('click', flip);
+  card.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); flip(); } });
+  $('fc-flip').addEventListener('click', flip);
+  $('fc-next').addEventListener('click', () => { i = (i + 1) % cards.length; back = false; render(); });
+  $('fc-prev').addEventListener('click', () => { i = (i - 1 + cards.length) % cards.length; back = false; render(); });
+  $('fc-shuffle').addEventListener('click', () => { for(let k = cards.length-1; k > 0; k--){ const j = Math.floor(Math.random()*(k+1)); [cards[k], cards[j]] = [cards[j], cards[k]]; } i = 0; back = false; render(); });
+  render();
+})();
+
+})();
+</script>
+</body>
+</html>
