@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>v2 Week 5 - Combine, Report & Ship</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2430; --border:#30363d;
+    --text:#e6edf3; --muted:#8b949e; --accent:#c9f24d; --accent2:#58a6ff;
+    --code:#0a0e14; --green:#3fb950; --yellow:#d29922; --red:#f85149; --clay:#e07b39; --purple:#bc8cff;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.68;padding:0 0 60px;}
+  .wrap{max-width:920px;margin:0 auto;padding:0 20px;}
+  header{border-bottom:1px solid var(--border);background:linear-gradient(180deg,#12160e,#0d1117);padding:34px 0 26px;}
+  .kicker{color:var(--accent);font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 8px;}
+  header h1{margin:0 0 10px;font-size:28px;letter-spacing:-0.5px;}
+  header p{margin:0;color:var(--muted);font-size:14.5px;max-width:770px;}
+  .pill{display:inline-block;background:var(--panel2);border:1px solid var(--border);border-radius:20px;padding:2px 12px;font-size:12px;color:var(--muted);margin-right:6px;}
+
+  #tabbar{position:sticky;top:0;z-index:50;background:rgba(13,17,23,.96);backdrop-filter:blur(6px);border-bottom:1px solid var(--border);}
+  .tabs{max-width:920px;margin:0 auto;padding:8px 14px;display:flex;flex-wrap:wrap;gap:6px;}
+  .tab{background:var(--panel);border:1px solid var(--border);color:var(--muted);font-size:13px;font-weight:600;padding:7px 13px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:7px;transition:.12s;font-family:inherit;}
+  .tab:hover{color:var(--text);border-color:#455063;}
+  .tab .n{font-size:11px;font-weight:800;background:var(--panel2);color:var(--muted);border-radius:5px;padding:1px 6px;min-width:20px;text-align:center;}
+  .tab.active{background:var(--accent);color:#0d1117;border-color:var(--accent);}
+  .tab.active .n{background:rgba(13,17,23,.25);color:#0d1117;}
+
+  .panel{display:none;animation:fade .18s ease;}
+  .panel.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+  .panel-head{padding:26px 0 2px;}
+  .panel-head h2{margin:0;font-size:24px;letter-spacing:-0.3px;}
+  .panel-head .sub{color:var(--muted);margin:8px 0 0;font-size:15px;}
+
+  h3{font-size:15px;margin:24px 0 6px;color:var(--text);}
+  p{margin:11px 0;} ul{margin:8px 0;padding-left:22px;} li{margin:6px 0;}
+  .box{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin:16px 0;}
+  .tip{border-left:3px solid var(--accent2);}
+  .concept{border-left:3px solid var(--accent);}
+  .why{border-left:3px solid var(--clay);}
+  .win{border-left:3px solid var(--green);}
+  .cell-label{font-size:11px;color:var(--accent);font-weight:700;letter-spacing:0.5px;margin:18px 0 4px;text-transform:uppercase;}
+  pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padding:15px 16px;overflow-x:auto;margin:0 0 6px;position:relative;}
+  code{font-family:"SF Mono","Fira Code",Consolas,Menlo,monospace;font-size:13.5px;color:#c9d1d9;}
+  .copybtn{position:absolute;top:7px;right:7px;background:var(--panel2);border:1px solid var(--border);color:var(--muted);font-size:11px;padding:4px 10px;border-radius:6px;cursor:pointer;transition:.15s;font-family:inherit;}
+  .copybtn:hover{color:var(--text);border-color:var(--accent);}
+  .copybtn.done{color:var(--green);border-color:var(--green);}
+  .out{color:var(--muted);font-size:13px;margin:2px 0 14px;padding-left:12px;border-left:2px solid var(--border);}
+  .out b{color:var(--text);font-weight:600;}
+  code.inl{background:var(--panel2);border:1px solid var(--border);border-radius:5px;padding:1px 6px;color:var(--accent);font-size:12.5px;}
+
+  table.rank{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px;}
+  table.rank th{text-align:left;color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px;padding:6px 10px;border-bottom:1px solid var(--border);}
+  table.rank td{padding:7px 10px;border-bottom:1px solid #21262d;}
+  table.rank td.s{color:var(--accent);font-weight:700;}
+  table.rank td.n{color:var(--muted);font-variant-numeric:tabular-nums;}
+
+  .imp{margin:16px 0;}
+  .imp .row{display:flex;align-items:center;gap:12px;margin:7px 0;}
+  .imp .lab{flex:0 0 150px;font-size:13px;color:var(--text);font-family:"SF Mono",monospace;}
+  .imp .barwrap{flex:1;background:var(--panel2);border-radius:5px;height:22px;overflow:hidden;border:1px solid var(--border);}
+  .imp .bar{height:100%;background:linear-gradient(90deg,#c9f24d,#9bd62f);border-radius:5px 0 0 5px;}
+  .imp .bar.small{background:#455063;}
+  .imp .val{flex:0 0 54px;text-align:right;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;}
+
+  .demo{display:flex;gap:12px;flex-wrap:wrap;margin:14px 0;}
+  .demo .c{flex:1;min-width:220px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px 16px;}
+  .demo .c h4{margin:0 0 8px;font-size:13px;color:var(--accent2);}
+  .demo .pbar{background:var(--panel2);border-radius:6px;height:26px;overflow:hidden;border:1px solid var(--border);position:relative;margin:6px 0;}
+  .demo .pfill{height:100%;background:linear-gradient(90deg,#3fb950,#2ea043);}
+  .demo .plabel{font-size:12.5px;color:var(--text);}
+
+  .practice-head{margin:30px 0 4px;font-size:13px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--accent);display:flex;align-items:center;gap:10px;}
+  .practice-head::before{content:"";flex:0 0 26px;height:2px;background:var(--accent);}
+  .ex{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:10px;padding:14px 18px;margin:12px 0;}
+  .ex.wr{border-left-color:var(--purple);}
+  .ex p{margin:0;}
+  .qn{font-weight:700;color:var(--accent);margin-right:6px;}
+  .ex.wr .qn{color:var(--purple);}
+  .wtag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 8px;border-radius:4px;margin-left:8px;background:rgba(188,140,255,.15);color:var(--purple);border:1px solid var(--purple);vertical-align:middle;}
+  details.sol{margin:10px 0 0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  details.sol summary{cursor:pointer;padding:9px 14px;background:var(--panel2);font-weight:600;font-size:12.5px;color:var(--green);user-select:none;list-style:none;}
+  details.sol summary::-webkit-details-marker{display:none;}
+  details.sol summary::before{content:"\25B8  ";color:var(--muted);}
+  details.sol[open] summary::before{content:"\25BE  ";}
+  details.sol.ex-ans summary{color:var(--purple);}
+  details.sol .sb{padding:8px 14px 10px;}
+  .sb .note{color:var(--muted);font-size:12.5px;margin:6px 0 0;padding-left:10px;border-left:2px solid var(--border);}
+  .sb .exans{font-size:13.5px;color:var(--text);margin:0;font-style:italic;}
+  .sb .exans::before{content:"Example answer: ";font-style:normal;font-weight:700;color:var(--purple);}
+
+  .nav{display:flex;justify-content:flex-end;margin:32px 0 10px;padding-top:18px;border-top:1px solid var(--border);}
+  .nextbtn{background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:14px;font-weight:600;padding:10px 18px;border-radius:9px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;transition:.12s;}
+  .nextbtn:hover{border-color:var(--accent);color:var(--accent);}
+  a{color:var(--accent2);}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <p class="kicker">Tennis AI Project &middot; v2 &middot; Week 5 &middot; Finale</p>
+    <h1>Combine, Report &amp; Ship</h1>
+    <p>The payoff. No new features this week. You select the ones that earned their place, retrain all seven models on them, confirm the result is solid, write the honest final report, and upgrade your live app to the v2 model. By the end, the public site runs a measurably better model and tells a complete, honest story.</p>
+    <div style="margin-top:14px;">
+      <span class="pill">feature selection</span><span class="pill">seven models</span><span class="pill">importance</span><span class="pill">final report</span><span class="pill">ship it</span>
+    </div>
+  </div>
+</header>
+
+<div id="tabbar">
+  <div class="tabs">
+    <button class="tab active" data-target="t0"><span class="n">0</span>Start</button>
+    <button class="tab" data-target="t1"><span class="n">1</span>Select</button>
+    <button class="tab" data-target="t2"><span class="n">2</span>Seven models</button>
+    <button class="tab" data-target="t3"><span class="n">3</span>Importance</button>
+    <button class="tab" data-target="t4"><span class="n">4</span>Report</button>
+    <button class="tab" data-target="t5"><span class="n">5</span>Ship v2</button>
+    <button class="tab" data-target="t6"><span class="n">R</span>Wrap-up</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ============ START ============ -->
+<section class="panel active" id="t0">
+  <div class="panel-head"><h2>Start here</h2>
+    <p class="sub">Rebuild the features that survived testing, in one pass.</p>
+  </div>
+  <p>This is the same combined loop you know, building the five features that earned their place: Elo, surface Elo, head-to-head, rest, and experience. Form and serve stats are left out, they were tested and did not help.</p>
+  <pre><button class="copybtn">Copy</button><code>import pandas as pd, numpy as np, joblib, json
+from collections import defaultdict
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+
+df = pd.read_csv("atp_2000_2024_model_ready.csv", low_memory=False)
+df["tourney_date"] = pd.to_datetime(df["tourney_date"])
+df = df.sort_values(["tourney_date", "match_num"]).reset_index(drop=True)
+is_A = df["winner_is_A"].values.astype(bool); cut = int(len(df) * 0.8)
+def dynamic_k(n): return 250 / ((n + 5) ** 0.4)
+
+elo=defaultdict(lambda:1500.0); games=defaultdict(int)
+selo=defaultdict(lambda:1500.0); sgames=defaultdict(int)
+h2h=defaultdict(int); last_date={}; played=defaultdict(int)
+ew=np.zeros(len(df)); el=np.zeros(len(df)); sew=np.zeros(len(df)); sel=np.zeros(len(df))
+hw=np.zeros(len(df)); rw=np.zeros(len(df)); rl=np.zeros(len(df)); xw=np.zeros(len(df)); xl=np.zeros(len(df))
+for i,row in enumerate(df.itertuples(index=False)):
+    w,l,s,d=row.winner_id,row.loser_id,row.surface,row.tourney_date
+    a,b=elo[w],elo[l]; ew[i]=a; el[i]=b
+    sa,sb=selo[(w,s)],selo[(l,s)]; sew[i]=sa; sel[i]=sb
+    hw[i]=h2h[(w,l)]-h2h[(l,w)]
+    rw[i]=(d-last_date[w]).days if w in last_date else 30
+    rl[i]=(d-last_date[l]).days if l in last_date else 30
+    xw[i]=played[w]; xl[i]=played[l]
+    e=1/(1+10**((b-a)/400)); elo[w]=a+dynamic_k(games[w])*(1-e); elo[l]=b-dynamic_k(games[l])*(1-e); games[w]+=1; games[l]+=1
+    se=1/(1+10**((sb-sa)/400)); selo[(w,s)]=sa+dynamic_k(sgames[(w,s)])*(1-se); selo[(l,s)]=sb-dynamic_k(sgames[(l,s)])*(1-se); sgames[(w,s)]+=1; sgames[(l,s)]+=1
+    h2h[(w,l)]+=1; last_date[w]=d; last_date[l]=d; played[w]+=1; played[l]+=1
+
+df["elo_diff"]=np.where(is_A,ew-el,el-ew); df["surface_elo_diff"]=np.where(is_A,sew-sel,sel-sew)
+df["h2h_diff"]=np.where(is_A,hw,-hw); df["rest_diff"]=np.where(is_A,rw-rl,rl-rw); df["exp_diff"]=np.where(is_A,xw-xl,xl-xw)
+
+baseline_acc = accuracy_score(df.iloc[cut:]["target"], (df.iloc[cut:]["rank_diff"] < 0).astype(int))
+print("features rebuilt. baseline:", round(baseline_acc, 3))</code></pre>
+  <p class="out">Everything is in place. Now finish the job.</p>
+  <div class="nav"><button class="nextbtn" data-next="t1">Next: Select &rarr;</button></div>
+</section>
+
+<!-- ============ SELECT ============ -->
+<section class="panel" id="t1">
+  <div class="panel-head"><h2>Feature selection</h2>
+    <p class="sub">Choosing the final feature set based on evidence, not on what sounds good.</p>
+  </div>
+  <div class="box concept">
+    <b>The principle.</b> You built seven features over this chapter. Two of them, recent form and serve stats, were tested and did not improve the model, so they do not go in the final version. Deciding what stays based on measured value is called <b>feature selection</b>, and it is a core skill. A model with fewer, well-chosen features is simpler, faster, and easier to explain, and it usually generalizes better than one stuffed with everything you could think of.
+  </div>
+
+  <p class="cell-label">Cell &middot; the final feature set</p>
+  <pre><button class="copybtn">Copy</button><code>FEATURES = ["elo_diff", "surface_elo_diff", "h2h_diff", "rest_diff", "exp_diff"]
+
+train, test = df.iloc[:cut], df.iloc[cut:]
+final = LogisticRegression(max_iter=1000).fit(train[FEATURES], train["target"])
+final_acc = accuracy_score(test["target"], final.predict(test[FEATURES]))
+print("baseline:", round(baseline_acc, 3), " final model:", round(final_acc, 3))</code></pre>
+  <p class="out">Baseline <b>0.637</b>, final model about <b>0.650</b>. Roughly a 1.3-point gain over baseline, built entirely from engineered features.</p>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex"><p><span class="qn">1.</span>Confirm the dropped features really do not help: add <code class="inl">form_diff</code> and the serve diffs back (if you still have them) and check the accuracy does not improve. If you no longer have them, add <code class="inl">rank_diff</code> and see it only nudges by a hair.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>m = LogisticRegression(max_iter=1000).fit(train[FEATURES + ["rank_diff"]], train["target"])
+print("with rank added:", round(accuracy_score(test["target"], m.predict(test[FEATURES + ["rank_diff"]])), 4))</code></pre>
+    <p class="note">About 0.650, a tiny nudge. Elo already carries almost everything rank does.</p></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">2.</span>In a <b>markdown cell</b>, explain feature selection and why a smaller, tested feature set can be better than throwing in everything. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">Feature selection means keeping only the features that measurably improve the model and dropping the ones that do not. A smaller set is simpler to explain, faster to run, and less likely to overfit, because unhelpful or redundant features mostly add noise. Choosing features by tested value rather than by what sounds important produces a cleaner, more trustworthy model.</p></div></details>
+  </div>
+  <div class="nav"><button class="nextbtn" data-next="t2">Next: Seven models &rarr;</button></div>
+</section>
+
+<!-- ============ SEVEN MODELS ============ -->
+<section class="panel" id="t2">
+  <div class="panel-head"><h2>Retrain all seven models</h2>
+    <p class="sub">Bring back the v1 lineup and run it on the engineered features, closing the loop with your original study.</p>
+  </div>
+  <p>Distance and gradient models need scaled features, so scale once and reuse.</p>
+  <pre><button class="copybtn">Copy</button><code>from sklearn.preprocessing import StandardScaler
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import LinearSVC
+from sklearn.neural_network import MLPClassifier
+
+X_tr, y_tr = train[FEATURES], train["target"]
+X_te, y_te = test[FEATURES],  test["target"]
+scaler = StandardScaler().fit(X_tr)
+Xs_tr, Xs_te = scaler.transform(X_tr), scaler.transform(X_te)
+
+models = {
+    "logistic regression": (LogisticRegression(max_iter=1000), False),
+    "decision tree":  (DecisionTreeClassifier(max_depth=5, random_state=42), False),
+    "random forest":  (RandomForestClassifier(n_estimators=200, max_depth=8, random_state=42, n_jobs=-1), False),
+    "gradient boosting": (GradientBoostingClassifier(max_depth=3, random_state=42), False),
+    "KNN":        (KNeighborsClassifier(n_neighbors=25), True),
+    "linear SVM": (LinearSVC(max_iter=5000), True),
+    "neural net": (MLPClassifier(hidden_layer_sizes=(16, 8), max_iter=300, random_state=42), True),
+}
+rows = []
+for name, (m, needs_scale) in models.items():
+    a = Xs_tr if needs_scale else X_tr
+    b = Xs_te if needs_scale else X_te
+    m.fit(a, y_tr)
+    rows.append((name, round(accuracy_score(y_te, m.predict(b)), 4)))
+
+pd.DataFrame(rows, columns=["model", "accuracy"]).sort_values("accuracy", ascending=False)</code></pre>
+  <p class="out">You should see all seven clustered again, now around <b>0.64 to 0.65</b>:</p>
+  <table class="rank">
+    <tr><th>Model</th><th>v2 accuracy</th></tr>
+    <tr><td class="s">neural net</td><td class="n">0.651</td></tr>
+    <tr><td class="s">linear SVM</td><td class="n">0.650</td></tr>
+    <tr><td class="s">logistic regression</td><td class="n">0.650</td></tr>
+    <tr><td class="s">gradient boosting</td><td class="n">0.647</td></tr>
+    <tr><td class="s">random forest</td><td class="n">0.646</td></tr>
+    <tr><td class="s">decision tree</td><td class="n">0.645</td></tr>
+    <tr><td class="s">KNN</td><td class="n">0.641</td></tr>
+  </table>
+
+  <div class="box win">
+    <b>The v1 finding holds, but the whole cluster moved up.</b> In v1, all seven models sat near 0.64 on the thin features. Here they cluster again, but around 0.65, because the features are better. This is the thesis of the entire project in one comparison: <b>the model barely matters, the features do.</b> Same seven algorithms, better inputs, a real gain.
+  </div>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex wr"><p><span class="qn">1.</span>In a <b>markdown cell</b>, explain what it means that all seven models cluster together again, just at a higher level than v1. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">All seven very different models reaching almost the same accuracy shows that the choice of algorithm is not what limits performance, the information in the features is. In v1 they clustered near 0.64 on thin features; in v2 they cluster near 0.65 because the engineered features carry more signal. The cluster moving up while staying tight proves the gain came from better features, not a better model.</p></div></details>
+  </div>
+  <div class="nav"><button class="nextbtn" data-next="t3">Next: Importance &rarr;</button></div>
+</section>
+
+<!-- ============ IMPORTANCE ============ -->
+<section class="panel" id="t3">
+  <div class="panel-head"><h2>Stability and importance</h2>
+    <p class="sub">Confirm the number is not a fluke, then see which features did the work.</p>
+  </div>
+
+  <h3>Cross-validation: is 0.65 stable?</h3>
+  <pre><button class="copybtn">Copy</button><code>from sklearn.model_selection import cross_val_score
+cv = cross_val_score(LogisticRegression(max_iter=1000), df[FEATURES], df["target"], cv=5)
+print("folds:", [round(x, 3) for x in cv], " mean:", round(cv.mean(), 3))</code></pre>
+  <p class="out">The folds land in the mid-0.60s (mean around <b>0.66</b>), confirming the result is stable and real, not an artifact of one particular split.</p>
+
+  <h3>Feature importance: the story in one chart</h3>
+  <p>Read the standardized coefficients of the logistic regression, they show how much each feature drives the prediction:</p>
+  <pre><button class="copybtn">Copy</button><code>lr = LogisticRegression(max_iter=1000).fit(Xs_tr, y_tr)   # on scaled features
+importance = pd.Series(lr.coef_[0], index=FEATURES).sort_values(key=abs, ascending=False)
+print(importance.round(3))</code></pre>
+
+  <div class="imp">
+    <div class="row"><div class="lab">elo_diff</div><div class="barwrap"><div class="bar" style="width:100%"></div></div><div class="val">0.54</div></div>
+    <div class="row"><div class="lab">surface_elo_diff</div><div class="barwrap"><div class="bar" style="width:88%"></div></div><div class="val">0.48</div></div>
+    <div class="row"><div class="lab">rest_diff</div><div class="barwrap"><div class="bar small" style="width:11%"></div></div><div class="val">0.06</div></div>
+    <div class="row"><div class="lab">h2h_diff</div><div class="barwrap"><div class="bar small" style="width:10%"></div></div><div class="val">0.05</div></div>
+    <div class="row"><div class="lab">exp_diff</div><div class="barwrap"><div class="bar small" style="width:3%"></div></div><div class="val">0.02</div></div>
+  </div>
+
+  <div class="box why">
+    <b>This chart is your whole project.</b> Elo and surface Elo tower over everything, they do almost all the work. Head-to-head, rest, and experience contribute a sliver each. It confirms in one picture what every measurement hinted at: <b>skill, captured well by Elo and split by surface, is nearly the entire story of who wins a tennis match, and the rest is small context plus irreducible upset.</b>
+  </div>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex wr"><p><span class="qn">1.</span>In a <b>markdown cell</b>, describe what the importance chart shows and why it is the perfect summary of the whole v2 chapter. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">The chart shows that Elo and surface Elo have by far the largest coefficients, while head-to-head, rest, and experience are tiny. This means skill, measured by Elo and adjusted for surface, drives almost all of the prediction, and the context features add only a little. It summarizes the whole chapter because it confirms that good skill features matter enormously and that everything else, including the features we dropped, contributes little, which is exactly why the accuracy plateaus in the mid-60s.</p></div></details>
+  </div>
+  <div class="nav"><button class="nextbtn" data-next="t4">Next: Report &rarr;</button></div>
+</section>
+
+<!-- ============ REPORT ============ -->
+<section class="panel" id="t4">
+  <div class="panel-head"><h2>The honest final report</h2>
+    <p class="sub">The whole arc in one place. This is the writing that makes the project stand out.</p>
+  </div>
+
+  <div class="box concept">
+    <b>The story to tell, start to finish:</b>
+    <ul style="margin:8px 0 0;">
+      <li><b>Question:</b> can better features beat the ceiling that seven models hit in v1?</li>
+      <li><b>Approach:</b> engineer skill and context features from match history, leakage-safe, testing each one.</li>
+      <li><b>What worked:</b> Elo (0.643), then surface Elo (0.646), then head-to-head, rest, and experience (0.650).</li>
+      <li><b>What didn't:</b> recent form and serve stats, both tested and dropped, because Elo already captures them.</li>
+      <li><b>Result:</b> 0.637 to about 0.650, a real gain, confirmed by cross-validation, driven almost entirely by Elo and surface Elo.</li>
+      <li><b>Conclusion:</b> careful feature engineering improves the model but still lands in the mid-60s, the same ceiling professional betting markets hit. Tennis upsets are largely irreducible.</li>
+    </ul>
+  </div>
+
+  <div class="box win">
+    <b>Why this is a strong story.</b> It is honest end to end. It shows real skill (feature engineering, leakage control, hypothesis testing, feature selection) and a mature conclusion: you found the limit, engineered your way close to it, and can explain exactly why it exists. That is far more convincing than any inflated accuracy number, and it is the kind of write-up that reads like real research.
+  </div>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex wr"><p><span class="qn">1.</span>Write the full <b>v2 Results and Conclusion</b> section for your report (6 to 8 sentences), covering the arc above. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">In v2 we asked whether better features could beat the mid-60s ceiling that seven models hit in v1. We engineered skill and context features from the match history, all leakage-safe, and tested each one. Overall Elo lifted accuracy from a 0.637 baseline to 0.643, surface-specific Elo raised it to 0.646, and head-to-head, rest, and experience together brought it to about 0.650. Recent form and career serve statistics were also tested but did not help, because Elo already reflects them through match results. Cross-validation confirmed the result is stable, and feature importance showed Elo and surface Elo do nearly all the work. We conclude that careful feature engineering produces a real, roughly 1.3-point improvement but still plateaus in the mid-60s, the same range professional betting markets reach. This points to a genuine predictability ceiling in tennis: skill is highly predictive, but upsets are largely irreducible.</p></div></details>
+  </div>
+  <div class="nav"><button class="nextbtn" data-next="t5">Next: Ship v2 &rarr;</button></div>
+</section>
+
+<!-- ============ SHIP ============ -->
+<section class="panel" id="t5">
+  <div class="panel-head"><h2>Ship v2 to the live app</h2>
+    <p class="sub">The satisfying finish: upgrade the public site to a "pick two players, pick a surface" predictor powered by Elo.</p>
+  </div>
+
+  <div class="box concept">
+    <b>The plan.</b> Save a compact model that uses just <code class="inl">elo_diff</code> and <code class="inl">surface_elo_diff</code> (almost as accurate, and easy to run from a lookup), plus a table of every player's current Elo and per-surface Elo. Then the app lets someone pick two players and a surface, looks up their ratings, and predicts. This is the interactive demo you sketched at the very start, now real.
+  </div>
+
+  <p class="cell-label">Cell &middot; save the app model and the player rating lookup</p>
+  <pre><button class="copybtn">Copy</button><code># compact model: two features we can compute from a lookup
+app_model = LogisticRegression(max_iter=1000).fit(train[["elo_diff", "surface_elo_diff"]], train["target"])
+joblib.dump(app_model, "app_model.joblib")
+
+# current ratings for every player with enough matches
+names = pd.concat([
+    df[["winner_id","winner_name"]].rename(columns={"winner_id":"id","winner_name":"name"}),
+    df[["loser_id","loser_name"]].rename(columns={"loser_id":"id","loser_name":"name"}),
+]).drop_duplicates("id").set_index("id")["name"]
+
+lookup = {}
+for pid in games:
+    if games[pid] >= 30:                      # enough history to be meaningful
+        lookup[names[pid]] = {
+            "elo":   round(elo[pid], 1),
+            "Hard":  round(selo[(pid, "Hard")], 1),
+            "Clay":  round(selo[(pid, "Clay")], 1),
+            "Grass": round(selo[(pid, "Grass")], 1),
+        }
+json.dump(lookup, open("player_elo.json", "w"))
+print("saved app_model.joblib and", len(lookup), "players")</code></pre>
+  <p class="out">About <b>600</b> players saved. The model uses two features and predicts at ~0.646, nearly the full model, from a simple lookup.</p>
+
+  <h3>See why this app is worth shipping</h3>
+  <p>The same matchup, two surfaces, powered by real Elo ratings:</p>
+  <div class="demo">
+    <div class="c"><h4>Djokovic vs Nadal &middot; Clay</h4>
+      <div class="pbar"><div class="pfill" style="width:51%"></div></div>
+      <p class="plabel">Djokovic <b>51%</b> &middot; Nadal 49%</p>
+      <p style="font-size:12px;color:var(--muted);margin:6px 0 0;">Nadal's clay Elo cancels Djokovic's overall edge, nearly a coin flip.</p>
+    </div>
+    <div class="c"><h4>Djokovic vs Nadal &middot; Grass</h4>
+      <div class="pbar"><div class="pfill" style="width:70%"></div></div>
+      <p class="plabel">Djokovic <b>70%</b> &middot; Nadal 30%</p>
+      <p style="font-size:12px;color:var(--muted);margin:6px 0 0;">On grass, Nadal's rating drops and Djokovic is a clear favorite.</p>
+    </div>
+  </div>
+  <div class="box tip">That contrast is the whole point of surface Elo, made interactive. It is exactly the kind of thing a non-technical visitor finds cool and an admissions reader remembers.</p></div>
+
+  <p class="cell-label">app.py &middot; the upgraded Streamlit app</p>
+  <pre><button class="copybtn">Copy</button><code>import streamlit as st
+import joblib, json
+
+model = joblib.load("app_model.joblib")
+players = json.load(open("player_elo.json"))
+names = sorted(players)
+
+st.title("ATP Match Predictor (v2, Elo-powered)")
+st.write("Pick two players and a surface. The model uses their Elo ratings to predict the winner.")
+
+a = st.selectbox("Player A", names, index=names.index("Novak Djokovic"))
+b = st.selectbox("Player B", names, index=names.index("Rafael Nadal"))
+surface = st.selectbox("Surface", ["Hard", "Clay", "Grass"])
+
+pa, pb = players[a], players[b]
+elo_diff = pa["elo"] - pb["elo"]
+surface_elo_diff = pa[surface] - pb[surface]
+prob_a = model.predict_proba([[elo_diff, surface_elo_diff]])[0][1]
+
+st.metric(f"{a} win probability", f"{prob_a*100:.0f}%")
+st.progress(prob_a)
+st.caption(f"{a} favored" if prob_a > 0.5 else f"{b} favored")</code></pre>
+
+  <h3>Update the README and redeploy</h3>
+  <ul>
+    <li>Add a v2 section to the README: the engineered features, the results table, the importance chart, and the honest conclusion.</li>
+    <li>Note the new files: <code class="inl">app_model.joblib</code>, <code class="inl">player_elo.json</code>, and the updated <code class="inl">app.py</code>.</li>
+    <li>Commit and push. Since the app is hosted from the repo, pushing redeploys it automatically, refresh the live URL and the new predictor is there.</li>
+  </ul>
+
+  <div class="box win"><b>That is the project, shipped.</b> A measurably better model, a clean seven-model comparison, an honest report, and a live, interactive predictor that shows off the surface-Elo insight. Done.</div>
+
+  <div class="nav"><button class="nextbtn" data-next="t6">Next: Wrap-up &rarr;</button></div>
+</section>
+
+<!-- ============ WRAP-UP ============ -->
+<section class="panel" id="t6">
+  <div class="panel-head"><h2>Wrap-up &amp; reflection</h2>
+    <p class="sub">A mix of quick recalls and reflection questions, the reflection ones are gold for your application essay and report.</p>
+  </div>
+
+  <div class="ex"><p><span class="qn">1.</span>Name the five features in the final model and the two that were tested and dropped.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><p style="font-size:13.5px;margin:0;">Final: Elo, surface Elo, head-to-head, rest, experience. Dropped: recent form, serve stats.</p></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">2.</span>Write the code to save the compact app model and print the number of players in the lookup.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>app_model = LogisticRegression(max_iter=1000).fit(train[["elo_diff","surface_elo_diff"]], train["target"])
+joblib.dump(app_model, "app_model.joblib")
+print(sum(1 for p in games if games[p] >= 30), "players")</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">3.</span>What single line proves the result is stable across different splits of the data?</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>cross_val_score(LogisticRegression(max_iter=1000), df[FEATURES], df["target"], cv=5).mean()</code></pre></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">4.</span>Across the whole project, what mattered more, the choice of model or the quality of the features? Justify with evidence. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">The features mattered far more. In both v1 and v2, seven very different models clustered at almost the same accuracy, so switching models changed almost nothing. What moved the number was better features: engineering Elo and surface Elo lifted every model from about 0.64 to about 0.65. The evidence is that the whole cluster of models shifted up together when the features improved, while no single model ever broke away from the pack.</p></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">5.</span>Two features you built did not help. Why is reporting them a strength of the project, not a weakness? <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">Reporting the features that failed shows honesty and rigor: decisions were made by measurement, not by guessing. It also produced a real insight, that Elo already captures form and serving through match results, which is genuine understanding of the problem. Presenting only successes would hide how the conclusions were reached, so including the null results makes the whole study more credible and more like real science.</p></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">6.</span>Explain the leakage rule and give one example of a feature that would have leaked if built wrong. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">The leakage rule is that a feature may only use information available before the match, which we enforced by reading each value before updating it with the result. For example, using this match's aces as a serve feature would leak, because those aces are produced during the match we are predicting; only career serve stats coming into the match are fair.</p></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">7.</span>Why does the model top out in the mid-60s no matter what you do? <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">Because most of what is predictable about a tennis match comes from the skill gap, which Elo already captures well, and beyond that the outcome depends on upsets and day-to-day variation that no pre-match feature can foresee. Once skill is accounted for, the remaining uncertainty is largely irreducible, so accuracy plateaus in the mid-60s, the same ceiling professional betting markets reach.</p></div></details>
+  </div>
+  <div class="ex wr"><p><span class="qn">8.</span>In 3 to 4 sentences, describe what you learned in this project that would transfer to a completely different machine learning problem. <span class="wtag">write it</span></p>
+    <details class="sol ex-ans"><summary>Example answer</summary><div class="sb"><p class="exans">I learned that feature engineering usually matters more than the choice of algorithm, and that building good features from history requires strict care to avoid leakage. I learned to test every feature and every data-cleaning choice by measurement rather than assuming, since some sensible-looking features add nothing and some outliers are real signal. I also learned to select the features that earn their place and to report negative results honestly. These habits, careful features, no leakage, test everything, apply to almost any machine learning problem.</p></div></details>
+  </div>
+
+  <div class="box win" style="margin-top:26px;">
+    <b>Project complete.</b> Across v1 and v2 you built a full study: a clean dataset, seven models, engineered features, honest hypothesis tests, a stable measured result, a research-style report, and a live interactive app. From 0.637 to 0.650, and, more importantly, a clear and honest understanding of exactly why tennis can only be predicted so well. That is a genuinely strong piece of work.
+  </div>
+</section>
+
+</div>
+
+<script>
+  var tabs = document.querySelectorAll(".tab");
+  var panels = document.querySelectorAll(".panel");
+  var bar = document.getElementById("tabbar");
+  function show(id){
+    tabs.forEach(function(t){ t.classList.toggle("active", t.dataset.target === id); });
+    panels.forEach(function(p){ p.classList.toggle("active", p.id === id); });
+    window.scrollTo({ top: bar.offsetTop, behavior: "smooth" });
+  }
+  tabs.forEach(function(t){ t.addEventListener("click", function(){ show(t.dataset.target); }); });
+  document.querySelectorAll("[data-next]").forEach(function(b){ b.addEventListener("click", function(){ show(b.dataset.next); }); });
+  document.querySelectorAll(".copybtn").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var code = btn.parentElement.querySelector("code").innerText;
+      navigator.clipboard.writeText(code).then(function(){
+        btn.textContent = "Copied"; btn.classList.add("done");
+        setTimeout(function(){ btn.textContent = "Copy"; btn.classList.remove("done"); }, 1500);
+      });
+    });
+  });
+</script>
+</body>
+</html>

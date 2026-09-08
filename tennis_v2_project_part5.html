@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project v2 - Finalize & Ship (Part 5)</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2430; --border:#30363d;
+    --text:#e6edf3; --muted:#8b949e; --accent:#c9f24d; --accent2:#58a6ff;
+    --code:#0a0e14; --green:#3fb950; --yellow:#d29922; --red:#f85149; --purple:#bc8cff;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.68;padding:0 0 60px;}
+  .wrap{max-width:920px;margin:0 auto;padding:0 20px;}
+  header{border-bottom:1px solid var(--border);background:linear-gradient(180deg,#0e1512,#0d1117);padding:34px 0 26px;}
+  .kicker{color:var(--accent);font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 8px;}
+  header h1{margin:0 0 10px;font-size:28px;letter-spacing:-0.5px;}
+  header p{margin:0;color:var(--muted);font-size:14.5px;max-width:770px;}
+  .pill{display:inline-block;background:var(--panel2);border:1px solid var(--border);border-radius:20px;padding:2px 12px;font-size:12px;color:var(--muted);margin-right:6px;}
+  .pill.proj{background:rgba(188,140,255,.14);color:var(--purple);border-color:var(--purple);}
+
+  #tabbar{position:sticky;top:0;z-index:50;background:rgba(13,17,23,.96);backdrop-filter:blur(6px);border-bottom:1px solid var(--border);}
+  .tabs{max-width:920px;margin:0 auto;padding:8px 14px;display:flex;flex-wrap:wrap;gap:6px;}
+  .tab{background:var(--panel);border:1px solid var(--border);color:var(--muted);font-size:13px;font-weight:600;padding:7px 13px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:7px;transition:.12s;font-family:inherit;}
+  .tab:hover{color:var(--text);border-color:#455063;}
+  .tab .n{font-size:11px;font-weight:800;background:var(--panel2);color:var(--muted);border-radius:5px;padding:1px 6px;min-width:20px;text-align:center;}
+  .tab.active{background:var(--accent);color:#0d1117;border-color:var(--accent);}
+  .tab.active .n{background:rgba(13,17,23,.25);color:#0d1117;}
+
+  .panel{display:none;animation:fade .18s ease;}
+  .panel.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+  .panel-head{padding:26px 0 2px;}
+  .panel-head h2{margin:0;font-size:24px;letter-spacing:-0.3px;}
+  .panel-head .sub{color:var(--muted);margin:8px 0 0;font-size:15px;}
+
+  h3{font-size:15px;margin:24px 0 6px;color:var(--text);}
+  p{margin:11px 0;} ul{margin:8px 0;padding-left:22px;} li{margin:6px 0;}
+  ol{margin:8px 0;padding-left:22px;} ol li{margin:8px 0;}
+  .box{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin:16px 0;}
+  .tip{border-left:3px solid var(--accent2);}
+  .concept{border-left:3px solid var(--accent);}
+  .proj{border-left:3px solid var(--purple);}
+  .win{border-left:3px solid var(--green);}
+  pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padding:15px 16px;overflow-x:auto;margin:0 0 6px;position:relative;}
+  pre.md{border-style:dashed;}
+  code{font-family:"SF Mono","Fira Code",Consolas,Menlo,monospace;font-size:13px;color:#c9d1d9;}
+  .copybtn{position:absolute;top:7px;right:7px;background:var(--panel2);border:1px solid var(--border);color:var(--muted);font-size:11px;padding:4px 10px;border-radius:6px;cursor:pointer;transition:.15s;font-family:inherit;}
+  .copybtn:hover{color:var(--text);border-color:var(--accent);}
+  .copybtn.done{color:var(--green);border-color:var(--green);}
+  code.inl{background:var(--panel2);border:1px solid var(--border);border-radius:5px;padding:1px 6px;color:var(--accent);font-size:12.5px;}
+
+  .task{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:10px;padding:16px 18px;margin:16px 0;}
+  .task .th{font-size:11px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--accent);margin:0 0 6px;}
+  .task p{margin:6px 0;}
+  details.sol{margin:12px 0 0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  details.sol summary{cursor:pointer;padding:9px 14px;background:var(--panel2);font-weight:600;font-size:12.5px;color:var(--green);user-select:none;list-style:none;}
+  details.sol summary::-webkit-details-marker{display:none;}
+  details.sol summary::before{content:"\25B8  ";color:var(--muted);}
+  details.sol[open] summary::before{content:"\25BE  ";}
+  details.sol .sb{padding:8px 14px 10px;}
+  .see{background:rgba(63,185,80,.07);border:1px solid rgba(63,185,80,.35);border-radius:8px;padding:12px 16px;margin:12px 0 0;}
+  .see .lbl{font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--green);margin:0 0 4px;}
+  .see p{margin:0;font-size:13.5px;color:var(--text);}
+  .see code.inl{color:var(--green);}
+
+  .nav{display:flex;justify-content:flex-end;margin:32px 0 10px;padding-top:18px;border-top:1px solid var(--border);}
+  .nextbtn{background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:14px;font-weight:600;padding:10px 18px;border-radius:9px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;transition:.12s;}
+  .nextbtn:hover{border-color:var(--accent);color:var(--accent);}
+  a{color:var(--accent2);}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <p class="kicker">Tennis AI Project &middot; v2 Project Notebook &middot; Finale</p>
+    <h1>Build v2: Finalize &amp; Ship</h1>
+    <p>The last build. Finalize your notebook, retrain the seven models on your features, confirm the result, then save the model and ship the upgraded predictor to your live site. When you finish this, the public URL runs your v2 model.</p>
+    <div style="margin-top:14px;">
+      <span class="pill proj">tennis_predictor_v2.ipynb</span><span class="pill">seven models</span><span class="pill">save + app</span><span class="pill">redeploy</span>
+    </div>
+  </div>
+</header>
+
+<div id="tabbar">
+  <div class="tabs">
+    <button class="tab active" data-target="t0"><span class="n">0</span>Continue</button>
+    <button class="tab" data-target="t1"><span class="n">1</span>Finalize</button>
+    <button class="tab" data-target="t2"><span class="n">2</span>Save</button>
+    <button class="tab" data-target="t3"><span class="n">3</span>App</button>
+    <button class="tab" data-target="t4"><span class="n">4</span>Ship</button>
+    <button class="tab" data-target="t5"><span class="n">5</span>Done</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ============ CONTINUE ============ -->
+<section class="panel active" id="t0">
+  <div class="panel-head"><h2>Continue your v2 notebook</h2>
+    <p class="sub">Run all cells so every feature (elo, surface, h2h, rest, exp) and the baseline are ready.</p>
+  </div>
+  <p>Restart and Run All so the whole notebook executes cleanly top to bottom, that reproducibility check matters now that you are shipping. Then define the final feature set:</p>
+  <pre><button class="copybtn">Copy</button><code>FEATURES = ["elo_diff", "surface_elo_diff", "h2h_diff", "rest_diff", "exp_diff"]
+train, test = df.iloc[:cut], df.iloc[cut:]
+def acc(cols):
+    m = LogisticRegression(max_iter=1000).fit(train[cols], train["target"])
+    return round(accuracy_score(test["target"], m.predict(test[cols])), 4)
+print("final feature model:", acc(FEATURES))</code></pre>
+  <div class="see"><p class="lbl">You should see</p><p>About <code class="inl">0.650</code>. That is your v2 model.</p></div>
+  <div class="nav"><button class="nextbtn" data-next="t1">Next: Finalize &rarr;</button></div>
+</section>
+
+<!-- ============ FINALIZE ============ -->
+<section class="panel" id="t1">
+  <div class="panel-head"><h2>Finalize the study</h2>
+    <p class="sub">Seven models, cross-validation, importance, and the report cell.</p>
+  </div>
+
+  <div class="task">
+    <p class="th">Task A &middot; seven models on the features</p>
+    <p>Retrain all seven (scale for KNN, SVM, neural net) and build the comparison table.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>from sklearn.preprocessing import StandardScaler
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import LinearSVC
+from sklearn.neural_network import MLPClassifier
+
+X_tr, y_tr = train[FEATURES], train["target"]; X_te, y_te = test[FEATURES], test["target"]
+scaler = StandardScaler().fit(X_tr); Xs_tr, Xs_te = scaler.transform(X_tr), scaler.transform(X_te)
+models = {
+    "logistic regression": (LogisticRegression(max_iter=1000), False),
+    "decision tree": (DecisionTreeClassifier(max_depth=5, random_state=42), False),
+    "random forest": (RandomForestClassifier(n_estimators=200, max_depth=8, random_state=42, n_jobs=-1), False),
+    "gradient boosting": (GradientBoostingClassifier(max_depth=3, random_state=42), False),
+    "KNN": (KNeighborsClassifier(n_neighbors=25), True),
+    "linear SVM": (LinearSVC(max_iter=5000), True),
+    "neural net": (MLPClassifier(hidden_layer_sizes=(16, 8), max_iter=300, random_state=42), True),
+}
+rows = []
+for name, (m, sc) in models.items():
+    a = Xs_tr if sc else X_tr; b = Xs_te if sc else X_te
+    m.fit(a, y_tr); rows.append((name, round(accuracy_score(y_te, m.predict(b)), 4)))
+results = pd.DataFrame(rows, columns=["model", "accuracy"]).sort_values("accuracy", ascending=False)
+results</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>All seven clustered around <code class="inl">0.64 to 0.65</code>, best about <b>0.651</b>. Same cluster as v1, moved up because the features are better.</p></div>
+
+  <div class="task">
+    <p class="th">Task B &middot; cross-validation and importance</p>
+    <p>Confirm stability, then read feature importance.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>from sklearn.model_selection import cross_val_score
+cv = cross_val_score(LogisticRegression(max_iter=1000), df[FEATURES], df["target"], cv=5)
+print("CV folds:", [round(x,3) for x in cv], " mean:", round(cv.mean(),3))
+
+lr = LogisticRegression(max_iter=1000).fit(Xs_tr, y_tr)
+print(pd.Series(lr.coef_[0], index=FEATURES).sort_values(key=abs, ascending=False).round(3))</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>CV mean in the mid-0.60s (stable), and importance dominated by <code class="inl">elo_diff</code> (~0.54) and <code class="inl">surface_elo_diff</code> (~0.48), with the rest tiny.</p></div>
+
+  <div class="task">
+    <p class="th">Task C &middot; the final report cell</p>
+    <p>In a <b>markdown cell</b>, write the v2 Results and Conclusion: the climb from 0.637 to 0.650, the two dropped features, that Elo and surface Elo do the work, and the mid-60s ceiling. (Use the model answer from the lesson as your guide.)</p>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t2">Next: Save &rarr;</button></div>
+</section>
+
+<!-- ============ SAVE ============ -->
+<section class="panel" id="t2">
+  <div class="panel-head"><h2>Save the app model and ratings</h2>
+    <p class="sub">A compact model plus a player rating lookup, so the app can predict from two names.</p>
+  </div>
+
+  <div class="task">
+    <p class="th">Your task</p>
+    <p>Train a two-feature model (elo + surface elo), save it, and save every player's current Elo and per-surface Elo to a JSON file.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>import joblib, json
+
+app_model = LogisticRegression(max_iter=1000).fit(train[["elo_diff", "surface_elo_diff"]], train["target"])
+joblib.dump(app_model, "app_model.joblib")
+
+names = pd.concat([
+    df[["winner_id","winner_name"]].rename(columns={"winner_id":"id","winner_name":"name"}),
+    df[["loser_id","loser_name"]].rename(columns={"loser_id":"id","loser_name":"name"}),
+]).drop_duplicates("id").set_index("id")["name"]
+
+lookup = {}
+for pid in games:
+    if games[pid] >= 30:
+        lookup[names[pid]] = {
+            "elo":   round(elo[pid], 1),
+            "Hard":  round(selo[(pid, "Hard")], 1),
+            "Clay":  round(selo[(pid, "Clay")], 1),
+            "Grass": round(selo[(pid, "Grass")], 1),
+        }
+json.dump(lookup, open("player_elo.json", "w"))
+print("saved app_model.joblib and", len(lookup), "players")</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p><code class="inl">saved app_model.joblib and ~600 players</code>. Two new files: <code class="inl">app_model.joblib</code> and <code class="inl">player_elo.json</code>. Put both in your project folder next to <code class="inl">app.py</code>.</p></div>
+
+  <div class="box tip"><b>Quick sanity check:</b> predict Djokovic vs Nadal on Clay and on Grass. You should get roughly a coin flip on clay but a clear Djokovic edge on grass, the surface effect in action.</div>
+
+  <div class="nav"><button class="nextbtn" data-next="t3">Next: App &rarr;</button></div>
+</section>
+
+<!-- ============ APP ============ -->
+<section class="panel" id="t3">
+  <div class="panel-head"><h2>Upgrade the app</h2>
+    <p class="sub">Replace <code class="inl">app.py</code> with the pick-two-players predictor.</p>
+  </div>
+  <p>This is the whole app. You (or your AI assistant) can extend it with nicer visuals afterward, but this works end to end.</p>
+  <pre class="md"><button class="copybtn">Copy</button><code>import streamlit as st
+import joblib, json
+
+model = joblib.load("app_model.joblib")
+players = json.load(open("player_elo.json"))
+names = sorted(players)
+
+st.title("ATP Match Predictor (v2, Elo-powered)")
+st.write("Pick two players and a surface. The model uses their Elo ratings to predict the winner.")
+
+a = st.selectbox("Player A", names, index=names.index("Novak Djokovic"))
+b = st.selectbox("Player B", names, index=names.index("Rafael Nadal"))
+surface = st.selectbox("Surface", ["Hard", "Clay", "Grass"])
+
+pa, pb = players[a], players[b]
+elo_diff = pa["elo"] - pb["elo"]
+surface_elo_diff = pa[surface] - pb[surface]
+prob_a = model.predict_proba([[elo_diff, surface_elo_diff]])[0][1]
+
+st.metric(f"{a} win probability", f"{prob_a*100:.0f}%")
+st.progress(prob_a)
+st.caption(f"{a} favored" if prob_a > 0.5 else f"{b} favored")</code></pre>
+  <div class="task">
+    <p class="th">Test it locally</p>
+    <p>Run it and try Djokovic vs Nadal on clay, then switch to grass.</p>
+    <details class="sol"><summary>Command</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>streamlit run app.py</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>Two dropdowns and a surface picker. Clay gives a near coin flip; grass swings it toward Djokovic. That contrast is the demo.</p></div>
+  <div class="nav"><button class="nextbtn" data-next="t4">Next: Ship &rarr;</button></div>
+</section>
+
+<!-- ============ SHIP ============ -->
+<section class="panel" id="t4">
+  <div class="panel-head"><h2>Update the README and redeploy</h2>
+    <p class="sub">Push the v2 work live.</p>
+  </div>
+  <ol>
+    <li>Add a <b>v2</b> section to your README: the engineered features, the seven-model results table, the feature-importance finding, and the honest conclusion (0.637 to 0.650, mid-60s ceiling, two features dropped).</li>
+    <li>Make sure the new files are in the repo: <code class="inl">app_model.joblib</code>, <code class="inl">player_elo.json</code>, updated <code class="inl">app.py</code>, and your finalized <code class="inl">tennis_predictor_v2.ipynb</code>.</li>
+    <li>Commit and push:</li>
+  </ol>
+  <pre><button class="copybtn">Copy</button><code>git add .
+git commit -m "v2: Elo feature engineering, upgraded predictor"
+git push</code></pre>
+  <ol start="4">
+    <li>Because the app is hosted from the repo, pushing redeploys it. Refresh your live URL, the new Elo-powered predictor is there.</li>
+  </ol>
+  <div class="box win"><b>Shipped.</b> Your public site now runs the v2 model, and your repo tells the full, honest story from baseline to ceiling.</div>
+  <div class="nav"><button class="nextbtn" data-next="t5">Next: Done &rarr;</button></div>
+</section>
+
+<!-- ============ DONE ============ -->
+<section class="panel" id="t5">
+  <div class="panel-head"><h2>Project complete</h2>
+    <p class="sub">The final checklist.</p>
+  </div>
+  <div class="box proj">
+    <b>You should have, all committed and live:</b>
+    <ul style="margin:8px 0 0;">
+      <li>A finalized <code class="inl">tennis_predictor_v2.ipynb</code>: five engineered features, seven models, cross-validation, importance, and a written report, running clean top to bottom.</li>
+      <li><code class="inl">app_model.joblib</code> and <code class="inl">player_elo.json</code>.</li>
+      <li>An upgraded <code class="inl">app.py</code>, the Elo-powered pick-two-players predictor.</li>
+      <li>A README with the full v2 story, pushed and redeployed.</li>
+    </ul>
+  </div>
+  <div class="box win">
+    <b>What you built, across v1 and v2:</b> a clean dataset, a seven-model comparison, engineered features with strict leakage control, honest hypothesis tests (including two that failed), a stable measured result confirmed by cross-validation, a research-style report, and a live interactive app. From 0.637 to 0.650, with a clear, honest explanation of the ceiling. That is a complete, genuinely impressive project.
+  </div>
+  <div class="box tip">
+    <b>Turn it in:</b> send me the final <code class="inl">tennis_predictor_v2.ipynb</code>, your README, and the live link so I can give it one last review before it goes on applications. Reminder: this is homework part two; part one is the wrap-up questions in the lesson.
+  </div>
+</section>
+
+</div>
+
+<script>
+  var tabs = document.querySelectorAll(".tab");
+  var panels = document.querySelectorAll(".panel");
+  var bar = document.getElementById("tabbar");
+  function show(id){
+    tabs.forEach(function(t){ t.classList.toggle("active", t.dataset.target === id); });
+    panels.forEach(function(p){ p.classList.toggle("active", p.id === id); });
+    window.scrollTo({ top: bar.offsetTop, behavior: "smooth" });
+  }
+  tabs.forEach(function(t){ t.addEventListener("click", function(){ show(t.dataset.target); }); });
+  document.querySelectorAll("[data-next]").forEach(function(b){ b.addEventListener("click", function(){ show(b.dataset.next); }); });
+  document.querySelectorAll(".copybtn").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var code = btn.parentElement.querySelector("code").innerText;
+      navigator.clipboard.writeText(code).then(function(){
+        btn.textContent = "Copied"; btn.classList.add("done");
+        setTimeout(function(){ btn.textContent = "Copy"; btn.classList.remove("done"); }, 1500);
+      });
+    });
+  });
+</script>
+</body>
+</html>
