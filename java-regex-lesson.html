@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Regular expressions in Java, AP CSA Milestone #1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:      #0E1420;
+    --panel:   #161F2E;
+    --panel2:  #1B2637;
+    --line:    #2A3849;
+    --line2:   #3A4C61;
+    --text:    #E4EBF3;
+    --dim:     #8A9AAD;
+    --accent:  #FFC44D;
+
+    --cls:     #FFC44D;
+    --quant:   #FF8FB1;
+    --esc:     #63D7E8;
+    --grp:     #C4A7FF;
+    --yes:     #52E39C;
+    --no:      #FF7A7A;
+
+    --c-comment: #61748C;
+    --c-string:  #FFD98A;
+    --c-key:     #C4A7FF;
+
+    --sans: "Space Grotesk", "Segoe UI", system-ui, -apple-system, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .shell { max-width: 900px; margin: 0 auto; padding: 0 20px 90px; }
+
+  /* ---------- header ---------- */
+  header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 28px;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 40px 0 26px;
+  }
+  h1 { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 4px; }
+  header .sub { color: var(--dim); font-size: 14.5px; margin: 0; }
+
+  .dissect { display: flex; font-family: var(--mono); }
+  .chunk { display: flex; flex-direction: column; align-items: center; padding: 0 2px; }
+  .chunk .tok { font-size: 19px; font-weight: 500; line-height: 1.5; }
+  .chunk .bar { height: 5px; width: 100%; border: 1px solid var(--line2); border-top: 0; }
+  .chunk .lab {
+    font-family: var(--sans);
+    font-size: 10.5px;
+    color: var(--dim);
+    line-height: 1.35;
+    padding-top: 5px;
+    text-align: center;
+    max-width: 88px;
+  }
+
+  .tok-cls   { color: var(--cls); }
+  .tok-quant { color: var(--quant); }
+  .tok-esc   { color: var(--esc); }
+  .tok-grp   { color: var(--grp); }
+  .tok-lit   { color: var(--text); }
+
+  /* ---------- tabs ---------- */
+  .tabs {
+    display: flex;
+    gap: 2px;
+    border-bottom: 1px solid var(--line);
+    overflow-x: auto;
+    scrollbar-width: none;
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 10;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tabs button {
+    background: none;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    color: var(--dim);
+    font-family: var(--sans);
+    font-size: 14.5px;
+    font-weight: 500;
+    padding: 13px 15px;
+    margin-bottom: -1px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .tabs button:hover { color: var(--text); }
+  .tabs button[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
+  .tabs .div { flex: 0 0 1px; width: 1px; background: var(--line); margin: 11px 10px; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+  .panel { display: none; padding-top: 34px; }
+  .panel.on { display: block; }
+
+  h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 6px; }
+  .intro { color: var(--dim); margin: 0 0 26px; font-size: 15.5px; }
+  h3 { font-size: 17px; font-weight: 500; margin: 0 0 8px; }
+  p { margin: 0 0 12px; }
+  p:last-child { margin-bottom: 0; }
+  ul { margin: 0 0 12px; padding-left: 18px; }
+  li { margin-bottom: 5px; }
+  li::marker { color: var(--line2); }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 22px 24px;
+    margin-bottom: 18px;
+  }
+  .card h3 { font-family: var(--mono); font-size: 16px; color: var(--accent); }
+
+  pre {
+    font-family: var(--mono);
+    font-size: 13.5px;
+    line-height: 1.75;
+    background: #0B111C;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    padding: 14px 16px;
+    margin: 0 0 12px;
+    overflow-x: auto;
+  }
+  .cm { color: var(--c-comment); font-style: italic; }
+  .st { color: var(--c-string); }
+  .kw { color: var(--c-key); }
+  .blank { color: var(--line2); }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.87em;
+    background: var(--panel2);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 1px 5px;
+  }
+
+  .flag {
+    border-left: 3px solid var(--accent);
+    background: rgba(255,196,77,.07);
+    border-radius: 0 7px 7px 0;
+    padding: 13px 18px;
+    margin-bottom: 16px;
+  }
+  .flag b { font-weight: 700; color: var(--accent); }
+
+  .try {
+    background: none;
+    border: 1px solid var(--line2);
+    border-radius: 999px;
+    color: var(--dim);
+    font-family: var(--sans);
+    font-size: 12.5px;
+    padding: 4px 13px;
+    cursor: pointer;
+  }
+  .try:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ---------- symbols ---------- */
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  th {
+    text-align: left;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--dim);
+    padding: 0 12px 8px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  td { padding: 9px 12px 9px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  td.p { font-family: var(--mono); font-size: 14px; white-space: nowrap; width: 105px; }
+  td.ex { font-family: var(--mono); font-size: 13px; color: var(--dim); white-space: nowrap; }
+  tr:last-child td { border-bottom: 0; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 22px; font-size: 13px; }
+  .legend span::before {
+    content: "";
+    display: inline-block;
+    width: 9px; height: 9px;
+    border-radius: 2px;
+    margin-right: 7px;
+    background: currentColor;
+  }
+  .k-cls   { color: var(--cls); }
+  .k-quant { color: var(--quant); }
+  .k-esc   { color: var(--esc); }
+  .k-grp   { color: var(--grp); }
+
+  /* ---------- escaping chain ---------- */
+  .chain { display: flex; flex-wrap: wrap; gap: 12px; align-items: stretch; margin-bottom: 20px; }
+  .chain .step {
+    flex: 1 1 180px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    padding: 15px 16px;
+  }
+  .chain .step.last { border-color: var(--accent); }
+  .chain .who { font-size: 11.5px; color: var(--dim); margin-bottom: 8px; }
+  .chain .val { font-family: var(--mono); font-size: 24px; font-weight: 500; color: var(--esc); }
+  .chain .arrow { align-self: center; color: var(--line2); font-size: 20px; }
+
+  /* ---------- tester ---------- */
+  .tester { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .tester .bar {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 11px 18px;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel2);
+    font-size: 13px;
+    color: var(--dim);
+    font-family: var(--mono);
+  }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--line2); }
+  .tester .body { padding: 20px 22px 22px; }
+  .field { display: block; font-size: 11.5px; color: var(--dim); margin-bottom: 7px; }
+  .row { margin-bottom: 16px; }
+
+  input[type=text], textarea {
+    width: 100%;
+    background: #0B111C;
+    color: var(--text);
+    border: 1px solid var(--line2);
+    border-radius: 7px;
+    padding: 11px 13px;
+    font-family: var(--mono);
+    font-size: 15px;
+    line-height: 1.55;
+  }
+  textarea { min-height: 104px; resize: vertical; font-size: 14px; }
+  input[type=text]:focus, textarea:focus { border-color: var(--accent); outline: none; }
+
+  .modes { display: inline-flex; border: 1px solid var(--line2); border-radius: 7px; overflow: hidden; }
+  .modes label { cursor: pointer; position: relative; }
+  .modes input { position: absolute; opacity: 0; pointer-events: none; }
+  .modes span { display: block; padding: 7px 16px; font-family: var(--mono); font-size: 13px; color: var(--dim); }
+  .modes input:checked + span { background: var(--accent); color: #0E1420; font-weight: 500; }
+  .modes input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 18px; }
+  .chips button {
+    background: none;
+    border: 1px solid var(--line2);
+    border-radius: 999px;
+    color: var(--dim);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 5px 12px;
+    cursor: pointer;
+  }
+  .chips button:hover { border-color: var(--accent); color: var(--accent); }
+
+  .javaline {
+    background: #0B111C;
+    border: 1px dashed var(--line2);
+    border-radius: 7px;
+    padding: 11px 13px;
+    margin-bottom: 18px;
+    font-family: var(--mono);
+    font-size: 14px;
+    word-break: break-all;
+  }
+  .javaline .cap { display: block; font-family: var(--sans); font-size: 11px; color: var(--dim); margin-bottom: 5px; }
+  .javaline .code { color: var(--c-string); }
+
+  .out { border-top: 1px solid var(--line); padding-top: 14px; }
+  .tally { font-size: 12px; color: var(--dim); margin-bottom: 10px; }
+  .res {
+    display: flex;
+    gap: 11px;
+    align-items: baseline;
+    padding: 4px 0;
+    font-family: var(--mono);
+    font-size: 14px;
+    line-height: 1.55;
+  }
+  .res .m { flex: 0 0 auto; font-weight: 700; }
+  .res.pass .m { color: var(--yes); }
+  .res.fail .m { color: var(--no); }
+  .res.fail .txt { color: var(--dim); }
+  .res .txt { word-break: break-all; }
+  .piece { background: rgba(255,196,77,.14); border-radius: 3px; padding: 0 4px; }
+  .sep { color: var(--line2); }
+  .msg { font-size: 14px; color: var(--dim); }
+  .msg.err { color: var(--no); }
+
+  /* ---------- problems ---------- */
+  .tools { display: flex; justify-content: flex-end; margin-bottom: 14px; }
+  .num {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: #0E1420;
+    background: var(--accent);
+    border-radius: 4px;
+    padding: 1px 7px;
+    margin-right: 10px;
+    vertical-align: 2px;
+  }
+  .card > h3.q { font-family: var(--sans); font-size: 17px; color: var(--text); margin-bottom: 14px; }
+
+  details { border-top: 1px solid var(--line); margin-top: 16px; padding-top: 14px; }
+  summary { cursor: pointer; font-size: 14px; color: var(--dim); list-style: none; }
+  summary::-webkit-details-marker { display: none; }
+  summary::before { content: "+"; font-family: var(--mono); color: var(--accent); margin-right: 8px; }
+  details[open] summary::before { content: "\2212"; }
+  details[open] summary { margin-bottom: 14px; }
+  details > *:last-child { margin-bottom: 0; }
+
+  footer { margin-top: 40px; color: var(--dim); font-size: 13px; text-align: center; }
+
+  @media (max-width: 640px) {
+    header { padding: 28px 0 20px; }
+    h1 { font-size: 24px; }
+    .dissect { transform: scale(.9); transform-origin: left; }
+    .chain .arrow { display: none; }
+    .card { padding: 18px 16px; }
+    .tester .body { padding: 16px; }
+  }
+
+  @media print {
+    body { background: #fff; color: #000; }
+    .tabs, .tools, .chips, .tester, .try { display: none; }
+    .panel { display: block !important; page-break-before: always; }
+    details:not([open]) > *:not(summary) { display: block !important; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <header>
+    <div>
+      <h1>AP CSA Milestone #1</h1>
+      <p class="sub">Regular expressions first, then all six practice problems</p>
+    </div>
+    <div class="dissect" aria-label="An example pattern broken into its parts">
+      <div class="chunk"><span class="tok tok-cls">[a-z]</span><span class="bar"></span><span class="lab">any lowercase letter</span></div>
+      <div class="chunk"><span class="tok tok-quant">+</span><span class="bar"></span><span class="lab">one or more</span></div>
+      <div class="chunk"><span class="tok tok-esc">\d</span><span class="bar"></span><span class="lab">a digit</span></div>
+      <div class="chunk"><span class="tok tok-quant">{2}</span><span class="bar"></span><span class="lab">exactly two</span></div>
+      <div class="chunk"><span class="tok tok-esc">\.</span><span class="bar"></span><span class="lab">a real dot</span></div>
+      <div class="chunk"><span class="tok tok-lit">java</span><span class="bar"></span><span class="lab">plain text</span></div>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-tab="methods">Methods</button>
+    <button role="tab" aria-selected="false" data-tab="symbols">Symbols</button>
+    <button role="tab" aria-selected="false" data-tab="backslash">Backslashes</button>
+    <button role="tab" aria-selected="false" data-tab="tester">Tester</button>
+    <span class="div"></span>
+    <button role="tab" aria-selected="false" data-tab="p1">1 Math</button>
+    <button role="tab" aria-selected="false" data-tab="p2">2 Binary</button>
+    <button role="tab" aria-selected="false" data-tab="p3">3 Rotation</button>
+    <button role="tab" aria-selected="false" data-tab="p4">4 Arrays</button>
+    <button role="tab" aria-selected="false" data-tab="p5">5 Paths</button>
+    <button role="tab" aria-selected="false" data-tab="p6">6 Emails</button>
+  </nav>
+
+  <main>
+
+  <!-- ============ METHODS ============ -->
+  <section class="panel on" id="methods" role="tabpanel">
+    <h2>Three methods take a pattern</h2>
+    <p class="intro">These look like normal String methods, but the argument is a pattern, not plain text. That is the part everyone forgets.</p>
+
+    <div class="card">
+      <h3>matches(pattern)</h3>
+      <p>Returns <code>true</code> or <code>false</code>. The <b>entire string</b> has to fit the pattern. Not part of it, all of it.</p>
+<pre><span class="st">"cat"</span>.matches(<span class="st">"[a-z]{3}"</span>)      <span class="cm">// true</span>
+<span class="st">"cats"</span>.matches(<span class="st">"[a-z]{3}"</span>)     <span class="cm">// false, that is four letters</span>
+<span class="st">"the cat"</span>.matches(<span class="st">"[a-z]{3}"</span>)  <span class="cm">// false, the extra text still counts</span></pre>
+      <button class="try" data-pattern="[a-z]{3}" data-mode="matches" data-tests="cat|cats|the cat|CAT">Open in tester</button>
+    </div>
+
+    <div class="card">
+      <h3>split(pattern)</h3>
+      <p>Cuts a string into a <code>String[]</code> everywhere the pattern matches. The matched text disappears, you keep the pieces around it.</p>
+<pre><span class="st">"a,b,c"</span>.split(<span class="st">","</span>)        <span class="cm">// {"a", "b", "c"}</span>
+<span class="st">"a,  b ,c"</span>.split(<span class="st">"[ ,]+"</span>) <span class="cm">// {"a", "b", "c"}</span></pre>
+      <p>That <code>+</code> is doing real work. Without it, a comma followed by a space counts as two separators and you get an empty string wedged in the middle.</p>
+      <button class="try" data-pattern="[ ,]+" data-mode="split" data-tests="a,  b ,c">Open in tester</button>
+    </div>
+
+    <div class="card">
+      <h3>replaceAll(pattern, text)</h3>
+      <p>Swaps every match for the replacement. You probably will not need it tonight, but it takes a pattern too, so it belongs in the same mental bucket.</p>
+<pre><span class="st">"a1b2"</span>.replaceAll(<span class="st">"\\d"</span>, <span class="st">"#"</span>) <span class="cm">// "a#b#"</span></pre>
+    </div>
+
+    <div class="flag">
+      <p><b>The trap.</b> <code>matches()</code> is all or nothing. If you want to know whether a pattern shows up somewhere <i>inside</i> a longer string, <code>matches()</code> returns false and you will think your pattern is broken. Searching inside text is a job for <code>Pattern</code> and <code>Matcher</code>, which these labs do not use.</p>
+    </div>
+  </section>
+
+  <!-- ============ SYMBOLS ============ -->
+  <section class="panel" id="symbols" role="tabpanel">
+    <h2>The symbols worth memorizing</h2>
+    <p class="intro">Read a pattern left to right, one chunk at a time, and say it out loud in English as you go.</p>
+
+    <div class="legend">
+      <span class="k-cls">what to match</span>
+      <span class="k-quant">how many</span>
+      <span class="k-esc">escaped character</span>
+      <span class="k-grp">grouping</span>
+    </div>
+
+    <div class="card">
+      <table>
+        <tr><th>Pattern</th><th>Reads as</th><th>Example</th></tr>
+        <tr><td class="p tok-cls">[a-z]</td><td>one lowercase letter</td><td class="ex">q</td></tr>
+        <tr><td class="p tok-cls">[A-Z]</td><td>one uppercase letter</td><td class="ex">Q</td></tr>
+        <tr><td class="p tok-cls">[a-zA-Z]</td><td>one letter, either case</td><td class="ex">q or Q</td></tr>
+        <tr><td class="p tok-cls">[0-9]</td><td>one digit</td><td class="ex">7</td></tr>
+        <tr><td class="p tok-esc">\d</td><td>one digit, shorter to write</td><td class="ex">7</td></tr>
+        <tr><td class="p tok-cls">[^abc]</td><td>one character that is not a, b, or c</td><td class="ex">z</td></tr>
+        <tr><td class="p tok-cls">.</td><td>any single character at all</td><td class="ex">q, 7, or #</td></tr>
+        <tr><td class="p tok-esc">\.</td><td>an actual dot</td><td class="ex">.</td></tr>
+        <tr><td class="p tok-quant">+</td><td>one or more of the thing before it</td><td class="ex">[a-z]+</td></tr>
+        <tr><td class="p tok-quant">*</td><td>zero or more</td><td class="ex">[a-z]*</td></tr>
+        <tr><td class="p tok-quant">?</td><td>zero or one</td><td class="ex">[a-z]?</td></tr>
+        <tr><td class="p tok-quant">{5}</td><td>exactly five</td><td class="ex">\d{5}</td></tr>
+        <tr><td class="p tok-quant">{2,4}</td><td>between two and four</td><td class="ex">\d{2,4}</td></tr>
+        <tr><td class="p tok-grp">(txt|java)</td><td>either txt or java</td><td class="ex">\.(txt|java)</td></tr>
+      </table>
+    </div>
+
+    <div class="flag">
+      <p><b>Say it in English first.</b> <code>[a-zA-Z]{2}\d{5}</code> is "two letters, then five digits, in that order, nothing else." If you cannot say the sentence, you cannot write the pattern.</p>
+    </div>
+
+    <button class="try" data-pattern="[a-zA-Z]{2}\d{5}" data-mode="matches" data-tests="ab12345|AB12345|a12345|ab1234|ab12345x">Try that one in the tester</button>
+  </section>
+
+  <!-- ============ BACKSLASH ============ -->
+  <section class="panel" id="backslash" role="tabpanel">
+    <h2>Why Problem 5 has four backslashes</h2>
+    <p class="intro">Backslashes are special twice. Two different things strip them before your pattern ever runs.</p>
+
+    <div class="chain">
+      <div class="step">
+        <div class="who">1. You type this in the source</div>
+        <div class="val">"\\\\"</div>
+      </div>
+      <div class="arrow">&rarr;</div>
+      <div class="step">
+        <div class="who">2. Java builds this String</div>
+        <div class="val">\\</div>
+      </div>
+      <div class="arrow">&rarr;</div>
+      <div class="step last">
+        <div class="who">3. The pattern looks for</div>
+        <div class="val">\</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Step 1, the compiler</h3>
+      <p>Inside quotes a backslash starts an escape. <code>\n</code> is a newline, <code>\"</code> is a quote, and <code>\\</code> is one plain backslash. So the four characters you typed are only two by the time the String exists in memory.</p>
+    </div>
+
+    <div class="card">
+      <h3>Step 2, the pattern engine</h3>
+      <p>Now the pattern reads that two character String. In pattern language a backslash is also special, so <code>\\</code> means "one literal backslash" and <code>\.</code> means "one literal dot". Two characters become one again.</p>
+    </div>
+
+    <div class="flag">
+      <p><b>How to get it right every time.</b> Write the pattern on paper with single backslashes, the normal way. Then double every backslash as you copy it inside the quotes. <code>\d{5}</code> becomes <code>"\\d{5}"</code>, <code>\.</code> becomes <code>"\\."</code>, and one backslash becomes <code>"\\\\"</code>.</p>
+    </div>
+
+    <p>The tester does this conversion live, so you can watch it happen while you type.</p>
+    <button class="try" data-pattern="\\" data-mode="split" data-tests="C:\Users\Bautista\Documents\report.txt">Split a file path in the tester</button>
+  </section>
+
+  <!-- ============ TESTER ============ -->
+  <section class="panel" id="tester" role="tabpanel">
+    <h2>Pattern tester</h2>
+    <p class="intro">Type your pattern with single backslashes, the way you write it on paper. The dashed box shows exactly what to type in Java.</p>
+
+    <div class="chips" id="chips"></div>
+
+    <div class="tester">
+      <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span style="margin-left:8px">RegexTester.java</span></div>
+      <div class="body">
+        <div class="row">
+          <label class="field" for="pattern">Pattern</label>
+          <input type="text" id="pattern" spellcheck="false" autocapitalize="off" autocomplete="off" value="[a-zA-Z]{2}\d{5}@pausd\.us">
+        </div>
+
+        <div class="row">
+          <span class="field">Method</span>
+          <div class="modes">
+            <label><input type="radio" name="mode" value="matches" checked><span>matches()</span></label>
+            <label><input type="radio" name="mode" value="split"><span>split()</span></label>
+          </div>
+        </div>
+
+        <div class="row">
+          <label class="field" for="tests">Test strings, one per line</label>
+          <textarea id="tests" spellcheck="false" autocapitalize="off">ab12345@pausd.us
+xy67890@pausd.us
+invalid@pausd.us
+AB12345@pausd.us
+ab1234@pausd.us</textarea>
+        </div>
+
+        <div class="javaline"><span class="cap">In Java you would write</span><span class="code" id="javaline"></span></div>
+
+        <div class="out" id="out"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PROBLEM 1 ============ -->
+  <section class="panel" id="p1" role="tabpanel">
+    <h2>Problem 1, the Math class</h2>
+    <p class="intro">Lab 1. Random ranges, rounding, radians, and integer overflow.</p>
+
+    <div class="flag">
+      <p><b>The random formula, memorize this one.</b> For a random int from <code>low</code> to <code>high</code> inclusive, count how many values that is, then shift:</p>
+<pre><span class="kw">int</span> n = (<span class="kw">int</span>)(Math.random() * (high - low + <span class="st">1</span>)) + low;</pre>
+      <p>For a random double from <code>low</code> inclusive to <code>high</code> exclusive, no cast and no plus one:</p>
+<pre><span class="kw">double</span> d = Math.random() * (high - low) + low;</pre>
+    </div>
+
+    <div class="tools"><button class="try" id="reveal1">Reveal all answers</button></div>
+
+    <div class="card">
+      <h3 class="q"><span class="num">1a</span>Random odd number from 11 through 25 inclusive, stored in <code>level</code></h3>
+      <details>
+        <summary>Show the answer</summary>
+<pre><span class="kw">int</span> level = (<span class="kw">int</span>)(Math.random() * <span class="st">8</span>) * <span class="st">2</span> + <span class="st">11</span>;</pre>
+        <p>Count the odd numbers first: 11, 13, 15, 17, 19, 21, 23, 25. That is 8 values, not 15. Pick one of 8, double it to step by twos, then shift the start to 11.</p>
+      </details>
+    </div>
+
+    <div class="card">
+      <h3 class="q"><span class="num">1b</span>Random lowercase letter from 'a' through 'z', stored in <code>letter</code></h3>
+      <details>
+        <summary>Show the answer</summary>
+<pre><span class="kw">char</span> letter = (<span class="kw">char</span>)((<span class="kw">int</span>)(Math.random() * <span class="st">26</span>) + <span class="st">97</span>);</pre>
+        <p>26 letters, so <code>Math.random() * 26</code> gives 0 through 25. Add 97 to land on 97 through 122, then cast to <code>char</code> to turn the number into the letter.</p>
+        <p>You can write <code>+ 'a'</code> instead of <code>+ 97</code>, Java treats the char as its Unicode value in arithmetic.</p>
+      </details>
+    </div>
+
+    <div class="card">
+      <h3 class="q"><span class="num">1c</span>Why does <code>Integer.MAX_VALUE * 2</code> evaluate to -2?</h3>
+      <details>
+        <summary>Show the answer</summary>
+        <p>MAX_VALUE in binary is a 0 followed by 31 ones. Multiplying by 2 shifts every bit one place left, so the leading 0 falls off the front, a 1 slides into the sign bit, and a 0 fills the empty spot on the right.</p>
+        <p>You end up with 31 ones followed by a 0. In two's complement, all ones is -1, and all ones with the last bit cleared is -2.</p>
+        <p>The other way to say it: the true answer needs 33 bits, an <code>int</code> only has 32, so the extra bit is discarded and the value wraps around.</p>
+      </details>
+    </div>
+
+    <div class="card">
+      <h3 class="q"><span class="num">1d</span>Difference between <code>Math.round()</code>, <code>Math.ceil()</code>, and <code>Math.floor()</code></h3>
+      <details>
+        <summary>Show the answer</summary>
+        <ul>
+          <li><code>round</code> goes to the nearest whole number, and a .5 tie goes up.</li>
+          <li><code>ceil</code> always goes up, to the smallest whole number that is not smaller.</li>
+          <li><code>floor</code> always goes down, to the largest whole number that is not larger.</li>
+        </ul>
+        <p>Negatives are where people get burned. <code>Math.floor(-2.1)</code> is -3, because down means more negative. <code>Math.round(-2.5)</code> is -2, because the tie always goes up.</p>
+        <p>Return types differ too. <code>ceil</code> and <code>floor</code> hand back a <code>double</code>, <code>round</code> hands back a <code>long</code> when you give it a <code>double</code>.</p>
+      </details>
+    </div>
+
+    <div class="card">
+      <h3 class="q"><span class="num">1e</span>What is printed?</h3>
+<pre><span class="kw">double</span> x = Math.ceil(<span class="st">4.2</span>);
+<span class="kw">double</span> y = Math.floor(<span class="st">7.9</span>);
+<span class="kw">double</span> z = Math.round(<span class="st">3.6</span>);
+System.out.println(x + y + z);</pre>
+      <details>
+        <summary>Show the answer</summary>
+<pre>16.0</pre>
+        <p>x is 5.0, y is 7.0, z is 4. The round call returns a <code>long</code>, but storing it in a <code>double</code> widens it to 4.0, so the sum is 16.0 and prints with the decimal point.</p>
+      </details>
+    </div>
+
+    <div class="card">
+      <h3 class="q"><span class="num">1f</span>What is wrong with this attempt at the sine of 30 degrees?</h3>
+<pre><span class="kw">double</span> angle = <span class="st">30</span>;
+<span class="kw">double</span> result = Math.sin(angle);</pre>
+      <details>
+        <summary>Show the answer</summary>
+        <p>Java trig functions take radians, not degrees. This computes the sine of 30 radians, which is about -0.988, nowhere near the 0.5 he wanted.</p>
+<pre><span class="kw">double</span> result = Math.sin(Math.toRadians(<span class="st">30</span>));  <span class="cm">// 0.49999999999999994</span></pre>
+        <p><code>Math.sin(30 * Math.PI / 180)</code> works too, <code>toRadians</code> is just the readable version.</p>
+      </details>
+    </div>
+
+    <div class="card">
+      <h3 class="q"><span class="num">1g</span>Random <code>int</code> for a building with floors -5 through 12 inclusive</h3>
+      <details>
+        <summary>Show the answer</summary>
+<pre><span class="kw">int</span> floor = (<span class="kw">int</span>)(Math.random() * <span class="st">18</span>) - <span class="st">5</span>;</pre>
+        <p>How many floors? 12 minus -5 plus 1 is 18. Subtracting a negative is the step people rush, so write it out.</p>
+      </details>
+    </div>
+
+    <div class="card">
+      <h3 class="q"><span class="num">1h</span>Random <code>double</code> from 12.5 inclusive to 25.5 exclusive</h3>
+      <details>
+        <summary>Show the answer</summary>
+<pre><span class="kw">double</span> health = Math.random() * <span class="st">13</span> + <span class="st">12.5</span>;</pre>
+        <p>The gap is 13.0. No cast and no plus one here, because doubles fill the whole range continuously. <code>Math.random()</code> already gives you 0 inclusive to 1 exclusive, which is exactly the shape you want.</p>
+      </details>
+    </div>
+
+    <div class="card">
+      <h3 class="q"><span class="num">1i</span>What is printed, and why?</h3>
+<pre><span class="kw">int</span> x = Integer.MIN_VALUE;
+x--;
+System.out.println(x);</pre>
+      <details>
+        <summary>Show the answer</summary>
+<pre>2147483647</pre>
+        <p>MIN_VALUE is a 1 followed by 31 zeros. Subtracting 1 borrows across every zero, leaving a 0 followed by 31 ones, which is MAX_VALUE.</p>
+        <p>Same wrap-around as 1c, running the other direction. Push past the bottom and you appear at the top.</p>
+      </details>
+    </div>
+
+    <div class="card">
+      <h3 class="q"><span class="num">1j</span>How do you get the last digit of a number? The last two digits?</h3>
+      <details>
+        <summary>Show the answer</summary>
+<pre>n % <span class="st">10</span>    <span class="cm">// last digit</span>
+n % <span class="st">100</span>   <span class="cm">// last two digits</span>
+n / <span class="st">10</span>    <span class="cm">// chop the last digit off</span></pre>
+        <p>That last one is the partner trick. <code>%</code> reads a digit, <code>/</code> throws it away, and together they let you walk through a number one digit at a time. Problem 2 uses exactly this.</p>
+      </details>
+    </div>
+
+    <div class="card">
+      <h3 class="q"><span class="num">1k</span>Raise <code>n</code> to the power of its own digit count</h3>
+      <details>
+        <summary>Show the answer</summary>
+<pre><span class="kw">int</span> numDigits = countDigits(n);
+<span class="kw">double</span> result = Math.pow(n, numDigits);</pre>
+        <p><code>Math.pow</code> always returns a <code>double</code>, even when both arguments look like ints. If you need an int back, cast it: <code>(int) Math.pow(n, numDigits)</code>.</p>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============ PROBLEM 2 ============ -->
+  <section class="panel" id="p2" role="tabpanel">
+    <h2>Problem 2, evil numbers</h2>
+    <p class="intro">Lab 2. A number is evil when its binary form has an even count of 1s. 3 is 11 in binary, two ones, evil. 4 is 100, one 1, not evil.</p>
+
+    <div class="tools"><button class="try" id="reveal2">Reveal all answers</button></div>
+
+    <div class="card">
+      <h3 class="q"><span class="num">2a</span>Take a base 10 number, convert to a binary String</h3>
+<pre><span class="kw">public static boolean</span> isEvilNumber(<span class="kw">int</span> baseTenNum) {
+    <span class="blank">// your code here</span>
+}</pre>
+      <details>
+        <summary>Show the answer</summary>
+<pre><span class="kw">public static boolean</span> isEvilNumber(<span class="kw">int</span> baseTenNum) {
+    <span class="kw">String</span> binary = Integer.toBinaryString(baseTenNum);
+    <span class="kw">int</span> count = <span class="st">0</span>;
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="st">0</span>; i &lt; binary.length(); i++) {
+        <span class="kw">if</span> (binary.charAt(i) == <span class="st">'1'</span>) {
+            count++;
+        }
+    }
+    <span class="kw">return</span> count % <span class="st">2</span> == <span class="st">0</span>;
+}</pre>
+        <ul>
+          <li><code>charAt</code> returns a <code>char</code>, so compare against <code>'1'</code> in single quotes, not <code>"1"</code> in double quotes.</li>
+          <li>Return the whole condition <code>count % 2 == 0</code>. Writing <code>if (...) return true; else return false;</code> works but is the long way around.</li>
+        </ul>
+      </details>
+    </div>
+
+    <div class="card">
+      <h3 class="q"><span class="num">2b</span>Take the binary number as an <code>int</code>, no String allowed</h3>
+      <p>Here 101 means the binary number 101, so use the last digit trick from 1j.</p>
+      <details>
+        <summary>Show the answer</summary>
+<pre><span class="kw">public static boolean</span> isEvilBinary(<span class="kw">int</span> binaryNum) {
+    <span class="kw">int</span> count = <span class="st">0</span>;
+    <span class="kw">while</span> (binaryNum &gt; <span class="st">0</span>) {
+        <span class="kw">if</span> (binaryNum % <span class="st">10</span> == <span class="st">1</span>) {
+            count++;
+        }
+        binaryNum /= <span class="st">10</span>;
+    }
+    <span class="kw">return</span> count % <span class="st">2</span> == <span class="st">0</span>;
+}</pre>
+        <p><code>% 10</code> peels off the rightmost digit, <code>/= 10</code> discards it, and the loop ends when there is nothing left.</p>
+      </details>
+    </div>
+
+    <div class="flag">
+      <p><b>The worksheet has a bug.</b> Both versions are written as <code>isEvilNumber(int)</code>. Java cannot hold two methods with the same name and the same parameter list in one class, so that will not compile. Overloading needs different parameter types or counts. Rename one, which is why the second answer says <code>isEvilBinary</code>.</p>
+    </div>
+  </section>
+
+  <!-- ============ PROBLEM 3 ============ -->
+  <section class="panel" id="p3" role="tabpanel">
+    <h2>Problem 3, rotating a point</h2>
+    <p class="intro">Lab 1. Rotate (x, y) about the origin and return the new coordinates in a <code>double[]</code> of length 2.</p>
+
+    <div class="card">
+      <h3 class="q">The three things this problem is testing</h3>
+      <ul>
+        <li>Converting degrees to radians before any trig call.</li>
+        <li>Computing both new values from the <b>original</b> x and y.</li>
+        <li>Building and returning an array from inside a method.</li>
+      </ul>
+<pre>x' = x * cos(angle) - y * sin(angle)
+y' = x * sin(angle) + y * cos(angle)</pre>
+    </div>
+
+    <div class="tools"><button class="try" id="reveal3">Reveal all answers</button></div>
+
+    <div class="card">
+      <h3 class="q"><span class="num">3</span>Write <code>rotatePoint</code></h3>
+<pre><span class="kw">public static double</span>[] rotatePoint(<span class="kw">double</span> x, <span class="kw">double</span> y, <span class="kw">double</span> angleDeg) {
+    <span class="blank">// your code here</span>
+}</pre>
+      <details>
+        <summary>Show the answer</summary>
+<pre><span class="kw">public static double</span>[] rotatePoint(<span class="kw">double</span> x, <span class="kw">double</span> y, <span class="kw">double</span> angleDeg) {
+    <span class="kw">double</span> rad = Math.toRadians(angleDeg);
+    <span class="kw">double</span> newX = x * Math.cos(rad) - y * Math.sin(rad);
+    <span class="kw">double</span> newY = x * Math.sin(rad) + y * Math.cos(rad);
+    <span class="kw">return new double</span>[]{newX, newY};
+}</pre>
+        <ul>
+          <li>Convert once at the top and reuse <code>rad</code>, rather than calling <code>toRadians</code> four times.</li>
+          <li>Do not assign back into <code>x</code> before computing <code>newY</code>. If you overwrite <code>x</code> first, the second line uses the rotated value and the answer is wrong.</li>
+          <li><code>new double[]{newX, newY}</code> builds and returns the array in one line.</li>
+        </ul>
+      </details>
+    </div>
+
+    <div class="card">
+      <h3 class="q">What the example actually prints</h3>
+<pre><span class="kw">double</span>[] result = rotatePoint(<span class="st">3</span>, <span class="st">4</span>, <span class="st">90</span>);
+System.out.println(result[<span class="st">0</span>] + <span class="st">", "</span> + result[<span class="st">1</span>]);</pre>
+      <details>
+        <summary>Show the answer</summary>
+<pre>-4.0, 3.0000000000000004</pre>
+        <p>The worksheet says -4.0, 3.0, and the math is right, but doubles cannot store cos(90 degrees) as exactly zero. It comes out as roughly 0.0000000000000000612, and that dust survives into the y value.</p>
+        <p>Not a bug in your code. This is why you never compare doubles with <code>==</code>, you check whether the difference is smaller than some tiny tolerance instead.</p>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============ PROBLEM 4 ============ -->
+  <section class="panel" id="p4" role="tabpanel">
+    <h2>Problem 4, array searching</h2>
+    <p class="intro">Lab 2. Two boolean methods over an <code>int[]</code>. Both hinge on where you put the return.</p>
+
+    <div class="tools"><button class="try" id="reveal4">Reveal all answers</button></div>
+
+    <div class="card">
+      <h3 class="q"><span class="num">4a</span><code>hasLargeNumber</code>, true if any element is greater than 100</h3>
+<pre>hasLargeNumber(<span class="kw">new int</span>[]{<span class="st">12</span>, <span class="st">45</span>, <span class="st">101</span>, <span class="st">67</span>})  <span class="cm">// true</span>
+hasLargeNumber(<span class="kw">new int</span>[]{<span class="st">12</span>, <span class="st">45</span>, <span class="st">99</span>, <span class="st">67</span>})   <span class="cm">// false</span></pre>
+      <details>
+        <summary>Show the answer</summary>
+<pre><span class="kw">public static boolean</span> hasLargeNumber(<span class="kw">int</span>[] arr) {
+    <span class="kw">for</span> (<span class="kw">int</span> num : arr) {
+        <span class="kw">if</span> (num &gt; <span class="st">100</span>) {
+            <span class="kw">return true</span>;
+        }
+    }
+    <span class="kw">return false</span>;
+}</pre>
+        <p>This is the "does any" shape. Return true the instant you find one, and return false only after the loop has finished and found nothing.</p>
+        <p>The classic bug is putting <code>return false</code> in an else inside the loop. That answers the whole question from the first element alone.</p>
+      </details>
+    </div>
+
+    <div class="card">
+      <h3 class="q"><span class="num">4b</span><code>isIncreasingByTwos</code>, true if every element is 2 more than the one before it</h3>
+<pre>isIncreasingByTwos(<span class="kw">new int</span>[]{<span class="st">2</span>, <span class="st">4</span>, <span class="st">6</span>, <span class="st">8</span>, <span class="st">10</span>})  <span class="cm">// true</span>
+isIncreasingByTwos(<span class="kw">new int</span>[]{<span class="st">2</span>, <span class="st">4</span>, <span class="st">6</span>, <span class="st">7</span>})      <span class="cm">// false</span></pre>
+      <details>
+        <summary>Show the answer</summary>
+<pre><span class="kw">public static boolean</span> isIncreasingByTwos(<span class="kw">int</span>[] arr) {
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="st">1</span>; i &lt; arr.length; i++) {
+        <span class="kw">if</span> (arr[i] - arr[i - <span class="st">1</span>] != <span class="st">2</span>) {
+            <span class="kw">return false</span>;
+        }
+    }
+    <span class="kw">return true</span>;
+}</pre>
+        <ul>
+          <li>This is the "do all" shape, the mirror image of 4a. Return false on the first failure, true only at the very end.</li>
+          <li>Start at <code>i = 1</code>, not 0. Comparing pairs means the first element has nothing before it, and <code>arr[-1]</code> throws <code>ArrayIndexOutOfBoundsException</code>.</li>
+          <li>A for-each loop cannot do this one. You need the index to reach the previous element.</li>
+        </ul>
+      </details>
+    </div>
+
+    <div class="flag">
+      <p><b>Two shapes to keep straight.</b> "Does any element..." starts at false and returns true early. "Do all elements..." starts at true and returns false early. Almost every array boolean question on the milestone is one of these two.</p>
+    </div>
+  </section>
+
+  <!-- ============ PROBLEM 5 ============ -->
+  <section class="panel" id="p5" role="tabpanel">
+    <h2>Problem 5, file paths</h2>
+    <p class="intro">Write each answer on paper before you open anything.</p>
+
+<pre><span class="kw">String</span> path = <span class="st">"C:\\Users\\Bautista\\Documents\\report.txt"</span>;
+<span class="kw">String</span>[] parts = path.split(<span class="st">"\\\\"</span>);</pre>
+
+    <div class="tools"><button class="try" id="reveal5">Reveal all answers</button></div>
+
+    <div class="card">
+      <h3 class="q"><span class="num">5a</span>What does <code>System.out.println(path)</code> print?</h3>
+      <details>
+        <summary>Show the answer</summary>
+<pre>C:\Users\Bautista\Documents\report.txt</pre>
+        <p>Single backslashes. Each <code>\\</code> in the source is already one backslash by the time the String exists. Printing does not put anything back.</p>
+      </details>
+    </div>
+
+    <div class="card">
+      <h3 class="q"><span class="num">5b</span>Why does split use <code>\\\\</code> instead of a single <code>\</code>?</h3>
+      <details>
+        <summary>Show the answer</summary>
+        <p>Because two layers each eat one. The compiler turns the four characters <code>\\\\</code> into the two character String <code>\\</code>, and the pattern engine reads <code>\\</code> as one literal backslash.</p>
+        <p>A single <code>\</code> never survives the compiler at all, and a pattern of just <code>\</code> would be a backslash with nothing after it, which is not valid.</p>
+      </details>
+    </div>
+
+    <div class="card">
+      <h3 class="q"><span class="num">5c</span>What happens if you run <code>path.split("\")</code>?</h3>
+      <details>
+        <summary>Show the answer</summary>
+        <p>It does not compile. Inside quotes <code>\"</code> means "an actual quote character", so the String is never closed and the compiler stops on that line.</p>
+        <p>Worth knowing the near miss: <code>path.split("\\")</code> compiles fine, then crashes at run time with a <code>PatternSyntaxException</code>, because the pattern is a lone backslash escaping nothing.</p>
+      </details>
+    </div>
+
+    <div class="card">
+      <h3 class="q"><span class="num">5d</span>Write the pattern for a valid file name: letters only, then a dot, then an extension.</h3>
+<pre><span class="kw">if</span> (fileName.matches(<span class="st">"</span><span class="blank">________________</span><span class="st">"</span>))</pre>
+      <button class="try" data-pattern="[a-zA-Z]+\.[a-zA-Z]+" data-mode="matches" data-tests="report.txt|Main.java|report2.txt|report.tar.gz|reportXtxt">Test your idea first</button>
+      <details>
+        <summary>Show the answer</summary>
+<pre><span class="kw">if</span> (fileName.matches(<span class="st">"[a-zA-Z]+\\.[a-zA-Z]+"</span>))</pre>
+        <ul>
+          <li><code>[a-zA-Z]+</code> is one or more letters, no digits allowed.</li>
+          <li><code>\\.</code> is a real dot. A plain <code>.</code> matches any character, so <code>reportXtxt</code> would sneak through.</li>
+          <li>No <code>^</code> or <code>$</code> needed, <code>matches()</code> already checks the whole string.</li>
+        </ul>
+        <p>If the teacher wants specific extensions only: <code>"[a-zA-Z]+\\.(txt|java)"</code>.</p>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============ PROBLEM 6 ============ -->
+  <section class="panel" id="p6" role="tabpanel">
+    <h2>Problem 6, school emails</h2>
+    <p class="intro">A valid email is two letters, then exactly five digits, then <code>@pausd.us</code>. Find them all and store them as <code>Email</code> objects.</p>
+
+<pre><span class="kw">public static void</span> main(<span class="kw">String</span>[] args) {
+    <span class="kw">String</span> data = <span class="st">"ab12345@pausd.us, xy67890@pausd.us, invalid@pausd.us"</span>;
+
+    <span class="cm">// 1. make the ArrayList</span>
+    <span class="blank">________________________________</span>
+
+    <span class="cm">// 2. write the pattern</span>
+    <span class="kw">String</span> emailRegex = <span class="blank">__________________</span>
+
+    <span class="cm">// 3. split into tokens</span>
+    <span class="kw">String</span>[] tokens = <span class="blank">__________</span>(<span class="st">"[ ,]+"</span>);
+
+    <span class="cm">// 4. keep the valid ones</span>
+    <span class="kw">for</span> (<span class="kw">String</span> <span class="blank">___</span> : <span class="blank">________</span>) {
+        <span class="kw">if</span> (t.matches(<span class="blank">__________</span>)) {
+            validEmails.add(<span class="blank">___</span>);
+        }
+    }
+}</pre>
+
+    <div class="tools"><button class="try" id="reveal6">Reveal all answers</button></div>
+
+    <div class="card">
+      <h3 class="q"><span class="num">6</span>Build the pattern, then fill in the program</h3>
+      <button class="try" data-pattern="[a-zA-Z]{2}\d{5}@pausd\.us" data-mode="matches" data-tests="ab12345@pausd.us|xy67890@pausd.us|invalid@pausd.us|AB12345@pausd.us|ab1234@pausd.us|ab12345@pausdXus">Test the pattern first</button>
+      <details>
+        <summary>Show the full solution</summary>
+<pre>ArrayList&lt;Email&gt; validEmails = <span class="kw">new</span> ArrayList&lt;Email&gt;();
+
+<span class="kw">String</span> emailRegex = <span class="st">"[a-zA-Z]{2}\\d{5}@pausd\\.us"</span>;
+
+<span class="kw">String</span>[] tokens = data.split(<span class="st">"[ ,]+"</span>);
+
+<span class="kw">for</span> (<span class="kw">String</span> t : tokens) {
+    <span class="kw">if</span> (t.matches(emailRegex)) {
+        validEmails.add(<span class="kw">new</span> Email(t));
+    }
+}</pre>
+        <p><code>ab12345@pausd.us</code> and <code>xy67890@pausd.us</code> go in the list. <code>invalid@pausd.us</code> is rejected, it has no two-letters-then-five-digits prefix.</p>
+        <ul>
+          <li><code>add(new Email(t))</code>, not <code>add(t)</code>. The list holds <code>Email</code> objects and <code>t</code> is a <code>String</code>, so <code>add(t)</code> will not compile.</li>
+          <li><code>pausd\\.us</code>, not <code>pausd.us</code>. An unescaped dot matches anything, so <code>ab12345@pausdXus</code> would pass.</li>
+          <li><code>[ ,]+</code> treats a comma plus a space as one separator. Drop the <code>+</code> and you get empty strings between the emails.</li>
+        </ul>
+      </details>
+    </div>
+
+    <div class="card">
+      <h3 class="q"><span class="num">+1</span>Push yourself</h3>
+      <p>Change the pattern so it accepts either <code>@pausd.us</code> or <code>@student.pausd.us</code>. Test it before you look.</p>
+      <details>
+        <summary>Show one answer</summary>
+<pre><span class="st">"[a-zA-Z]{2}\\d{5}@(student\\.)?pausd\\.us"</span></pre>
+        <p><code>(student\\.)?</code> is a group with <code>?</code> after it, so the whole group appears either zero times or one time.</p>
+      </details>
+    </div>
+  </section>
+
+  </main>
+
+  <footer>Answers on paper first. The tester is for checking, not for guessing.</footer>
+</div>
+
+<script>
+(function () {
+  /* ---------- tabs ---------- */
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.tabs button'));
+  var panels = Array.prototype.slice.call(document.querySelectorAll('.panel'));
+
+  function show(id) {
+    tabs.forEach(function (t) { t.setAttribute('aria-selected', t.dataset.tab === id); });
+    panels.forEach(function (p) { p.classList.toggle('on', p.id === id); });
+    window.scrollTo(0, 0);
+  }
+  tabs.forEach(function (t) {
+    t.addEventListener('click', function () { show(t.dataset.tab); });
+  });
+
+  /* ---------- tester ---------- */
+  var patternEl = document.getElementById('pattern');
+  var testsEl = document.getElementById('tests');
+  var outEl = document.getElementById('out');
+  var javaEl = document.getElementById('javaline');
+  var chipsEl = document.getElementById('chips');
+
+  var presets = [
+    { label: 'two letters', pattern: '[a-zA-Z]{2}', mode: 'matches', tests: 'ab|AB|a1|abc' },
+    { label: 'five digits', pattern: '\\d{5}', mode: 'matches', tests: '12345|1234|123456|12a45' },
+    { label: 'a dot matches anything', pattern: '@pausd.us', mode: 'matches', tests: '@pausd.us|@pausdXus|@pausd_us' },
+    { label: 'file name', pattern: '[a-zA-Z]+\\.[a-zA-Z]+', mode: 'matches', tests: 'report.txt|Main.java|report2.txt|report.tar.gz' },
+    { label: 'school email', pattern: '[a-zA-Z]{2}\\d{5}@pausd\\.us', mode: 'matches', tests: 'ab12345@pausd.us|xy67890@pausd.us|invalid@pausd.us|ab1234@pausd.us' },
+    { label: 'split on backslash', pattern: '\\\\', mode: 'split', tests: 'C:\\Users\\Bautista\\Documents\\report.txt' },
+    { label: 'split on commas', pattern: '[ ,]+', mode: 'split', tests: 'ab12345@pausd.us, xy67890@pausd.us, invalid@pausd.us' }
+  ];
+
+  function load(pattern, mode, tests) {
+    patternEl.value = pattern;
+    testsEl.value = tests.split('|').join('\n');
+    document.querySelector('input[name=mode][value=' + mode + ']').checked = true;
+    run();
+  }
+
+  presets.forEach(function (p) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = p.label;
+    b.addEventListener('click', function () { load(p.pattern, p.mode, p.tests); });
+    chipsEl.appendChild(b);
+  });
+
+  Array.prototype.forEach.call(document.querySelectorAll('.try[data-pattern]'), function (b) {
+    b.addEventListener('click', function () {
+      show('tester');
+      load(b.dataset.pattern, b.dataset.mode, b.dataset.tests);
+      patternEl.focus();
+    });
+  });
+
+  function currentMode() {
+    return document.querySelector('input[name=mode]:checked').value;
+  }
+  function toJava(p) {
+    return p.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  }
+  function say(cls, text) {
+    var s = document.createElement('div');
+    s.className = cls;
+    s.textContent = text;
+    return s;
+  }
+
+  function run() {
+    var pattern = patternEl.value;
+    var mode = currentMode();
+    var lines = testsEl.value.split('\n').filter(function (s) { return s.length > 0; });
+
+    javaEl.textContent = mode === 'matches'
+      ? 'text.matches("' + toJava(pattern) + '")'
+      : 'text.split("' + toJava(pattern) + '")';
+
+    outEl.innerHTML = '';
+
+    if (!pattern) { outEl.appendChild(say('msg', 'Type a pattern to see what happens.')); return; }
+
+    var re;
+    try {
+      re = mode === 'matches' ? new RegExp('^(?:' + pattern + ')$') : new RegExp(pattern);
+    } catch (e) {
+      outEl.appendChild(say('msg err', 'That pattern is not valid yet. Look for an unclosed bracket or a backslash with nothing after it.'));
+      return;
+    }
+
+    if (!lines.length) { outEl.appendChild(say('msg', 'Add a test string to see what happens.')); return; }
+
+    var hits = 0;
+    var rows = document.createDocumentFragment();
+
+    lines.forEach(function (t) {
+      var row = document.createElement('div');
+      var mark = document.createElement('span');
+      mark.className = 'm';
+
+      if (mode === 'matches') {
+        var ok = re.test(t);
+        if (ok) hits++;
+        row.className = 'res ' + (ok ? 'pass' : 'fail');
+        mark.textContent = ok ? '\u2713' : '\u2717';
+        var txt = document.createElement('span');
+        txt.className = 'txt';
+        txt.textContent = t;
+        row.appendChild(mark);
+        row.appendChild(txt);
+      } else {
+        var parts = t.split(re);
+        row.className = 'res pass';
+        mark.textContent = '\u2192';
+        mark.style.color = 'var(--dim)';
+        var box = document.createElement('span');
+        box.className = 'txt';
+        parts.forEach(function (piece, i) {
+          if (i > 0) {
+            var sp = document.createElement('span');
+            sp.className = 'sep';
+            sp.textContent = '  ';
+            box.appendChild(sp);
+          }
+          var pc = document.createElement('span');
+          pc.className = 'piece';
+          pc.textContent = piece;
+          box.appendChild(pc);
+        });
+        var count = document.createElement('span');
+        count.className = 'sep';
+        count.textContent = '   ' + parts.length + ' pieces';
+        box.appendChild(count);
+        row.appendChild(mark);
+        row.appendChild(box);
+      }
+      rows.appendChild(row);
+    });
+
+    if (mode === 'matches') {
+      outEl.appendChild(say('tally', hits + ' of ' + lines.length + ' lines match'));
+    }
+    outEl.appendChild(rows);
+  }
+
+  patternEl.addEventListener('input', run);
+  testsEl.addEventListener('input', run);
+  Array.prototype.forEach.call(document.querySelectorAll('input[name=mode]'), function (r) {
+    r.addEventListener('change', run);
+  });
+  run();
+
+  /* ---------- reveal all ---------- */
+  function wireReveal(btnId, panelId) {
+    var btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      var all = document.querySelectorAll('#' + panelId + ' details');
+      var opening = Array.prototype.some.call(all, function (d) { return !d.open; });
+      Array.prototype.forEach.call(all, function (d) { d.open = opening; });
+      btn.textContent = opening ? 'Hide all answers' : 'Reveal all answers';
+    });
+  }
+  wireReveal('reveal1', 'p1');
+  wireReveal('reveal2', 'p2');
+  wireReveal('reveal3', 'p3');
+  wireReveal('reveal4', 'p4');
+  wireReveal('reveal5', 'p5');
+  wireReveal('reveal6', 'p6');
+})();
+</script>
+</body>
+</html>
