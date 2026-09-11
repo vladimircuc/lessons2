@@ -271,6 +271,19 @@ details.reveal .body{padding:6px 0 14px}
 .port.hear{box-shadow:0 0 0 3px var(--ip)}
 .port.deaf{opacity:.4}
 .tchip.eth.swap{border-style:dashed}
+
+/* interview questions */
+.iq-head{margin-top:34px}
+.iq-head p{color:var(--ink2);margin-top:.2em}
+.iq{background:var(--card);border:1px solid var(--rule);border-left:6px solid var(--ip-d);border-radius:0 16px 16px 0;padding:16px 18px;margin:16px 0;max-width:68ch}
+.iq .lab{display:inline-block;font-weight:700;font-size:.78rem;color:var(--ip-d);background:var(--ip);border-radius:999px;padding:1px 10px;margin-bottom:8px}
+.iq .qtxt{font-size:1.08rem;font-weight:700;margin:0 0 4px}
+.iq details.reveal{margin:8px 0 0;background:var(--card2)}
+.iq details.reveal summary{padding:10px 0;font-size:.95rem}
+.iq ul{margin:.3em 0;padding-left:1.2em}
+.iq li{margin:.25em 0}
+.iq .fu{margin:.5em 0 0;font-size:.95rem}
+.iq .fu b{color:var(--ip-d)}
 </style>
 </head>
 <body>
@@ -312,7 +325,7 @@ details.reveal .body{padding:6px 0 14px}
   </ul>
 
   <div class="note">
-    <p><b>Same rules as last time.</b> New terms are <span class="term">underlined</span> the first time and defined in the Glossary. Same four colors for the envelopes. Two new colors this session: <span class="chip" style="background:var(--blue);color:#fff">network bits</span> and <span class="chip letter">host bits</span>, which you'll meet in the second tab.</p>
+    <p><b>Same rules as last time.</b> Quick checks, then two interview questions per tab that I ask out loud. New terms are <span class="term">underlined</span> the first time and defined in the Glossary. Same four colors for the envelopes. Two new colors this session: <span class="chip" style="background:var(--blue);color:#fff">network bits</span> and <span class="chip letter">host bits</span>, which you'll meet in the second tab.</p>
   </div>
 </section>
 
@@ -354,6 +367,16 @@ details.reveal .body{padding:6px 0 14px}
     <p class="q">What is the largest number one octet can hold?</p>
     <div class="opts"><button data-k="a">128</button><button data-k="b">255</button><button data-k="c">256</button><button data-k="d">999</button></div>
     <div class="fb" data-explain="All eight switches on: 128 + 64 + 32 + 16 + 8 + 4 + 2 + 1 = 255. There are 256 possible values, but they run from 0 to 255."></div>
+  </div>
+
+  <div class="iq-head"><h3>Interview questions</h3><p>I ask, you answer out loud, one to two minutes, the way you would in the room. No notes. Then we open the answer together. These can pull in anything from earlier tabs or earlier sessions.</p></div>
+  <div class="iq"><span class="lab">Interview question</span>
+    <p class="qtxt">What does 192.168.1.10 actually represent to the computer?</p>
+    <details class="reveal"><summary>What a strong answer covers</summary><div class="body"><ul><li>One 32-bit number. Humans split it into four groups of eight bits and write each group as a decimal number.</li><li>Each group, an octet, holds 0 to 255, which is why 256 or larger never appears in an address.</li><li>Each bit is worth 128, 64, 32, 16, 8, 4, 2, or 1; the octet's value is the sum of the bits that are on.</li><li>Bonus: the reason to know this is that the network/host split happens at a bit boundary, which decimal hides.</li></ul><p class="fu"><b>Follow-up:</b> What's 192 in binary, and how did you get it? (11000000: 128 + 64, the top two switches on.)</p></div></details>
+  </div>
+  <div class="iq"><span class="lab">Interview question</span>
+    <p class="qtxt">What is IPv6, and why does it exist if IPv4 works?</p>
+    <details class="reveal"><summary>What a strong answer covers</summary><div class="body"><ul><li>IPv4 has 32-bit addresses: about 4.3 billion. The world ran out.</li><li>IPv6 uses 128-bit addresses, written in hex with colons, like 2001:db8::1.</li><li>It does the same job: it's the IP envelope's address. TCP, Ethernet, ARP's role, and the layers are all the same idea.</li><li>Honest answer about depth: "I know what it is and why; I haven't subnetted it yet."</li></ul><p class="fu"><b>Follow-up:</b> From session 1: which envelope carries the IPv6 address? (The IP envelope, layer 3. The Ethernet envelope still uses MACs.)</p></div></details>
   </div>
 </section>
 
@@ -400,6 +423,16 @@ details.reveal .body{padding:6px 0 14px}
     <p class="q">Which mask is the same as /24?</p>
     <div class="opts"><button data-k="a">255.255.255.0</button><button data-k="b">255.255.0.0</button><button data-k="c">255.0.0.0</button><button data-k="d">0.0.0.255</button></div>
     <div class="fb" data-explain="Three octets of all ones (255) is 24 network bits. 255.255.0.0 would be /16, and 255.0.0.0 would be /8."></div>
+  </div>
+
+  <div class="iq-head"><h3>Interview questions</h3><p>I ask, you answer out loud, one to two minutes, the way you would in the room. No notes. Then we open the answer together. These can pull in anything from earlier tabs or earlier sessions.</p></div>
+  <div class="iq"><span class="lab">Interview question</span>
+    <p class="qtxt">Explain what /24 means to someone who has never seen the slash notation.</p>
+    <details class="reveal"><summary>What a strong answer covers</summary><div class="body"><ul><li>The number after the slash is how many of the 32 bits are the network part. /24 means the first 24 bits, the first three octets, name the network; the last 8 bits name the computer.</li><li>Written the old way, that's 255.255.255.0.</li><li>A /24 has 256 addresses: the first is the network address, the last is the broadcast, and 254 are usable.</li><li>Everyone with the same first three octets is on the same network and can reach each other directly.</li></ul><p class="fu"><b>Follow-up:</b> Why 254 and not 256? (Network address and broadcast address can't be assigned to a computer.)</p></div></details>
+  </div>
+  <div class="iq"><span class="lab">Interview question</span>
+    <p class="qtxt">You see 192.168.1.50 in a packet capture. What can you tell me about it before looking at anything else?</p>
+    <details class="reveal"><summary>What a strong answer covers</summary><div class="body"><ul><li>It's a private address (192.168.x.x), so it's on someone's home or office network, not on the public internet.</li><li>If the network is a /24, the network is 192.168.1.0 and this is host 50 on it.</li><li>Traffic from it reaches the internet through NAT: the router swaps it for a public address on the way out.</li><li>Nobody on the internet can send to 192.168.1.50 directly; there are millions of networks using that same address.</li></ul><p class="fu"><b>Follow-up:</b> Two different companies both use 192.168.1.50 inside. Why doesn't that cause a conflict? (Private addresses never appear on the internet; each company's router NATs them behind its own public address.)</p></div></details>
   </div>
 </section>
 
@@ -473,6 +506,16 @@ details.reveal .body{padding:6px 0 14px}
     <div class="opts"><button data-k="a">/30</button><button data-k="b">/28</button><button data-k="c">/26</button><button data-k="d">/24</button></div>
     <div class="fb" data-explain="A /30 has four addresses: network, broadcast, and two usable ones, one for each end of the cable. Nothing wasted."></div>
   </div>
+
+  <div class="iq-head"><h3>Interview questions</h3><p>I ask, you answer out loud, one to two minutes, the way you would in the room. No notes. Then we open the answer together. These can pull in anything from earlier tabs or earlier sessions.</p></div>
+  <div class="iq"><span class="lab">Interview question</span>
+    <p class="qtxt">I have 192.168.10.0/24 and I need six separate networks with about 25 hosts each. How would you carve it up?</p>
+    <details class="reveal"><summary>What a strong answer covers</summary><div class="body"><ul><li>25 hosts needs at least 27 addresses including network and broadcast, so a block of 32: a /27, which gives 30 usable.</li><li>A /24 split into /27s gives eight networks of 32: .0, .32, .64, .96, .128, .160, .192, .224.</li><li>Use six of them and keep two spare.</li><li>Mask for /27 is 255.255.255.224.</li></ul><p class="fu"><b>Follow-up:</b> What's the broadcast address of the third one, and what are its usable addresses? (Third block starts at .64: broadcast .95, usable .65 to .94.)</p></div></details>
+  </div>
+  <div class="iq"><span class="lab">Interview question</span>
+    <p class="qtxt">What is a /30 used for, and why don't we just use /24 everywhere and stop doing this math?</p>
+    <details class="reveal"><summary>What a strong answer covers</summary><div class="body"><ul><li>A /30 has four addresses, two usable: exactly right for a cable between two routers, one address at each end.</li><li>Addresses are finite and networks are separate broadcast domains; a /24 for a two-device link wastes 252 addresses and creates a needlessly big network.</li><li>Smaller subnets also limit how far broadcasts and problems spread.</li><li>Strong answers connect it to session 1: a subnet is one "room" where ARP shouts are heard; you size the room to who needs to be in it.</li></ul><p class="fu"><b>Follow-up:</b> Two routers connected by a /30: what are the four addresses and which two go on the routers? (Network, two usable, broadcast. The two in the middle go on the routers.)</p></div></details>
+  </div>
 </section>
 
 <!-- 4 NEAR OR FAR -->
@@ -525,6 +568,16 @@ details.reveal .body{padding:6px 0 14px}
     <p class="q">Which three settings does a laptop need to send packets anywhere?</p>
     <div class="opts"><button data-k="a">IP, MAC, port</button><button data-k="b">IP, DNS, VLAN</button><button data-k="c">IP, mask, gateway</button><button data-k="d">Mask, MAC, TTL</button></div>
     <div class="fb" data-explain="The IP says who you are, the mask says which addresses are nearby, and the gateway says where to send everything else. The MAC comes from the hardware and doesn't need to be configured."></div>
+  </div>
+
+  <div class="iq-head"><h3>Interview questions</h3><p>I ask, you answer out loud, one to two minutes, the way you would in the room. No notes. Then we open the answer together. These can pull in anything from earlier tabs or earlier sessions.</p></div>
+  <div class="iq"><span class="lab">Interview question</span>
+    <p class="qtxt">Your laptop is 192.168.1.10/24 with gateway 192.168.1.1. You send to 8.8.8.8. Walk me through the decision and the very first frame that leaves.</p>
+    <details class="reveal"><summary>What a strong answer covers</summary><div class="body"><ul><li>Compare network bits with my mask: mine is 192.168.1, theirs is 8.8.8. Different, so it's far.</li><li>Send it to the default gateway. That means the Ethernet envelope goes to the router's MAC.</li><li>If I don't have the router's MAC, ARP for 192.168.1.1 first. Never ARP for 8.8.8.8; it isn't in this room.</li><li>First frame: Ethernet To the router's MAC, From my MAC; inside, IP To 8.8.8.8, From 192.168.1.10; inside that, TCP or UDP and the data.</li></ul><p class="fu"><b>Follow-up:</b> What three settings did your laptop need to make that decision, and where did it get them? (IP, mask, gateway. Handed to it when it joined the network.)</p></div></details>
+  </div>
+  <div class="iq"><span class="lab">Interview question (stretch)</span>
+    <p class="qtxt">A colleague accidentally configured a laptop on a /24 network with a /16 mask. Everything else is right. What would you expect to work and what would break?</p>
+    <details class="reveal"><summary>What a strong answer covers</summary><div class="body"><ul><li>With /16 it thinks everything starting 192.168 is local, including 192.168.2.x, 192.168.50.x, and so on.</li><li>Talking to machines actually on 192.168.1.x still works: they really are local.</li><li>Talking to 192.168.2.x breaks: it ARPs for them locally instead of sending to the gateway, nobody answers, packets go nowhere.</li><li>Talking to the internet (8.8.8.8) still works: that's still "far" under either mask, so it goes to the gateway correctly.</li><li>Strong answers reason from the near-or-far comparison rather than from memory.</li></ul><p class="fu"><b>Follow-up:</b> How would you spot this from the laptop without knowing the config? (It can reach the internet but not other internal subnets; check the mask and try ARP for one of the unreachable addresses.)</p></div></details>
   </div>
 </section>
 
@@ -587,6 +640,16 @@ details.reveal .body{padding:6px 0 14px}
     <div class="opts"><button data-k="a">B's</button><button data-k="b">The switch's</button><button data-k="c">The router's</button><button data-k="d">A's own</button></div>
     <div class="fb" data-explain="B is on another network, so A can't reach B's MAC. It addresses the frame to its gateway, the router's MAC on A's side, and lets the router take it from there."></div>
   </div>
+
+  <div class="iq-head"><h3>Interview questions</h3><p>I ask, you answer out loud, one to two minutes, the way you would in the room. No notes. Then we open the answer together. These can pull in anything from earlier tabs or earlier sessions.</p></div>
+  <div class="iq"><span class="lab">Interview question</span>
+    <p class="qtxt">What does a router change on a packet as it passes through, and what does it leave alone?</p>
+    <details class="reveal"><summary>What a strong answer covers</summary><div class="body"><ul><li>It throws away the Ethernet envelope and writes a new one for the next cable: new To MAC, new From MAC (its own on that side).</li><li>It lowers the TTL on the IP envelope by one.</li><li>It leaves the IP To and From, the TCP envelope (ports, packet number), and the data untouched.</li><li>The sentence: layer 2 is hop by hop, layer 3 is end to end.</li></ul><p class="fu"><b>Follow-up:</b> What is TTL for? What would happen without it if two routers each thought the other was the way to some address? (The packet would loop forever. TTL hits zero after 64 hops and the packet is dropped.)</p></div></details>
+  </div>
+  <div class="iq"><span class="lab">Interview question</span>
+    <p class="qtxt">Walk me through a web request from A on 192.168.1.10 to B on 10.0.0.20 through one router. Start at the browser and name who ARPs for whom.</p>
+    <details class="reveal"><summary>What a strong answer covers</summary><div class="body"><ul><li>Letter, TCP envelope for port 80, IP envelope To 10.0.0.20 From 192.168.1.10 TTL 64.</li><li>A compares network bits: different, so it sends to its gateway. A ARPs for the gateway's MAC, not B's.</li><li>Ethernet envelope To the router's MAC; the switch forwards it to the router's port.</li><li>Router opens and discards Ethernet, reads To 10.0.0.20, finds it on its other side, TTL to 63.</li><li>Router ARPs for 10.0.0.20 on that side, writes a new Ethernet envelope To B's MAC From its own right-side MAC.</li><li>B's card matches its MAC, envelopes come off outside in, the web server gets the letter.</li></ul><p class="fu"><b>Follow-up:</b> What TTL does B see, and what does the IP To line say when B reads it? (63. Still 10.0.0.20; the router never changed it.)</p></div></details>
+  </div>
 </section>
 
 <!-- 6 SPLITTING AND BUNDLING -->
@@ -635,6 +698,16 @@ details.reveal .body{padding:6px 0 14px}
     <p class="q">A device that forwards using IP addresses is working at:</p>
     <div class="opts"><button data-k="a">Layer 3</button><button data-k="b">Layer 2</button><button data-k="c">Layer 4</button><button data-k="d">Layer 1</button></div>
     <div class="fb" data-explain="IP is layer 3, so a router (or a layer 3 switch doing routing) is a layer 3 device. Plain switches forward on MAC and are layer 2."></div>
+  </div>
+
+  <div class="iq-head"><h3>Interview questions</h3><p>I ask, you answer out loud, one to two minutes, the way you would in the room. No notes. Then we open the answer together. These can pull in anything from earlier tabs or earlier sessions.</p></div>
+  <div class="iq"><span class="lab">Interview question</span>
+    <p class="qtxt">What is a VLAN, why would you use one, and how do two VLANs talk to each other?</p>
+    <details class="reveal"><summary>What a strong answer covers</summary><div class="body"><ul><li>A VLAN splits one physical switch into separate networks; ports in different VLANs can't hear each other's frames or broadcasts.</li><li>You use it to separate groups (finance from guest Wi-Fi) without buying separate switches, and to keep broadcast noise small.</li><li>To go between VLANs you need a router or a layer 3 switch, exactly like between any two networks.</li><li>Between two switches, a trunk port carries many VLANs at once with an 802.1Q tag on each frame saying which VLAN it belongs to.</li></ul><p class="fu"><b>Follow-up:</b> A computer in VLAN 10 ARPs for a computer in VLAN 20. What happens? (Nothing. The broadcast never leaves VLAN 10. It has to go through the router, so it ARPs for its gateway instead.)</p></div></details>
+  </div>
+  <div class="iq"><span class="lab">Interview question</span>
+    <p class="qtxt">What's the difference between a layer 2 switch, a layer 3 switch, and a router?</p>
+    <details class="reveal"><summary>What a strong answer covers</summary><div class="body"><ul><li>A layer 2 switch forwards on MAC addresses within one network (or one VLAN). It never reads IP.</li><li>A router forwards on IP addresses between different networks: it opens the Ethernet envelope, reads IP, rewrites Ethernet, lowers TTL.</li><li>A layer 3 switch does both in one box: switches inside each VLAN and routes between VLANs. Most data center switches are layer 3 switches.</li><li>"L2 or L3 problem" means "MAC level or IP level."</li></ul><p class="fu"><b>Follow-up:</b> What is LACP and when would you reach for it? (Bundling several cables between two devices into one logical link, for bandwidth and so one cable failing doesn't cut the connection.)</p></div></details>
   </div>
 </section>
 
