@@ -1,0 +1,1692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Systems session 2: The operating system</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f4f0e6; --card:#fffdf7; --card2:#faf6ec; --ink:#1e2530; --ink2:#5d6675; --rule:#e2dbcb; --rule2:#c9bfa9;
+  --blue:#2b55b8; --blue2:#1f4192; --blue-soft:#e8eefb;
+  --letter:#ffe08a; --letter-d:#7a5a00; --tcp:#d3c4ff; --tcp-d:#4a2f9e; --ip:#ffbe95; --ip-d:#9a3d10; --eth:#9fe0d8; --eth-d:#0e5f5a;
+  --ok:#2f9e5b; --ok-soft:#e5f5eb; --bad:#d64545; --bad-soft:#fbe9e9;
+  --sans:'Atkinson Hyperlegible', 'Segoe UI', system-ui, sans-serif;
+  --mono:'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+  --hand:'Caveat', 'Segoe Print', 'Bradley Hand', cursive;
+}
+*{box-sizing:border-box;min-width:0}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:18px;line-height:1.65}
+.wrap{max-width:820px;margin:0 auto;padding:0 20px}
+h1{font-size:2.2rem;line-height:1.15;margin:.2em 0 .4em;letter-spacing:-.01em}
+h2{font-size:1.7rem;line-height:1.2;margin:.1em 0 .6em;letter-spacing:-.01em}
+h3{font-size:1.2rem;margin:1.5em 0 .4em}
+p{margin:.75em 0;max-width:68ch}
+ul,ol{max-width:68ch;padding-left:1.25em}
+li{margin:.35em 0}
+code{font-family:var(--mono);font-size:.9em;background:var(--card2);border:1px solid var(--rule);border-radius:6px;padding:.05em .4em}
+pre{font-family:var(--mono);font-size:.86rem;line-height:1.55;background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:14px 16px;overflow:auto;position:relative;margin:14px 0}
+pre code{background:none;border:0;padding:0;font-size:inherit}
+pre .copy{position:absolute;top:8px;right:8px;background:var(--card2);border:1px solid var(--rule2);color:var(--ink2);border-radius:8px;padding:3px 10px;font:inherit;font-size:.78rem;cursor:pointer}
+.mono{font-family:var(--mono)}
+.muted{color:var(--ink2)}
+b{font-weight:700}
+.term{font-weight:700;border-bottom:2px solid var(--letter);padding-bottom:1px}
+
+header.top{padding:40px 0 18px}
+header .meta{color:var(--ink2);margin:0;font-size:.98rem}
+.lede{font-size:1.15rem;color:var(--ink2);max-width:62ch}
+.sticky{position:sticky;top:0;z-index:30;background:rgba(244,240,230,.94);backdrop-filter:blur(6px);border-bottom:1px solid var(--rule);padding:10px 0}
+.tabs{display:flex;flex-wrap:wrap;gap:8px}
+.tabs button{font:inherit;font-size:.92rem;border:1.5px solid var(--rule2);background:var(--card);color:var(--ink);padding:7px 14px;border-radius:999px;cursor:pointer}
+.tabs button:hover{border-color:var(--ink2)}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+main{padding:28px 0 60px}
+.pane{display:none}
+.pane.active{display:block}
+.pane-nav{display:flex;justify-content:space-between;gap:12px;margin-top:44px;padding-top:20px;border-top:1px solid var(--rule)}
+.pane-nav button{font:inherit;background:var(--card);border:1.5px solid var(--rule2);color:var(--ink);padding:10px 16px;border-radius:12px;cursor:pointer}
+.pane-nav button:hover{border-color:var(--ink2)}
+.pane-nav .sp{flex:1}
+:where(button,input,select,textarea,summary,[tabindex]):focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+.note{background:var(--card);border:1px solid var(--rule);border-left:6px solid var(--letter);border-radius:0 14px 14px 0;padding:14px 18px;margin:18px 0;max-width:68ch}
+.note.blue{border-left-color:var(--blue)}
+.note p{margin:.3em 0}
+
+table.t{border-collapse:collapse;width:100%;margin:14px 0;font-size:.95rem;background:var(--card);border:1px solid var(--rule);border-radius:12px;overflow:hidden}
+table.t th,table.t td{padding:10px 12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--rule)}
+table.t tr:last-child td{border-bottom:0}
+table.t th{background:var(--card2);font-weight:700;color:var(--ink2)}
+.chip{display:inline-block;padding:1px 9px;border-radius:999px;font-size:.85em;font-weight:700}
+.chip.letter{background:var(--letter);color:var(--letter-d)}.chip.tcp{background:var(--tcp);color:var(--tcp-d)}.chip.ip{background:var(--ip);color:var(--ip-d)}.chip.eth{background:var(--eth);color:var(--eth-d)}
+
+/* widget card */
+.widget{background:var(--card);border:1px solid var(--rule);border-radius:18px;padding:20px;margin:22px 0}
+.widget h4{margin:0 0 4px;font-size:1.05rem}
+.widget .sub{margin:0 0 14px;color:var(--ink2);font-size:.95rem}
+.row{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center}
+.btn{font:inherit;font-size:.95rem;background:var(--blue);color:#fff;border:1.5px solid var(--blue);padding:9px 16px;border-radius:12px;cursor:pointer}
+.btn:hover{background:var(--blue2);border-color:var(--blue2)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.alt{background:var(--card);color:var(--ink);border-color:var(--rule2)}
+.btn.alt:hover{border-color:var(--ink2);background:var(--card2)}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:.88rem;color:var(--ink2)}
+label.f input,label.f select,label.f textarea{font:inherit;font-size:1rem;color:var(--ink);background:var(--card2);border:1.5px solid var(--rule2);border-radius:10px;padding:8px 10px;min-width:160px}
+input[type=range]{accent-color:var(--blue);min-width:140px}
+.story{margin-top:14px}
+.story .text{background:var(--card2);border:1px solid var(--rule);border-radius:14px;padding:14px 16px;font-size:1.05rem;min-height:74px}
+.story .text b{color:var(--blue2)}
+.story .ctrl{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:12px}
+.dots{display:flex;gap:6px;flex-wrap:wrap}
+.dots span{width:9px;height:9px;border-radius:50%;background:var(--rule2)}
+.dots span.on{background:var(--blue)}
+.dots span.done{background:var(--ink2)}
+
+svg.scene{width:100%;height:auto;display:block;background:var(--card2);border:1px solid var(--rule);border-radius:14px}
+svg.scene text{font-family:var(--sans);fill:var(--ink)}
+svg.scene .pc rect,svg.scene .sw rect{fill:var(--card);stroke:var(--ink);stroke-width:2}
+svg.scene .pc .scr{fill:#dfe7f5}
+svg.scene .pc.on rect,svg.scene .sw.on rect{stroke:var(--blue);stroke-width:3.5}
+svg.scene .pc.on .scr{fill:var(--blue-soft)}
+svg.scene .led{fill:var(--rule2)}
+svg.scene .sw.on .led{fill:var(--ok)}
+svg.scene .link{stroke:var(--rule2);stroke-width:4;stroke-linecap:round}
+svg.scene .link.on{stroke:var(--blue)}
+svg.scene .link.shout{stroke:var(--ip-d);stroke-dasharray:7 7}
+svg.scene .env{fill:var(--eth);stroke:var(--eth-d);stroke-width:1.5}
+@media (prefers-reduced-motion:no-preference){ svg.scene .link{transition:stroke .3s} .env-box{animation:pop .25s ease-out} @keyframes pop{from{transform:scale(.96);opacity:.6}to{transform:none;opacity:1}} }
+
+/* packets widget */
+.pk-list{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.pk{background:var(--card2);border:1.5px solid var(--rule2);border-radius:12px;padding:8px 10px 10px;min-width:130px;max-width:100%;flex:1 1 150px}
+.pk .n{display:inline-block;background:var(--ink);color:var(--paper);font-family:var(--mono);font-size:.78rem;border-radius:6px;padding:1px 7px;margin-bottom:6px}
+.pk .body{font-family:var(--hand);font-size:1.35rem;line-height:1.2;overflow-wrap:anywhere;white-space:pre-wrap}
+.pk.lost{border-style:dashed;opacity:.55}
+
+/* addresses widget */
+.addr-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:14px}
+.addr{background:var(--card2);border:1.5px solid var(--rule2);border-radius:14px;padding:14px;cursor:pointer;text-align:left;font:inherit;color:var(--ink)}
+.addr:hover{border-color:var(--ink2)}
+.addr.on{border-color:var(--blue);background:var(--blue-soft)}
+.addr .k{font-size:.85rem;color:var(--ink2);margin-bottom:4px}
+.addr .v{font-family:var(--mono);font-size:.95rem;font-weight:600;overflow-wrap:anywhere}
+.addr .tag{font-size:.85rem;margin-top:6px}
+.match{margin-top:16px;display:grid;gap:10px}
+.mq{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;background:var(--card2);border:1px solid var(--rule);border-radius:12px;padding:10px 12px}
+.mq .q{flex:1 1 220px;font-weight:700}
+.mq button{font:inherit;font-size:.9rem;background:var(--card);border:1.5px solid var(--rule2);border-radius:999px;padding:5px 12px;cursor:pointer;color:var(--ink)}
+.mq button.ok{background:var(--ok-soft);border-color:var(--ok)}
+.mq button.no{background:var(--bad-soft);border-color:var(--bad);color:var(--ink2)}
+.mq button:disabled{cursor:default}
+
+/* envelopes */
+.env-stage{margin-top:14px;display:grid;grid-template-columns:1fr;gap:12px}
+.env-side{font-size:.9rem;color:var(--ink2);display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}
+.env-box{position:relative;border-radius:14px;padding:34px 14px 14px;border:2px solid}
+.env-box::before{content:"";position:absolute;left:0;right:0;top:0;height:28px;background:rgba(0,0,0,.09);clip-path:polygon(0 0,100% 0,50% 100%);border-radius:12px 12px 0 0}
+.env-box .lab{position:absolute;top:6px;left:12px;font-size:.78rem;font-weight:700;letter-spacing:.01em}
+.env-box .addr-lines{font-family:var(--mono);font-size:.82rem;line-height:1.5;margin-bottom:10px;overflow-wrap:anywhere}
+.env-box .addr-lines span{display:block}
+.env-box.tcp{background:var(--tcp);border-color:var(--tcp-d)}.env-box.tcp .lab{color:var(--tcp-d)}
+.env-box.ip{background:var(--ip);border-color:var(--ip-d)}.env-box.ip .lab{color:var(--ip-d)}
+.env-box.eth{background:var(--eth);border-color:var(--eth-d)}.env-box.eth .lab{color:var(--eth-d)}
+.env-box.opened{opacity:.35;padding-top:14px}
+.env-box.opened::before{display:none}
+.env-box.opened .lab{position:static;display:block;margin-bottom:6px}
+.env-box.opened .addr-lines{display:none}
+.letter{background:var(--letter);border:2px dashed var(--letter-d);border-radius:12px;padding:12px 14px;font-family:var(--hand);font-size:1.5rem;line-height:1.25;color:#3b2d00;overflow-wrap:anywhere;white-space:pre-wrap}
+.letter.small{font-size:1.15rem;padding:8px 10px}
+.layers{display:grid;grid-template-columns:1fr;gap:8px;margin:14px 0}
+.layers .ly{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;align-items:baseline;background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:10px 14px}
+.layers .ly .name{font-weight:700;white-space:nowrap}
+.layers .ly .what{color:var(--ink2);font-size:.95rem}
+
+/* same network */
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:14px}
+.mini{background:var(--card2);border:1px solid var(--rule);border-radius:12px;padding:10px 12px;font-size:.9rem}
+.mini h5{margin:0 0 6px;font-size:.9rem}
+.mini table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:.82rem}
+.mini td{padding:3px 4px;border-bottom:1px dashed var(--rule)}
+.mini td.new{color:var(--ok);font-weight:600}
+.mini .empty{color:var(--ink2);font-style:italic;font-family:var(--sans)}
+.wire{margin-top:10px;font-size:.9rem;color:var(--ink2);min-height:24px}
+
+/* chat (TCP/UDP) */
+.chat{display:flex;flex-direction:column;gap:8px;background:var(--card2);border:1px solid var(--rule);border-radius:14px;padding:14px;min-height:120px;margin-top:14px}
+.chat .who{display:flex;justify-content:space-between;font-weight:700;color:var(--ink2);font-size:.9rem;margin-bottom:4px}
+.bub{max-width:min(78%,420px);padding:9px 14px;border-radius:16px;background:var(--card);border:1.5px solid var(--rule2);font-size:1rem}
+.bub.A{align-self:flex-start;border-bottom-left-radius:4px}
+.bub.B{align-self:flex-end;border-bottom-right-radius:4px;background:var(--blue-soft)}
+.bub .tag{display:block;font-family:var(--mono);font-size:.74rem;color:var(--ink2);margin-top:3px}
+.bub.lost{border-style:dashed;border-color:var(--bad);opacity:.7}
+.bub.lost .tag{color:var(--bad)}
+.bub.cur{box-shadow:0 0 0 3px var(--blue-soft)}
+
+/* trip */
+.trip-stack{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px;min-height:40px}
+.tchip{padding:6px 12px;border-radius:999px;font-weight:700;font-size:.9rem;border:2px solid}
+.tchip.letter{background:var(--letter);border-color:var(--letter-d);color:var(--letter-d)}
+.tchip.tcp{background:var(--tcp);border-color:var(--tcp-d);color:var(--tcp-d)}
+.tchip.ip{background:var(--ip);border-color:var(--ip-d);color:var(--ip-d)}
+.tchip.eth{background:var(--eth);border-color:var(--eth-d);color:var(--eth-d)}
+.tchip.off{opacity:.3;text-decoration:line-through}
+.trip-where{font-size:.9rem;color:var(--ink2);margin-top:6px}
+
+/* checks */
+.check{background:var(--card);border:1px solid var(--rule);border-radius:16px;padding:16px 18px;margin:20px 0;max-width:68ch}
+.check .q{margin:0 0 12px;font-weight:700}
+.check .q::before{content:"Quick check";display:inline-block;font-weight:700;font-size:.78rem;color:var(--blue2);background:var(--blue-soft);border-radius:999px;padding:1px 10px;margin-right:10px;vertical-align:2px}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+.opts button{font:inherit;font-size:.95rem;background:var(--card2);border:1.5px solid var(--rule2);color:var(--ink);padding:9px 12px;border-radius:12px;cursor:pointer;text-align:left}
+.opts button:hover{border-color:var(--ink2)}
+.opts button.ok{background:var(--ok-soft);border-color:var(--ok)}
+.opts button.no{background:var(--bad-soft);border-color:var(--bad);color:var(--ink2)}
+.opts button:disabled{cursor:default}
+.fb{margin-top:12px;display:none}
+.fb.show{display:block}
+.fb .v{font-weight:700;margin-right:6px}
+.fb .v.ok{color:var(--ok)}.fb .v.no{color:var(--bad)}
+
+details.reveal{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:0 16px;margin:10px 0;max-width:68ch}
+details.reveal summary{cursor:pointer;padding:12px 0;font-weight:700;color:var(--blue2)}
+details.reveal[open] summary{border-bottom:1px solid var(--rule)}
+details.reveal .body{padding:6px 0 14px}
+.gl{display:grid;grid-template-columns:1fr;gap:8px;max-width:72ch}
+.gl div{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:10px 14px}
+.gl b{display:block;margin-bottom:2px}
+.hw{list-style:none;padding:0;max-width:68ch}
+.hw li{background:var(--card);border:1px solid var(--rule);border-radius:14px;padding:14px 16px;margin:12px 0;display:grid;grid-template-columns:26px 1fr;gap:10px}
+.hw li input{width:18px;height:18px;margin-top:5px;accent-color:var(--blue)}
+.hw li h4{margin:0 0 4px;font-size:1.05rem}
+.hw .send{color:var(--ink2);font-size:.93rem}
+.hw .send b{color:var(--ink)}
+/* flashcards */
+.fc{margin-top:12px;display:grid;gap:10px}
+.fc .card{background:var(--letter);border:2px dashed var(--letter-d);border-radius:14px;min-height:130px;display:flex;align-items:center;justify-content:center;text-align:center;padding:18px;cursor:pointer;font-size:1.15rem;color:#3b2d00}
+.fc .card.back{background:var(--card2);border:2px solid var(--rule2);color:var(--ink)}
+.fc .card small{display:block;color:inherit;opacity:.7;font-size:.8rem;margin-top:6px}
+.tutor{border:1.5px dashed var(--rule2);border-radius:12px;padding:0 16px;margin-top:30px;max-width:68ch}
+.tutor summary{color:var(--ink2);padding:10px 0;cursor:pointer;font-size:.92rem}
+.tutor .body{padding:4px 0 14px;font-size:.95rem}
+@media (max-width:520px){ body{font-size:17px} h1{font-size:1.8rem} h2{font-size:1.45rem} .widget{padding:14px} .env-box{padding:30px 10px 10px} }
+
+/* session 2 additions */
+.bits{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.bit{flex:1 1 64px;max-width:90px;background:var(--card2);border:2px solid var(--rule2);border-radius:12px;padding:10px 6px;text-align:center;cursor:pointer;font:inherit;color:var(--ink)}
+.bit .val{font-family:var(--mono);font-size:.85rem;color:var(--ink2)}
+.bit .sw{display:block;margin:8px auto 0;width:40px;height:22px;border-radius:999px;background:var(--rule2);position:relative;transition:background .15s}
+.bit .sw::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--card);transition:left .15s}
+.bit.on{border-color:var(--blue);background:var(--blue-soft)}
+.bit.on .sw{background:var(--blue)}
+.bit.on .sw::after{left:21px}
+.bit .b{display:block;margin-top:8px;font-family:var(--mono);font-weight:600;font-size:1.1rem}
+.sum{margin-top:14px;font-size:1.15rem}
+.sum .mono{font-weight:600}
+.octets{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:14px}
+.oct{background:var(--card2);border:1px solid var(--rule);border-radius:12px;padding:8px 6px;text-align:center;min-width:0}
+.oct .dec{font-family:var(--mono);font-weight:600;font-size:1rem}
+.oct .bin{display:flex;justify-content:center;gap:2px;margin-top:6px;flex-wrap:wrap}
+.oct .bin span{width:14px;height:20px;border-radius:4px;font-family:var(--mono);font-size:.72rem;display:inline-flex;align-items:center;justify-content:center}
+.oct .bin span.net{background:var(--blue);color:#fff}
+.oct .bin span.host{background:var(--letter);color:var(--letter-d)}
+.oct .lbl{font-size:.75rem;color:var(--ink2);margin-top:4px}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:10px;font-size:.88rem;color:var(--ink2)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:6px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:14px}
+.fact{background:var(--card2);border:1px solid var(--rule);border-radius:12px;padding:8px 10px}
+.fact .k{font-size:.8rem;color:var(--ink2)}
+.fact .v{font-family:var(--mono);font-weight:600;font-size:.98rem;overflow-wrap:anywhere}
+.cmp{display:grid;grid-template-columns:auto repeat(4,minmax(0,1fr));gap:6px;align-items:center;margin-top:14px;font-family:var(--mono);font-size:.9rem}
+.cmp .lab{font-family:var(--sans);font-size:.85rem;color:var(--ink2);text-align:right;padding-right:6px}
+.cmp .cell{background:var(--card2);border:1px solid var(--rule);border-radius:8px;padding:6px 4px;text-align:center;min-width:0}
+.cmp .cell.net{border-color:var(--blue);background:var(--blue-soft)}
+.cmp .cell.host{border-color:var(--letter-d);background:var(--letter);opacity:.6}
+.cmp .cell.bad{border-color:var(--bad);background:var(--bad-soft)}
+.verdict{margin-top:14px;padding:12px 14px;border-radius:12px;font-weight:700;border:2px solid}
+.verdict.same{background:var(--ok-soft);border-color:var(--ok)}
+.verdict.diff{background:var(--ip);border-color:var(--ip-d);color:var(--ip-d)}
+.drill{margin-top:14px}
+.drill .qbox{background:var(--card2);border:1px solid var(--rule);border-radius:14px;padding:16px;font-size:1.15rem}
+.drill .qbox .mono{font-weight:600}
+.drill .meta{display:flex;flex-wrap:wrap;gap:10px 18px;margin:10px 0;font-size:.9rem;color:var(--ink2)}
+.drill .meta b{color:var(--ink)}
+.drill .timer{font-family:var(--mono);font-weight:600}
+.drill .timer.low{color:var(--bad)}
+.drill input[type=text]{font:inherit;font-family:var(--mono);font-size:1.05rem;padding:9px 12px;border:2px solid var(--rule2);border-radius:12px;background:var(--card);flex:1 1 200px;min-width:0}
+.drill .res{margin-top:12px;padding:12px 14px;border-radius:12px;display:none}
+.drill .res.show{display:block}
+.drill .res.ok{background:var(--ok-soft);border:1.5px solid var(--ok)}
+.drill .res.no{background:var(--bad-soft);border:1.5px solid var(--bad)}
+.drill .work{margin-top:10px;font-family:var(--mono);font-size:.88rem;line-height:1.7;white-space:pre-wrap;background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:10px 12px}
+.ports{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;margin-top:12px}
+.port{background:var(--card2);border:2px solid var(--rule2);border-radius:12px;padding:8px;text-align:center}
+.port .name{font-weight:700}
+.port .ip{font-family:var(--mono);font-size:.72rem;color:var(--ink2)}
+.port button{font:inherit;font-size:.82rem;margin-top:6px;border-radius:999px;border:1.5px solid var(--rule2);background:var(--card);padding:3px 10px;cursor:pointer;color:var(--ink)}
+.port.v10{border-color:#2b55b8;background:#e8eefb}.port.v10 button{border-color:#2b55b8;color:#1f4192}
+.port.v20{border-color:#2f9e5b;background:#e5f5eb}.port.v20 button{border-color:#2f9e5b;color:#1e6e3d}
+.port.hear{box-shadow:0 0 0 3px var(--ip)}
+.port.deaf{opacity:.4}
+.tchip.eth.swap{border-style:dashed}
+
+/* interview questions */
+.iq-head{margin-top:34px}
+.iq-head p{color:var(--ink2);margin-top:.2em}
+.iq{background:var(--card);border:1px solid var(--rule);border-left:6px solid var(--ip-d);border-radius:0 16px 16px 0;padding:16px 18px;margin:16px 0;max-width:68ch}
+.iq .lab{display:inline-block;font-weight:700;font-size:.78rem;color:var(--ip-d);background:var(--ip);border-radius:999px;padding:1px 10px;margin-bottom:8px}
+.iq .qtxt{font-size:1.08rem;font-weight:700;margin:0 0 4px}
+.iq details.reveal{margin:8px 0 0;background:var(--card2)}
+.iq details.reveal summary{padding:10px 0;font-size:.95rem}
+.iq ul{margin:.3em 0;padding-left:1.2em}
+.iq li{margin:.25em 0}
+.iq .fu{margin:.5em 0 0;font-size:.95rem}
+.iq .fu b{color:var(--ip-d)}
+
+/* systems session 1 additions */
+.c1{color:var(--tcp-d)}.c2{color:var(--ip-d)}.c3{color:var(--eth-d)}.c4{color:var(--letter-d)}
+.cpu{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:14px;margin-top:14px}
+@media (max-width:700px){.cpu{grid-template-columns:1fr}}
+.memcol{background:var(--card2);border:1px solid var(--rule);border-radius:12px;padding:10px;max-height:420px;overflow:auto}
+.memcol h5,.regs h5{margin:0 0 6px;font-size:.88rem;color:var(--ink2)}
+.mrow{display:grid;grid-template-columns:36px 1fr;gap:8px;font-family:var(--mono);font-size:.82rem;padding:3px 6px;border-radius:6px;align-items:center}
+.mrow .a{color:var(--ink2)}
+.mrow.pc{background:var(--blue-soft);outline:2px solid var(--blue)}
+.mrow.touch{background:var(--letter)}
+.mrow.data{color:var(--ip-d)}
+.regs{display:grid;grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:8px}
+.reg{background:var(--card2);border:1.5px solid var(--rule2);border-radius:10px;padding:8px;text-align:center}
+.reg .n{font-size:.78rem;color:var(--ink2)}
+.reg .v{font-family:var(--mono);font-weight:600;font-size:1.05rem}
+.reg.chg{border-color:var(--ok);background:var(--ok-soft)}
+.reg.pc{border-color:var(--blue);background:var(--blue-soft)}
+.stages{display:flex;gap:6px;margin:12px 0 8px;flex-wrap:wrap}
+.stg{flex:1 1 90px;text-align:center;padding:7px 6px;border-radius:999px;border:1.5px solid var(--rule2);font-size:.88rem;color:var(--ink2);background:var(--card2)}
+.stg.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.stg.done{border-color:var(--ink2)}
+.counts{display:flex;gap:16px;flex-wrap:wrap;font-size:.9rem;color:var(--ink2);margin-top:10px}
+.counts b{color:var(--ink);font-family:var(--mono)}
+.pipe{overflow:auto;margin-top:14px}
+.pipe table{border-collapse:separate;border-spacing:3px;font-family:var(--mono);font-size:.78rem}
+.pipe th{font-weight:600;color:var(--ink2);padding:2px 4px;text-align:center;font-family:var(--sans)}
+.pipe th.cur{color:var(--blue2)}
+.pipe td{width:38px;height:30px;text-align:center;border-radius:6px;background:var(--card2);border:1px solid var(--rule)}
+.pipe td.rowlab{width:auto;text-align:left;padding:0 8px;font-family:var(--sans);font-size:.85rem;background:none;border:0;white-space:nowrap}
+.pipe td.IF{background:var(--tcp)}.pipe td.ID{background:var(--ip)}.pipe td.EX{background:var(--eth)}.pipe td.MEM{background:var(--letter)}.pipe td.WB{background:var(--blue-soft)}
+.pipe td.X{background:var(--bad-soft);color:var(--bad);font-weight:700}
+.pipe td.cur{outline:2px solid var(--blue)}
+.pipe td.future{opacity:.25}
+.pipe tr.wrong td.rowlab{color:var(--bad)}
+.ladder{margin-top:14px;display:grid;gap:6px}
+.lv{display:grid;grid-template-columns:150px 1fr;gap:10px;align-items:center;background:var(--card2);border:1.5px solid var(--rule);border-radius:10px;padding:8px 10px;cursor:pointer;font:inherit;color:var(--ink);text-align:left}
+.lv:hover{border-color:var(--ink2)}
+.lv.on{border-color:var(--blue);background:var(--blue-soft)}
+.lv .nm{font-weight:700;font-size:.92rem}
+.lv .bar{height:14px;border-radius:7px;background:linear-gradient(90deg,var(--eth),var(--ip));min-width:4px}
+.lv .lat{font-family:var(--mono);font-size:.78rem;color:var(--ink2)}
+@media (max-width:560px){.lv{grid-template-columns:110px 1fr}}
+.cache{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin-top:14px}
+@media (max-width:700px){.cache{grid-template-columns:1fr}}
+.memgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:4px}
+.mc{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:6px;font-family:var(--mono);font-size:.72rem;background:var(--card2);border:1px solid var(--rule);min-width:0}
+.mc.l0{background:var(--tcp)}.mc.l1{background:var(--ip)}.mc.l2{background:var(--eth)}.mc.l3{background:var(--letter)}
+.mc.l4{background:#f5c6e0}.mc.l5{background:#c9e6a7}.mc.l6{background:#ffd6a8}.mc.l7{background:#cfd8ff}
+.mc.l8{background:#e2c7ff}.mc.l9{background:#b8ebe3}.mc.l10{background:#ffe9a8}.mc.l11{background:#ffc9c9}
+.mc.l12{background:#c6f0ff}.mc.l13{background:#e6d5b8}.mc.l14{background:#d5f5c6}.mc.l15{background:#f0d0f7}
+.mc.hit{outline:3px solid var(--ok)}.mc.miss{outline:3px solid var(--bad)}
+.ctab{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:.8rem;background:var(--card2);border-radius:10px;overflow:hidden}
+.ctab th{font-family:var(--sans);font-weight:600;color:var(--ink2);text-align:left;padding:6px 8px;border-bottom:1px solid var(--rule)}
+.ctab td{padding:6px 8px;border-bottom:1px solid var(--rule)}
+.ctab tr.on td{background:var(--blue-soft)}
+.ctab .empty{color:var(--ink2);font-style:italic;font-family:var(--sans)}
+.res.tag{display:inline-block;padding:2px 10px;border-radius:999px;font-weight:700;font-size:.9rem}
+.res.tag.hit{background:var(--ok-soft);color:var(--ok)}.res.tag.miss{background:var(--bad-soft);color:var(--bad)}
+.vm{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin-top:14px}
+@media (max-width:760px){.vm{grid-template-columns:1fr}}
+.steps{display:grid;gap:6px;margin-top:12px}
+.stp{background:var(--card2);border:1px solid var(--rule);border-radius:10px;padding:8px 12px;font-size:.95rem}
+.stp .mono{font-weight:600}
+.stp.fault{border-color:var(--ip-d);background:var(--ip)}
+.stp.seg{border-color:var(--bad);background:var(--bad-soft)}
+.stp.good{border-color:var(--ok);background:var(--ok-soft)}
+.bits32{font-family:var(--mono);font-size:.95rem;letter-spacing:.06em;margin-top:4px;overflow-wrap:anywhere}
+.bits32 .pg{background:var(--blue);color:#fff;border-radius:4px;padding:0 3px}
+.bits32 .off{background:var(--letter);color:var(--letter-d);border-radius:4px;padding:0 3px}
+.frames{display:grid;grid-template-columns:repeat(auto-fit,minmax(78px,1fr));gap:6px;margin-top:8px}
+.fr{background:var(--card2);border:1.5px solid var(--rule2);border-radius:10px;padding:6px;text-align:center;font-size:.78rem;min-height:56px}
+.fr .fn{font-family:var(--mono);color:var(--ink2)}
+.fr .own{font-weight:700}
+.fr.A{border-color:var(--tcp-d);background:var(--tcp)}.fr.B{border-color:var(--eth-d);background:var(--eth)}.fr.S{border-color:var(--letter-d);background:var(--letter)}
+.fr.on{outline:3px solid var(--blue)}
+.fr.evict{outline:3px solid var(--bad)}
+.fr .lru{display:block;font-family:var(--mono);font-size:.7rem;color:var(--ink2)}
+.refs{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+.ref{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:6px;font-family:var(--mono);font-size:.82rem;background:var(--card2);border:1px solid var(--rule)}
+.ref.done.hit{background:var(--ok-soft);border-color:var(--ok)}
+.ref.done.fault{background:var(--bad-soft);border-color:var(--bad)}
+.ref.cur{outline:2px solid var(--blue)}
+.formula{font-family:var(--mono);background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:10px 14px;margin:12px 0;font-size:.95rem;overflow-wrap:anywhere}
+
+/* systems session 2 additions */
+.lanes{display:grid;grid-template-columns:120px 1fr;gap:6px 10px;margin-top:14px}
+@media (max-width:560px){.lanes{grid-template-columns:90px 1fr}}
+.lane-lab{font-weight:700;font-size:.82rem;color:var(--ink2);align-self:center}
+.lane{background:var(--card2);border:1px solid var(--rule);border-radius:10px;min-height:44px;display:flex;align-items:center;padding:6px 10px;gap:6px;flex-wrap:wrap}
+.lane.kern{background:#edeaf7}
+.lane.hw{background:#e9f4f2}
+.lane .mk{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;font-size:.8rem;font-family:var(--mono);background:var(--card);border:1.5px solid var(--rule2)}
+.lane .mk.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+.lane .mk.past{opacity:.5}
+.modebar{display:flex;flex-wrap:wrap;gap:10px 18px;margin-top:10px;font-size:.9rem;color:var(--ink2);align-items:center}
+.modebar .bit{padding:2px 10px;border-radius:6px;font-weight:700;font-family:var(--mono);font-size:.85rem}
+.modebar .bit.user{background:var(--eth);color:var(--eth-d)}.modebar .bit.kern{background:var(--tcp);color:var(--tcp-d)}.modebar .bit.off{background:var(--card2);color:var(--ink2);border:1px solid var(--rule2)}
+.modebar b{color:var(--ink);font-family:var(--mono)}
+.ptable{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:.82rem;background:var(--card2);border-radius:10px;overflow:hidden;margin-top:12px}
+.ptable th{font-family:var(--sans);font-weight:600;color:var(--ink2);text-align:left;padding:6px 8px;border-bottom:1px solid var(--rule)}
+.ptable td{padding:6px 8px;border-bottom:1px solid var(--rule);cursor:pointer}
+.ptable tr.sel td{background:var(--blue-soft)}
+.ptable .Z{color:var(--bad);font-weight:700}.ptable .R{color:var(--ok);font-weight:700}.ptable .S{color:var(--ink2)}
+.gantt{display:grid;grid-template-columns:64px 1fr;gap:6px 8px;margin-top:12px;font-size:.82rem;align-items:center}
+.gantt .row{display:flex;gap:2px;overflow:auto;padding-bottom:2px}
+.gantt .cell{width:22px;height:26px;flex:none;border-radius:4px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:.68rem;background:var(--card2);border:1px solid var(--rule);color:var(--ink2)}
+.gantt .cell.run.pA{background:var(--tcp);color:var(--tcp-d)}.gantt .cell.run.pB{background:var(--eth);color:var(--eth-d)}.gantt .cell.run.pC{background:var(--ip);color:var(--ip-d)}
+.gantt .cell.io{background:repeating-linear-gradient(45deg,var(--card2) 0 4px,var(--rule) 4px 8px)}
+.gantt .cell.rdy{background:var(--card)}
+.gantt .cell.cur{outline:2px solid var(--blue)}
+.gantt .cell.idle{background:var(--card);font-style:italic}
+.gantt .cell.ok{background:var(--ok-soft);color:var(--ok)}
+.procs{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-top:10px}
+.proc{background:var(--card2);border:1.5px solid var(--rule2);border-radius:10px;padding:8px 10px;font-size:.85rem}
+.proc.pA{border-color:var(--tcp-d)}.proc.pB{border-color:var(--eth-d)}.proc.pC{border-color:var(--ip-d)}
+.proc .st{font-weight:700}
+.proc .st.running{color:var(--ok)}.proc .st.blocked{color:var(--ip-d)}.proc .st.ready{color:var(--blue2)}.proc .st.done{color:var(--ink2)}
+.proc .bursts{font-family:var(--mono);font-size:.76rem;color:var(--ink2);margin-top:4px}
+.threads{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+@media (max-width:600px){.threads{grid-template-columns:1fr}}
+.thr{background:var(--card2);border:1.5px solid var(--rule2);border-radius:12px;padding:10px}
+.thr h5{margin:0 0 6px;font-size:.9rem}
+.thr .ops{display:flex;flex-direction:column;gap:3px;font-family:var(--mono);font-size:.78rem;max-height:220px;overflow:auto}
+.thr .op{padding:3px 8px;border-radius:6px;background:var(--card);border:1px solid var(--rule)}
+.thr .op.done{opacity:.4}.thr .op.cur{background:var(--blue-soft);border-color:var(--blue)}.thr .op.wait{background:var(--ip);border-color:var(--ip-d)}
+.thr .regv{font-family:var(--mono);font-size:.82rem;color:var(--ink2);margin-top:6px}
+.shared{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;font-family:var(--mono);font-size:.9rem}
+.shared span{background:var(--card2);border:1px solid var(--rule);border-radius:10px;padding:6px 12px}
+.shared b{font-size:1.15rem}
+.shared .bad{color:var(--bad)}
+.topout{font-family:var(--mono);font-size:.76rem;line-height:1.55;background:#1e2530;color:#e6e9ef;border-radius:12px;padding:12px 14px;overflow:auto;white-space:pre;margin-top:12px}
+.topout .hd{color:#9fe0d8}
+.topout .hl{background:#5a4a12;color:#ffe08a;border-radius:3px}
+.cols{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.cols button{font:inherit;font-family:var(--mono);font-size:.78rem;background:var(--card2);border:1px solid var(--rule2);border-radius:6px;padding:3px 8px;cursor:pointer;color:var(--ink)}
+.cols button:hover{border-color:var(--ink2)}
+.layout{display:grid;grid-template-columns:1fr;gap:4px;max-width:380px;margin:14px 0}
+.layout div{padding:8px 12px;border-radius:8px;font-size:.9rem;border:1.5px solid}
+.layout .stk{background:var(--letter);border-color:var(--letter-d)}
+.layout .gap{background:var(--card);border-style:dashed;border-color:var(--rule2);color:var(--ink2);text-align:center;font-size:.8rem}
+.layout .lib{background:var(--eth);border-color:var(--eth-d)}
+.layout .heap{background:var(--ip);border-color:var(--ip-d)}
+.layout .data{background:var(--tcp);border-color:var(--tcp-d)}
+.layout .code{background:var(--blue-soft);border-color:var(--blue)}
+.two-col{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <p class="meta">Systems prep. Session 2 of 2: the operating system.</p>
+    <h1>How one computer runs everything at once</h1>
+    <p class="lede">Last time: the CPU, caches, and virtual memory. This time: the program in charge of all of it. Processes, threads, the scheduler, interrupts, and how to read a sick server.</p>
+  </div>
+</header>
+<div class="sticky"><nav class="wrap tabs" id="tabs" aria-label="Sections">
+  <button data-p="p0">Start</button>
+  <button data-p="p1">The kernel</button>
+  <button data-p="p2">Processes</button>
+  <button data-p="p3">Scheduling</button>
+  <button data-p="p4">Threads</button>
+  <button data-p="p5">Interrupts and I/O</button>
+  <button data-p="p6">Linux in practice</button>
+  <button data-p="p7">Glossary</button>
+  <button data-p="p8">Practice and homework</button>
+</nav></div>
+
+<main class="wrap">
+
+<!-- 0 START -->
+<section class="pane" id="p0">
+  <h2>Start here</h2>
+  <p>Session 1 was hardware: a CPU that fetches and executes, caches that hide slow memory, an MMU that translates addresses through a table. It kept saying "the OS builds the table," "the OS handles the fault," "the OS switches to another process." This session is that OS.</p>
+  <p>The operating system is a program. It happens to be the one program that's allowed to touch the hardware directly, and its job is to share one computer among many programs so that each one believes it has the machine to itself. Everything in this session is a piece of that sharing: sharing the CPU (scheduling), sharing memory (processes), sharing devices (interrupts and I/O), and sharing safely (threads and locks).</p>
+
+  <h3>The story this session tells</h3>
+  <ol>
+    <li>The kernel runs in a privileged mode; your program runs in a restricted one. The only way across is a system call.</li>
+    <li>A process is a running program plus everything the kernel tracks about it. Processes are born by fork, transformed by exec, and die into zombies until someone collects them.</li>
+    <li>With more processes than cores, a scheduler hands out time slices and a timer interrupt takes the CPU back.</li>
+    <li>Threads share a process's memory, which is fast and dangerous. Locks make it safe; misused locks make it stop.</li>
+    <li>Devices interrupt the CPU when they have something. That's how a packet on the wire becomes bytes in your program.</li>
+    <li>All of it is visible from a shell, if you know which columns to read.</li>
+  </ol>
+
+  <h3>How this page works</h3>
+  <ul>
+    <li>Same format as before: short text, a simulation, quick checks, then interview questions I ask out loud.</li>
+    <li>The simulations have real rules again: a scheduler that actually schedules, two threads that actually lose updates, a process table that actually zombifies.</li>
+    <li>The last tab, Practice, has the two narrations this whole week was building toward: the OS half of "what happens when you run a program," and "a packet arrives," which ties the systems sessions to the networking ones.</li>
+  </ul>
+
+  <div class="note">
+    <p><b>The one idea for today.</b> The kernel is the only code allowed to say yes. Everything a program wants from the outside world, memory, files, the network, the screen, another program, it has to ask for, and the kernel decides. Once you see every interaction as an ask, the whole OS makes sense.</p>
+  </div>
+</section>
+
+<!-- 1 THE KERNEL -->
+<section class="pane" id="p1">
+  <h2>The kernel and system calls</h2>
+  <p>The <span class="term">kernel</span> is the core of the operating system: the part that's always in memory and owns the hardware. It decides which process runs, which frame each page gets, what happens when a device interrupts. It is code like any other, but it runs in a special state.</p>
+
+  <h3>Two modes</h3>
+  <p>The CPU has a mode bit. In <span class="term">kernel mode</span>, every instruction is allowed: talk to devices, change page tables, halt the machine. In <span class="term">user mode</span>, the dangerous instructions fault instead of executing, and the only memory reachable is what the process's own page table maps. Your programs run in user mode. The kernel runs in kernel mode. The hardware enforces the line, which is why a buggy program can crash itself but not the machine.</p>
+
+  <h3>The one door: system calls</h3>
+  <p>If user mode can't touch a disk, how does a program read a file? It asks. A <span class="term">system call</span> is a request to the kernel, and the mechanism is a special instruction, the <span class="term">trap</span>, that does three things at once: flips the mode bit to kernel, saves where the program was, and jumps to one fixed address inside the kernel. The kernel reads which call was requested and its arguments, checks that they're legal (that buffer had better be inside your own memory), does the work, and executes the return path, which flips the mode back and lands the program on the next instruction.</p>
+  <p>Linux has around 350 system calls. You need a dozen by name: <code>open</code>, <code>read</code>, <code>write</code>, <code>close</code> for files; <code>socket</code>, <code>connect</code>, <code>accept</code>, <code>send</code>, <code>recv</code> for the network; <code>fork</code>, <code>exec</code>, <code>wait</code>, <code>exit</code> for processes; <code>mmap</code> for memory. Everything your language's standard library does eventually bottoms out in these. <code>printf</code> is a library function that formats text and then calls <code>write</code>. <code>malloc</code> is a library function that hands out pieces of memory it got from the kernel with <code>mmap</code> or <code>brk</code>.</p>
+
+  <h3>What a call costs</h3>
+  <p>The mode switch, the argument checking, and the cache and pipeline disruption cost hundreds of nanoseconds to a microsecond, hundreds of times an ordinary instruction. That's why reading a file one byte at a time is catastrophically slow and why every language buffers I/O: read 64 KB in one call, hand out bytes from the buffer for free. It's also why a system call that can't finish immediately doesn't spin. If you <code>recv</code> on a socket with nothing in it, the kernel marks your process <span class="term">blocked</span>, puts it to sleep, and runs something else until data arrives. That's the scheduler's job, two tabs from now, but you can watch it happen in the simulation below.</p>
+
+  <div class="widget" id="w-sc">
+    <h4>Cross the line</h4>
+    <p class="sub">Four things a program might do, from a plain instruction to a call that has to wait for the network. Watch the mode bit and which lane is active.</p>
+    <div class="row">
+      <label class="f">What the program does<select id="sc-scn">
+        <option value="add">An ordinary ADD instruction</option>
+        <option value="getpid">Call getpid()</option>
+        <option value="file" selected>read() 4 KB from a file that's already cached</option>
+        <option value="socket">recv() on a socket with no data yet</option>
+      </select></label>
+    </div>
+    <div class="lanes" id="sc-lanes"></div>
+    <div class="modebar"><span>Mode bit: <span class="bit off" id="sc-bit">user</span></span><span>Our process: <b id="sc-state">running</b></span><span>Mode switches: <b id="sc-ms">0</b></span><span>Context switches: <b id="sc-cs">0</b></span></div>
+    <div class="story">
+      <div class="text" id="sc-text"></div>
+      <div class="ctrl"><button class="btn alt" id="sc-prev">Back</button><button class="btn" id="sc-next">Next</button><button class="btn alt" id="sc-reset">Replay</button><div class="dots" id="sc-dots"></div></div>
+    </div>
+  </div>
+
+  <div class="note blue">
+    <p><b>System call versus interrupt, since interviewers pair them.</b> Both enter kernel mode through a trap. A system call is synchronous: the program asked for it, on purpose, right now. An interrupt is asynchronous: a device or the timer forced it, and the program that was running had nothing to do with it. Tab 5 is the interrupt half.</p>
+  </div>
+
+  <div class="check" data-answer="b">
+    <p class="q">Which can a user-mode program do without the kernel's help?</p>
+    <div class="opts"><button data-k="a">Write to a file</button><button data-k="b">Add two numbers</button><button data-k="c">Read from the disk</button><button data-k="d">Change its page table</button></div>
+    <div class="fb" data-explain="Arithmetic on its own registers and memory needs no permission. Files, devices, and page tables are all kernel territory, reached only through system calls."></div>
+  </div>
+  <div class="check" data-answer="a">
+    <p class="q">A system call switches the CPU:</p>
+    <div class="opts"><button data-k="a">To kernel mode and back</button><button data-k="b">To another core</button><button data-k="c">To another process always</button><button data-k="d">To a faster clock</button></div>
+    <div class="fb" data-explain="The trap flips to kernel mode; the return flips back. Whether another process runs in between depends only on whether the call had to wait."></div>
+  </div>
+  <div class="check" data-answer="b">
+    <p class="q">printf is:</p>
+    <div class="opts"><button data-k="a">A system call</button><button data-k="b">A library function that calls write</button><button data-k="c">An interrupt</button><button data-k="d">A kernel thread</button></div>
+    <div class="fb" data-explain="The formatting happens in your process in user mode. Only the final handoff of bytes to the terminal or file is a system call, write."></div>
+  </div>
+  <div class="check" data-answer="b">
+    <p class="q">Reading a file one byte at a time is slow mainly because:</p>
+    <div class="opts"><button data-k="a">Disks are slow</button><button data-k="b">Every byte is a system call</button><button data-k="c">Bytes are large</button><button data-k="d">Files are compressed</button></div>
+    <div class="fb" data-explain="The data is probably cached in RAM already. The cost is a mode switch per byte, hundreds of instructions each. Reading 64 KB per call and handing out bytes from a buffer fixes it."></div>
+  </div>
+
+  <div class="iq-head"><h3>Interview questions</h3><p>I ask, you answer out loud, one to two minutes. Then we open the answer together.</p></div>
+  <div class="iq"><span class="lab">Interview question</span>
+    <p class="qtxt">What's the difference between user mode and kernel mode, and why does the split exist?</p>
+    <details class="reveal"><summary>What a strong answer covers</summary><div class="body"><ul>
+      <li>A CPU mode bit. Kernel mode can execute every instruction and touch all memory; user mode can't touch devices, page tables, or other processes' memory.</li>
+      <li>The hardware enforces it, so a buggy or malicious program can't take down the machine or read another program's data.</li>
+      <li>The only way from user to kernel is a trap: a system call the program requests, or an interrupt or fault the hardware forces.</li>
+      <li>Cost: crossing the line isn't free, which shapes how programs do I/O.</li>
+    </ul><p class="fu"><b>Follow-up:</b> What happens if a user-mode program tries to execute a privileged instruction? (The CPU faults into the kernel, which typically kills the process with an illegal instruction signal.)</p></div></details>
+  </div>
+  <div class="iq"><span class="lab">Interview question</span>
+    <p class="qtxt">What is a system call? Walk me through what happens when my program calls read() on a file.</p>
+    <details class="reveal"><summary>What a strong answer covers</summary><div class="body"><ul>
+      <li>The library wrapper puts the call number and arguments in registers and executes the trap instruction.</li>
+      <li>The CPU flips to kernel mode, saves the user registers, jumps to the kernel's entry point.</li>
+      <li>The kernel validates the file descriptor and the buffer address, finds the file, and either copies from the page cache or issues a disk read and blocks the process until it completes.</li>
+      <li>Return: registers restored, mode back to user, read() returns the byte count. Two mode switches minimum.</li>
+    </ul><p class="fu"><b>Follow-up:</b> Where does the data sit between the disk and your variable? (In the kernel's page cache, in RAM, then copied into your buffer. A second read of the same file skips the disk entirely.)</p></div></details>
+  </div>
+  <div class="iq"><span class="lab">Interview question</span>
+    <p class="qtxt">Why is it much faster to read a file in 64 KB chunks than one byte at a time, when the total bytes are the same?</p>
+    <details class="reveal"><summary>What a strong answer covers</summary><div class="body"><ul>
+      <li>Each read is a system call: mode switch, validation, cache disruption. Hundreds of nanoseconds each, regardless of size.</li>
+      <li>One byte per call means a million calls per megabyte; 64 KB per call means sixteen.</li>
+      <li>This is why language runtimes buffer: the library does one big read and serves your small ones from user-space memory.</li>
+      <li>Bonus: the same logic applies to writes and to network sends. Batching across the kernel boundary is a general principle.</li>
+    </ul><p class="fu"><b>Follow-up:</b> Is there a downside to a huge buffer? (Memory, and latency: you may wait to fill it before acting on the first bytes. There's a sweet spot, usually tens to hundreds of KB.)</p></div></details>
+  </div>
+</section>
+
+<!-- 2 PROCESSES -->
+<section class="pane" id="p2">
+  <h2>Processes</h2>
+  <p>A <span class="term">process</span> is a running program plus everything the kernel has to remember about it: its own virtual address space (session 1), a <span class="term">PID</span>, a parent, a current user, its open files, and, when it isn't running, a saved copy of every register including the program counter. The program is the recipe; the process is the cooking.</p>
+
+  <h3>What's inside</h3>
+  <div class="two-col">
+    <div>
+      <p>The address space has a conventional shape. Code at the bottom, then global data, then the heap growing up as you allocate, shared libraries in the middle, the stack at the top growing down, and unmapped gaps between. Touching a gap is a segfault.</p>
+      <p>The kernel also keeps a table of the process's <span class="term">file descriptors</span>: small integers naming open files, sockets, and pipes. Three exist from birth: 0 is standard input, 1 is standard output, 2 is standard error. Every <code>open</code> or <code>socket</code> call returns the next free number. That's what the <code>fd</code> argument to <code>read</code> and <code>write</code> is.</p>
+    </div>
+    <div class="layout">
+      <div class="stk">stack (grows down)</div>
+      <div class="gap">unmapped</div>
+      <div class="lib">shared libraries</div>
+      <div class="gap">unmapped</div>
+      <div class="heap">heap (grows up)</div>
+      <div class="data">global data</div>
+      <div class="code">code</div>
+    </div>
+  </div>
+
+  <h3>Birth, transformation, death</h3>
+  <p>On Linux, new processes come from exactly one place. <code>fork()</code> makes a copy of the calling process: same code, same data, same open files, a new PID. The copy is cheap because the pages are shared until one side writes (copy-on-write). fork returns twice: the child's PID in the parent, zero in the child, which is how each side knows who it is.</p>
+  <p><code>exec()</code> replaces the calling process's program with a new one. The address space is thrown away and rebuilt from the new binary; the PID and the open files stay. A shell runs <code>ls</code> like this: fork, the child execs <code>ls</code>, the parent calls <code>wait()</code> until the child exits.</p>
+  <p>When a process calls <code>exit()</code>, its memory and files are released, but its table entry stays until the parent calls <code>wait()</code> to collect the exit status. In that window it's a <span class="term">zombie</span>: dead, taking up nothing but a PID. If the parent dies first, the child is an <span class="term">orphan</span> and the kernel reparents it to PID 1, which reaps zombies as a matter of routine. Every process on the machine descends from PID 1 (<code>systemd</code> or <code>init</code>).</p>
+
+  <div class="widget" id="w-pl">
+    <h4>A process table you can operate</h4>
+    <p class="sub">Click a row to select a process, then use the buttons. Try the "shell runs ls" sequence first, one step at a time, and watch the states.</p>
+    <div class="row">
+      <button class="btn" id="pl-fork">fork()</button>
+      <label class="f">exec<select id="pl-prog"><option>ls</option><option>python3 script.py</option><option>sleep 100</option></select></label>
+      <button class="btn" id="pl-exec">exec()</button>
+      <button class="btn" id="pl-wait">wait()</button>
+      <button class="btn" id="pl-exit">exit()</button>
+      <button class="btn alt" id="pl-kill">kill (parent dies first)</button>
+      <button class="btn alt" id="pl-play">Play: shell runs ls</button>
+      <button class="btn alt" id="pl-reset">Reset</button>
+    </div>
+    <table class="ptable" id="pl-table"></table>
+    <div class="story"><div class="text" id="pl-text"></div></div>
+  </div>
+
+  <div class="check" data-answer="b">
+    <p class="q">Right after a successful fork(), how many processes are running the calling program?</p>
+    <div class="opts"><button data-k="a">1</button><button data-k="b">2</button><button data-k="c">0</button><button data-k="d">Depends on the shell</button></div>
+    <div class="fb" data-explain="Parent and child, nearly identical, both continuing from the line after fork. The return value tells them apart: the child's PID in the parent, 0 in the child."></div>
+  </div>
+  <div class="check" data-answer="b">
+    <p class="q">exec():</p>
+    <div class="opts"><button data-k="a">Creates a new process</button><button data-k="b">Replaces the current program</button><button data-k="c">Waits for a child</button><button data-k="d">Kills the parent</button></div>
+    <div class="fb" data-explain="Same PID, same open files, brand new address space loaded from the new binary. The old program never returns from exec because it no longer exists."></div>
+  </div>
+  <div class="check" data-answer="b">
+    <p class="q">A zombie process is:</p>
+    <div class="opts"><button data-k="a">A runaway process</button><button data-k="b">A finished process not yet waited for</button><button data-k="c">A stuck process</button><button data-k="d">A kernel thread</button></div>
+    <div class="fb" data-explain="It has exited and freed everything except its table entry, which holds the exit status for the parent. It uses no CPU or memory. Fix the parent, not the zombie."></div>
+  </div>
+  <div class="check" data-answer="b">
+    <p class="q">File descriptor 1 is:</p>
+    <div class="opts"><button data-k="a">Standard input</button><button data-k="b">Standard output</button><button data-k="c">Standard error</button><button data-k="d">The first file opened</button></div>
+    <div class="fb" data-explain="0 is stdin, 1 is stdout, 2 is stderr. The first file your program opens gets 3."></div>
+  </div>
+  <div class="check" data-answer="b">
+    <p class="q">How does a shell run the command ls?</p>
+    <div class="opts"><button data-k="a">It calls exec directly</button><button data-k="b">Fork, child execs, parent waits</button><button data-k="c">It starts a thread</button><button data-k="d">It asks the kernel to run it</button></div>
+    <div class="fb" data-explain="If the shell exec'd directly it would turn into ls and vanish. So it forks, the copy becomes ls, and the shell waits for it to finish before printing the next prompt."></div>
+  </div>
+
+  <div class="iq-head"><h3>Interview questions</h3><p>Out loud, one to two minutes each.</p></div>
+  <div class="iq"><span class="lab">Interview question</span>
+    <p class="qtxt">What is a process, and what does the operating system keep track of for each one?</p>
+    <details class="reveal"><summary>What a strong answer covers</summary><div class="body"><ul>
+      <li>A running instance of a program with its own virtual address space.</li>
+      <li>Kernel state: PID and parent, saved registers and PC, the page table, open file descriptors, current directory, user and permissions, scheduling state and priority, exit status.</li>
+      <li>Address space layout: code, data, heap, libraries, stack.</li>
+      <li>Strong answers distinguish program (a file) from process (a running thing) and note one program can be many processes.</li>
+    </ul><p class="fu"><b>Follow-up:</b> Two copies of the same program are running. What do they share? (The code pages in RAM, read-only, mapped into both. Nothing else unless they set up shared memory.)</p></div></details>
+  </div>
+  <div class="iq"><span class="lab">Interview question</span>
+    <p class="qtxt">Explain fork and exec, and how a shell uses them to run a command.</p>
+    <details class="reveal"><summary>What a strong answer covers</summary><div class="body"><ul>
+      <li>fork clones the caller: new PID, copy of the address space (copy-on-write), same open files. Returns the child PID to the parent and 0 to the child.</li>
+      <li>exec replaces the caller's program: new address space from the binary, same PID, files stay open.</li>
+      <li>Shell: fork; in the child, set up redirections on file descriptors, then exec the command; in the parent, wait for the child.</li>
+      <li>Why two calls instead of one "spawn": the gap between fork and exec is where redirection and pipes get set up, using the inherited file descriptors.</li>
+    </ul><p class="fu"><b>Follow-up:</b> How does "ls &gt; out.txt" work? (Between fork and exec, the child opens out.txt and makes it file descriptor 1. ls then writes to stdout as usual and never knows.)</p></div></details>
+  </div>
+  <div class="iq"><span class="lab">Interview question</span>
+    <p class="qtxt">What is a zombie process, why does it exist, and how do you get rid of one?</p>
+    <details class="reveal"><summary>What a strong answer covers</summary><div class="body"><ul>
+      <li>A process that has exited but whose parent hasn't called wait. Only the table entry remains, holding the exit status.</li>
+      <li>It exists so the parent can find out how the child ended. It costs a PID slot and nothing else.</li>
+      <li>kill does nothing to it; it's already dead. You fix or kill the parent. If the parent dies, PID 1 adopts and reaps the zombie.</li>
+      <li>Thousands of zombies means a parent that forks and never waits, a real bug.</li>
+    </ul><p class="fu"><b>Follow-up:</b> How would you find a zombie's parent from a shell? (ps -o ppid= -p the zombie's PID, or look at the PPID column in ps.)</p></div></details>
+  </div>
+</section>
+
+<!-- 3 SCHEDULING -->
+<section class="pane" id="p3">
+  <h2>Scheduling and context switches</h2>
+  <p>A laptop runs a few hundred processes on four or eight cores. Most of them are asleep, waiting for something, but whenever more processes are ready to run than there are cores, something has to pick. That's the <span class="term">scheduler</span>, a piece of the kernel that runs every few milliseconds and on every event that changes who's ready.</p>
+
+  <h3>Three states</h3>
+  <p>At any moment a process is <b>running</b> on a core, <b>ready</b> (could run, waiting for a core), or <b>blocked</b> (waiting for something else: disk, network, a keypress, a lock, a sleep timer). Blocked processes cost the scheduler nothing; they aren't candidates. The transitions are the whole story: running becomes ready when its turn ends, running becomes blocked when it asks for something slow, blocked becomes ready when the thing arrives.</p>
+
+  <h3>Time slices and preemption</h3>
+  <p>A running process would happily run forever, so the kernel sets a timer. When the <span class="term">time slice</span> (also called a quantum, a few milliseconds) expires, the timer interrupt fires, the kernel takes the CPU back, and the scheduler picks the next ready process. Taking the CPU away from a running process is <span class="term">preemption</span>. Without it, one infinite loop would freeze the machine.</p>
+
+  <h3>Policies</h3>
+  <p>The simplest policy is first come, first served: run each ready process until it blocks or finishes. Simple, and awful for interactive work: your text editor waits behind a video encoder. <span class="term">Round robin</span> fixes that by rotating through the ready queue with a fixed slice. Real schedulers layer priorities on top: Linux's default gives every process a fair share of CPU, weighted by its <span class="term">nice</span> value, and quietly favors processes that sleep a lot, because those are the interactive ones.</p>
+  <p>The slice length is a trade. Short slices mean responsive, because nobody waits long for a turn, but every turn ends in a <span class="term">context switch</span>, and those aren't free. Long slices waste less but make interactive programs sluggish.</p>
+
+  <h3>The context switch</h3>
+  <p>Switching processes means saving everything the CPU knows about the current one (registers, program counter, stack pointer), loading the next one's saved state, and pointing the MMU at the next one's page table. The direct cost is a microsecond or so. The indirect cost is bigger: the new process finds the caches and the TLB full of the old process's data, and spends its first thousands of cycles missing. Switching between threads of the same process is cheaper, since the page table doesn't change.</p>
+
+  <div class="widget" id="w-sch">
+    <h4>One core, three processes</h4>
+    <p class="sub">Each process is a sequence of CPU bursts and I/O waits. Step one tick at a time and watch the scheduler decide. Colored cells are running, striped cells are waiting for I/O, blank cells are ready and waiting for the core.</p>
+    <div class="row">
+      <label class="f">Workload<select id="sch-scn">
+        <option value="mix" selected>A hog, an interactive process, a medium job</option>
+        <option value="equal">Three plain CPU jobs: 5, 3, 2 ticks</option>
+        <option value="io">Two I/O-heavy processes and one hog</option>
+      </select></label>
+      <label class="f">Policy<select id="sch-pol"><option value="rr" selected>Round robin</option><option value="fcfs">First come, first served</option></select></label>
+      <label class="f">Time slice<select id="sch-q"><option>1</option><option selected>2</option><option>4</option></select></label>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <button class="btn" id="sch-step">Next tick</button>
+      <button class="btn alt" id="sch-run">Run all</button>
+      <button class="btn alt" id="sch-reset">Reset</button>
+    </div>
+    <div class="procs" id="sch-procs"></div>
+    <div class="gantt" id="sch-gantt"></div>
+    <div class="counts" style="margin-top:10px"><span>Tick <b id="sch-t">0</b></span><span>Context switches <b id="sch-cs">0</b></span><span>Idle ticks <b id="sch-idle">0</b></span><span>Ready queue <b id="sch-rq">-</b></span></div>
+    <div class="story"><div class="text" id="sch-text"></div></div>
+  </div>
+
+  <div class="note">
+    <p><b>Try this.</b> Run the first workload with round robin and a slice of 2, then with first come, first served. Look at when B (the interactive one) gets its turns. Then try a slice of 1 and count the context switches. That three-way tension, responsiveness against switching overhead against fairness, is every scheduling conversation you'll ever have.</p>
+  </div>
+
+  <h3>Load average</h3>
+  <p>The number you'll see everywhere on Linux. It's the average number of processes that are runnable or in uninterruptible disk wait, over the last 1, 5, and 15 minutes. Compare it to the core count: a load of 4 on a 4-core box means the cores are just kept busy; a load of 12 means processes are queuing three deep. Note what it isn't: it isn't CPU percentage, and a high load with idle CPUs means processes are waiting on disk, not on compute. Tab 6 uses that.</p>
+
+  <div class="check" data-answer="c">
+    <p class="q">A process waiting for a disk read is:</p>
+    <div class="opts"><button data-k="a">Running</button><button data-k="b">Ready</button><button data-k="c">Blocked</button><button data-k="d">A zombie</button></div>
+    <div class="fb" data-explain="It can't use the CPU until the data arrives, so it isn't a scheduling candidate at all. When the disk interrupt delivers the data, it becomes ready."></div>
+  </div>
+  <div class="check" data-answer="b">
+    <p class="q">What forces a running process off the CPU when its slice ends?</p>
+    <div class="opts"><button data-k="a">The process itself</button><button data-k="b">The timer interrupt</button><button data-k="c">The disk</button><button data-k="d">The compiler</button></div>
+    <div class="fb" data-explain="The kernel sets a timer before handing over the CPU. When it fires, the CPU traps into the kernel regardless of what the process was doing. That's preemption."></div>
+  </div>
+  <div class="check" data-answer="b">
+    <p class="q">Making the time slice much shorter:</p>
+    <div class="opts"><button data-k="a">Speeds everything up</button><button data-k="b">Improves responsiveness, adds switching overhead</button><button data-k="c">Reduces memory use</button><button data-k="d">Eliminates blocking</button></div>
+    <div class="fb" data-explain="Everyone gets a turn sooner, but each turn ends in a context switch with its direct cost and its cache pollution. Too short and the machine spends its time switching."></div>
+  </div>
+  <div class="check" data-answer="b">
+    <p class="q">Load average 8 on a 4-core machine means:</p>
+    <div class="opts"><button data-k="a">8 percent CPU use</button><button data-k="b">About twice as many runnable processes as cores</button><button data-k="c">8 GB in use</button><button data-k="d">8 threads per core</button></div>
+    <div class="fb" data-explain="On average 8 processes wanted the CPU (or were stuck in disk wait) while 4 cores were available. Processes are queuing. Whether that's CPU or disk contention is what top's wa column tells you."></div>
+  </div>
+
+  <div class="iq-head"><h3>Interview questions</h3><p>Out loud, one to two minutes each.</p></div>
+  <div class="iq"><span class="lab">Interview question</span>
+    <p class="qtxt">What is a context switch, and what makes it expensive?</p>
+    <details class="reveal"><summary>What a strong answer covers</summary><div class="body"><ul>
+      <li>Saving the running process's registers and PC, loading the next one's, and switching the page table pointer.</li>
+      <li>Direct cost: about a microsecond of kernel work.</li>
+      <li>Indirect cost, the bigger one: caches and TLB are full of the old process's data, so the new one misses heavily at first.</li>
+      <li>Thread switches within a process are cheaper because the address space doesn't change.</li>
+    </ul><p class="fu"><b>Follow-up:</b> A program does a system call that returns immediately. Was there a context switch? (No. Two mode switches, same process throughout. Context switch means a different process or thread takes the CPU.)</p></div></details>
+  </div>
+  <div class="iq"><span class="lab">Interview question</span>
+    <p class="qtxt">One core, two programs: a video encoder that always has work, and a text editor that mostly waits for keystrokes. How should the scheduler share the CPU, and why?</p>
+    <details class="reveal"><summary>What a strong answer covers</summary><div class="body"><ul>
+      <li>The editor should win whenever it's ready: it needs the CPU for a moment and then blocks again, so giving it priority costs the encoder almost nothing.</li>
+      <li>The encoder soaks up whatever is left. It's CPU-bound; a little latency is invisible.</li>
+      <li>Mechanism: preemption with a short enough slice, plus favoring processes that sleep a lot (which is what Linux's scheduler does).</li>
+      <li>Pure first come, first served would make the editor unusable.</li>
+    </ul><p class="fu"><b>Follow-up:</b> What's the danger in always favoring interactive processes? (Starvation: a CPU-bound job never runs if interactive ones keep waking. Real schedulers guarantee a minimum share.)</p></div></details>
+  </div>
+  <div class="iq"><span class="lab">Interview question</span>
+    <p class="qtxt">Describe the states a process can be in and what moves it between them.</p>
+    <details class="reveal"><summary>What a strong answer covers</summary><div class="body"><ul>
+      <li>Running, ready, blocked (plus created and terminated, and Linux's zombie).</li>
+      <li>Running to ready: slice expired or a higher-priority process woke (preemption).</li>
+      <li>Running to blocked: it asked for something slow (I/O, a lock, sleep).</li>
+      <li>Blocked to ready: the thing arrived, usually via an interrupt handler marking it runnable.</li>
+      <li>Ready to running: the scheduler picked it.</li>
+    </ul><p class="fu"><b>Follow-up:</b> Can a process go from blocked straight to running? (No. It becomes ready first; the scheduler still has to choose it, though it may do so immediately.)</p></div></details>
+  </div>
+</section>
+
+<!-- 4 THREADS -->
+<section class="pane" id="p4">
+  <h2>Threads and concurrency</h2>
+  <p>A <span class="term">thread</span> is one path of execution inside a process. It has its own stack, its own registers, its own program counter, so the scheduler can run it independently, but it shares the process's address space with its sibling threads: the same heap, the same globals, the same code, the same open files. A process starts with one thread. It can create more.</p>
+
+  <table class="t">
+    <thead><tr><th></th><th>Processes</th><th>Threads (in one process)</th></tr></thead>
+    <tbody>
+      <tr><td>Memory</td><td>Separate address spaces</td><td>Shared address space; own stacks</td></tr>
+      <tr><td>Communication</td><td>Explicit: pipes, sockets, shared memory</td><td>Just read and write the same variables</td></tr>
+      <tr><td>Creation and switching</td><td>Heavier</td><td>Lighter (no page table change)</td></tr>
+      <tr><td>Fault isolation</td><td>One crash doesn't touch the others</td><td>One crash takes the whole process down</td></tr>
+      <tr><td>Use when</td><td>You want isolation (browser tabs, services)</td><td>You want parallelism or overlapped I/O on shared data</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Why threads</h3>
+  <p>Two reasons. Parallelism: on a multicore machine, four threads can run on four cores at once. And overlap: a thread that blocks waiting for the network doesn't stop the others, so a web server can handle many requests with one thread each. The price is the shared memory that makes threads convenient.</p>
+
+  <h3>The race</h3>
+  <p><code>counter += 1</code> is not one operation. It's three: load the value into a register, add one, store it back. If two threads do this at the same time on the same variable, their steps can interleave: both load 5, both add, both store 6, and one increment is lost. That's a <span class="term">race condition</span>: the result depends on timing you don't control. It might work a million times and then not. The piece of code that must not be interleaved is a <span class="term">critical section</span>.</p>
+
+  <h3>The fix, and the new problem</h3>
+  <p>A <span class="term">mutex</span> (mutual exclusion lock) is an object only one thread can hold at a time. Take it before the critical section, release it after; a second thread that tries to take it blocks until the first releases. The updates can no longer interleave. The cost is that the threads now take turns through that section, and if they spend most of their time there, you've serialized your parallel program.</p>
+  <p>Locks introduce their own failure. Thread 1 holds lock A and waits for lock B. Thread 2 holds lock B and waits for lock A. Neither will ever release what the other needs. That's <span class="term">deadlock</span>, and the program simply stops, using no CPU, forever. The standard prevention: every thread acquires locks in the same global order, so the cycle can't form. Other tools exist (semaphores for counting, condition variables for waiting on a state, atomic instructions for single-variable updates), but mutex, race, and deadlock are the three words the interview wants.</p>
+
+  <div class="widget" id="w-rc">
+    <h4>Two threads, one variable</h4>
+    <p class="sub">Each thread increments a shared counter four times, three machine steps per increment. Choose how the scheduler interleaves them, with and without a lock. Then switch to the deadlock mode.</p>
+    <div class="row">
+      <label class="f">Mode<select id="rc-mode"><option value="counter" selected>Shared counter</option><option value="dead">Two locks: deadlock</option></select></label>
+      <label class="f" id="rc-schedwrap">Interleaving<select id="rc-sched"><option value="alt" selected>Strict alternation, one step each (worst case)</option><option value="whole">One full increment at a time</option><option value="rand">Random</option></select></label>
+      <label class="f" id="rc-lockwrap"><span>Protection</span><select id="rc-lock"><option value="none" selected>No lock</option><option value="mutex">Mutex around each increment</option></select></label>
+      <label class="f" id="rc-orderwrap" style="display:none">Lock order<select id="rc-order"><option value="bad" selected>Thread 2 takes them in the opposite order</option><option value="good">Both threads take L1 then L2</option></select></label>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <button class="btn" id="rc-step">Next step</button>
+      <button class="btn alt" id="rc-run">Run all</button>
+      <button class="btn alt" id="rc-reset">Reset</button>
+    </div>
+    <div class="shared" id="rc-shared"></div>
+    <div class="threads" id="rc-threads"></div>
+    <div class="story"><div class="text" id="rc-text"></div></div>
+  </div>
+
+  <div class="note blue">
+    <p><b>Python, since you write it.</b> CPython has a global interpreter lock, the GIL: only one thread runs Python bytecode at a time. Threads still help when they spend their time waiting on I/O, because the waiting thread releases the GIL. They don't help a CPU-bound loop; for that you use multiprocessing, or a library that does the heavy work outside Python. And the GIL does not save you from races: <code>counter += 1</code> can still be interrupted between its bytecodes.</p>
+  </div>
+
+  <div class="check" data-answer="b">
+    <p class="q">Threads in the same process share:</p>
+    <div class="opts"><button data-k="a">Their stacks</button><button data-k="b">The heap and globals</button><button data-k="c">Their registers</button><button data-k="d">Their program counters</button></div>
+    <div class="fb" data-explain="Each thread has its own stack, registers, and PC so it can run independently. The heap, globals, code, and open files belong to the process and are shared by all its threads."></div>
+  </div>
+  <div class="check" data-answer="b">
+    <p class="q">A race condition is:</p>
+    <div class="opts"><button data-k="a">Two threads reading the same data</button><button data-k="b">Uncoordinated access where timing changes the result</button><button data-k="c">One thread being faster</button><button data-k="d">Creating threads too quickly</button></div>
+    <div class="fb" data-explain="Reads alone are safe. The problem is read-modify-write sequences that can interleave, so the outcome depends on which thread got there first. Two loads before either store loses an update."></div>
+  </div>
+  <div class="check" data-answer="b">
+    <p class="q">A mutex guarantees:</p>
+    <div class="opts"><button data-k="a">Faster execution</button><button data-k="b">One thread at a time in the section</button><button data-k="c">No deadlock</button><button data-k="d">Fair ordering</button></div>
+    <div class="fb" data-explain="Mutual exclusion and nothing more. It doesn't speed anything up, it doesn't prevent deadlock (it can cause it), and most mutexes don't promise who gets it next."></div>
+  </div>
+  <div class="check" data-answer="b">
+    <p class="q">Deadlock between two threads needs:</p>
+    <div class="opts"><button data-k="a">One lock</button><button data-k="b">Each holding a lock the other wants</button><button data-k="c">Many threads</button><button data-k="d">A slow CPU</button></div>
+    <div class="fb" data-explain="A cycle: thread 1 holds A and waits for B, thread 2 holds B and waits for A. One lock can't form a cycle. Acquiring locks in a fixed global order makes the cycle impossible."></div>
+  </div>
+  <div class="check" data-answer="b">
+    <p class="q">In CPython, adding threads speeds up:</p>
+    <div class="opts"><button data-k="a">CPU-bound loops</button><button data-k="b">I/O-bound waiting</button><button data-k="c">Nothing</button><button data-k="d">Everything</button></div>
+    <div class="fb" data-explain="The GIL lets one thread run Python code at a time, so CPU-bound work doesn't parallelize. A thread waiting on the network releases the GIL, so I/O-bound programs do overlap. Use multiprocessing for CPU parallelism."></div>
+  </div>
+
+  <div class="iq-head"><h3>Interview questions</h3><p>Out loud, one to two minutes each.</p></div>
+  <div class="iq"><span class="lab">Interview question</span>
+    <p class="qtxt">Process versus thread: what's the difference, and when would you choose each?</p>
+    <details class="reveal"><summary>What a strong answer covers</summary><div class="body"><ul>
+      <li>A process has its own address space; threads share one. Threads have their own stack, registers, and PC.</li>
+      <li>Threads: cheap to create and switch, trivial to share data, one crash kills all. Processes: isolated, heavier, communicate through pipes, sockets, or shared memory.</li>
+      <li>Threads for parallel work on shared data or overlapping I/O in one program. Processes for isolation and robustness (browser tabs, separate services).</li>
+      <li>Bonus: in Python the GIL pushes CPU-bound parallelism toward processes.</li>
+    </ul><p class="fu"><b>Follow-up:</b> Why does a browser use a process per tab instead of a thread per tab? (Isolation: one tab crashing or being exploited can't read or take down the others.)</p></div></details>
+  </div>
+  <div class="iq"><span class="lab">Interview question</span>
+    <p class="qtxt">Two threads each increment a shared counter a million times. The final value is less than two million. What happened, and how do you fix it?</p>
+    <details class="reveal"><summary>What a strong answer covers</summary><div class="body"><ul>
+      <li>Increment is load, add, store. Interleaved between threads, two loads can happen before either store, and one increment is lost. A race condition.</li>
+      <li>Fix: make the increment a critical section with a mutex, or use an atomic increment instruction, or give each thread its own counter and sum at the end.</li>
+      <li>Trade-off: the mutex serializes the increments; the per-thread counters avoid contention entirely.</li>
+      <li>Strong answers can name the exact interleaving that loses an update.</li>
+    </ul><p class="fu"><b>Follow-up:</b> Would the bug show up in a test that runs it once? (Maybe not. Races are timing-dependent; it can pass a thousand times. That's what makes them dangerous.)</p></div></details>
+  </div>
+  <div class="iq"><span class="lab">Interview question</span>
+    <p class="qtxt">What is a deadlock? Give a concrete example and two ways to prevent it.</p>
+    <details class="reveal"><summary>What a strong answer covers</summary><div class="body"><ul>
+      <li>Two or more threads each waiting for a resource another holds, in a cycle, so none can proceed. The program hangs using no CPU.</li>
+      <li>Example: thread 1 locks A then B; thread 2 locks B then A; each gets its first lock and waits forever for the second.</li>
+      <li>Prevent: a global lock ordering so cycles can't form; or hold only one lock at a time; or try-lock with timeout and back off; or a single coarse lock.</li>
+      <li>Detect: a stuck program with 0 percent CPU and threads all in a waiting state.</li>
+    </ul><p class="fu"><b>Follow-up:</b> Can you deadlock with a single lock? (Yes, if a thread tries to take a lock it already holds and the lock isn't re-entrant. It waits for itself.)</p></div></details>
+  </div>
+</section>
+
+<!-- 5 INTERRUPTS AND I/O -->
+<section class="pane" id="p5">
+  <h2>Interrupts and I/O</h2>
+  <p>Devices are slow and they don't run on the CPU's clock. A keypress comes when the human presses it; a packet arrives when the network delivers it; a disk read finishes milliseconds after it was asked for. The CPU could sit and check, over and over, whether the thing has happened yet. That's polling, and it wastes the CPU. Instead, devices raise <span class="term">interrupts</span>.</p>
+
+  <h3>What an interrupt does</h3>
+  <p>A device pulls a wire. Between two instructions, the CPU notices, saves where it was, flips to kernel mode, and jumps to the kernel's <span class="term">interrupt handler</span> for that device, exactly the way a trap does for a system call. The handler does the minimum: acknowledge the device, move or note the data, mark any process that was waiting for it as ready. Then the CPU restores what it was doing and continues. Whatever program was running never knows it was paused; a few microseconds vanished.</p>
+  <p>The timer is a device too. Its interrupt every few milliseconds is how the scheduler gets control back from a running process. Without it, preemption would be impossible.</p>
+
+  <h3>DMA</h3>
+  <p>Copying bytes from a device into RAM would eat the CPU if the CPU did it. So devices do it themselves: <span class="term">DMA</span>, direct memory access, lets a network card or disk controller write straight into RAM at an address the kernel gave it, and raise an interrupt when the whole transfer is done. The CPU is involved at the start and the end, not for every byte.</p>
+
+  <h3>Blocking and not blocking</h3>
+  <p>The default is <span class="term">blocking I/O</span>: your <code>recv</code> puts the process to sleep until data exists, and the interrupt handler that delivers the data is what wakes it. Simple, and fine when one thread handles one connection. A server with ten thousand idle connections can't afford ten thousand sleeping threads, so it uses <span class="term">non-blocking I/O</span> plus a call like <code>epoll</code> that says "put me to sleep until any of these sockets has something," then handles whichever woke up. One thread, ten thousand sockets. That's how nginx and Node.js work, and it's worth one sentence in an interview.</p>
+
+  <div class="widget" id="w-pk">
+    <h4>A packet arrives</h4>
+    <p class="sub">Your program called recv() on a TCP socket and is asleep. Follow the packet from the wire to your variable, across every layer from both weeks. The envelope colors are the ones from the networking sessions.</p>
+    <div class="lanes" id="pk-lanes"></div>
+    <div class="trip-stack" id="pk-stack"></div>
+    <div class="modebar"><span>Our process: <b id="pk-state">blocked</b></span><span>CPU mode: <span class="bit off" id="pk-bit">user (other process)</span></span><span>Copies of the data so far: <b id="pk-copies">0</b></span></div>
+    <div class="story">
+      <div class="text" id="pk-text"></div>
+      <div class="ctrl"><button class="btn alt" id="pk-prev">Back</button><button class="btn" id="pk-next">Next</button><button class="btn alt" id="pk-reset">Replay</button><div class="dots" id="pk-dots"></div></div>
+    </div>
+  </div>
+
+  <div class="note">
+    <p><b>Why this story matters.</b> It's the one place the two weeks meet. The envelopes from the networking sessions get opened by kernel code, running in an interrupt handler, in kernel mode, and the last step is a scheduler decision. A candidate who can tell it end to end has shown they understand networking, the OS, and how they fit. Almost nobody can. Practice it until you can do it in ninety seconds.</p>
+  </div>
+
+  <div class="check" data-answer="b">
+    <p class="q">An interrupt is:</p>
+    <div class="opts"><button data-k="a">A program crashing</button><button data-k="b">A device signaling the CPU</button><button data-k="c">A system call</button><button data-k="d">A context switch</button></div>
+    <div class="fb" data-explain="Hardware forcing the CPU into a kernel handler, asynchronously. A system call is the program asking on purpose; a context switch is the scheduler changing processes. Interrupts often lead to both, but they're different things."></div>
+  </div>
+  <div class="check" data-answer="b">
+    <p class="q">DMA lets:</p>
+    <div class="opts"><button data-k="a">The CPU copy faster</button><button data-k="b">Devices write RAM without the CPU</button><button data-k="c">Disks compress data</button><button data-k="d">Processes share memory</button></div>
+    <div class="fb" data-explain="The device moves the bytes itself into a buffer the kernel set up, then interrupts once at the end. The CPU never touches the data during the transfer."></div>
+  </div>
+  <div class="check" data-answer="b">
+    <p class="q">A process blocked in recv() becomes ready when:</p>
+    <div class="opts"><button data-k="a">Its time slice ends</button><button data-k="b">The interrupt handler delivers data to its socket</button><button data-k="c">It polls the network card</button><button data-k="d">Another process calls it</button></div>
+    <div class="fb" data-explain="The network card interrupts, the kernel's stack processes the packet into the socket's buffer, and the handler marks the waiting process runnable. The scheduler picks it up after that."></div>
+  </div>
+  <div class="check" data-answer="d">
+    <p class="q">In the kernel's network stack, which envelope is opened first?</p>
+    <div class="opts"><button data-k="a">TCP</button><button data-k="b">IP</button><button data-k="c">The letter</button><button data-k="d">Ethernet</button></div>
+    <div class="fb" data-explain="Outside in, same as always. The driver hands the frame up, the Ethernet header says IPv4, IP says TCP, TCP finds the socket and stores the data."></div>
+  </div>
+
+  <div class="iq-head"><h3>Interview questions</h3><p>Out loud, one to two minutes each. The second one is the big one.</p></div>
+  <div class="iq"><span class="lab">Interview question</span>
+    <p class="qtxt">What is an interrupt, and how is it different from a system call?</p>
+    <details class="reveal"><summary>What a strong answer covers</summary><div class="body"><ul>
+      <li>Both enter kernel mode through a trap and run a kernel handler.</li>
+      <li>A system call is synchronous and requested by the running program. An interrupt is asynchronous and forced by hardware (a device or the timer); the running program is just interrupted.</li>
+      <li>Interrupt handlers do the minimum and return; the timer interrupt is how preemption works.</li>
+      <li>Bonus: a page fault is a third kind of entry, a synchronous fault caused by the program without asking.</li>
+    </ul><p class="fu"><b>Follow-up:</b> Why should an interrupt handler be short? (Other interrupts and the running process are stalled while it runs; heavy work is deferred to later kernel work or to the woken process.)</p></div></details>
+  </div>
+  <div class="iq"><span class="lab">Interview question</span>
+    <p class="qtxt">Walk me through what happens from a packet arriving at the network card to recv() returning in my program.</p>
+    <details class="reveal"><summary>What a strong answer covers</summary><div class="body"><ul>
+      <li>The program is blocked in recv; the scheduler is running something else.</li>
+      <li>The NIC matches the destination MAC, DMA-writes the frame into a kernel buffer in RAM, raises an interrupt.</li>
+      <li>Kernel mode: the driver hands the frame to the stack. Ethernet header says IPv4; IP says it's for me and TCP; TCP finds the socket by the four-tuple, checks the sequence number, queues the data in the socket's receive buffer, schedules an ACK.</li>
+      <li>The handler marks the blocked process runnable. Later the scheduler switches to it; the kernel copies from the socket buffer to the user buffer; recv returns the byte count in user mode.</li>
+      <li>Layers named at each step: hardware, kernel network stack, scheduler, user program.</li>
+    </ul><p class="fu"><b>Follow-up:</b> How many times were the bytes copied? (Roughly twice: DMA into the kernel buffer, then kernel to user buffer. Zero-copy techniques exist to avoid the second.)</p></div></details>
+  </div>
+  <div class="iq"><span class="lab">Interview question</span>
+    <p class="qtxt">A web server has ten thousand connections open, most of them idle. One thread per connection or something else? Why?</p>
+    <details class="reveal"><summary>What a strong answer covers</summary><div class="body"><ul>
+      <li>Ten thousand blocked threads means ten thousand stacks and heavy scheduling overhead, mostly for threads doing nothing.</li>
+      <li>Instead: non-blocking sockets plus epoll (or kqueue, or IOCP). One thread sleeps until any socket is ready, then handles the ready ones.</li>
+      <li>This is the event loop model: nginx, Node.js, Python asyncio.</li>
+      <li>Trade-off: CPU-heavy requests block the loop, so you pair it with a small pool of worker threads.</li>
+    </ul><p class="fu"><b>Follow-up:</b> How does the kernel know which sockets are ready without the thread polling them? (The same interrupt path: packet arrives, TCP queues data, and the socket is flagged; epoll returns the flagged ones.)</p></div></details>
+  </div>
+</section>
+
+<!-- 6 LINUX IN PRACTICE -->
+<section class="pane" id="p6">
+  <h2>Linux in practice</h2>
+  <p>Everything above is visible from a shell. The interview's "Linux comfort" line means being able to look at a machine and say what's wrong with it, using a handful of tools. This tab is those tools and the patterns they show.</p>
+
+  <table class="t">
+    <thead><tr><th>Command</th><th>Shows</th><th>Look at</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">top / htop</td><td>Live view: load, CPU split, memory, and the top processes</td><td>load average, wa, avail Mem, RES, S (state), %CPU</td></tr>
+      <tr><td class="mono">ps aux</td><td>A snapshot of every process</td><td>STAT, RSS, %CPU, PPID (with ps -ef)</td></tr>
+      <tr><td class="mono">free -h</td><td>Memory: used, free, cache, available, swap</td><td>available and swap used; ignore "free"</td></tr>
+      <tr><td class="mono">uptime</td><td>Load average, 1, 5, 15 minutes</td><td>compare to the core count (nproc)</td></tr>
+      <tr><td class="mono">vmstat 1</td><td>Per second: runnable (r), blocked (b), swap in/out (si, so), CPU split</td><td>si and so nonzero means swapping; b high means disk wait</td></tr>
+      <tr><td class="mono">kill</td><td>Sends a signal; TERM by default, KILL with -9</td><td>try TERM first so the process can clean up</td></tr>
+      <tr><td class="mono">/proc/&lt;pid&gt;/</td><td>The kernel's view of one process: status, maps, fd, limits</td><td>status for state and memory, fd for open files</td></tr>
+      <tr><td class="mono">strace -p</td><td>The system calls a process is making, live</td><td>what it's stuck in: read, futex, poll</td></tr>
+    </tbody>
+  </table>
+
+  <h3>The state column</h3>
+  <p><b>R</b> running or runnable. <b>S</b> sleeping, waiting for something interruptible (most processes, most of the time). <b>D</b> uninterruptible sleep, almost always waiting on disk; a machine full of D states has a storage problem. <b>Z</b> zombie. <b>T</b> stopped. The load average counts R and D, which is why disk trouble shows up as high load with idle CPUs.</p>
+
+  <h3>Memory columns</h3>
+  <p><b>VIRT</b> is everything the process has mapped, including files and reserved-but-untouched space. It's usually huge and usually meaningless. <b>RES</b> (or RSS) is what's actually resident in RAM. That's the one you watch. <b>SHR</b> is the part shared with other processes, mostly libraries. In <code>free</code>, "free" is misleading: the kernel uses spare RAM for the page cache, which it gives back instantly. Read <b>available</b> instead.</p>
+
+  <h3>The playbook</h3>
+  <ol>
+    <li><b>Load versus cores.</b> Load above core count means queuing. Then ask: for CPU or for disk?</li>
+    <li><b>CPU line.</b> High <b>us</b> means user programs computing. High <b>sy</b> means kernel work, often I/O or a syscall storm. High <b>wa</b> means everyone's waiting for disk.</li>
+    <li><b>Memory.</b> available near zero and swap climbing means you're heading for thrashing. Find the process with the biggest RES.</li>
+    <li><b>Processes.</b> Sort by %CPU or %MEM. Look for D states, Z states, or one process with N times 100 percent.</li>
+    <li><b>Then narrow.</b> strace or /proc on the suspect; iostat for disks; ss for sockets.</li>
+  </ol>
+
+  <div class="widget" id="w-tp">
+    <h4>Read the top output</h4>
+    <p class="sub">Six machines, six problems. Pick one, read the output, decide what's wrong, then reveal. Click any column name for what it means. The machine has 4 cores and 16 GB.</p>
+    <div class="row">
+      <label class="f">Machine<select id="tp-scn">
+        <option value="ok" selected>Machine 1</option>
+        <option value="cpu">Machine 2</option>
+        <option value="leak">Machine 3</option>
+        <option value="thrash">Machine 4</option>
+        <option value="zombie">Machine 5</option>
+        <option value="iowait">Machine 6</option>
+      </select></label>
+      <button class="btn" id="tp-reveal">What's wrong?</button>
+    </div>
+    <div class="topout" id="tp-out"></div>
+    <div class="cols" id="tp-cols"></div>
+    <div class="story"><div class="text" id="tp-text">Read it first. Which numbers jump out?</div></div>
+  </div>
+
+  <div class="check" data-answer="a">
+    <p class="q">In top's CPU line, "wa" means the CPU is:</p>
+    <div class="opts"><button data-k="a">Waiting for I/O</button><button data-k="b">Wasted</button><button data-k="c">Warning</button><button data-k="d">Warming up</button></div>
+    <div class="fb" data-explain="I/O wait: idle time during which some process was blocked on disk. High wa with low us is the signature of a storage bottleneck."></div>
+  </div>
+  <div class="check" data-answer="b">
+    <p class="q">A process in state D is:</p>
+    <div class="opts"><button data-k="a">Dead</button><button data-k="b">In uninterruptible sleep, usually disk</button><button data-k="c">Being debugged</button><button data-k="d">Done</button></div>
+    <div class="fb" data-explain="It's waiting on something the kernel won't interrupt, almost always storage. It can't even be killed until the wait ends. Lots of D states means look at the disks."></div>
+  </div>
+  <div class="check" data-answer="a">
+    <p class="q">The memory number that tells you how much RAM programs can still get:</p>
+    <div class="opts"><button data-k="a">available</button><button data-k="b">free</button><button data-k="c">buff/cache</button><button data-k="d">VIRT</button></div>
+    <div class="fb" data-explain="free is only the RAM nobody is using at all; the kernel deliberately fills spare RAM with cache and gives it back on demand. available counts that reclaimable cache."></div>
+  </div>
+  <div class="check" data-answer="b">
+    <p class="q">kill -9 versus plain kill:</p>
+    <div class="opts"><button data-k="a">-9 is faster to type</button><button data-k="b">-9 can't be caught or ignored</button><button data-k="c">Plain kill only pauses</button><button data-k="d">No difference</button></div>
+    <div class="fb" data-explain="Plain kill sends TERM, which the process can catch to save state and exit cleanly. -9 is KILL: the kernel ends the process without asking. Use TERM first."></div>
+  </div>
+
+  <div class="iq-head"><h3>Interview questions</h3><p>Out loud, one to two minutes each.</p></div>
+  <div class="iq"><span class="lab">Interview question</span>
+    <p class="qtxt">A production server is slow. What are the first five commands you run, and what are you looking for in each?</p>
+    <details class="reveal"><summary>What a strong answer covers</summary><div class="body"><ul>
+      <li>uptime or top: load average versus core count. Queuing or not?</li>
+      <li>top's CPU line: us versus sy versus wa. Compute-bound, kernel-bound, or disk-bound?</li>
+      <li>free -h: available and swap used. Heading for thrashing?</li>
+      <li>top sorted by CPU and by memory, plus the state column: one hog, a leak, D states, zombies.</li>
+      <li>Then a targeted tool: strace on the suspect, iostat for disks, ss for sockets, dmesg for hardware errors.</li>
+    </ul><p class="fu"><b>Follow-up:</b> Load is 30 on 8 cores, CPU is 10 percent busy. What is it? (Disk. Processes in D state count toward load. Check wa and iostat.)</p></div></details>
+  </div>
+  <div class="iq"><span class="lab">Interview question</span>
+    <p class="qtxt">In top, what's the difference between VIRT and RES, and which one tells you a process is using too much memory?</p>
+    <details class="reveal"><summary>What a strong answer covers</summary><div class="body"><ul>
+      <li>VIRT is the size of the virtual address space: every mapping, including files mapped but not read and memory reserved but never touched.</li>
+      <li>RES is the resident set: pages actually in RAM right now. That's the real footprint.</li>
+      <li>SHR is the shared part of RES, mostly libraries, counted once per process even though it's one copy in RAM.</li>
+      <li>Watch RES over time: growth that never comes back is a leak.</li>
+    </ul><p class="fu"><b>Follow-up:</b> Why can VIRT be far bigger than the machine's RAM? (Virtual memory: mappings don't need frames until touched. A process can map terabytes and use megabytes.)</p></div></details>
+  </div>
+  <div class="iq"><span class="lab">Interview question</span>
+    <p class="qtxt">You see three zombie processes in top. Is the machine in trouble? What do you do?</p>
+    <details class="reveal"><summary>What a strong answer covers</summary><div class="body"><ul>
+      <li>Three zombies cost three PID slots and nothing else. Not trouble by themselves.</li>
+      <li>They mean a parent isn't calling wait. Find it: the zombies' PPID.</li>
+      <li>kill on the zombie does nothing; it's already dead. Fix or restart the parent; if the parent dies, PID 1 reaps them.</li>
+      <li>Thousands of zombies, or a growing count, is a bug worth escalating: PIDs are finite.</li>
+    </ul><p class="fu"><b>Follow-up:</b> Could you ever have a zombie whose parent is PID 1? (Only briefly; PID 1 reaps continuously. A lingering one means PID 1 itself is stuck, which is a real emergency.)</p></div></details>
+  </div>
+</section>
+
+<!-- 7 GLOSSARY -->
+<section class="pane" id="p7">
+  <h2>Glossary</h2>
+  <p>One sentence each. Session 1's terms are in that lesson's glossary.</p>
+  <div class="gl">
+    <div><b>Kernel</b>The core of the OS, always in memory, the only code that runs in kernel mode and touches hardware directly.</div>
+    <div><b>User mode</b>The restricted CPU mode programs run in: no device access, no page table changes, only your own memory.</div>
+    <div><b>Kernel mode</b>The privileged CPU mode where every instruction is allowed.</div>
+    <div><b>System call</b>A program's request to the kernel, made through a trap instruction: read, write, open, fork, and about 350 others.</div>
+    <div><b>Trap</b>The instruction or event that switches to kernel mode and jumps into the kernel; used by system calls, interrupts, and faults.</div>
+    <div><b>Library function</b>Code that runs in your process (printf, malloc) and may make system calls underneath.</div>
+    <div><b>Process</b>A running program plus the kernel's state for it: address space, PID, registers, open files.</div>
+    <div><b>PID / PPID</b>A process's ID and its parent's ID. Every process descends from PID 1.</div>
+    <div><b>File descriptor</b>A small integer naming an open file, socket, or pipe: 0 stdin, 1 stdout, 2 stderr.</div>
+    <div><b>fork</b>Clone the calling process; returns the child's PID to the parent and 0 to the child.</div>
+    <div><b>exec</b>Replace the calling process's program with a new one; same PID, same open files.</div>
+    <div><b>wait</b>Collect a child's exit status, freeing its table entry.</div>
+    <div><b>Copy-on-write</b>fork shares pages between parent and child until one writes, then copies just that page.</div>
+    <div><b>Zombie</b>A process that has exited but whose parent hasn't called wait; only a PID slot remains.</div>
+    <div><b>Orphan</b>A process whose parent died; reparented to PID 1.</div>
+    <div><b>Process states</b>Running, ready (runnable), blocked (sleeping), plus stopped and zombie.</div>
+    <div><b>Scheduler</b>The kernel code that decides which ready process runs on each core.</div>
+    <div><b>Ready queue</b>The processes that could run right now and are waiting for a core.</div>
+    <div><b>Time slice (quantum)</b>How long a process may run before the scheduler reconsiders; a few milliseconds.</div>
+    <div><b>Preemption</b>Taking the CPU away from a running process, via the timer interrupt.</div>
+    <div><b>Round robin</b>Rotate through the ready queue giving each process one slice.</div>
+    <div><b>Nice value</b>Linux's priority knob: higher nice means a smaller share of CPU.</div>
+    <div><b>Context switch</b>Saving one process's registers and page table and loading another's; costly mainly through cache and TLB pollution.</div>
+    <div><b>CPU-bound / I/O-bound</b>A process that mostly computes versus one that mostly waits for devices.</div>
+    <div><b>Load average</b>Average count of runnable plus uninterruptible-wait processes over 1, 5, and 15 minutes; compare to cores.</div>
+    <div><b>Thread</b>One execution path inside a process: own stack, registers, PC; shared heap, globals, and files.</div>
+    <div><b>Race condition</b>A bug where the result depends on the timing of uncoordinated accesses to shared data.</div>
+    <div><b>Critical section</b>Code that must not be interleaved with other threads touching the same data.</div>
+    <div><b>Mutex</b>A lock only one thread can hold; the others block until it's released.</div>
+    <div><b>Deadlock</b>Threads each waiting for a lock another holds, in a cycle; nothing ever proceeds.</div>
+    <div><b>Lock ordering</b>The standard deadlock prevention: every thread takes locks in the same global order.</div>
+    <div><b>Semaphore</b>A counter for controlling access to a pool of N resources; a mutex is the N equals 1 case.</div>
+    <div><b>Atomic operation</b>A single instruction that can't be interleaved, like a hardware increment or compare-and-swap.</div>
+    <div><b>GIL</b>CPython's global interpreter lock: one thread runs Python bytecode at a time.</div>
+    <div><b>Interrupt</b>A hardware signal that makes the CPU pause and run a kernel handler; asynchronous, unlike a system call.</div>
+    <div><b>Interrupt handler</b>The kernel code that services one device's interrupt, quickly.</div>
+    <div><b>Timer interrupt</b>The periodic interrupt that gives the scheduler control.</div>
+    <div><b>DMA</b>Direct memory access: a device moves data to or from RAM itself and interrupts when done.</div>
+    <div><b>Blocking I/O</b>The calling process sleeps until the operation can complete.</div>
+    <div><b>Non-blocking I/O</b>The call returns immediately with whatever is available, possibly nothing.</div>
+    <div><b>epoll</b>Sleep until any of many sockets is ready; the basis of event-loop servers.</div>
+    <div><b>Socket receive buffer</b>Kernel memory where TCP queues arrived data until the program reads it.</div>
+    <div><b>Signal</b>A message the kernel delivers to a process: TERM asks it to exit, KILL ends it, SEGV is a segfault.</div>
+    <div><b>D state</b>Uninterruptible sleep, almost always waiting on disk; counts toward load.</div>
+    <div><b>RES / RSS</b>Resident set size: the RAM a process is actually using.</div>
+    <div><b>VIRT</b>The size of a process's virtual address space; usually huge and usually irrelevant.</div>
+    <div><b>Page cache</b>Spare RAM the kernel uses to cache file contents; why "free" looks low and "available" is the number to read.</div>
+  </div>
+</section>
+
+<!-- 8 PRACTICE + HOMEWORK -->
+<section class="pane" id="p8">
+  <h2>Practice</h2>
+  <p>Out loud first, then open the answer.</p>
+
+  <details class="reveal"><summary>1. What does the kernel do, in three sentences?</summary><div class="body"><p>It's the one program allowed to touch the hardware, and it shares that hardware among all the others. It gives each process its own memory and its turns on the CPU, moves data to and from devices, and enforces who may do what. Programs reach it only by asking, through system calls.</p></div></details>
+  <details class="reveal"><summary>2. fork, exec, wait: one sentence each, then how a shell uses them.</summary><div class="body"><p>fork clones the process; exec replaces its program; wait collects a finished child. The shell forks, the child execs the command, the shell waits for it to exit.</p></div></details>
+  <details class="reveal"><summary>3. Why does the OS need a timer interrupt?</summary><div class="body"><p>Without it, a running process keeps the CPU until it voluntarily blocks or exits, so one infinite loop freezes the machine. The timer forces control back into the kernel every few milliseconds so the scheduler can preempt.</p></div></details>
+  <details class="reveal"><summary>4. Explain a race condition with the counter example, and name the fix.</summary><div class="body"><p>counter += 1 is load, add, store. Two threads can both load the old value before either stores, so one increment vanishes. Wrap it in a mutex so only one thread runs those three steps at a time, or use an atomic increment.</p></div></details>
+  <details class="reveal"><summary>5. Interrupt versus system call versus page fault.</summary><div class="body"><p>All three enter kernel mode. A system call is the program asking, on purpose. A page fault is the program stumbling into something the kernel has to fix, without asking. An interrupt is a device or the timer forcing its way in, unrelated to what's running.</p></div></details>
+  <details class="reveal"><summary>6. Load average is 16 on a 4-core box and the CPUs are 20 percent busy. Explain.</summary><div class="body"><p>Load counts processes in disk wait too. The CPUs are idle because the processes are all blocked on storage. Expect high wa in top and many D states. It's a disk problem wearing a CPU costume.</p></div></details>
+
+  <h3>Paper problems</h3>
+  <details class="reveal"><summary>a. One core. A needs 5 ticks of CPU, B needs 3, C needs 2, all ready at tick 0. Round robin, slice 2. Draw the schedule and give each completion time.</summary><div class="body"><p>A A B B C C A A B A. C finishes at 6, B at 9, A at 10. Average turnaround (10 + 9 + 6) / 3 = 8.3. First come, first served would be A A A A A B B B C C: A 5, B 8, C 10, average 7.7. FCFS has a better average here, but C waited 8 ticks to run at all; round robin got it done in 6. Check it in the scheduler widget with "Three plain CPU jobs."</p></div></details>
+  <details class="reveal"><summary>b. Two threads each increment a shared counter 5 times, three steps per increment, no lock, and the scheduler alternates strictly one step at a time. Final value?</summary><div class="body"><p>5. Each pair of increments interleaves as load, load, add, add, store, store, so the two stores write the same value and one increment is lost every time. Ten increments, five survive. Check it in the race widget.</p></div></details>
+  <details class="reveal"><summary>c. A loop calls getpid() 1,000 times. How many mode switches? How many context switches?</summary><div class="body"><p>2,000 mode switches (into the kernel and back, each call). Zero context switches: the same process ran the whole time; nothing blocked.</p></div></details>
+  <details class="reveal"><summary>d. Thread 1 locks A then B. Thread 2 locks B then A. Both start at once. What happens, and what's the one-line fix?</summary><div class="body"><p>Thread 1 gets A, thread 2 gets B, then each waits for the other's lock forever: deadlock. Fix: make thread 2 lock A then B too. With a global order, the cycle can't form.</p></div></details>
+  <details class="reveal"><summary>e. A shell runs "sort big.txt &gt; out.txt". List the system calls in order, roughly.</summary><div class="body"><p>fork. In the child: open out.txt, dup2 it onto file descriptor 1, exec sort. sort then: open big.txt, read repeatedly, write repeatedly to fd 1 (which is out.txt), exit. In the parent: wait.</p></div></details>
+  <details class="reveal"><summary>f. top shows a process at 397 percent CPU. How many cores is it using, and is that a problem?</summary><div class="body"><p>About four cores' worth: %CPU is per core, so 400 means four cores fully busy, presumably four threads. It's only a problem if that process isn't supposed to be doing that. Check with top -H to see its threads.</p></div></details>
+
+  <h3>Narration one: what happens when you run ./program (the OS half)</h3>
+  <p>You told the machine half last session. Now the whole thing, from the shell prompt to exit. A complete answer touches all of these.</p>
+  <ul class="rubric">
+    <li>The shell reads the command and calls fork; the child is a copy of the shell.</li>
+    <li>The child calls exec on ./program: the kernel throws away the shell's address space and maps the new binary's code and data.</li>
+    <li>The loader maps shared libraries and sets up the stack; the program counter is set to the entry point.</li>
+    <li>Pages load on demand: the first instruction fetch page-faults the code in.</li>
+    <li>The process runs in user mode; every file, network, or memory request is a system call into the kernel.</li>
+    <li>The timer interrupt lets the scheduler preempt it and run other processes; it keeps running when picked again.</li>
+    <li>If it blocks (reading input, waiting on the network), it sleeps until an interrupt handler wakes it.</li>
+    <li>It calls exit: memory and file descriptors are released; it becomes a zombie until the shell's wait collects the exit status.</li>
+    <li>The shell prints the next prompt.</li>
+    <li>You named which side each step belongs to: hardware, kernel, or user program.</li>
+  </ul>
+
+  <h3>Narration two: a packet arrives</h3>
+  <p>The one that ties both weeks together. Ninety seconds, out loud.</p>
+  <ul class="rubric">
+    <li>The program is blocked in recv on a TCP socket; the scheduler is running something else.</li>
+    <li>The frame arrives; the network card checks the destination MAC and the checksum and keeps it.</li>
+    <li>DMA writes the frame into a kernel buffer in RAM; no CPU involved.</li>
+    <li>The card raises an interrupt; the CPU saves state, enters kernel mode, runs the driver's handler.</li>
+    <li>The Ethernet header says IPv4; the IP header says it's for this host and carries TCP.</li>
+    <li>TCP finds the socket by source and destination address and port, checks the sequence number, queues the data in the receive buffer, and arranges an ACK.</li>
+    <li>The handler marks the blocked process runnable and returns; the interrupted process resumes.</li>
+    <li>The scheduler later switches to our process; the kernel copies the data to the user buffer.</li>
+    <li>recv returns the byte count, back in user mode.</li>
+    <li>You named the layer at every step: hardware, kernel network stack, scheduler, user program.</li>
+  </ul>
+
+  <h2 style="margin-top:44px">Homework</h2>
+  <p>Two to three hours before the next session, plus the daily narrations. Send everything the night before.</p>
+
+  <ul class="hw">
+    <li><input type="checkbox" aria-label="done"><div>
+      <h4>1. Flashcards, ten minutes a day</h4>
+      <p>Keep running the session 1 deck alongside; the two overlap on purpose.</p>
+      <div class="fc" id="fc">
+        <div class="card" id="fc-card" tabindex="0" role="button" aria-label="flashcard"></div>
+        <div class="row"><button class="btn alt" id="fc-prev">Back</button><button class="btn" id="fc-flip">Flip</button><button class="btn alt" id="fc-next">Next</button><span class="muted" id="fc-count"></span><button class="btn alt" id="fc-shuffle">Shuffle</button></div>
+      </div>
+      <details class="reveal" style="margin-top:12px"><summary>Anki import block</summary><div class="body">
+<pre class="cmd"><code>What is the kernel?	The core of the OS; the only code that runs privileged and touches hardware
+User mode versus kernel mode	Restricted mode for programs versus privileged mode for the kernel; a CPU bit enforces it
+What is a system call?	A program's request to the kernel through a trap instruction
+Name six system calls	open, read, write, fork, exec, wait (also close, socket, mmap, exit)
+Is printf a system call?	No, a library function that eventually calls write
+Why buffer I/O?	Each system call costs a mode switch; one big read beats a million tiny ones
+System call versus interrupt	Synchronous and requested versus asynchronous and forced by hardware
+What is a process?	A running program plus its kernel state: address space, PID, registers, open files
+File descriptors 0, 1, 2	stdin, stdout, stderr
+What does fork return?	Child's PID in the parent, 0 in the child
+What does exec do?	Replaces the current program; same PID, files stay open
+How does a shell run a command?	fork, child execs, parent waits
+What is copy-on-write?	fork shares pages until one side writes, then copies that page
+What is a zombie?	An exited process whose parent hasn't called wait; only a PID slot remains
+What is an orphan?	A process whose parent died; adopted by PID 1
+Three process states	Running, ready, blocked
+Running to blocked	The process asked for something slow (I/O, lock, sleep)
+Blocked to ready	The thing arrived, usually via an interrupt handler
+What is preemption?	Taking the CPU from a running process via the timer interrupt
+What is a time slice?	How long a process runs before the scheduler reconsiders; a few ms
+Round robin	Rotate through ready processes giving each one slice
+Short slice trade-off	More responsive, more context-switch overhead
+What is a context switch?	Save one process's registers and page table, load another's
+Why is a context switch expensive?	Cache and TLB pollution more than the direct cost
+Thread switch versus process switch	Thread switch is cheaper: same address space
+What is load average?	Average runnable plus disk-wait processes over 1, 5, 15 minutes
+Load 8 on 4 cores means	Processes queuing two deep for the cores
+What is a thread?	An execution path with its own stack, registers, PC; shares heap and globals with siblings
+What do threads share?	Heap, globals, code, open files
+What do threads not share?	Stack, registers, program counter
+Why use threads?	Parallelism on multicore and overlapping I/O with cheap data sharing
+Why use processes instead?	Isolation: one crash or exploit stays contained
+What is a race condition?	Result depends on timing of uncoordinated accesses to shared data
+Why is counter += 1 not atomic?	It's load, add, store; another thread can run between them
+What is a mutex?	A lock only one thread can hold; others block until release
+What is a critical section?	Code that must not be interleaved with other threads on the same data
+What is deadlock?	Threads each waiting for a lock another holds, in a cycle
+How do you prevent deadlock?	Acquire locks in a fixed global order
+What is the GIL?	CPython's lock: one thread runs Python bytecode at a time
+Do Python threads help CPU-bound code?	No; they help I/O-bound code; use multiprocessing for CPU
+What is an interrupt?	A device signal that makes the CPU run a kernel handler
+What is the timer interrupt for?	Giving the scheduler control back; enables preemption
+What is DMA?	A device writes or reads RAM directly and interrupts when done
+Blocking I/O	The process sleeps until the operation can complete
+What is epoll?	Sleep until any of many sockets is ready; basis of event-loop servers
+Where does TCP put arrived data?	The socket's receive buffer in the kernel
+What wakes a process blocked in recv?	The interrupt handler that delivers data marks it runnable
+top: what is wa?	Time the CPU sat idle while processes waited on I/O
+Process state D	Uninterruptible sleep, almost always disk
+Process state Z	Zombie
+RES versus VIRT	RES is RAM actually used; VIRT is the whole address space size
+free: which column matters?	available, not free
+kill versus kill -9	TERM can be caught and handled; KILL cannot
+What does vmstat si/so show?	Pages swapped in and out per second; nonzero means swapping
+Signature of a disk bottleneck	High load, low CPU use, high wa, D states
+Signature of thrashing	Available memory near zero, swap full, high wa, kswapd busy</code></pre>
+      </div></details>
+      <p class="send"><b>Send:</b> nothing. I quiz you next time.</p>
+    </div></li>
+
+    <li><input type="checkbox" aria-label="done"><div>
+      <h4>2. See the race for real</h4>
+      <p>Python: two threads, each adding 1 to a shared global one million times, no lock. Print the final value. Run it five times. Then add a <code>threading.Lock</code> around the increment and run again. Time both versions. You should see wrong answers without the lock and a slower, correct answer with it.</p>
+      <p><b>Stretch:</b> give each thread its own local counter and add them at the end. Correct and fast. Say in one sentence why.</p>
+      <p class="send"><b>Send:</b> the script and the ten results.</p>
+    </div></li>
+
+    <li><input type="checkbox" aria-label="done"><div>
+      <h4>3. Write the scheduler</h4>
+      <p>Python: implement the round robin simulation from the widget. Input: a list of processes, each a list of alternating CPU and I/O burst lengths, plus a time slice. Output: the tick-by-tick schedule, each process's completion time, and the number of context switches. Reproduce paper problem a exactly. Then add first come, first served and compare.</p>
+      <p class="send"><b>Send:</b> the file and its output for both policies.</p>
+    </div></li>
+
+    <li><input type="checkbox" aria-label="done"><div>
+      <h4>4. Twenty minutes in a shell (optional but recommended)</h4>
+      <p>On any Linux machine, or WSL, or a Mac terminal for most of it: run <code>top</code> and identify load, wa, and available memory. Run <code>ps aux | head</code> and find the state column. Run <code>free -h</code>. Run <code>cat /proc/self/status</code> (Linux only) and find the state and memory lines. Nothing to build, just look.</p>
+      <p class="send"><b>Send:</b> one screenshot of top with the load average and the CPU line circled.</p>
+    </div></li>
+
+    <li><input type="checkbox" aria-label="done"><div>
+      <h4>5. Both narrations, daily</h4>
+      <p>Once a day, out loud, no notes: "run ./program" (both halves now, machine and OS) in two minutes, and "a packet arrives" in ninety seconds. Record both at the end of the week.</p>
+      <p class="send"><b>Send:</b> the two recordings.</p>
+    </div></li>
+  </ul>
+
+  <details class="tutor">
+    <summary>Tutor notes (for me)</summary>
+    <div class="body">
+      <p><b>Pacing for 90 minutes.</b> Start 5, Kernel 12, Processes 15, Scheduling 18, Threads 18, Interrupts 12, Linux 10. If she has taken an OS course, run each tab as widget plus interview questions, about 8 minutes each, and spend the saved time on the two narrations at the end. If she hasn't, protect Processes and Threads and compress Linux to the playbook list.</p>
+      <p><b>What "good" looks like.</b> She says "fork then exec" without prompting and knows why they're separate. She distinguishes mode switch from context switch. She can name the exact interleaving that loses an increment. She says "lock ordering" for deadlock. She tells the packet story with the layers named and ends at the scheduler.</p>
+      <p><b>The usual confusions.</b> Threads share stacks (they don't). fork creates a thread (no, a process). A system call is an interrupt (related mechanism, different cause). Zombies use resources (only a PID). kill -9 first (TERM first). Load average is CPU percentage (it's queue length). Blocking means the CPU is stuck (the CPU moves on; the process sleeps).</p>
+      <p><b>Widget answers.</b> Scheduler, "Three plain CPU jobs," round robin slice 2: A A B B C C A A B A, completions C 6, B 9, A 10, 5 context switches. FCFS: A 5, B 8, C 10, 2 switches. The mixed workload with round robin and slice 2 finishes at tick 15 with 7 switches; B's two I/O waits show as ticks 3 to 5 and 10 to 12. Race, four increments each, strict alternation, no lock: final 4 (four lost). Whole increments or mutex: 8. Deadlock mode with opposite order: stops after four steps with both waiting. Same order: completes.</p>
+      <p><b>Python checks.</b> Race demo: unlocked results typically between 1.2 and 1.9 million, varying per run; locked gives 2,000,000 and takes noticeably longer. If her unlocked run gives exactly 2,000,000 every time, have her increase the count or add a tiny sleep inside the loop; on some CPython versions the switch interval hides it. Scheduler: must reproduce A A B B C C A A B A.</p>
+      <p><b>If both sessions land in one sitting.</b> Do systems 1 tabs 1, 3, 4, 5 and systems 2 tabs 1, 2, 3, 4, then the two narrations. Skip pipelining, page faults detail, interrupts detail, and Linux tools; assign them as reading with the flashcards.</p>
+    </div>
+  </details>
+</section>
+
+</main>
+
+<script>
+(function(){
+'use strict';
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* tabs */
+const panes = [...document.querySelectorAll('.pane')];
+const tabs = [...document.querySelectorAll('#tabs button')];
+function show(id, push){
+  panes.forEach(p => p.classList.toggle('active', p.id === id));
+  tabs.forEach(t => t.setAttribute('aria-selected', t.dataset.p === id ? 'true' : 'false'));
+  if(push !== false) history.replaceState(null, '', '#' + id);
+  window.scrollTo({top:0});
+}
+tabs.forEach(t => t.addEventListener('click', () => show(t.dataset.p)));
+panes.forEach((p, i) => {
+  const nav = document.createElement('div'); nav.className = 'pane-nav';
+  if(i > 0){ const b = document.createElement('button'); b.textContent = 'Back: ' + tabs[i-1].textContent; b.onclick = () => show(panes[i-1].id); nav.appendChild(b); }
+  const sp = document.createElement('div'); sp.className = 'sp'; nav.appendChild(sp);
+  if(i < panes.length-1){ const b = document.createElement('button'); b.textContent = 'Next: ' + tabs[i+1].textContent; b.onclick = () => show(panes[i+1].id); nav.appendChild(b); }
+  p.appendChild(nav);
+});
+const h0 = location.hash.slice(1);
+show(panes.some(p => p.id === h0) ? h0 : 'p0', false);
+
+/* copy buttons */
+document.querySelectorAll('pre.cmd').forEach(pre => {
+  const b = document.createElement('button'); b.className = 'copy'; b.type = 'button'; b.textContent = 'Copy';
+  b.addEventListener('click', () => navigator.clipboard.writeText(pre.querySelector('code').textContent).then(() => { b.textContent = 'Copied'; setTimeout(() => b.textContent = 'Copy', 1200); }));
+  pre.appendChild(b);
+});
+
+/* quick checks */
+document.querySelectorAll('.check').forEach(ch => {
+  const ans = ch.dataset.answer, fb = ch.querySelector('.fb'), opts = [...ch.querySelectorAll('.opts button')];
+  opts.forEach(b => b.addEventListener('click', () => {
+    if(ch.dataset.done) return;
+    if(b.dataset.k === ans){ b.classList.add('ok'); ch.dataset.done = '1'; opts.forEach(o => o.disabled = true); fb.innerHTML = '<span class="v ok">Yes.</span>' + esc(fb.dataset.explain); }
+    else { b.classList.add('no'); b.disabled = true; fb.innerHTML = '<span class="v no">Not that one.</span> Try another.'; }
+    fb.classList.add('show');
+  }));
+});
+
+/* story helper */
+function makeStory(o){
+  let steps = o.steps(), i = 0;
+  function render(){
+    const st = steps[i];
+    o.text.innerHTML = st.text;
+    o.dots.innerHTML = steps.map((_, k) => `<span class="${k < i ? 'done' : k === i ? 'on' : ''}"></span>`).join('');
+    o.prev.disabled = i === 0; o.next.disabled = i === steps.length - 1;
+    o.onStep(i, st, steps);
+  }
+  o.next.addEventListener('click', () => { if(i < steps.length-1){ i++; render(); } });
+  o.prev.addEventListener('click', () => { if(i > 0){ i--; render(); } });
+  o.reset.addEventListener('click', () => { i = 0; render(); });
+  render();
+  return { reload(){ steps = o.steps(); i = 0; render(); } };
+}
+
+/* ---------- system call stepper ---------- */
+(function(){
+  const LANES = [['user','Our process, user mode'],['kern','Kernel'],['other','Another process'],['hw','Hardware']];
+  const S = (lane, text, bit, state, ms, cs) => ({lane, text, bit, state, ms:ms||0, cs:cs||0});
+  const SCN = {
+    add: [S('user','The program executes <b>ADD R1, R2, R3</b>. An ordinary instruction: user mode, no kernel, no permission needed. About a third of a nanosecond. Most of what a program does looks like this.','user','running')],
+    getpid: [
+      S('user','The program calls <b>getpid()</b>. That is a C library function: still your code, still user mode.','user','running'),
+      S('user','The library puts the system call number for getpid in a register and executes the <b>trap</b> instruction (called <span class="mono">syscall</span> on x86-64).','user','running'),
+      S('kern','<b>Trap.</b> The CPU flips the mode bit to kernel, saves the user registers, and jumps to the kernel\'s system call entry point. Mode switch one.','kern','running',1),
+      S('kern','The kernel reads the call number, dispatches to the getpid handler, and copies the PID out of the process table into the return register. A few dozen instructions of actual work.','kern','running'),
+      S('user','<b>Return.</b> Registers restored, mode bit back to user, execution resumes after the trap. Mode switch two. Total: 100 to 300 nanoseconds, hundreds of ADDs\' worth, to fetch one number.','user','running',1)
+    ],
+    file: [
+      S('user','The program calls <b>read(fd, buf, 4096)</b> on a file it opened earlier.','user','running'),
+      S('user','The library wrapper loads the call number and the three arguments into registers and executes the trap.','user','running'),
+      S('kern','<b>Kernel mode.</b> The kernel checks that fd is one of this process\'s open files and that buf points into this process\'s own memory. It must never write into someone else\'s pages.','kern','running',1),
+      S('kern','The file\'s data is already in the kernel\'s <b>page cache</b> in RAM, because it was read recently. The kernel copies 4,096 bytes from the cache into buf. No disk involved.','kern','running'),
+      S('user','<b>Return</b> to user mode with 4096 as the result. Two mode switches, about a microsecond. If the data had not been cached, this would have blocked on the disk, which is exactly the socket case.','user','running',1)
+    ],
+    socket: [
+      S('user','The program calls <b>recv(sock, buf, 4096)</b> on a TCP socket.','user','running'),
+      S('user','Trap into the kernel.','user','running'),
+      S('kern','<b>Kernel mode.</b> The kernel looks at the socket\'s receive buffer. Empty. There is nothing to return yet.','kern','running',1),
+      S('kern','Rather than spin, the kernel marks our process <b>blocked</b>, saves its full context, and calls the scheduler.','kern','blocked'),
+      S('other','<b>Context switch.</b> The scheduler picks another ready process and switches to it. Our process is not on the CPU at all now, and will not be until something wakes it.','other','blocked',0,1),
+      S('hw','Time passes. Microseconds, or seconds. A packet for our socket arrives at the network card. The card DMA-writes it into RAM and raises an <b>interrupt</b>.','other','blocked'),
+      S('kern','<b>Interrupt handler</b>, kernel mode. The network stack opens the Ethernet, IP, and TCP headers, finds our socket, queues the bytes in its receive buffer, and marks our process <b>runnable</b>. Then the interrupted process resumes.','kern','ready'),
+      S('kern','Later the scheduler picks our process. <b>Context switch</b> back to it, in kernel mode, exactly where it went to sleep inside recv.','kern','running',0,1),
+      S('kern','The kernel copies the bytes from the socket buffer into buf.','kern','running'),
+      S('user','<b>Return</b> to user mode. recv() returns the byte count. From the program\'s point of view: one function call that took a while.','user','running',1)
+    ]
+  };
+  const BIT = {user:['user','user'], kern:['kern','kernel'], other:['off','user (another process)']};
+  const story = makeStory({
+    text:$('sc-text'), dots:$('sc-dots'), prev:$('sc-prev'), next:$('sc-next'), reset:$('sc-reset'),
+    steps: () => SCN[$('sc-scn').value],
+    onStep(i, st, steps){
+      $('sc-lanes').innerHTML = LANES.map(([k, lab]) => `<div class="lane-lab">${lab}</div><div class="lane ${k === 'kern' ? 'kern' : k === 'hw' ? 'hw' : ''}">` + steps.map((s, n) => s.lane === k ? `<span class="mk ${n === i ? 'on' : n < i ? 'past' : ''}">${n+1}</span>` : '').join('') + '</div>').join('');
+      const b = BIT[st.bit]; const bitEl = $('sc-bit'); bitEl.className = 'bit ' + b[0]; bitEl.textContent = b[1];
+      $('sc-state').textContent = st.state;
+      $('sc-ms').textContent = steps.slice(0, i+1).reduce((a, s) => a + s.ms, 0);
+      $('sc-cs').textContent = steps.slice(0, i+1).reduce((a, s) => a + s.cs, 0);
+    }
+  });
+  $('sc-scn').addEventListener('change', () => story.reload());
+})();
+
+/* ---------- process table ---------- */
+(function(){
+  let procs, next, sel, play, playStep;
+  const txt = $('pl-text'), tab = $('pl-table');
+  const find = pid => procs.find(p => p.pid === pid);
+  const kids = pid => procs.filter(p => p.ppid === pid);
+  function reset(){ procs = [{pid:1, ppid:0, name:'systemd', state:'S'}, {pid:100, ppid:1, name:'bash', state:'S'}]; next = 101; sel = 100; play = null; playStep = 0; $('pl-play').textContent = 'Play: shell runs ls'; txt.innerHTML = 'Two processes: <b>systemd</b>, PID 1, the ancestor of everything, and your shell, <b>bash</b>, PID 100, sleeping while it waits for you to type. bash is selected.'; render(); }
+  function render(){
+    const rows = []; const walk = (pid, depth) => { const p = find(pid); if(!p) return; rows.push([p, depth]); kids(pid).sort((a, b) => a.pid - b.pid).forEach(c => walk(c.pid, depth+1)); }; walk(1, 0);
+    tab.innerHTML = '<tr><th>PID</th><th>PPID</th><th>COMMAND</th><th>STAT</th></tr>' + rows.map(([p, d]) => `<tr class="${p.pid === sel ? 'sel' : ''}" data-pid="${p.pid}"><td>${p.pid}</td><td>${p.ppid}</td><td>${'&nbsp;&nbsp;'.repeat(d)}${d ? '\\_ ' : ''}${esc(p.name)}${p.waiting ? ' <span class="muted">(blocked in wait)</span>' : ''}</td><td class="${p.state}">${p.state}${p.state === 'Z' ? ' zombie' : ''}</td></tr>`).join('');
+  }
+  tab.addEventListener('click', e => { const tr = e.target.closest('tr[data-pid]'); if(!tr) return; sel = +tr.dataset.pid; render(); const p = find(sel); txt.innerHTML = `Selected PID ${p.pid} (${esc(p.name)}), child of PID ${p.ppid}.`; });
+  function doFork(){ const p = find(sel); if(!p || p.state === 'Z'){ txt.innerHTML = 'A zombie cannot fork. It has already exited.'; return; }
+    const c = {pid:next++, ppid:p.pid, name:p.name.replace(/ \(copy\)$/, '') + ' (copy)', state:'R'}; procs.push(c); sel = c.pid;
+    txt.innerHTML = `<b>fork()</b> in PID ${p.pid}. The kernel copies the process: PID <b>${c.pid}</b> is born as an almost exact copy. Same code, same data (shared copy-on-write until someone writes), same open files, same program counter, one line after fork. fork returned ${c.pid} in the parent and 0 in the child, so each side knows which one it is. The child is selected.`; render(); }
+  function doExec(){ const p = find(sel); if(!p || p.state === 'Z'){ txt.innerHTML = 'Nothing to exec: a zombie has no program left.'; return; } if(p.pid === 1){ txt.innerHTML = 'Leave PID 1 alone. If it exec\'d something else, there would be no init process.'; return; }
+    const prog = $('pl-prog').value; const old = p.name; p.name = prog; p.state = 'R';
+    txt.innerHTML = `<b>exec()</b> in PID ${p.pid}. The address space of ${esc(old)} is thrown away and rebuilt from the <b>${esc(prog)}</b> binary: new code, new data, fresh stack. The PID stays ${p.pid}. Its open files stay open, which is how redirection works. The old program is gone and never returns from exec.`; render(); }
+  function endProcess(p, how){
+    const orphans = kids(p.pid); orphans.forEach(c => c.ppid = 1);
+    const orphanNote = orphans.length ? ` Its ${orphans.length === 1 ? 'child' : 'children'} ${orphans.map(c => c.pid).join(', ')} ${orphans.length === 1 ? 'is' : 'are'} now <b>orphans</b>: the kernel reparents them to PID 1, which will collect them when they exit.` : '';
+    const parent = find(p.ppid);
+    if(!parent || parent.pid === 1){ procs = procs.filter(x => x.pid !== p.pid); sel = 1; txt.innerHTML = `${how} PID ${p.pid} releases its memory and files. Its parent is PID 1, which is always waiting, so the exit status is collected immediately and the table entry is freed.${orphanNote}`; }
+    else if(parent.waiting){ procs = procs.filter(x => x.pid !== p.pid); parent.waiting = false; parent.state = 'R'; sel = parent.pid; txt.innerHTML = `${how} PID ${p.pid} releases its memory and files. Its parent, PID ${parent.pid}, was blocked in wait(), so it wakes up with the exit status and the entry is freed right away. No zombie.${orphanNote}`; }
+    else { p.state = 'Z'; p.name = p.name.replace(/ \(copy\)$/, ''); sel = parent.pid; txt.innerHTML = `${how} PID ${p.pid} releases its memory and open files. But its parent, PID ${parent.pid}, hasn't called wait(), so the table entry stays behind holding the exit status: a <b>zombie</b>. It uses no CPU and no memory, only a PID. kill can't touch it; it's already dead. The parent is selected: try wait().${orphanNote}`; }
+    render(); }
+  function doExit(){ const p = find(sel); if(!p){ return; } if(p.pid === 1){ txt.innerHTML = 'If PID 1 exits, the kernel panics. Not today.'; return; } if(p.state === 'Z'){ txt.innerHTML = 'Already exited. Select its parent and call wait().'; return; } endProcess(p, `<b>exit(0)</b>.`); }
+  function doKill(){ const p = find(sel); if(!p){ return; } if(p.pid === 1){ txt.innerHTML = 'PID 1 ignores SIGKILL. The kernel won\'t deliver it.'; return; } if(p.state === 'Z'){ txt.innerHTML = 'kill -9 on a zombie does nothing. It is already dead; only the parent\'s wait() can remove the entry.'; return; } endProcess(p, `<b>kill -TERM ${p.pid}</b>: the kernel delivers the signal and the process exits.`); }
+  function doWait(){ const p = find(sel); if(!p || p.state === 'Z'){ txt.innerHTML = 'A zombie can\'t call wait().'; return; }
+    const ch = kids(p.pid); if(!ch.length){ txt.innerHTML = `<b>wait()</b> in PID ${p.pid}: it has no children, so wait returns an error immediately (ECHILD).`; return; }
+    const z = ch.find(c => c.state === 'Z');
+    if(z){ procs = procs.filter(x => x.pid !== z.pid); p.state = 'R'; txt.innerHTML = `<b>wait()</b> in PID ${p.pid}: child ${z.pid} had already exited, so wait returns at once with its exit status (0). The zombie entry is freed and PID ${z.pid} can be reused.`; }
+    else { p.waiting = true; p.state = 'S'; txt.innerHTML = `<b>wait()</b> in PID ${p.pid}: no child has finished yet. PID ${p.pid} blocks (sleeps) until one does. Select a child and call exit() to see it wake.`; }
+    render(); }
+  function doPlay(){
+    if(play === null){ reset(); play = ['fork','exec','wait','exit']; playStep = 0; }
+    const step = play[playStep];
+    if(step === 'fork'){ sel = 100; doFork(); txt.innerHTML = '<b>Step 1 of 4.</b> ' + txt.innerHTML; }
+    if(step === 'exec'){ $('pl-prog').value = 'ls'; doExec(); txt.innerHTML = '<b>Step 2 of 4.</b> ' + txt.innerHTML; }
+    if(step === 'wait'){ sel = 100; doWait(); txt.innerHTML = '<b>Step 3 of 4.</b> ' + txt.innerHTML; }
+    if(step === 'exit'){ sel = procs.find(p => p.name === 'ls') ? procs.find(p => p.name === 'ls').pid : sel; doExit(); txt.innerHTML = '<b>Step 4 of 4.</b> ' + txt.innerHTML + ' bash prints the next prompt. That is every command you have ever typed.'; }
+    playStep++;
+    if(playStep >= play.length){ play = null; $('pl-play').textContent = 'Play: shell runs ls'; } else $('pl-play').textContent = `Play: next step (${playStep+1} of 4)`;
+  }
+  $('pl-fork').addEventListener('click', doFork); $('pl-exec').addEventListener('click', doExec); $('pl-exit').addEventListener('click', doExit); $('pl-wait').addEventListener('click', doWait); $('pl-kill').addEventListener('click', doKill); $('pl-play').addEventListener('click', doPlay); $('pl-reset').addEventListener('click', reset);
+  reset();
+})();
+
+/* ---------- scheduler ---------- */
+(function(){
+  const SCN = {mix:{A:[8], B:[1,3,1,3,1], C:[4]}, equal:{A:[5], B:[3], C:[2]}, io:{A:[2,4,2], B:[2,4,2], C:[6]}};
+  const DESC = {mix:'A is a CPU hog (8 ticks). B is interactive: 1 tick of CPU, 3 ticks waiting for input, three times. C is a medium job (4 ticks).', equal:'Three CPU-only jobs: A needs 5, B needs 3, C needs 2. Paper problem a.', io:'A and B each compute 2, wait 4 on I/O, compute 2 more. C is a hog (6).'};
+  let P, rq, running, lastRun, qUsed, t, cs, idle, timer = null, done;
+  function reset(){ if(timer){ clearInterval(timer); timer = null; } const s = SCN[$('sch-scn').value];
+    P = Object.entries(s).map(([id, bursts]) => ({id, bursts, bi:0, rem:bursts[0], state:'ready', fin:null, hist:[]})); rq = P.map(p => p.id); running = null; lastRun = null; qUsed = 0; t = 0; cs = 0; idle = 0; done = false;
+    $('sch-text').innerHTML = DESC[$('sch-scn').value] + ' All three are ready at tick 0, in the order A, B, C. Press Next tick.'; render(); }
+  function tick(){
+    if(done) return;
+    const pol = $('sch-pol').value, q = +$('sch-q').value; const notes = []; const blockedNow = new Set();
+    if(running === null){
+      if(rq.length){ const id = rq.shift(); running = id; qUsed = 0; const p = P.find(x => x.id === id); p.state = 'running'; if(lastRun !== null && lastRun !== id) cs++; notes.push(`Dispatch: <b>${id}</b> gets the core${lastRun !== null && lastRun !== id ? ` (context switch ${cs})` : ''}.`); lastRun = id; }
+      else { idle++; notes.push('Nobody is ready: the core idles while everyone waits for I/O.'); }
+    } else notes.push(`<b>${running}</b> keeps the core.`);
+    P.forEach(p => { if(p.state === 'running') p.hist[t] = 'run'; else if(p.state === 'blocked') p.hist[t] = 'io'; else if(p.state === 'ready') p.hist[t] = 'rdy'; else p.hist[t] = ''; });
+    if(running !== null){ const p = P.find(x => x.id === running); p.rem--; qUsed++; }
+    // I/O progress for processes that were blocked before this tick
+    P.forEach(p => { if(p.state === 'blocked' && !blockedNow.has(p.id)){ p.rem--; if(p.rem === 0){ p.bi++; p.rem = p.bursts[p.bi]; p.state = 'ready'; rq.push(p.id); notes.push(`${p.id}'s I/O finished; it's back in the ready queue.`); } } });
+    if(running !== null){ const p = P.find(x => x.id === running);
+      if(p.rem === 0){ p.bi++; if(p.bi >= p.bursts.length){ p.state = 'done'; p.fin = t+1; notes.push(`<b>${p.id} finishes</b> at tick ${t+1}.`); } else { p.state = 'blocked'; p.rem = p.bursts[p.bi]; blockedNow.add(p.id); notes.push(`${p.id} asks for I/O (${p.rem} ticks) and blocks. It leaves the core voluntarily.`); } running = null; qUsed = 0; }
+      else if(pol === 'rr' && qUsed >= q){ if(rq.length){ p.state = 'ready'; rq.push(p.id); running = null; notes.push(`${p.id}'s slice of ${q} is up: the timer interrupt fires and it's <b>preempted</b> to the back of the queue.`); } else { notes.push(`${p.id}'s slice is up, but nobody else is ready, so it gets a fresh slice.`); } qUsed = 0; }
+    }
+    t++;
+    if(P.every(p => p.state === 'done')){ done = true; const avg = (P.reduce((a, p) => a + p.fin, 0) / P.length).toFixed(1); notes.push(`<br><b>All done at tick ${t}.</b> Completion: ${P.map(p => p.id + ' ' + p.fin).join(', ')}. Average turnaround ${avg}. ${cs} context switches, ${idle} idle tick${idle === 1 ? '' : 's'}.`); }
+    $('sch-text').innerHTML = `<b>Tick ${t-1}.</b> ` + notes.join(' '); render();
+  }
+  function render(){
+    $('sch-procs').innerHTML = P.map(p => `<div class="proc p${p.id}"><b>${p.id}</b> <span class="st ${p.state}">${p.state}</span>${p.fin !== null ? ` at ${p.fin}` : p.state === 'blocked' ? `, ${p.rem} I/O tick${p.rem === 1 ? '' : 's'} left` : p.state !== 'done' ? `, ${p.rem} CPU tick${p.rem === 1 ? '' : 's'} left in this burst` : ''}<div class="bursts">bursts: ${p.bursts.map((b, k) => (k % 2 ? 'io ' : 'cpu ') + b).join(', ')}</div></div>`).join('');
+    const T = Math.max(t, 1);
+    $('sch-gantt').innerHTML = P.map(p => `<div><b>${p.id}</b></div><div class="row">` + Array.from({length:T}, (_, k) => { const h = p.hist[k] || (k >= t ? '' : ''); const cls = h === 'run' ? 'run p' + p.id : h === 'io' ? 'io' : h === 'rdy' ? 'rdy' : (p.fin !== null && k >= p.fin ? 'ok' : ''); return `<div class="cell ${cls} ${k === t-1 ? 'cur' : ''}">${h === 'run' ? p.id : h === 'io' ? 'io' : h === 'rdy' ? '' : (p.fin !== null && k >= p.fin ? 'done' : '')}</div>`; }).join('') + '</div>').join('');
+    $('sch-t').textContent = t; $('sch-cs').textContent = cs; $('sch-idle').textContent = idle; $('sch-rq').textContent = rq.length ? rq.join(' ') : (running ? 'empty' : '-');
+    $('sch-step').disabled = done; $('sch-run').disabled = done;
+  }
+  $('sch-step').addEventListener('click', tick);
+  $('sch-run').addEventListener('click', () => { if(timer) return; timer = setInterval(() => { tick(); if(done){ clearInterval(timer); timer = null; } }, 300); });
+  $('sch-reset').addEventListener('click', reset);
+  ['sch-scn','sch-pol','sch-q'].forEach(id => $(id).addEventListener('change', reset));
+  reset();
+})();
+
+/* ---------- race and deadlock ---------- */
+(function(){
+  const N = 4;
+  let mode, T, counter, lock, locks, step, lost, over, turn, timer = null, seed;
+  const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+  const txt = $('rc-text');
+  function build(){
+    mode = $('rc-mode').value; const dead = mode === 'dead';
+    $('rc-schedwrap').style.display = dead ? 'none' : ''; $('rc-lockwrap').style.display = dead ? 'none' : ''; $('rc-orderwrap').style.display = dead ? '' : 'none';
+    if(!dead){ const useLock = $('rc-lock').value === 'mutex'; const inc = useLock ? ['LOCK','LOAD','ADD','STORE','UNLOCK'] : ['LOAD','ADD','STORE'];
+      T = [1,2].map(n => ({n, ops:[].concat(...Array.from({length:N}, () => inc)), i:0, reg:null, per:inc.length}));
+      counter = 0; lock = null; }
+    else { const good = $('rc-order').value === 'good';
+      T = [{n:1, ops:['LOCK L1','LOCK L2','WORK','UNLOCK L2','UNLOCK L1'], i:0}, {n:2, ops: good ? ['LOCK L1','LOCK L2','WORK','UNLOCK L2','UNLOCK L1'] : ['LOCK L2','LOCK L1','WORK','UNLOCK L1','UNLOCK L2'], i:0}];
+      locks = {L1:null, L2:null}; }
+    step = 0; lost = 0; over = false; turn = 0; seed = 7; if(timer){ clearInterval(timer); timer = null; }
+    txt.innerHTML = dead ? 'Two threads, two locks. Thread 1 takes L1 then L2. Thread 2 takes ' + ($('rc-order').value === 'good' ? 'L1 then L2 as well.' : 'L2 then L1, the opposite order.') + ' Press Next step and alternate them.' : `Each thread will increment the shared counter ${N} times. Correct final value: <b>${2*N}</b>. Press Next step.`;
+    render();
+  }
+  const finished = t => t.i >= t.ops.length;
+  function blockedOn(t){ const op = t.ops[t.i]; if(!op) return null; if(mode === 'dead'){ if(op.startsWith('LOCK')){ const L = op.split(' ')[1]; if(locks[L] !== null && locks[L] !== t.n) return L; } return null; } if(op === 'LOCK' && lock !== null && lock !== t.n) return 'lock'; return null; }
+  function pick(){
+    const alive = T.filter(t => !finished(t)); if(!alive.length) return null;
+    let cand;
+    if(mode === 'dead' || $('rc-sched').value === 'alt'){ cand = T[turn % 2]; if(finished(cand)) cand = alive[0]; turn++; }
+    else if($('rc-sched').value === 'whole'){ cand = T[turn % 2]; if(finished(cand)) cand = alive[0]; if((cand.i + 1) % cand.per === 0) turn++; }
+    else { cand = alive[Math.floor(rnd() * alive.length)]; }
+    return cand;
+  }
+  function doStep(){
+    if(over) return;
+    let t = pick(); if(!t){ finish(); return; }
+    let note = '';
+    if(blockedOn(t)){ const other = T.find(x => x !== t); if(!finished(other) && !blockedOn(other)){ note = `Thread ${t.n} wants ${mode === 'dead' ? blockedOn(t) : 'the lock'} but thread ${other.n} holds it, so thread ${t.n} <b>blocks</b> and the scheduler runs thread ${other.n} instead. `; t = other; if($('rc-sched').value === 'alt' || mode === 'dead') turn = (t.n === 1 ? 1 : 0) + 1; }
+      else { over = true; step++; txt.innerHTML = `<b>Deadlock.</b> Thread 1 holds L1 and is waiting for L2. Thread 2 holds L2 and is waiting for L1. Neither will ever release what the other needs. Both are blocked forever, using no CPU. The program has hung. Switch the lock order and replay.`; render(true); return; } }
+    const op = t.ops[t.i]; step++;
+    if(mode === 'dead'){
+      const L = op.split(' ')[1];
+      if(op.startsWith('LOCK')){ locks[L] = t.n; note += `Thread ${t.n} takes <b>${L}</b>.`; }
+      else if(op.startsWith('UNLOCK')){ locks[L] = null; note += `Thread ${t.n} releases ${L}.`; }
+      else note += `Thread ${t.n} does its work while holding both locks.`;
+    } else {
+      if(op === 'LOCK'){ lock = t.n; note += `Thread ${t.n} takes the lock.`; }
+      else if(op === 'UNLOCK'){ lock = null; note += `Thread ${t.n} releases the lock.`; }
+      else if(op === 'LOAD'){ t.reg = counter; note += `Thread ${t.n} <b>loads</b> counter (${counter}) into its register.`; }
+      else if(op === 'ADD'){ t.reg += 1; note += `Thread ${t.n} <b>adds</b> one in its register: ${t.reg}.`; }
+      else if(op === 'STORE'){ const before = counter; counter = t.reg; if(before >= t.reg){ lost++; note += `Thread ${t.n} <b>stores</b> ${t.reg}. But counter was already ${before}: this store throws away work the other thread did. <b>Lost update.</b>`; } else note += `Thread ${t.n} <b>stores</b> ${t.reg} into counter.`; t.reg = null; }
+    }
+    t.i++;
+    txt.innerHTML = `<b>Step ${step}.</b> ${note}`;
+    if(T.every(finished)) finish(); else render();
+  }
+  function finish(){ over = true;
+    if(mode === 'dead') txt.innerHTML += ` <br><br><b>Done.</b> Both threads finished. With a consistent lock order, one thread simply waits for the other; no cycle, no deadlock.`;
+    else txt.innerHTML += ` <br><br><b>Done.</b> Final counter <b>${counter}</b>, correct value ${2*N}. ${lost ? `<span class="bad">${lost} increment${lost > 1 ? 's' : ''} lost.</span> Every lost one came from two loads happening before either store.` : 'Nothing lost: no two increments ever overlapped.'}`;
+    render(true); }
+  function render(end){
+    const dead = mode === 'dead';
+    $('rc-shared').innerHTML = dead ? `<span>L1 held by: <b>${locks.L1 ? 'thread ' + locks.L1 : 'nobody'}</b></span><span>L2 held by: <b>${locks.L2 ? 'thread ' + locks.L2 : 'nobody'}</b></span><span>Steps: <b>${step}</b></span>`
+      : `<span>counter = <b class="${end && counter < 2*N ? 'bad' : ''}">${counter}</b></span><span>lock held by: <b>${lock ? 'thread ' + lock : 'nobody'}</b></span><span>lost updates: <b class="${lost ? 'bad' : ''}">${lost}</b></span><span>Steps: <b>${step}</b></span>`;
+    $('rc-threads').innerHTML = T.map(t => `<div class="thr"><h5>Thread ${t.n}${finished(t) ? ' (finished)' : ''}</h5><div class="ops">${t.ops.map((op, k) => `<div class="op ${k < t.i ? 'done' : k === t.i ? (blockedOn(t) ? 'wait' : 'cur') : ''}">${k+1}. ${op}${k === t.i && blockedOn(t) ? ' (waiting)' : ''}</div>`).join('')}</div>${!dead ? `<div class="regv">register: ${t.reg === null ? 'empty' : t.reg}</div>` : ''}</div>`).join('');
+    $('rc-step').disabled = over; $('rc-run').disabled = over;
+  }
+  $('rc-step').addEventListener('click', doStep);
+  $('rc-run').addEventListener('click', () => { if(timer) return; timer = setInterval(() => { doStep(); if(over){ clearInterval(timer); timer = null; } }, 260); });
+  $('rc-reset').addEventListener('click', build);
+  ['rc-mode','rc-sched','rc-lock','rc-order'].forEach(id => $(id).addEventListener('change', build));
+  build();
+})();
+
+/* ---------- a packet arrives ---------- */
+(function(){
+  const LANES = [['hw','Hardware'],['kern','Kernel'],['user','Our process'],['other','Another process']];
+  const NAMES = {eth:'Ethernet envelope', ip:'IP envelope', tcp:'TCP envelope', letter:'the data'};
+  const S = (lane, text, state, bit, copies, stack) => ({lane, text, state, bit, copies, stack});
+  const FULL = [['eth'],['ip'],['tcp'],['letter']];
+  const STEPS = [
+    S('other','Our program called <b>recv()</b> a while ago. The socket was empty, so the kernel put the process to sleep. Right now the CPU is running <b>another process</b>, in user mode. Our process is not running anywhere.','blocked','user (another process)',0,[]),
+    S('hw','A frame arrives on the wire. The network card reads the destination MAC: mine. Checks the frame checksum: fine. It keeps the frame. No software has seen it yet.','blocked','user (another process)',0,FULL),
+    S('hw','The card <b>DMA-writes</b> the whole frame into a ring buffer in RAM that the driver set up earlier. The CPU is not involved. It is still running the other process.','blocked','user (another process)',1,FULL),
+    S('hw','The card raises an <b>interrupt</b>.','blocked','user (another process)',1,FULL),
+    S('kern','The CPU finishes its current instruction, saves the other process\'s state, flips to <b>kernel mode</b>, and jumps to the network driver\'s interrupt handler.','blocked','kernel (interrupt handler)',1,FULL),
+    S('kern','The driver hands the frame to the network stack. <b>Ethernet header</b>: EtherType says IPv4. Opened and stripped.','blocked','kernel (interrupt handler)',1,[['eth','off'],['ip'],['tcp'],['letter']]),
+    S('kern','<b>IP header</b>: destination address is this host, protocol says TCP. Opened.','blocked','kernel (interrupt handler)',1,[['eth','off'],['ip','off'],['tcp'],['letter']]),
+    S('kern','<b>TCP</b>: find the socket by the four values, source IP, source port, destination IP, destination port. Check that the sequence number is the one expected next. Queue the bytes in the socket\'s <b>receive buffer</b> (a pointer is handed over; nothing is copied). Arrange an ACK back to the sender.','blocked','kernel (interrupt handler)',1,[['eth','off'],['ip','off'],['tcp','off'],['letter']]),
+    S('kern','The socket now has data and a process is sleeping on it, so the handler marks our process <b>runnable</b>. The handler ends; the CPU restores the other process and returns to it. That process never knew it was interrupted.','ready','user (another process)',1,[['letter']]),
+    S('kern','Later, the timer interrupt fires and the scheduler runs. It picks our process. <b>Context switch</b>: save the other process, load ours, switch page tables. We wake up inside recv, in kernel mode, exactly where we went to sleep.','running','kernel (our process)',1,[['letter']]),
+    S('kern','The kernel <b>copies</b> the bytes from the socket buffer into the buffer the program passed to recv. Second copy of the data.','running','kernel (our process)',2,[['letter']]),
+    S('user','<b>Return to user mode.</b> recv() returns the number of bytes. The program reads its variable and carries on. Two weeks of material, one function call.','running','user (our process)',2,[['letter']])
+  ];
+  makeStory({
+    text:$('pk-text'), dots:$('pk-dots'), prev:$('pk-prev'), next:$('pk-next'), reset:$('pk-reset'),
+    steps: () => STEPS,
+    onStep(i, st, steps){
+      $('pk-lanes').innerHTML = LANES.map(([k, lab]) => `<div class="lane-lab">${lab}</div><div class="lane ${k === 'kern' ? 'kern' : k === 'hw' ? 'hw' : ''}">` + steps.map((s, n) => s.lane === k ? `<span class="mk ${n === i ? 'on' : n < i ? 'past' : ''}">${n+1}</span>` : '').join('') + '</div>').join('');
+      $('pk-stack').innerHTML = st.stack.length ? st.stack.map(([k, mod]) => `<span class="tchip ${k} ${mod || ''}">${NAMES[k]}</span>`).join('') : '<span class="muted" style="font-size:.9rem">no packet yet</span>';
+      $('pk-state').textContent = st.state; const b = $('pk-bit'); b.textContent = st.bit; b.className = 'bit ' + (st.bit.startsWith('kernel') ? 'kern' : st.bit.includes('our') ? 'user' : 'off');
+      $('pk-copies').textContent = st.copies;
+    }
+  });
+})();
+
+/* ---------- top reader ---------- */
+(function(){
+  const HDR = '    PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND';
+  const M = {
+    ok: {lines:[
+      'top - 14:02:11 up 12 days,  3:41,  2 users,  load average: 0.62, 0.71, 0.66',
+      'Tasks: 212 total,   1 running, 211 sleeping,   0 stopped,   0 zombie',
+      '%Cpu(s):  4.1 us,  1.3 sy,  0.0 ni, 94.2 id,  0.4 wa,  0.0 hi,  0.0 si,  0.0 st',
+      'MiB Mem :  15919.6 total,   9240.1 free,   3288.4 used,   3391.1 buff/cache',
+      'MiB Swap:   8191.9 total,   8191.9 free,      0.0 used.  12102.7 avail Mem', '', HDR,
+      '   2481 vlad      20   0 4212340 812304 210448 S   3.0   5.0  22:14.05 firefox',
+      '    912 root      20   0  892120  84120  61200 S   1.0   0.5   1:02.11 Xorg',
+      '   2610 vlad      20   0 1230400 214880  98212 S   0.7   1.3   4:41.80 code',
+      '      1 root      20   0  167840  13020   8412 S   0.0   0.1   0:08.12 systemd'],
+      hl:[0,2,4], diag:'<b>Nothing is wrong.</b> Load 0.6 on 4 cores, CPU 94 percent idle, 12 GB available, no swap in use, no zombies. This is the baseline. Learn what healthy looks like so the other five jump out at you.', next:'Nothing to do. Maybe <span class="mono">uptime</span> tomorrow.'},
+    cpu: {lines:[
+      'top - 14:07:52 up 12 days,  3:46,  2 users,  load average: 4.05, 3.81, 2.20',
+      'Tasks: 214 total,   1 running, 213 sleeping,   0 stopped,   0 zombie',
+      '%Cpu(s): 97.8 us,  1.9 sy,  0.0 ni,  0.0 id,  0.3 wa,  0.0 hi,  0.0 si,  0.0 st',
+      'MiB Mem :  15919.6 total,   7102.3 free,   5312.7 used,   3504.6 buff/cache',
+      'MiB Swap:   8191.9 total,   8191.9 free,      0.0 used.   9911.0 avail Mem', '', HDR,
+      '   3320 vlad      20   0 6144212 2201844 102340 R 398.0  13.5  41:12.70 python3 train.py',
+      '   2481 vlad      20   0 4212340 812304 210448 S   1.3   5.0  22:31.90 firefox',
+      '    912 root      20   0  892120  84120  61200 S   0.3   0.5   1:03.40 Xorg',
+      '      1 root      20   0  167840  13020   8412 S   0.0   0.1   0:08.12 systemd'],
+      hl:[0,2,7], diag:'<b>CPU-bound.</b> One process at 398 percent: that is all four cores, so it has at least four busy threads. Load 4.05 equals the core count, the CPU line is 98 percent user time with zero idle, and memory is fine. Not necessarily a problem: the question is whether train.py is supposed to be running. If it is, the machine is doing exactly what was asked.', next:'<span class="mono">top -H -p 3320</span> to see its threads; <span class="mono">renice</span> it if it should yield to other work.'},
+    leak: {lines:[
+      'top - 09:31:07 up 3 days, 18:20,  1 user,  load average: 1.82, 1.60, 1.11',
+      'Tasks: 208 total,   1 running, 207 sleeping,   0 stopped,   0 zombie',
+      '%Cpu(s): 12.0 us,  6.1 sy,  0.0 ni, 70.8 id, 11.1 wa,  0.0 hi,  0.0 si,  0.0 st',
+      'MiB Mem :  15919.6 total,    212.4 free,  15104.8 used,    602.4 buff/cache',
+      'MiB Swap:   8191.9 total,   5810.3 free,   2381.6 used.    410.1 avail Mem', '', HDR,
+      '   5522 app       20   0   22.4g  14.2g  12040 S   9.0  91.3 118:40.55 node server.js',
+      '   2481 vlad      20   0 4212340 312304 110448 S   1.0   1.9  22:40.10 firefox',
+      '    980 postgres  20   0  432100 121004  98010 S   0.7   0.7   3:12.00 postgres',
+      '      1 root      20   0  167840   9020   6412 S   0.0   0.1   0:08.12 systemd'],
+      hl:[3,4,7], diag:'<b>A process eating memory.</b> node has 14.2 GB resident, 91 percent of RAM. Available memory is down to 410 MB, swap is already 2.4 GB in use, and the 11 percent wa is the swapping starting. CPU is fine; this is a memory leak or an unbounded cache in the app. If nothing changes, this machine becomes Machine 4.', next:'Confirm growth: <span class="mono">ps -o rss= -p 5522</span> a few times a minute apart. Then restart the service and find the leak.'},
+    thrash: {lines:[
+      'top - 09:52:33 up 3 days, 18:41,  1 user,  load average: 14.20, 11.75, 6.02',
+      'Tasks: 209 total,   3 running, 206 sleeping,   0 stopped,   0 zombie',
+      '%Cpu(s):  3.2 us,  9.8 sy,  0.0 ni,  4.1 id, 82.9 wa,  0.0 hi,  0.0 si,  0.0 st',
+      'MiB Mem :  15919.6 total,     98.2 free,  15630.0 used,    191.4 buff/cache',
+      'MiB Swap:   8191.9 total,     61.5 free,   8130.4 used.    120.3 avail Mem', '', HDR,
+      '   5522 app       20   0   22.9g   9.8g   4040 D   2.1  63.0 131:02.40 node server.js',
+      '    980 postgres  20   0 6210400   4.9g   6010 D   1.4  31.5   9:44.10 postgres',
+      '     81 root      20   0       0      0      0 R   9.1   0.0  14:22.60 kswapd0',
+      '   2481 vlad      20   0 4212340  88304  20448 D   0.3   0.5  22:41.00 firefox'],
+      hl:[0,2,3,4,7,8,9], diag:'<b>Thrashing.</b> Swap is essentially full (61 MB left of 8 GB), available memory is 120 MB, and the CPU spends 83 percent of its time waiting on I/O: that I/O is pages moving to and from swap. Load is 14 on 4 cores while the CPUs are almost idle, because the processes are stuck in D state waiting for their pages. kswapd0, the kernel\'s swapper, is one of the busiest things on the box. The machine is doing almost no real work.', next:'<span class="mono">vmstat 1</span> to watch si and so in the tens of thousands. Kill or restart the biggest process (node) to get the machine back, then fix Machine 3\'s problem, which is what this was two hours ago.'},
+    zombie: {lines:[
+      'top - 16:20:45 up 40 days,  2:13,  3 users,  load average: 0.35, 0.40, 0.38',
+      'Tasks: 231 total,   1 running, 227 sleeping,   0 stopped,   3 zombie',
+      '%Cpu(s):  2.2 us,  0.9 sy,  0.0 ni, 96.6 id,  0.3 wa,  0.0 hi,  0.0 si,  0.0 st',
+      'MiB Mem :  15919.6 total,   8420.0 free,   2988.5 used,   4511.1 buff/cache',
+      'MiB Swap:   8191.9 total,   8191.9 free,      0.0 used.  12433.8 avail Mem', '', HDR,
+      '   7710 app       20   0  812300  61200  22012 S   1.0   0.4   6:02.11 worker.py',
+      '   7742 app       20   0       0      0      0 Z   0.0   0.0   0:00.31 [convert] <defunct>',
+      '   7751 app       20   0       0      0      0 Z   0.0   0.0   0:00.28 [convert] <defunct>',
+      '   7763 app       20   0       0      0      0 Z   0.0   0.0   0:00.30 [convert] <defunct>'],
+      hl:[1,8,9,10], diag:'<b>Zombies, and otherwise healthy.</b> Three processes in state Z with zero memory and zero CPU: they have exited, but their parent hasn\'t called wait. The parent is almost certainly worker.py, which forks convert and never collects it. Harmless right now; over weeks it leaks PIDs. kill -9 on the zombies does nothing.', next:'<span class="mono">ps -o ppid= -p 7742</span> to confirm the parent is 7710. Fix worker.py to wait for its children (or handle SIGCHLD). Restarting it hands the zombies to PID 1, which reaps them.'},
+    iowait: {lines:[
+      'top - 11:08:19 up 7 days,  5:02,  2 users,  load average: 6.40, 5.90, 4.10',
+      'Tasks: 218 total,   1 running, 217 sleeping,   0 stopped,   0 zombie',
+      '%Cpu(s):  8.1 us,  2.3 sy,  0.0 ni, 31.7 id, 57.9 wa,  0.0 hi,  0.0 si,  0.0 st',
+      'MiB Mem :  15919.6 total,   6200.3 free,   4110.2 used,   5609.1 buff/cache',
+      'MiB Swap:   8191.9 total,   8191.9 free,      0.0 used.  11402.6 avail Mem', '', HDR,
+      '   4410 root      20   0  118200  12300   8400 D   2.1   0.1  12:04.40 rsync',
+      '    980 postgres  20   0  432100 181004 128010 D   3.4   1.1   8:30.20 postgres',
+      '   4415 postgres  20   0  432100  92004  80010 D   1.2   0.6   0:12.00 postgres',
+      '   2481 vlad      20   0 4212340 612304 190448 S   0.8   3.8  22:50.10 firefox'],
+      hl:[0,2,7,8,9], diag:'<b>Disk-bound.</b> Load 6.4 on 4 cores with a third of the CPU idle and 58 percent wa: the queue is made of processes waiting for storage, not compute. Three of them are in D state. Memory is fine and there is no swapping, so this isn\'t thrashing; something is simply hammering the disk. rsync is the likely culprit, and postgres is stuck behind it.', next:'<span class="mono">iostat -x 1</span> for disk utilization and await; <span class="mono">iotop</span> to see who is doing the I/O; <span class="mono">ionice</span> or reschedule the rsync.'}
+  };
+  const COLS = {'PID':'Process ID.', 'USER':'Who owns the process.', 'PR / NI':'Priority and nice value. Nice 0 is default; higher nice means a smaller share of CPU.', 'VIRT':'Size of the virtual address space: everything mapped, including untouched reservations. Usually huge, usually meaningless.', 'RES':'Resident memory: the RAM this process actually occupies right now. The number to watch.', 'SHR':'The part of RES shared with other processes, mostly libraries.', 'S':'State. R running or runnable, S sleeping, D uninterruptible sleep (usually disk), Z zombie, T stopped.', '%CPU':'Share of one core. 400 means four cores fully busy, so the process has at least four threads.', '%MEM':'RES as a percentage of total RAM.', 'TIME+':'Total CPU time consumed since the process started.', 'load average':'Average number of runnable or disk-waiting processes over the last 1, 5, and 15 minutes. Compare to the core count.', 'us / sy':'Percent of CPU time in user programs versus in the kernel.', 'id':'Percent idle.', 'wa':'Percent idle while some process waited on I/O. High wa means a storage bottleneck.', 'hi / si / st':'Time in hardware interrupts, software interrupts, and stolen by the hypervisor. Usually near zero.', 'free vs available':'free is RAM nobody touches; the kernel fills spare RAM with file cache. available is what programs can actually get, including reclaimable cache.', 'buff/cache':'RAM the kernel is using to cache files and disk blocks. It gives this back on demand.', 'Swap used':'Pages pushed out to disk. Some is fine; climbing is a warning; full is thrashing.'};
+  const out = $('tp-out'), txt = $('tp-text');
+  let revealed = false;
+  function render(){ const m = M[$('tp-scn').value]; out.innerHTML = m.lines.map((l, k) => { const e = esc(l); if(k === 6) return `<span class="hd">${e}</span>`; return revealed && m.hl.includes(k) ? `<span class="hl">${e}</span>` : e; }).join('\n'); }
+  $('tp-cols').innerHTML = Object.keys(COLS).map(k => `<button data-c="${esc(k)}">${esc(k)}</button>`).join('');
+  $('tp-cols').addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; txt.innerHTML = `<b>${esc(b.dataset.c)}.</b> ${COLS[b.dataset.c]}`; });
+  $('tp-scn').addEventListener('change', () => { revealed = false; render(); txt.innerHTML = 'Read it first. Which numbers jump out? Then reveal.'; $('tp-reveal').textContent = "What's wrong?"; });
+  $('tp-reveal').addEventListener('click', () => { revealed = true; render(); const m = M[$('tp-scn').value]; txt.innerHTML = `${m.diag}<br><br><b>Next command:</b> ${m.next}`; $('tp-reveal').textContent = 'Revealed'; });
+  render();
+})();
+/* flashcards */
+(function(){
+  const pre = document.querySelector('#p8 pre.cmd code');
+  let cards = pre.textContent.trim().split('\n').map(l => l.split('\t')).filter(p => p.length === 2);
+  let i = 0, back = false;
+  const card = $('fc-card'), count = $('fc-count');
+  function render(){
+    const c = cards[i];
+    card.classList.toggle('back', back);
+    card.innerHTML = esc(back ? c[1] : c[0]) + `<small>${back ? 'click for the question' : 'click to flip'}</small>`;
+    count.textContent = `${i+1} of ${cards.length}`;
+  }
+  const flip = () => { back = !back; render(); };
+  card.addEventListener('click', flip);
+  card.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); flip(); } });
+  $('fc-flip').addEventListener('click', flip);
+  $('fc-next').addEventListener('click', () => { i = (i + 1) % cards.length; back = false; render(); });
+  $('fc-prev').addEventListener('click', () => { i = (i - 1 + cards.length) % cards.length; back = false; render(); });
+  $('fc-shuffle').addEventListener('click', () => { for(let k = cards.length-1; k > 0; k--){ const j = Math.floor(Math.random()*(k+1)); [cards[k], cards[j]] = [cards[j], cards[k]]; } i = 0; back = false; render(); });
+  render();
+})();
+
+})();
+</script>
+</body>
+</html>
