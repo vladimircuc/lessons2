@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CV Week 1 - Images Are Just Numbers</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2430; --border:#30363d;
+    --text:#e6edf3; --muted:#8b949e; --accent:#c9f24d; --accent2:#58a6ff;
+    --code:#0a0e14; --green:#3fb950; --yellow:#d29922; --red:#f85149; --clay:#e07b39; --purple:#bc8cff;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.68;padding:0 0 60px;}
+  .wrap{max-width:920px;margin:0 auto;padding:0 20px;}
+  header{border-bottom:1px solid var(--border);background:linear-gradient(180deg,#12160e,#0d1117);padding:34px 0 26px;}
+  .kicker{color:var(--accent);font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 8px;}
+  header h1{margin:0 0 10px;font-size:28px;letter-spacing:-0.5px;}
+  header p{margin:0;color:var(--muted);font-size:14.5px;max-width:770px;}
+  .pill{display:inline-block;background:var(--panel2);border:1px solid var(--border);border-radius:20px;padding:2px 12px;font-size:12px;color:var(--muted);margin-right:6px;margin-bottom:4px;}
+
+  #tabbar{position:sticky;top:0;z-index:50;background:rgba(13,17,23,.96);backdrop-filter:blur(6px);border-bottom:1px solid var(--border);}
+  .tabs{max-width:920px;margin:0 auto;padding:8px 14px;display:flex;flex-wrap:wrap;gap:6px;}
+  .tab{background:var(--panel);border:1px solid var(--border);color:var(--muted);font-size:13px;font-weight:600;padding:7px 13px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:7px;transition:.12s;font-family:inherit;}
+  .tab:hover{color:var(--text);border-color:#455063;}
+  .tab .n{font-size:11px;font-weight:800;background:var(--panel2);color:var(--muted);border-radius:5px;padding:1px 6px;min-width:20px;text-align:center;}
+  .tab.active{background:var(--accent);color:#0d1117;border-color:var(--accent);}
+  .tab.active .n{background:rgba(13,17,23,.25);color:#0d1117;}
+
+  .panel{display:none;animation:fade .18s ease;}
+  .panel.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+  .panel-head{padding:26px 0 2px;}
+  .panel-head h2{margin:0;font-size:24px;letter-spacing:-0.3px;}
+  .panel-head .sub{color:var(--muted);margin:8px 0 0;font-size:15px;}
+
+  h3{font-size:15px;margin:24px 0 6px;color:var(--text);}
+  p{margin:11px 0;} ul{margin:8px 0;padding-left:22px;} li{margin:6px 0;}
+  ol{margin:8px 0;padding-left:22px;} ol li{margin:8px 0;}
+  .box{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin:16px 0;}
+  .tip{border-left:3px solid var(--accent2);}
+  .warn{border-left:3px solid var(--yellow);}
+  .concept{border-left:3px solid var(--accent);}
+  .why{border-left:3px solid var(--clay);}
+  .win{border-left:3px solid var(--green);}
+  .cell-label{font-size:11px;color:var(--accent);font-weight:700;letter-spacing:0.5px;margin:18px 0 4px;text-transform:uppercase;}
+  pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padding:15px 16px;overflow-x:auto;margin:0 0 6px;position:relative;}
+  code{font-family:"SF Mono","Fira Code",Consolas,Menlo,monospace;font-size:13.5px;color:#c9d1d9;}
+  .copybtn{position:absolute;top:7px;right:7px;background:var(--panel2);border:1px solid var(--border);color:var(--muted);font-size:11px;padding:4px 10px;border-radius:6px;cursor:pointer;transition:.15s;font-family:inherit;}
+  .copybtn:hover{color:var(--text);border-color:var(--accent);}
+  .copybtn.done{color:var(--green);border-color:var(--green);}
+  .out{color:var(--muted);font-size:13px;margin:2px 0 14px;padding-left:12px;border-left:2px solid var(--border);}
+  .out b{color:var(--text);font-weight:600;}
+  code.inl{background:var(--panel2);border:1px solid var(--border);border-radius:5px;padding:1px 6px;color:var(--accent);font-size:12.5px;}
+
+  .figure{background:#0b0f16;border:1px solid var(--border);border-radius:12px;padding:18px 16px 10px;margin:18px 0;text-align:center;}
+  .figure svg{max-width:100%;height:auto;}
+  .figure .cap{color:var(--muted);font-size:12.5px;margin:10px 6px 4px;line-height:1.5;}
+
+  table.rank{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px;}
+  table.rank th{text-align:left;color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px;padding:6px 10px;border-bottom:1px solid var(--border);}
+  table.rank td{padding:7px 10px;border-bottom:1px solid #21262d;}
+  table.rank td.s{color:var(--accent);font-weight:700;}
+  table.rank td.n{color:var(--muted);font-variant-numeric:tabular-nums;}
+
+  .practice-head{margin:30px 0 4px;font-size:13px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--accent);display:flex;align-items:center;gap:10px;}
+  .practice-head::before{content:"";flex:0 0 26px;height:2px;background:var(--accent);}
+  .ex{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:10px;padding:14px 18px;margin:12px 0;}
+  .ex p{margin:0;}
+  .qn{font-weight:700;color:var(--accent);margin-right:6px;}
+  details.sol{margin:10px 0 0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  details.sol summary{cursor:pointer;padding:9px 14px;background:var(--panel2);font-weight:600;font-size:12.5px;color:var(--green);user-select:none;list-style:none;}
+  details.sol summary::-webkit-details-marker{display:none;}
+  details.sol summary::before{content:"\25B8  ";color:var(--muted);}
+  details.sol[open] summary::before{content:"\25BE  ";}
+  details.sol .sb{padding:8px 14px 10px;}
+  .sb .note{color:var(--muted);font-size:12.5px;margin:6px 0 0;padding-left:10px;border-left:2px solid var(--border);}
+
+  .nav{display:flex;justify-content:flex-end;margin:32px 0 10px;padding-top:18px;border-top:1px solid var(--border);}
+  .nextbtn{background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:14px;font-weight:600;padding:10px 18px;border-radius:9px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;transition:.12s;}
+  .nextbtn:hover{border-color:var(--accent);color:var(--accent);}
+  a{color:var(--accent2);}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <p class="kicker">Tennis Vision Project &middot; Week 1</p>
+    <h1>Images Are Just Numbers</h1>
+    <p>New project, new field. You are moving from predicting match results to teaching a computer to see, and the goal for this chapter is a model that looks at a tennis photo and names the surface. This lesson builds the whole foundation: what an image actually is, how to do math on one, how to classify one with tools you already know, and how to load and prepare real photo files, which is exactly what tennis will need.</p>
+    <div style="margin-top:14px;">
+      <span class="pill">pixels as numbers</span><span class="pill">image math</span><span class="pill">flatten</span><span class="pill">classify</span><span class="pill">real photo files</span><span class="pill">resize</span><span class="pill">why CNNs exist</span>
+    </div>
+  </div>
+</header>
+
+<div id="tabbar">
+  <div class="tabs">
+    <button class="tab active" data-target="t0"><span class="n">0</span>Start</button>
+    <button class="tab" data-target="t1"><span class="n">1</span>Images = numbers</button>
+    <button class="tab" data-target="t2"><span class="n">2</span>Image math</button>
+    <button class="tab" data-target="t3"><span class="n">3</span>Classify</button>
+    <button class="tab" data-target="t4"><span class="n">4</span>Inspect</button>
+    <button class="tab" data-target="t5"><span class="n">5</span>Real photos</button>
+    <button class="tab" data-target="t6"><span class="n">6</span>The limit</button>
+    <button class="tab" data-target="t7"><span class="n">R</span>Review</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ============ START ============ -->
+<section class="panel active" id="t0">
+  <div class="panel-head"><h2>Start here: a new project</h2>
+    <p class="sub">Fresh folder, fresh notebook, and a dataset that needs no downloading.</p>
+  </div>
+
+  <div class="box concept">
+    <b>Where this chapter is going.</b> The end goal is a <b>tennis court surface classifier</b>: give it a photo of a match, and it answers clay, grass, or hard. That is a real computer vision problem, and it connects directly to the surface Elo work you just finished. But we do not start with tennis photos, because collecting and labeling those is its own job. We start on a clean, built-in dataset so you learn how vision actually works first, then point those skills at tennis.
+  </div>
+
+  <h3>Set up</h3>
+  <ol>
+    <li>Make a new folder, for example <code class="inl">tennis-vision</code>.</li>
+    <li>Create a notebook <code class="inl">vision_lesson1.ipynb</code>.</li>
+    <li>No dataset download needed. It ships inside scikit-learn, which you already have.</li>
+    <li>For the "Real photos" section later, save any one tennis photo from the web into the folder as <code class="inl">court.jpg</code>.</li>
+  </ol>
+
+  <p class="cell-label">Cell &middot; imports and load</p>
+  <pre><button class="copybtn">Copy</button><code>import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.datasets import load_digits
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+
+digits = load_digits()
+print(digits.images.shape)
+print(digits.data.shape)</code></pre>
+  <p class="out">You should see <b>(1797, 8, 8)</b> and <b>(1797, 64)</b>. That is 1797 small images of handwritten digits, each 8 pixels by 8 pixels. Those two shapes are the whole lesson in a nutshell, and the next tab explains why.</p>
+
+  <div class="box tip"><b>Why handwritten digits?</b> It is the classic first computer vision dataset, the "hello world" of the field. It is small, clean, and labeled, so you can focus on learning how images work instead of fighting with data collection. Everything here transfers straight to tennis photos.</div>
+
+  <div class="nav"><button class="nextbtn" data-next="t1">Next: Images = numbers &rarr;</button></div>
+</section>
+
+<!-- ============ IMAGES ARE NUMBERS ============ -->
+<section class="panel" id="t1">
+  <div class="panel-head"><h2>An image is a grid of numbers</h2>
+    <p class="sub">The single most important idea in computer vision, and it is simpler than people expect.</p>
+  </div>
+
+  <div class="box concept">
+    <b>The idea.</b> A computer does not see a picture. It stores a <b>grid of numbers</b>, one per pixel, where each number is a brightness value. A dark pixel is a low number, a bright pixel is a high number. That is it. An 8 by 8 image is just an 8 by 8 table of numbers, and "seeing" is finding patterns in those numbers.
+  </div>
+
+  <div class="figure">
+    <svg viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+      <text x="105" y="22" fill="#8b949e" font-size="12" text-anchor="middle">what you see</text>
+      <g>
+        <rect x="45" y="35" width="120" height="120" fill="#0a0e14" stroke="#30363d"/>
+        <g fill="#e6edf3">
+          <rect x="75" y="50" width="45" height="15"/>
+          <rect x="60" y="65" width="15" height="15"/><rect x="120" y="65" width="15" height="15"/>
+          <rect x="60" y="80" width="15" height="15"/><rect x="120" y="80" width="15" height="15"/>
+          <rect x="60" y="95" width="15" height="15"/><rect x="120" y="95" width="15" height="15"/>
+          <rect x="60" y="110" width="15" height="15"/><rect x="120" y="110" width="15" height="15"/>
+          <rect x="75" y="125" width="45" height="15"/>
+        </g>
+      </g>
+      <line x1="185" y1="95" x2="235" y2="95" stroke="#c9f24d" stroke-width="2" marker-end="url(#a1)"/>
+      <text x="210" y="85" fill="#c9f24d" font-size="11" text-anchor="middle">is stored as</text>
+      <text x="450" y="22" fill="#8b949e" font-size="12" text-anchor="middle">what the computer stores</text>
+      <g font-family="monospace" font-size="11.5" fill="#8b949e">
+        <text x="255" y="52">0   0   5  13   9   1   0   0</text>
+        <text x="255" y="72">0   0  13  15  10  15   5   0</text>
+        <text x="255" y="92">0   3  15   2   0  11   8   0</text>
+        <text x="255" y="112">0   4  12   0   0   8   8   0</text>
+        <text x="255" y="132">0   5   8   0   0   9   8   0</text>
+        <text x="255" y="152">0   4  11   0   1  12   7   0</text>
+        <text x="255" y="172">0   2  14   5  10  12   0   0</text>
+        <text x="255" y="192">0   0   6  13  10   0   0   0</text>
+      </g>
+      <text x="450" y="218" fill="#c9f24d" font-size="11.5" text-anchor="middle">0 = black, 16 = brightest</text>
+      <defs><marker id="a1" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#c9f24d"/></marker></defs>
+    </svg>
+    <p class="cap">The same digit, two ways. Low numbers are the dark background, high numbers trace the bright strokes of the handwriting. Squint at the grid and you can see the zero.</p>
+  </div>
+
+  <p class="cell-label">Cell &middot; look at the raw numbers</p>
+  <pre><button class="copybtn">Copy</button><code>print(digits.images[0].astype(int))     # the first image as an 8x8 grid
+print("label:", digits.target[0])       # what digit it actually is
+print("pixel range:", digits.images.min(), "to", digits.images.max())</code></pre>
+  <p class="out">An 8 by 8 table of numbers, label <b>0</b>, and pixel values running from <b>0 to 16</b>. Look at the grid and you can make out the shape of the zero in the big numbers.</p>
+
+  <p class="cell-label">Cell &middot; render them as pictures</p>
+  <pre><button class="copybtn">Copy</button><code>fig, axes = plt.subplots(1, 5, figsize=(8, 2))
+for ax, image, label in zip(axes, digits.images, digits.target):
+    ax.imshow(image, cmap="gray")
+    ax.set_title(label)
+    ax.axis("off")
+plt.show()</code></pre>
+  <p class="out">Five small handwritten digits with their labels. <code class="inl">imshow</code> takes the grid of numbers and paints it, and <code class="inl">cmap="gray"</code> means draw low numbers dark and high numbers light.</p>
+
+  <div class="box tip"><b>A note on ranges.</b> These images use 0 to 16 because the dataset was compressed that way. Real photos almost always use <b>0 to 255</b> per pixel. Same idea, bigger range, and you will see that firsthand in the Real photos tab.</div>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex"><p><span class="qn">1.</span>Print the raw 8 by 8 grid and the label for image number <code class="inl">10</code>, then display that same image with <code class="inl">imshow</code>. Do the numbers match the picture?</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>print(digits.images[10].astype(int))
+print("label:", digits.target[10])
+plt.imshow(digits.images[10], cmap="gray")
+plt.axis("off")
+plt.show()</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">2.</span>Count how many pixels in the first image are brighter than 8.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>print((digits.images[0] > 8).sum())</code></pre>
+    <p class="note">17. Comparing an array to a number gives an array of True/False, and summing counts the Trues.</p></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">3.</span>Build the "average 3" by averaging every image labeled 3, then display it. (Hint: <code class="inl">digits.images[digits.target == 3]</code> selects them, and <code class="inl">.mean(axis=0)</code> averages across images.)</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>avg3 = digits.images[digits.target == 3].mean(axis=0)
+plt.imshow(avg3, cmap="gray")
+plt.title("average 3")
+plt.axis("off")
+plt.show()</code></pre>
+    <p class="note">A blurry but clearly recognizable 3. Averaging numbers averages pictures, more proof that images really are just arrays.</p></div></details>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t2">Next: Image math &rarr;</button></div>
+</section>
+
+<!-- ============ IMAGE MATH ============ -->
+<section class="panel" id="t2">
+  <div class="panel-head"><h2>Doing math on an image</h2>
+    <p class="sub">If an image is numbers, then editing an image is arithmetic. This is what every photo filter really is.</p>
+  </div>
+
+  <div class="box concept">
+    <b>The idea.</b> Because an image is just an array, ordinary math changes the picture. Add a number to every pixel and the image gets brighter. Subtract every pixel from the maximum and you invert it, like a photo negative. Reverse the column order and the image flips. Slice a smaller rectangle out of the array and you have cropped it. No special image library is needed for any of this, it is plain array work.
+  </div>
+
+  <div class="figure">
+    <svg viewBox="0 0 660 150" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+      <g font-size="11" fill="#8b949e" text-anchor="middle">
+        <text x="80" y="20">original</text><text x="240" y="20">+ 4</text><text x="400" y="20">16 - image</text><text x="560" y="20">fliplr</text>
+      </g>
+      <g>
+        <rect x="40" y="32" width="80" height="80" fill="#0a0e14" stroke="#30363d"/>
+        <rect x="55" y="45" width="20" height="55" fill="#8b949e"/><rect x="75" y="45" width="30" height="14" fill="#8b949e"/>
+      </g>
+      <g>
+        <rect x="200" y="32" width="80" height="80" fill="#1c2430" stroke="#30363d"/>
+        <rect x="215" y="45" width="20" height="55" fill="#e6edf3"/><rect x="235" y="45" width="30" height="14" fill="#e6edf3"/>
+      </g>
+      <g>
+        <rect x="360" y="32" width="80" height="80" fill="#e6edf3" stroke="#30363d"/>
+        <rect x="375" y="45" width="20" height="55" fill="#0a0e14"/><rect x="395" y="45" width="30" height="14" fill="#0a0e14"/>
+      </g>
+      <g>
+        <rect x="520" y="32" width="80" height="80" fill="#0a0e14" stroke="#30363d"/>
+        <rect x="565" y="45" width="20" height="55" fill="#8b949e"/><rect x="535" y="45" width="30" height="14" fill="#8b949e"/>
+      </g>
+      <text x="330" y="138" fill="#c9f24d" font-size="11.5" text-anchor="middle">every one of these is plain arithmetic on the array</text>
+    </svg>
+    <p class="cap">Brightness, inversion, and flipping are all just operations on the numbers. Photo editing apps do exactly this, on much bigger arrays.</p>
+  </div>
+
+  <p class="cell-label">Cell &middot; four operations</p>
+  <pre><button class="copybtn">Copy</button><code>img = digits.images[0]
+
+brighter = np.clip(img + 4, 0, 16)     # add to every pixel, keep inside 0..16
+inverted = 16 - img                     # flip dark and light
+flipped  = np.fliplr(img)               # mirror left to right
+cropped  = img[2:6, 2:6]                # rows 2-5, columns 2-5
+
+fig, axes = plt.subplots(1, 5, figsize=(10, 2))
+for ax, picture, name in zip(axes,
+        [img, brighter, inverted, flipped, cropped],
+        ["original", "brighter", "inverted", "flipped", "cropped"]):
+    ax.imshow(picture, cmap="gray"); ax.set_title(name, fontsize=9); ax.axis("off")
+plt.show()</code></pre>
+  <p class="out">Five versions of the same digit. Note the cropped one is a smaller array, <b>4 by 4</b> instead of 8 by 8, which matters later: models need every image to be the same size.</p>
+
+  <div class="box tip"><b>Why <code class="inl">np.clip</code>?</b> Adding 4 could push a pixel above the legal maximum of 16. <code class="inl">np.clip(array, 0, 16)</code> forces every value back inside the allowed range. With real photos you clip to 0 and 255 instead.</div>
+
+  <div class="box why">
+    <b>Why this matters for tennis.</b> These operations are the basis of <b>data augmentation</b>, a technique we will likely need. If you only have a few hundred tennis photos, you can flip, crop, and brighten them to create more training variety from the same pictures. A flipped photo of a clay court is still a clay court, so the label stays valid while the model sees something new.
+  </div>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex"><p><span class="qn">1.</span>Make a <b>darker</b> version of image 0 by subtracting 4 from every pixel (clipped so nothing goes below 0), and display it next to the original.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>darker = np.clip(digits.images[0] - 4, 0, 16)
+fig, axes = plt.subplots(1, 2, figsize=(4, 2))
+axes[0].imshow(digits.images[0], cmap="gray"); axes[0].set_title("original"); axes[0].axis("off")
+axes[1].imshow(darker, cmap="gray"); axes[1].set_title("darker"); axes[1].axis("off")
+plt.show()</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">2.</span>Flip an image upside down instead of left to right, and confirm with code that the flipped array really is different from the original.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>upside = np.flipud(digits.images[0])
+print("changed:", not np.array_equal(upside, digits.images[0]))
+plt.imshow(upside, cmap="gray"); plt.axis("off"); plt.show()</code></pre>
+    <p class="note"><code class="inl">np.fliplr</code> mirrors left to right, <code class="inl">np.flipud</code> flips up and down.</p></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">3.</span>Crop the middle 4 by 4 square out of image 0, and print both the original shape and the cropped shape.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>crop = digits.images[0][2:6, 2:6]
+print("original:", digits.images[0].shape, " cropped:", crop.shape)
+plt.imshow(crop, cmap="gray"); plt.axis("off"); plt.show()</code></pre>
+    <p class="note">Slicing an array is cropping an image. The first slice picks rows, the second picks columns.</p></div></details>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t3">Next: Classify &rarr;</button></div>
+</section>
+
+<!-- ============ CLASSIFY ============ -->
+<section class="panel" id="t3">
+  <div class="panel-head"><h2>Flatten, then classify with what you know</h2>
+    <p class="sub">The bridge from your tennis work: an image is a row of features, so your old models work as is.</p>
+  </div>
+
+  <div class="box concept">
+    <b>The trick: flattening.</b> Your models expect each example to be a <b>row of numbers</b> (for tennis: rank_diff, elo_diff, and so on). An image is a grid, so you lay the grid out into one long row: take row 1 of pixels, then row 2 after it, and so on. An 8 by 8 grid becomes a single row of 64 numbers. Now each image is just an example with 64 features, and every classifier you know works on it, unchanged.
+  </div>
+
+  <div class="figure">
+    <svg viewBox="0 0 640 170" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+      <g>
+        <rect x="40" y="35" width="100" height="100" fill="none" stroke="#30363d"/>
+        <g stroke="#30363d">
+          <line x1="65" y1="35" x2="65" y2="135"/><line x1="90" y1="35" x2="90" y2="135"/><line x1="115" y1="35" x2="115" y2="135"/>
+          <line x1="40" y1="60" x2="140" y2="60"/><line x1="40" y1="85" x2="140" y2="85"/><line x1="40" y1="110" x2="140" y2="110"/>
+        </g>
+        <g fill="#c9f24d" opacity="0.65">
+          <rect x="40" y="35" width="25" height="25"/><rect x="65" y="35" width="25" height="25"/><rect x="90" y="35" width="25" height="25"/><rect x="115" y="35" width="25" height="25"/>
+        </g>
+        <g fill="#58a6ff" opacity="0.5">
+          <rect x="40" y="60" width="25" height="25"/><rect x="65" y="60" width="25" height="25"/><rect x="90" y="60" width="25" height="25"/><rect x="115" y="60" width="25" height="25"/>
+        </g>
+      </g>
+      <text x="90" y="152" fill="#8b949e" font-size="11" text-anchor="middle">8 x 8 grid</text>
+      <line x1="160" y1="85" x2="205" y2="85" stroke="#c9f24d" stroke-width="2" marker-end="url(#a2)"/>
+      <text x="182" y="75" fill="#c9f24d" font-size="10.5" text-anchor="middle">flatten</text>
+      <g>
+        <rect x="220" y="70" width="25" height="25" fill="#c9f24d" opacity="0.65" stroke="#30363d"/>
+        <rect x="245" y="70" width="25" height="25" fill="#c9f24d" opacity="0.65" stroke="#30363d"/>
+        <rect x="270" y="70" width="25" height="25" fill="#c9f24d" opacity="0.65" stroke="#30363d"/>
+        <rect x="295" y="70" width="25" height="25" fill="#c9f24d" opacity="0.65" stroke="#30363d"/>
+        <rect x="320" y="70" width="25" height="25" fill="#58a6ff" opacity="0.5" stroke="#30363d"/>
+        <rect x="345" y="70" width="25" height="25" fill="#58a6ff" opacity="0.5" stroke="#30363d"/>
+        <rect x="370" y="70" width="25" height="25" fill="#58a6ff" opacity="0.5" stroke="#30363d"/>
+        <rect x="395" y="70" width="25" height="25" fill="#58a6ff" opacity="0.5" stroke="#30363d"/>
+        <rect x="420" y="70" width="25" height="25" fill="#161b22" stroke="#30363d"/>
+        <rect x="445" y="70" width="25" height="25" fill="#161b22" stroke="#30363d"/>
+        <text x="487" y="88" fill="#8b949e" font-size="16">&#8230;</text>
+        <rect x="505" y="70" width="25" height="25" fill="#161b22" stroke="#30363d"/>
+      </g>
+      <text x="375" y="115" fill="#8b949e" font-size="11" text-anchor="middle">one row of 64 numbers = 64 features</text>
+      <text x="375" y="58" fill="#8b949e" font-size="10" text-anchor="middle">row 1 of pixels, then row 2, then row 3 ...</text>
+      <defs><marker id="a2" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#c9f24d"/></marker></defs>
+    </svg>
+    <p class="cap">Flattening lays the rows of the grid end to end. The picture becomes a single row of numbers, exactly the shape your classifiers expect.</p>
+  </div>
+
+  <div class="box tip"><b>Already done for you.</b> That is what <code class="inl">digits.data</code> is: the flattened version, shape <b>(1797, 64)</b>, while <code class="inl">digits.images</code> is the grid version, shape <b>(1797, 8, 8)</b>. Same data, two shapes. You train on <code class="inl">digits.data</code>, and you look at <code class="inl">digits.images</code>.</div>
+
+  <p class="cell-label">Cell &middot; split and train, exactly like tennis</p>
+  <pre><button class="copybtn">Copy</button><code>X = digits.data          # 1797 rows, 64 pixel-features each
+y = digits.target        # the digit each image shows
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42)
+
+model = LogisticRegression(max_iter=5000)
+model.fit(X_train, y_train)
+acc = accuracy_score(y_test, model.predict(X_test))
+print("accuracy:", round(acc, 4))</code></pre>
+  <p class="out">About <b>0.9733</b>. Your first computer vision model, 97% accurate, using the same logistic regression you used on tennis.</p>
+
+  <div class="box win">
+    <b>Why this is so much higher than tennis (65%), honestly.</b> It is not that this model is better, it is the same algorithm. The difference is the <b>problem</b>. A handwritten 3 really does look different from a handwritten 8, and the pixels contain nearly all the information needed. In tennis, the pre-match numbers simply do not contain the answer, because upsets happen. This is the clearest possible lesson that accuracy is a property of the problem and the data, not a scoreboard for your skill.
+  </div>
+
+  <div class="box warn"><b>One new detail:</b> <code class="inl">train_test_split</code> shuffles randomly here, unlike tennis where you split by time. Images have no time order, so random splitting is correct. <code class="inl">random_state=42</code> makes the shuffle repeatable.</div>
+
+  <h3>Normalization, and an honest test of it</h3>
+  <p>Standard advice in image work is to <b>normalize</b> pixels, rescaling them into the 0 to 1 range by dividing by the maximum. Rather than take that on faith, test it, exactly like you tested features in the tennis project:</p>
+  <pre><button class="copybtn">Copy</button><code>raw  = LogisticRegression(max_iter=5000).fit(X_train, y_train)
+norm = LogisticRegression(max_iter=5000).fit(X_train / 16.0, y_train)
+
+print("raw pixels: ", round(accuracy_score(y_test, raw.predict(X_test)), 4))
+print("normalized: ", round(accuracy_score(y_test, norm.predict(X_test / 16.0)), 4))</code></pre>
+  <p class="out">Raw about <b>0.9733</b>, normalized about <b>0.9667</b>. Normalizing is slightly <b>worse</b> here.</p>
+
+  <div class="box why">
+    <b>Read that honestly.</b> Normalization did not help on this dataset, because these pixels already sit in a small, consistent 0 to 16 range, so there was nothing to fix. It becomes genuinely important with <b>real photos</b>, where values span 0 to 255 and lighting varies wildly between pictures, and it is close to required for neural networks, which train badly on large raw numbers. So keep the technique, but note that here the measurement says it adds nothing. Same habit as tennis: test, do not assume.
+  </div>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex"><p><span class="qn">1.</span>Take the first row of <code class="inl">digits.data</code> and reshape it back into an 8 by 8 grid, then confirm it matches <code class="inl">digits.images[0]</code>.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>back = digits.data[0].reshape(8, 8)
+print(back.astype(int))
+print("identical:", np.array_equal(back, digits.images[0]))</code></pre>
+    <p class="note">Prints True. Flattening is reversible, no information is lost by reshaping.</p></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">2.</span>Train a small neural network on the same data and compare it to the logistic regression. Use <code class="inl">MLPClassifier(hidden_layer_sizes=(64,), max_iter=1000, random_state=42)</code>.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>from sklearn.neural_network import MLPClassifier
+nn = MLPClassifier(hidden_layer_sizes=(64,), max_iter=1000, random_state=42)
+nn.fit(X_train, y_train)
+print("neural net:", round(accuracy_score(y_test, nn.predict(X_test)), 4))</code></pre>
+    <p class="note">About 0.9822, a bit better than logistic regression. Unlike tennis, here the extra power actually helps, because there is real structure to find.</p></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">3.</span>How much does training data matter? Train logistic regression on just the first 100 training images, then the first 500, then all of them, and print all three accuracies.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>for n in [100, 500, len(X_train)]:
+    m = LogisticRegression(max_iter=5000).fit(X_train[:n], y_train[:n])
+    print(f"{n:5} images -> {accuracy_score(y_test, m.predict(X_test)):.4f}")</code></pre>
+    <p class="note">Roughly 0.90, then 0.96, then 0.97. More images means better accuracy, worth remembering when we collect tennis photos later.</p></div></details>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t4">Next: Inspect &rarr;</button></div>
+</section>
+
+<!-- ============ INSPECT ============ -->
+<section class="panel" id="t4">
+  <div class="panel-head"><h2>Compare models, and see what the model learned</h2>
+    <p class="sub">With images you can actually look at the mistakes, and even look inside the model.</p>
+  </div>
+
+  <p class="cell-label">Cell &middot; a quick model comparison</p>
+  <pre><button class="copybtn">Copy</button><code>from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neural_network import MLPClassifier
+
+models = {
+    "logistic regression": LogisticRegression(max_iter=5000),
+    "neural net": MLPClassifier(hidden_layer_sizes=(64,), max_iter=1000, random_state=42),
+    "KNN": KNeighborsClassifier(n_neighbors=3),
+    "decision tree": DecisionTreeClassifier(random_state=42),
+}
+for name, m in models.items():
+    m.fit(X_train, y_train)
+    print(f"{name:22} {accuracy_score(y_test, m.predict(X_test)):.4f}")</code></pre>
+  <p class="out">You should see roughly:</p>
+  <table class="rank">
+    <tr><th>Model</th><th>Accuracy</th></tr>
+    <tr><td class="s">KNN</td><td class="n">0.987</td></tr>
+    <tr><td class="s">neural net</td><td class="n">0.982</td></tr>
+    <tr><td class="s">logistic regression</td><td class="n">0.973</td></tr>
+    <tr><td class="s">decision tree</td><td class="n">0.858</td></tr>
+  </table>
+  <p>Unlike tennis, the models genuinely <b>separate</b> here. KNN does well because similar-looking digits really do have similar pixel values, and the decision tree struggles because splitting on one pixel at a time is a poor way to read a picture.</p>
+
+  <p class="cell-label">Cell &middot; the confusion matrix</p>
+  <pre><button class="copybtn">Copy</button><code>from sklearn.metrics import confusion_matrix
+pred = model.predict(X_test)
+print(confusion_matrix(y_test, pred))
+print("wrong:", (pred != y_test).sum(), "out of", len(y_test))</code></pre>
+  <p class="out">A 10 by 10 table where row <em>i</em>, column <em>j</em> counts images that really were <em>i</em> but were predicted <em>j</em>. The strong diagonal is correct predictions, and only about <b>12 of 450</b> are wrong.</p>
+
+  <h3>Looking inside the model</h3>
+  <p>Here is something tennis could never give you. The logistic regression learned one weight per pixel per digit, so you can reshape those weights back into 8 by 8 images and <b>see what the model is looking for</b>:</p>
+  <pre><button class="copybtn">Copy</button><code>print("coefficient shape:", model.coef_.shape)   # (10 digits, 64 pixels)
+
+fig, axes = plt.subplots(1, 5, figsize=(9, 2))
+for ax, i in zip(axes, range(5)):
+    ax.imshow(model.coef_[i].reshape(8, 8), cmap="RdBu")
+    ax.set_title(f"digit {i}", fontsize=9)
+    ax.axis("off")
+plt.show()</code></pre>
+  <p class="out">Shape <b>(10, 64)</b>, one row of 64 pixel-weights per digit. Each picture is a map of evidence: red areas are pixels that <b>push toward</b> that digit when bright, blue areas push away. The map for 0 shows a ring shape, because a bright ring with a dark middle is what makes a zero a zero.</p>
+
+  <div class="box tip"><b>Why this is worth doing.</b> Being able to visualize what a model learned is a real advantage of image work, and it is genuinely useful for debugging. If the surface classifier ever learns something silly, like keying on a scoreboard in the corner instead of the court, this kind of look inside is how you would catch it.</div>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex"><p><span class="qn">1.</span>Find the test images the model got wrong and display the first four, with their true and predicted labels in the titles.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>wrong = np.where(pred != y_test)[0]
+fig, axes = plt.subplots(1, 4, figsize=(7, 2))
+for ax, idx in zip(axes, wrong[:4]):
+    ax.imshow(X_test[idx].reshape(8, 8), cmap="gray")
+    ax.set_title(f"is {y_test[idx]}, said {pred[idx]}", fontsize=9)
+    ax.axis("off")
+plt.show()</code></pre>
+    <p class="note">The mistakes are usually genuinely messy digits. Being able to eyeball errors is a real advantage of image work.</p></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">2.</span>Display the learned weight maps for the last five digits (5 through 9) the same way.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>fig, axes = plt.subplots(1, 5, figsize=(9, 2))
+for ax, i in zip(axes, range(5, 10)):
+    ax.imshow(model.coef_[i].reshape(8, 8), cmap="RdBu")
+    ax.set_title(f"digit {i}", fontsize=9); ax.axis("off")
+plt.show()</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">3.</span>Check the dataset is balanced by counting how many images there are of each digit, then predict a single test image and print the prediction next to the true label.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>vals, counts = np.unique(digits.target, return_counts=True)
+print(dict(zip(vals, counts)))
+
+one = X_test[0].reshape(1, -1)      # one row, model expects 2D
+print("predicted:", model.predict(one)[0], " actual:", y_test[0])</code></pre>
+    <p class="note">About 180 of each digit, so the classes are balanced. <code class="inl">reshape(1, -1)</code> turns a single row into a table with one row, which is the shape predict expects.</p></div></details>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t5">Next: Real photos &rarr;</button></div>
+</section>
+
+<!-- ============ REAL PHOTOS ============ -->
+<section class="panel" id="t5">
+  <div class="panel-head"><h2>Working with real photo files</h2>
+    <p class="sub">The practical half of computer vision, and the exact groundwork for tennis. Everything so far was pre-packaged, real photos are not.</p>
+  </div>
+
+  <div class="box concept">
+    <b>What changes with real photos.</b> The digits arrived clean: all the same size, grayscale, tidy value range, already flattened. A folder of tennis photos gives you none of that. They are different sizes, in color, stored as JPG files, with values 0 to 255. So before any model sees them, you have to <b>load, resize, and convert</b> them into a consistent array. That pipeline is what this tab teaches, and it is the single most useful thing in this lesson for the project ahead.
+  </div>
+
+  <p>Save any tennis photo from the web into your project folder as <code class="inl">court.jpg</code>, then:</p>
+
+  <p class="cell-label">Cell &middot; load a real image file</p>
+  <pre><button class="copybtn">Copy</button><code>from PIL import Image          # Pillow, the standard Python image library
+
+img = Image.open("court.jpg")
+print("size (width, height):", img.size)
+print("mode:", img.mode)              # RGB means color
+
+arr = np.array(img)                    # turn the photo into numbers
+print("array shape:", arr.shape)       # (height, width, 3)
+print("value range:", arr.min(), "to", arr.max())
+plt.imshow(arr); plt.axis("off"); plt.show()</code></pre>
+  <p class="out">The shape is <b>(height, width, 3)</b>, for example (300, 400, 3). That trailing <b>3</b> is the color channels, red, green, and blue, one value each per pixel. Values run <b>0 to 255</b>, not 0 to 16.</p>
+
+  <div class="figure">
+    <svg viewBox="0 0 640 200" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+      <text x="320" y="18" fill="#8b949e" font-size="12" text-anchor="middle">one color photo = three stacked grids of numbers</text>
+      <g>
+        <rect x="90" y="40" width="130" height="95" fill="#f85149" opacity="0.30" stroke="#f85149"/>
+        <text x="100" y="60" fill="#f85149" font-size="11">R</text>
+        <rect x="120" y="60" width="130" height="95" fill="#3fb950" opacity="0.30" stroke="#3fb950"/>
+        <text x="130" y="80" fill="#3fb950" font-size="11">G</text>
+        <rect x="150" y="80" width="130" height="95" fill="#58a6ff" opacity="0.30" stroke="#58a6ff"/>
+        <text x="160" y="100" fill="#58a6ff" font-size="11">B</text>
+      </g>
+      <line x1="300" y1="105" x2="350" y2="105" stroke="#c9f24d" stroke-width="2" marker-end="url(#a3)"/>
+      <g>
+        <rect x="370" y="70" width="60" height="60" fill="#e07b39" stroke="#30363d"/>
+        <text x="400" y="150" fill="#8b949e" font-size="11" text-anchor="middle">one clay pixel</text>
+      </g>
+      <g font-family="monospace" font-size="12">
+        <text x="455" y="82" fill="#f85149">R = 198</text>
+        <text x="455" y="102" fill="#3fb950">G = 120</text>
+        <text x="455" y="122" fill="#58a6ff">B = 81</text>
+      </g>
+      <defs><marker id="a3" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#c9f24d"/></marker></defs>
+    </svg>
+    <p class="cap">A color photo stores three numbers per pixel. A clay-court pixel is high in red and low in blue, while a grass pixel is high in green. That difference is the core signal the surface classifier will use.</p>
+  </div>
+
+  <p class="cell-label">Cell &middot; the preparation pipeline</p>
+  <pre><button class="copybtn">Copy</button><code># 1. resize so every photo is the same size (models require this)
+small = img.resize((64, 64))
+small_arr = np.array(small)
+print("resized:", small_arr.shape, " total numbers:", small_arr.size)
+
+# 2. grayscale, if color is not needed
+gray = np.array(img.convert("L"))      # "L" means luminance, one value per pixel
+print("grayscale:", gray.shape)
+
+# 3. normalize into 0 to 1 (important for real photos and neural networks)
+normalized = small_arr / 255.0
+print("normalized range:", round(float(normalized.min()), 3), "to", round(float(normalized.max()), 3))
+
+# 4. flatten, if feeding a classic model
+flat = small_arr.reshape(-1)
+print("flattened length:", flat.shape[0])</code></pre>
+  <p class="out">A 64 by 64 color image holds <b>12,288</b> numbers (64 x 64 x 3). Compare that to 64 numbers for a digit, which is why real image work needs more capable models and more computing power.</p>
+
+  <div class="box warn">
+    <b>Resizing is not optional.</b> Every model needs its inputs to be the same shape, but photos come in every size imaginable. So a fixed resize (say 64 by 64, or 224 by 224) is always step one of an image pipeline. It does lose detail, which is a real trade-off: smaller is faster to train but blurrier, bigger keeps detail but costs time and memory.
+  </div>
+
+  <h3>A preview of the actual tennis problem</h3>
+  <p>Here is the surface signal, in one calculation. Average the color channels over a region and compare:</p>
+  <pre><button class="copybtn">Copy</button><code>top    = arr[:arr.shape[0]//2]         # top half of the photo
+bottom = arr[arr.shape[0]//2:]         # bottom half
+
+print("top    average R,G,B:", [int(v) for v in top.mean(axis=(0, 1))])
+print("bottom average R,G,B:", [int(v) for v in bottom.mean(axis=(0, 1))])</code></pre>
+  <p class="out">Three numbers per region, the average red, green, and blue. On a clay court photo the red value runs high, and on grass the green dominates. You could almost build a crude surface classifier from these three numbers alone, which is a good sign this project is genuinely learnable.</p>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex"><p><span class="qn">1.</span>Load your <code class="inl">court.jpg</code>, print its original size, then resize it to 32 by 32 and print how many numbers the resized version contains.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>img = Image.open("court.jpg")
+print("original size:", img.size)
+tiny = np.array(img.resize((32, 32)))
+print("resized shape:", tiny.shape, " numbers:", tiny.size)</code></pre>
+    <p class="note">32 x 32 x 3 = 3072 numbers, a quarter of the 64 by 64 version.</p></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">2.</span>Display the three color channels of your photo separately, as three grayscale images (red channel, green channel, blue channel).</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>arr = np.array(Image.open("court.jpg"))
+fig, axes = plt.subplots(1, 3, figsize=(9, 3))
+for ax, i, name in zip(axes, [0, 1, 2], ["red", "green", "blue"]):
+    ax.imshow(arr[:, :, i], cmap="gray")
+    ax.set_title(name); ax.axis("off")
+plt.show()</code></pre>
+    <p class="note">Bright areas in the red channel are the red parts of the photo. On a clay court the red channel looks much brighter than the blue one.</p></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">3.</span>Compare resolutions: display your photo resized to 8 by 8, 32 by 32, and 128 by 128 side by side. At which size can you still tell it is a tennis court?</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>fig, axes = plt.subplots(1, 3, figsize=(9, 3))
+for ax, size in zip(axes, [8, 32, 128]):
+    ax.imshow(np.array(img.resize((size, size))))
+    ax.set_title(f"{size}x{size}"); ax.axis("off")
+plt.show()</code></pre>
+    <p class="note">A useful judgment call: the resize has to be small enough to train quickly but big enough to keep the detail that matters. Color survives even at tiny sizes, which is promising for surface classification.</p></div></details>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t6">Next: The limit &rarr;</button></div>
+</section>
+
+<!-- ============ THE LIMIT ============ -->
+<section class="panel" id="t6">
+  <div class="panel-head"><h2>The limit of flattening, and what comes next</h2>
+    <p class="sub">A two-line experiment that reveals exactly what this approach is missing, and why the next lesson exists.</p>
+  </div>
+
+  <div class="box concept">
+    <b>A suspicion worth testing.</b> When you flatten an image, you throw away the layout. The model sees 64 numbers in a row, but nothing tells it that pixel 1 sits next to pixel 2 and above pixel 9. Does the model actually know anything about the shape of the image? Here is a clean way to find out: <b>scramble the pixel positions</b>, the same scramble for every image, then retrain. If the model understood spatial layout, scrambling should wreck it.
+  </div>
+
+  <p class="cell-label">Cell &middot; the scramble test</p>
+  <pre><button class="copybtn">Copy</button><code>rng = np.random.default_rng(0)
+perm = rng.permutation(64)               # one fixed random reordering of the 64 pixels
+
+X_train_s = X_train[:, perm]             # apply the SAME scramble to every image
+X_test_s  = X_test[:, perm]
+
+m = LogisticRegression(max_iter=5000).fit(X_train_s, y_train)
+print("normal pixels:   ", round(accuracy_score(y_test, model.predict(X_test)), 4))
+print("scrambled pixels:", round(accuracy_score(y_test, m.predict(X_test_s)), 4))</code></pre>
+  <p class="out">Both print <b>0.9733</b>. Identical, to four decimal places.</p>
+
+  <div class="box why">
+    <b>What that proves.</b> The model does not care where the pixels are. To it, an image was never a picture, just 64 unrelated numbers, so shuffling their order changes nothing as long as it is shuffled consistently. It learned "pixel 27 tends to be bright for a 3" without any notion that pixel 27 is in the middle of the image. A human shown the scrambled version could not recognize a single digit, but the model scores exactly the same.
+  </div>
+
+  <div class="box concept">
+    <b>Why this breaks on tennis photos.</b> For neat, centered 8 by 8 digits, ignoring layout works fine. Real photos are different, because the same court appears shifted, zoomed, rotated, and lit differently in every picture, and every one of those changes moves the pixels around. A model with no sense of shape or position has to memorize each variation separately, and there will never be enough photos for that.
+    <p style="margin:8px 0 0;">The fix is a network built to respect spatial layout: a <b>convolutional neural network</b> (CNN). Instead of one long row of pixels, it slides small detectors across the image looking for local patterns (edges, textures, colors) wherever they appear. Because a detector that finds "grass texture" works anywhere in the frame, a CNN handles shifted and zoomed photos naturally. That is the next lesson, and it is what will actually read tennis surfaces.</p>
+  </div>
+
+  <div class="box warn">
+    <b>The size problem, too.</b> Your 64-pixel digits flatten into 64 features. A modest 64 by 64 color photo flattens into 12,288 features, and a 224 by 224 one into over 150,000. Classic models buckle under that many inputs with few examples. CNNs handle it by reusing the same small detectors across the whole image instead of learning a separate weight for every pixel.
+  </div>
+
+  <div class="practice-head">Practice</div>
+  <div class="ex"><p><span class="qn">1.</span>Display a scrambled digit so you can see what the model is actually working with. Show test image 0 normally and with <code class="inl">perm</code> applied, side by side.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>fig, axes = plt.subplots(1, 2, figsize=(4, 2))
+axes[0].imshow(X_test[0].reshape(8, 8), cmap="gray"); axes[0].set_title("normal"); axes[0].axis("off")
+axes[1].imshow(X_test[0][perm].reshape(8, 8), cmap="gray"); axes[1].set_title("scrambled"); axes[1].axis("off")
+plt.show()</code></pre>
+    <p class="note">Unreadable to you, identical accuracy to the model. That contrast is the whole point.</p></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">2.</span>Repeat the scramble test with the neural network instead of logistic regression. Does a more powerful model notice the scrambling?</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>from sklearn.neural_network import MLPClassifier
+n1 = MLPClassifier(hidden_layer_sizes=(64,), max_iter=1000, random_state=42).fit(X_train, y_train)
+n2 = MLPClassifier(hidden_layer_sizes=(64,), max_iter=1000, random_state=42).fit(X_train_s, y_train)
+print("normal:   ", round(accuracy_score(y_test, n1.predict(X_test)), 4))
+print("scrambled:", round(accuracy_score(y_test, n2.predict(X_test_s)), 4))</code></pre>
+    <p class="note">Essentially the same either way. Even a neural network on flattened pixels has no spatial awareness, which is exactly the gap a CNN fills.</p></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">3.</span>Show the size problem with numbers. Print how many features a flattened image has at 8 by 8 grayscale, 64 by 64 color, and 224 by 224 color.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>print("8x8 gray:     ", 8 * 8)
+print("64x64 color:  ", 64 * 64 * 3)
+print("224x224 color:", 224 * 224 * 3)</code></pre>
+    <p class="note">64, then 12288, then 150528. That jump is why real image models are built differently.</p></div></details>
+  </div>
+
+  <div class="nav"><button class="nextbtn" data-next="t7">Next: Review &rarr;</button></div>
+</section>
+
+<!-- ============ REVIEW ============ -->
+<section class="panel" id="t7">
+  <div class="panel-head"><h2>Review: 14 coding questions</h2>
+    <p class="sub">All code. These are homework part one; the project notebook is part two.</p>
+  </div>
+
+  <div class="ex"><p><span class="qn">1.</span>Load the digits dataset and print the shapes of both the image version and the flattened version.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>from sklearn.datasets import load_digits
+digits = load_digits()
+print(digits.images.shape, digits.data.shape)</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">2.</span>Print the raw number grid for image 25 along with its label.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>print(digits.images[25].astype(int))
+print("label:", digits.target[25])</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">3.</span>Display the first eight images in a row with their labels as titles.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>fig, axes = plt.subplots(1, 8, figsize=(11, 2))
+for ax, img, lab in zip(axes, digits.images, digits.target):
+    ax.imshow(img, cmap="gray"); ax.set_title(lab); ax.axis("off")
+plt.show()</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">4.</span>Make image 5 brighter by 5 (clipped to the 0 to 16 range) and display it next to the original.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>b = np.clip(digits.images[5] + 5, 0, 16)
+fig, axes = plt.subplots(1, 2, figsize=(4, 2))
+axes[0].imshow(digits.images[5], cmap="gray"); axes[0].axis("off")
+axes[1].imshow(b, cmap="gray"); axes[1].axis("off")
+plt.show()</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">5.</span>Invert image 5 (make it a negative), crop the middle 4 by 4 out of it, and print the cropped shape.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>inv = 16 - digits.images[5]
+crop = inv[2:6, 2:6]
+print("cropped shape:", crop.shape)
+plt.imshow(crop, cmap="gray"); plt.axis("off"); plt.show()</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">6.</span>Split the data into train and test sets (25% test) and print both shapes.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>X_train, X_test, y_train, y_test = train_test_split(
+    digits.data, digits.target, test_size=0.25, random_state=42)
+print(X_train.shape, X_test.shape)</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">7.</span>Train a logistic regression on the images and print its test accuracy.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>model = LogisticRegression(max_iter=5000).fit(X_train, y_train)
+print(round(accuracy_score(y_test, model.predict(X_test)), 4))</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">8.</span>Test whether normalizing pixels into the 0 to 1 range changes the accuracy.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>n = LogisticRegression(max_iter=5000).fit(X_train / 16.0, y_train)
+print("raw:       ", round(accuracy_score(y_test, model.predict(X_test)), 4))
+print("normalized:", round(accuracy_score(y_test, n.predict(X_test / 16.0)), 4))</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">9.</span>Compare four models (logistic regression, neural net, KNN, decision tree) and print each accuracy.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neural_network import MLPClassifier
+for name, m in {
+    "logreg": LogisticRegression(max_iter=5000),
+    "neural net": MLPClassifier(hidden_layer_sizes=(64,), max_iter=1000, random_state=42),
+    "KNN": KNeighborsClassifier(n_neighbors=3),
+    "tree": DecisionTreeClassifier(random_state=42),
+}.items():
+    m.fit(X_train, y_train)
+    print(name, round(accuracy_score(y_test, m.predict(X_test)), 4))</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">10.</span>Print the confusion matrix and display the first three misclassified images with true and predicted labels.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>from sklearn.metrics import confusion_matrix
+pred = model.predict(X_test)
+print(confusion_matrix(y_test, pred))
+wrong = np.where(pred != y_test)[0]
+fig, axes = plt.subplots(1, 3, figsize=(6, 2))
+for ax, idx in zip(axes, wrong[:3]):
+    ax.imshow(X_test[idx].reshape(8, 8), cmap="gray")
+    ax.set_title(f"{y_test[idx]} vs {pred[idx]}", fontsize=9); ax.axis("off")
+plt.show()</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">11.</span>Visualize what the model learned for digits 0 through 4 by reshaping its coefficients into images.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>fig, axes = plt.subplots(1, 5, figsize=(9, 2))
+for ax, i in zip(axes, range(5)):
+    ax.imshow(model.coef_[i].reshape(8, 8), cmap="RdBu")
+    ax.set_title(f"digit {i}", fontsize=9); ax.axis("off")
+plt.show()</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">12.</span>Load <code class="inl">court.jpg</code>, print its array shape and value range, then resize it to 64 by 64 and print how many numbers that holds.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>from PIL import Image
+img = Image.open("court.jpg")
+arr = np.array(img)
+print("shape:", arr.shape, " range:", arr.min(), "to", arr.max())
+small = np.array(img.resize((64, 64)))
+print("resized:", small.shape, " numbers:", small.size)</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">13.</span>Convert <code class="inl">court.jpg</code> to grayscale, print its shape, and print the average red, green, and blue values of the color photo.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>gray = np.array(img.convert("L"))
+print("grayscale shape:", gray.shape)
+print("average R,G,B:", [int(v) for v in arr.mean(axis=(0, 1))])</code></pre></div></details>
+  </div>
+  <div class="ex"><p><span class="qn">14.</span>Run the scramble test: apply one fixed pixel permutation to every image, retrain, and print both accuracies.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>rng = np.random.default_rng(0)
+perm = rng.permutation(64)
+m = LogisticRegression(max_iter=5000).fit(X_train[:, perm], y_train)
+print("normal:   ", round(accuracy_score(y_test, model.predict(X_test)), 4))
+print("scrambled:", round(accuracy_score(y_test, m.predict(X_test[:, perm])), 4))</code></pre></div></details>
+  </div>
+
+  <div class="box win" style="margin-top:26px;">
+    <b>Done with Vision Week 1.</b> You learned that an image is a grid of numbers, that editing one is arithmetic, that flattening turns it into ordinary features your models handle at 97%, and how to load, resize, and prepare real photo files, which is the pipeline tennis will need. You also proved with the scramble test that this approach is blind to spatial layout, which is exactly why convolutional networks exist. Next lesson: CNNs, in Google Colab, on color images.
+  </div>
+</section>
+
+</div>
+
+<script>
+  var tabs = document.querySelectorAll(".tab");
+  var panels = document.querySelectorAll(".panel");
+  var bar = document.getElementById("tabbar");
+  function show(id){
+    tabs.forEach(function(t){ t.classList.toggle("active", t.dataset.target === id); });
+    panels.forEach(function(p){ p.classList.toggle("active", p.id === id); });
+    window.scrollTo({ top: bar.offsetTop, behavior: "smooth" });
+  }
+  tabs.forEach(function(t){ t.addEventListener("click", function(){ show(t.dataset.target); }); });
+  document.querySelectorAll("[data-next]").forEach(function(b){ b.addEventListener("click", function(){ show(b.dataset.next); }); });
+  document.querySelectorAll(".copybtn").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var code = btn.parentElement.querySelector("code").innerText;
+      navigator.clipboard.writeText(code).then(function(){
+        btn.textContent = "Copied"; btn.classList.add("done");
+        setTimeout(function(){ btn.textContent = "Copy"; btn.classList.remove("done"); }, 1500);
+      });
+    });
+  });
+</script>
+</body>
+</html>

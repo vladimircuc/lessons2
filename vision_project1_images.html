@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project - Tennis Vision (Part 1)</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2430; --border:#30363d;
+    --text:#e6edf3; --muted:#8b949e; --accent:#c9f24d; --accent2:#58a6ff;
+    --code:#0a0e14; --green:#3fb950; --yellow:#d29922; --red:#f85149; --purple:#bc8cff; --clay:#e07b39;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.68;padding:0 0 60px;}
+  .wrap{max-width:920px;margin:0 auto;padding:0 20px;}
+  header{border-bottom:1px solid var(--border);background:linear-gradient(180deg,#0e1512,#0d1117);padding:34px 0 26px;}
+  .kicker{color:var(--accent);font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 8px;}
+  header h1{margin:0 0 10px;font-size:28px;letter-spacing:-0.5px;}
+  header p{margin:0;color:var(--muted);font-size:14.5px;max-width:770px;}
+  .pill{display:inline-block;background:var(--panel2);border:1px solid var(--border);border-radius:20px;padding:2px 12px;font-size:12px;color:var(--muted);margin-right:6px;margin-bottom:4px;}
+  .pill.proj{background:rgba(188,140,255,.14);color:var(--purple);border-color:var(--purple);}
+
+  #tabbar{position:sticky;top:0;z-index:50;background:rgba(13,17,23,.96);backdrop-filter:blur(6px);border-bottom:1px solid var(--border);}
+  .tabs{max-width:920px;margin:0 auto;padding:8px 14px;display:flex;flex-wrap:wrap;gap:6px;}
+  .tab{background:var(--panel);border:1px solid var(--border);color:var(--muted);font-size:13px;font-weight:600;padding:7px 13px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:7px;transition:.12s;font-family:inherit;}
+  .tab:hover{color:var(--text);border-color:#455063;}
+  .tab .n{font-size:11px;font-weight:800;background:var(--panel2);color:var(--muted);border-radius:5px;padding:1px 6px;min-width:20px;text-align:center;}
+  .tab.active{background:var(--accent);color:#0d1117;border-color:var(--accent);}
+  .tab.active .n{background:rgba(13,17,23,.25);color:#0d1117;}
+
+  .panel{display:none;animation:fade .18s ease;}
+  .panel.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+  .panel-head{padding:26px 0 2px;}
+  .panel-head h2{margin:0;font-size:24px;letter-spacing:-0.3px;}
+  .panel-head .sub{color:var(--muted);margin:8px 0 0;font-size:15px;}
+
+  h3{font-size:15px;margin:24px 0 6px;color:var(--text);}
+  p{margin:11px 0;} ul{margin:8px 0;padding-left:22px;} li{margin:6px 0;}
+  ol{margin:8px 0;padding-left:22px;} ol li{margin:8px 0;}
+  .box{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin:16px 0;}
+  .tip{border-left:3px solid var(--accent2);}
+  .concept{border-left:3px solid var(--accent);}
+  .proj{border-left:3px solid var(--purple);}
+  .win{border-left:3px solid var(--green);}
+  .why{border-left:3px solid var(--clay);}
+  .warn{border-left:3px solid var(--yellow);}
+  pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padding:15px 16px;overflow-x:auto;margin:0 0 6px;position:relative;}
+  code{font-family:"SF Mono","Fira Code",Consolas,Menlo,monospace;font-size:13px;color:#c9d1d9;}
+  .copybtn{position:absolute;top:7px;right:7px;background:var(--panel2);border:1px solid var(--border);color:var(--muted);font-size:11px;padding:4px 10px;border-radius:6px;cursor:pointer;transition:.15s;font-family:inherit;}
+  .copybtn:hover{color:var(--text);border-color:var(--accent);}
+  .copybtn.done{color:var(--green);border-color:var(--green);}
+  code.inl{background:var(--panel2);border:1px solid var(--border);border-radius:5px;padding:1px 6px;color:var(--accent);font-size:12.5px;}
+
+  .task{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:10px;padding:16px 18px;margin:16px 0;}
+  .task .th{font-size:11px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--accent);margin:0 0 6px;}
+  .task p{margin:6px 0;}
+  details.sol{margin:12px 0 0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  details.sol summary{cursor:pointer;padding:9px 14px;background:var(--panel2);font-weight:600;font-size:12.5px;color:var(--green);user-select:none;list-style:none;}
+  details.sol summary::-webkit-details-marker{display:none;}
+  details.sol summary::before{content:"\25B8  ";color:var(--muted);}
+  details.sol[open] summary::before{content:"\25BE  ";}
+  details.sol .sb{padding:8px 14px 10px;}
+  .see{background:rgba(63,185,80,.07);border:1px solid rgba(63,185,80,.35);border-radius:8px;padding:12px 16px;margin:12px 0 0;}
+  .see .lbl{font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--green);margin:0 0 4px;}
+  .see p{margin:0;font-size:13.5px;color:var(--text);}
+  .see code.inl{color:var(--green);}
+
+  .nav{display:flex;justify-content:flex-end;margin:32px 0 10px;padding-top:18px;border-top:1px solid var(--border);}
+  .nextbtn{background:var(--panel);border:1px solid var(--border);color:var(--text);font-size:14px;font-weight:600;padding:10px 18px;border-radius:9px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;transition:.12s;}
+  .nextbtn:hover{border-color:var(--accent);color:var(--accent);}
+  a{color:var(--accent2);}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <p class="kicker">Tennis Vision Project &middot; Project Notebook</p>
+    <h1>Build Your Vision Project: Part 1</h1>
+    <p>Start the new project and build your first computer vision notebook. You will explore images as raw numbers, edit them with arithmetic, classify them with models you already know, look inside the trained model, prepare a real photo file the way tennis will need, and run the experiment that shows why convolutional networks come next.</p>
+    <div style="margin-top:14px;">
+      <span class="pill proj">vision_project1.ipynb</span><span class="pill">explore</span><span class="pill">image math</span><span class="pill">classify</span><span class="pill">real photos</span><span class="pill">scramble test</span>
+    </div>
+  </div>
+</header>
+
+<div id="tabbar">
+  <div class="tabs">
+    <button class="tab active" data-target="t0"><span class="n">0</span>Set up</button>
+    <button class="tab" data-target="t1"><span class="n">1</span>Explore</button>
+    <button class="tab" data-target="t2"><span class="n">2</span>Image math</button>
+    <button class="tab" data-target="t3"><span class="n">3</span>Classify</button>
+    <button class="tab" data-target="t4"><span class="n">4</span>Inspect</button>
+    <button class="tab" data-target="t5"><span class="n">5</span>Real photo</button>
+    <button class="tab" data-target="t6"><span class="n">6</span>Scramble</button>
+    <button class="tab" data-target="t7"><span class="n">7</span>Submit</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ============ SET UP ============ -->
+<section class="panel active" id="t0">
+  <div class="panel-head"><h2>Set up the project</h2>
+    <p class="sub">A new folder and notebook. Almost nothing to download.</p>
+  </div>
+  <ol>
+    <li>Create a folder called <code class="inl">tennis-vision</code>.</li>
+    <li>Create a notebook inside it called <code class="inl">vision_project1.ipynb</code>.</li>
+    <li>The digits dataset ships with scikit-learn, so there is no data file to fetch.</li>
+    <li>Save one tennis photo from the web into the folder as <code class="inl">court.jpg</code>, you will need it in section 6.</li>
+  </ol>
+
+  <p style="font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--accent);text-transform:uppercase;margin:18px 0 4px;">Cell 1 &middot; imports and load</p>
+  <pre><button class="copybtn">Copy</button><code>import numpy as np
+import matplotlib.pyplot as plt
+from PIL import Image
+from sklearn.datasets import load_digits
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, confusion_matrix
+
+digits = load_digits()
+print("images:", digits.images.shape)
+print("flat:  ", digits.data.shape)</code></pre>
+  <div class="see"><p class="lbl">You should see</p><p><code class="inl">images: (1797, 8, 8)</code> and <code class="inl">flat: (1797, 64)</code>. Same 1797 images, stored two ways: as grids and as flattened rows.</p></div>
+
+  <div class="box concept"><b>Structure your notebook</b> with these sections, the same habit as the tennis project: 1. Load, 2. Explore, 3. Image math, 4. Classify, 5. Inspect, 6. Real photo pipeline, 7. The scramble test.</div>
+
+  <div class="nav"><button class="nextbtn" data-next="t1">Next: Explore &rarr;</button></div>
+</section>
+
+<!-- ============ EXPLORE ============ -->
+<section class="panel" id="t1">
+  <div class="panel-head"><h2>Section 2: explore the images</h2>
+    <p class="sub">See them as numbers first, then as pictures.</p>
+  </div>
+
+  <div class="task">
+    <p class="th">Task A &middot; the raw numbers</p>
+    <p>Print the first image as an 8 by 8 grid of integers, its label, and the overall pixel range.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>print(digits.images[0].astype(int))
+print("label:", digits.target[0])
+print("pixel range:", digits.images.min(), "to", digits.images.max())</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>A grid of numbers, label <code class="inl">0</code>, and a range of <code class="inl">0.0 to 16.0</code>. Look at the grid, the big numbers trace the shape of the digit.</p></div>
+
+  <div class="task">
+    <p class="th">Task B &middot; render them</p>
+    <p>Display the first eight images in a row with their labels as titles.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>fig, axes = plt.subplots(1, 8, figsize=(11, 2))
+for ax, img, lab in zip(axes, digits.images, digits.target):
+    ax.imshow(img, cmap="gray")
+    ax.set_title(lab)
+    ax.axis("off")
+plt.show()</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>Eight small, slightly blurry handwritten digits, each labeled correctly.</p></div>
+
+  <div class="task">
+    <p class="th">Task C &middot; the average digit and class balance</p>
+    <p>Build and display the average image for the digit 3, then count how many images there are of each digit.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>avg3 = digits.images[digits.target == 3].mean(axis=0)
+plt.imshow(avg3, cmap="gray"); plt.title("average 3"); plt.axis("off"); plt.show()
+
+vals, counts = np.unique(digits.target, return_counts=True)
+print(dict(zip(vals, counts)))</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>A blurry but recognizable 3, and roughly <code class="inl">180</code> images of each digit, so the dataset is balanced.</p></div>
+
+  <div class="nav"><button class="nextbtn" data-next="t2">Next: Image math &rarr;</button></div>
+</section>
+
+<!-- ============ IMAGE MATH ============ -->
+<section class="panel" id="t2">
+  <div class="panel-head"><h2>Section 3: image math</h2>
+    <p class="sub">Editing an image is arithmetic on the array.</p>
+  </div>
+
+  <div class="task">
+    <p class="th">Task A &middot; four operations at once</p>
+    <p>Take image 0 and produce a brighter version, an inverted version, a left-right flip, and a middle 4 by 4 crop. Display all five side by side.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>img = digits.images[0]
+brighter = np.clip(img + 4, 0, 16)
+inverted = 16 - img
+flipped  = np.fliplr(img)
+cropped  = img[2:6, 2:6]
+
+fig, axes = plt.subplots(1, 5, figsize=(10, 2))
+for ax, picture, name in zip(axes,
+        [img, brighter, inverted, flipped, cropped],
+        ["original", "brighter", "inverted", "flipped", "cropped"]):
+    ax.imshow(picture, cmap="gray"); ax.set_title(name, fontsize=9); ax.axis("off")
+plt.show()</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>Five versions of the same digit. The cropped one is visibly smaller, <code class="inl">(4, 4)</code> instead of <code class="inl">(8, 8)</code>.</p></div>
+
+  <div class="task">
+    <p class="th">Task B &middot; a darker version</p>
+    <p>Subtract 4 from every pixel of image 0, clipped so nothing goes below 0, and display it next to the original.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>darker = np.clip(digits.images[0] - 4, 0, 16)
+fig, axes = plt.subplots(1, 2, figsize=(4, 2))
+axes[0].imshow(digits.images[0], cmap="gray"); axes[0].set_title("original"); axes[0].axis("off")
+axes[1].imshow(darker, cmap="gray"); axes[1].set_title("darker"); axes[1].axis("off")
+plt.show()</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>The same digit, dimmer. Without <code class="inl">np.clip</code> the values could go negative and the display would look wrong.</p></div>
+
+  <div class="task">
+    <p class="th">Task C &middot; flip up and down</p>
+    <p>Flip image 0 upside down and confirm in code that the result really differs from the original.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>upside = np.flipud(digits.images[0])
+print("changed:", not np.array_equal(upside, digits.images[0]))
+plt.imshow(upside, cmap="gray"); plt.axis("off"); plt.show()</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p><code class="inl">changed: True</code> and an upside-down digit. These operations are the basis of data augmentation, which we may need for tennis.</p></div>
+
+  <div class="nav"><button class="nextbtn" data-next="t3">Next: Classify &rarr;</button></div>
+</section>
+
+<!-- ============ CLASSIFY ============ -->
+<section class="panel" id="t3">
+  <div class="panel-head"><h2>Section 4: classify</h2>
+    <p class="sub">Your first computer vision model, using tools you already know.</p>
+  </div>
+
+  <div class="task">
+    <p class="th">Task A &middot; split and train</p>
+    <p>Split into train and test (25% test), then train a logistic regression on the flattened images and print its accuracy.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>X, y = digits.data, digits.target
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42)
+
+model = LogisticRegression(max_iter=5000).fit(X_train, y_train)
+print("accuracy:", round(accuracy_score(y_test, model.predict(X_test)), 4))</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>About <code class="inl">0.9733</code>. Your first vision model, 97% accurate, from the same logistic regression you used on tennis.</p></div>
+
+  <div class="task">
+    <p class="th">Task B &middot; test normalization honestly</p>
+    <p>Train a second logistic regression on pixels divided by 16 (scaled to 0 to 1) and compare accuracies. Does normalizing help here?</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>norm = LogisticRegression(max_iter=5000).fit(X_train / 16.0, y_train)
+print("raw:       ", round(accuracy_score(y_test, model.predict(X_test)), 4))
+print("normalized:", round(accuracy_score(y_test, norm.predict(X_test / 16.0)), 4))</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>Raw about <code class="inl">0.9733</code>, normalized about <code class="inl">0.9667</code>. Normalizing is slightly worse here, because these pixels already sit in a small range. It becomes important for real photos and neural networks. Same habit as tennis: test, do not assume.</p></div>
+
+  <div class="task">
+    <p class="th">Task C &middot; compare four models</p>
+    <p>Train logistic regression, a neural net, KNN, and a decision tree, and print all four accuracies.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>from sklearn.neural_network import MLPClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
+
+models = {
+    "logistic regression": LogisticRegression(max_iter=5000),
+    "neural net": MLPClassifier(hidden_layer_sizes=(64,), max_iter=1000, random_state=42),
+    "KNN": KNeighborsClassifier(n_neighbors=3),
+    "decision tree": DecisionTreeClassifier(random_state=42),
+}
+for name, m in models.items():
+    m.fit(X_train, y_train)
+    print(f"{name:22} {accuracy_score(y_test, m.predict(X_test)):.4f}")</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>Roughly KNN <code class="inl">0.987</code>, neural net <code class="inl">0.982</code>, logistic regression <code class="inl">0.973</code>, decision tree <code class="inl">0.858</code>. Unlike tennis, the models really do separate here.</p></div>
+
+  <div class="nav"><button class="nextbtn" data-next="t4">Next: Inspect &rarr;</button></div>
+</section>
+
+<!-- ============ INSPECT ============ -->
+<section class="panel" id="t4">
+  <div class="panel-head"><h2>Section 5: inspect</h2>
+    <p class="sub">Look at the mistakes, then look inside the model.</p>
+  </div>
+
+  <div class="task">
+    <p class="th">Task A &middot; confusion matrix and errors</p>
+    <p>Print the confusion matrix and the number of wrong predictions, then display the first four misclassified images with true and predicted labels.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>pred = model.predict(X_test)
+print(confusion_matrix(y_test, pred))
+print("wrong:", (pred != y_test).sum(), "of", len(y_test))
+
+wrong = np.where(pred != y_test)[0]
+fig, axes = plt.subplots(1, 4, figsize=(7, 2))
+for ax, idx in zip(axes, wrong[:4]):
+    ax.imshow(X_test[idx].reshape(8, 8), cmap="gray")
+    ax.set_title(f"is {y_test[idx]}, said {pred[idx]}", fontsize=9)
+    ax.axis("off")
+plt.show()</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>A strong diagonal, about <code class="inl">12</code> wrong out of <code class="inl">450</code>, and four genuinely messy digits.</p></div>
+
+  <div class="task">
+    <p class="th">Task B &middot; see what the model learned</p>
+    <p>Print the shape of the model's coefficients, then reshape them into 8 by 8 images and display the maps for digits 0 through 4.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>print("coefficient shape:", model.coef_.shape)
+
+fig, axes = plt.subplots(1, 5, figsize=(9, 2))
+for ax, i in zip(axes, range(5)):
+    ax.imshow(model.coef_[i].reshape(8, 8), cmap="RdBu")
+    ax.set_title(f"digit {i}", fontsize=9); ax.axis("off")
+plt.show()</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p><code class="inl">(10, 64)</code>, one weight per pixel per digit, and five evidence maps. Red pixels push toward that digit, blue push away. The map for 0 shows a ring.</p></div>
+
+  <div class="task">
+    <p class="th">Task C &middot; predict a single image</p>
+    <p>Predict just test image 0 and print the prediction next to the true label.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>one = X_test[0].reshape(1, -1)
+print("predicted:", model.predict(one)[0], " actual:", y_test[0])</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>A matching pair. <code class="inl">reshape(1, -1)</code> is needed because predict expects a table of rows, not a single row.</p></div>
+
+  <div class="nav"><button class="nextbtn" data-next="t5">Next: Real photo &rarr;</button></div>
+</section>
+
+<!-- ============ REAL PHOTO ============ -->
+<section class="panel" id="t5">
+  <div class="panel-head"><h2>Section 6: the real photo pipeline</h2>
+    <p class="sub">The part that matters most for tennis. Use the <code class="inl">court.jpg</code> you saved.</p>
+  </div>
+
+  <div class="box warn"><b>Before you start:</b> make sure a tennis photo is saved in your project folder as <code class="inl">court.jpg</code>. Any match photo works.</div>
+
+  <div class="task">
+    <p class="th">Task A &middot; load it</p>
+    <p>Open the photo with Pillow, print its size and mode, convert it to an array, and print the array shape and value range. Display it.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>img = Image.open("court.jpg")
+print("size (width, height):", img.size)
+print("mode:", img.mode)
+
+arr = np.array(img)
+print("array shape:", arr.shape)
+print("value range:", arr.min(), "to", arr.max())
+plt.imshow(arr); plt.axis("off"); plt.show()</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>A shape like <code class="inl">(height, width, 3)</code> and a range up to <code class="inl">255</code>. The trailing 3 is the red, green, and blue channels, and the range is 0 to 255, not 0 to 16 like the digits.</p></div>
+
+  <div class="task">
+    <p class="th">Task B &middot; prepare it</p>
+    <p>Resize the photo to 64 by 64, convert a copy to grayscale, normalize the resized version to 0 to 1, and flatten it. Print the shape or length at each step.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>small_arr = np.array(img.resize((64, 64)))
+print("resized:", small_arr.shape, " total numbers:", small_arr.size)
+
+gray = np.array(img.convert("L"))
+print("grayscale:", gray.shape)
+
+normalized = small_arr / 255.0
+print("normalized range:", round(float(normalized.min()), 3), "to", round(float(normalized.max()), 3))
+
+flat = small_arr.reshape(-1)
+print("flattened length:", flat.shape[0])</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>Resized <code class="inl">(64, 64, 3)</code> holding <code class="inl">12288</code> numbers, grayscale with no third dimension, a normalized range inside 0 to 1, and a flattened length of 12288. Compare that to 64 numbers per digit.</p></div>
+
+  <div class="task">
+    <p class="th">Task C &middot; the color channels, and the surface preview</p>
+    <p>Display the red, green, and blue channels separately as grayscale images, then print the average R, G, B of the top half and the bottom half of the photo.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>fig, axes = plt.subplots(1, 3, figsize=(9, 3))
+for ax, i, name in zip(axes, [0, 1, 2], ["red", "green", "blue"]):
+    ax.imshow(arr[:, :, i], cmap="gray"); ax.set_title(name); ax.axis("off")
+plt.show()
+
+top    = arr[:arr.shape[0]//2]
+bottom = arr[arr.shape[0]//2:]
+print("top    average R,G,B:", [int(v) for v in top.mean(axis=(0, 1))])
+print("bottom average R,G,B:", [int(v) for v in bottom.mean(axis=(0, 1))])</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>Three channel images, and two sets of average colors. On a clay photo the red average runs high; on grass the green does. That single difference is the core signal the surface classifier will use, which is a good sign the project is learnable.</p></div>
+
+  <div class="nav"><button class="nextbtn" data-next="t6">Next: Scramble &rarr;</button></div>
+</section>
+
+<!-- ============ SCRAMBLE ============ -->
+<section class="panel" id="t6">
+  <div class="panel-head"><h2>Section 7: the scramble test</h2>
+    <p class="sub">The experiment that shows why the next lesson exists.</p>
+  </div>
+
+  <div class="task">
+    <p class="th">Task A &middot; scramble the pixels</p>
+    <p>Apply one fixed random pixel permutation to every image, retrain, and compare accuracy to normal.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>rng = np.random.default_rng(0)
+perm = rng.permutation(64)
+
+X_train_s, X_test_s = X_train[:, perm], X_test[:, perm]
+scrambled = LogisticRegression(max_iter=5000).fit(X_train_s, y_train)
+
+print("normal:   ", round(accuracy_score(y_test, model.predict(X_test)), 4))
+print("scrambled:", round(accuracy_score(y_test, scrambled.predict(X_test_s)), 4))</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>Both <code class="inl">0.9733</code>, identical. The model has no idea where the pixels are, so scrambling them changes nothing.</p></div>
+
+  <div class="task">
+    <p class="th">Task B &middot; see what the model sees</p>
+    <p>Display a normal digit next to its scrambled version.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>fig, axes = plt.subplots(1, 2, figsize=(4, 2))
+axes[0].imshow(X_test[0].reshape(8, 8), cmap="gray"); axes[0].set_title("normal"); axes[0].axis("off")
+axes[1].imshow(X_test[0][perm].reshape(8, 8), cmap="gray"); axes[1].set_title("scrambled"); axes[1].axis("off")
+plt.show()</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p>The scrambled one is unreadable to you, yet the model scores exactly the same on it. That gap is why convolutional networks exist.</p></div>
+
+  <div class="task">
+    <p class="th">Task C &middot; the size problem</p>
+    <p>Print how many features a flattened image has at 8 by 8 grayscale, 64 by 64 color, and 224 by 224 color.</p>
+    <details class="sol"><summary>Solution</summary><div class="sb"><pre><button class="copybtn">Copy</button><code>print("8x8 gray:     ", 8 * 8)
+print("64x64 color:  ", 64 * 64 * 3)
+print("224x224 color:", 224 * 224 * 3)</code></pre></div></details>
+  </div>
+  <div class="see"><p class="lbl">You should see</p><p><code class="inl">64</code>, <code class="inl">12288</code>, then <code class="inl">150528</code>. Classic models buckle at that many inputs, which is the other reason CNNs exist.</p></div>
+
+  <div class="nav"><button class="nextbtn" data-next="t7">Next: Submit &rarr;</button></div>
+</section>
+
+<!-- ============ SUBMIT ============ -->
+<section class="panel" id="t7">
+  <div class="panel-head"><h2>Bring this back next session</h2>
+    <p class="sub">Checklist for your first vision notebook.</p>
+  </div>
+  <div class="box proj">
+    <b>You should have a <code class="inl">vision_project1.ipynb</code> containing:</b>
+    <ul style="margin:8px 0 0;">
+      <li>The dataset loaded, with images shown both as raw numbers and as pictures, plus the average-3 image and class balance.</li>
+      <li>The image math section: brighter, darker, inverted, flipped, and cropped versions.</li>
+      <li>A train/test split, a logistic regression at about 97%, and the normalization test.</li>
+      <li>A four-model comparison.</li>
+      <li>A confusion matrix, the misclassified digits, and the learned coefficient maps.</li>
+      <li>The real photo pipeline on <code class="inl">court.jpg</code>: load, resize, grayscale, normalize, flatten, channels, and the average-color comparison.</li>
+      <li>The scramble test with both images shown, and the feature-count comparison.</li>
+    </ul>
+  </div>
+  <div class="box concept">
+    <b>Next lesson:</b> convolutional neural networks, the models built to respect spatial layout. We move to Google Colab (free, with TensorFlow and Keras already installed and free GPU access) so training runs fast without any local setup headaches. That is the last stop before tennis photos.
+  </div>
+  <div class="box tip">
+    <b>Turn it in:</b> send me your <code class="inl">vision_project1.ipynb</code> so I can look it over. Reminder: this is homework part two; part one is the 14 review questions at the end of the lesson.
+  </div>
+</section>
+
+</div>
+
+<script>
+  var tabs = document.querySelectorAll(".tab");
+  var panels = document.querySelectorAll(".panel");
+  var bar = document.getElementById("tabbar");
+  function show(id){
+    tabs.forEach(function(t){ t.classList.toggle("active", t.dataset.target === id); });
+    panels.forEach(function(p){ p.classList.toggle("active", p.id === id); });
+    window.scrollTo({ top: bar.offsetTop, behavior: "smooth" });
+  }
+  tabs.forEach(function(t){ t.addEventListener("click", function(){ show(t.dataset.target); }); });
+  document.querySelectorAll("[data-next]").forEach(function(b){ b.addEventListener("click", function(){ show(b.dataset.next); }); });
+  document.querySelectorAll(".copybtn").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var code = btn.parentElement.querySelector("code").innerText;
+      navigator.clipboard.writeText(code).then(function(){
+        btn.textContent = "Copied"; btn.classList.add("done");
+        setTimeout(function(){ btn.textContent = "Copy"; btn.classList.remove("done"); }, 1500);
+      });
+    });
+  });
+</script>
+</body>
+</html>
