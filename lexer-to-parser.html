@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>From Text to Tree: the Lexer and Parser</title>
+<style>
+  :root{
+    --bg:#fcfbf9; --panel:#fff; --panel2:#f4f2ee; --ink:#1b1a18; --ink2:#55524c; --ink3:#8a857c;
+    --line:#e3dfd7; --accent:#2f5fd0; --accent-soft:#e9effc;
+    --good:#1b7a49; --good-soft:#e5f4ec; --bad:#b02f2f; --bad-soft:#fbeaea;
+    --warn:#95640b; --warn-soft:#fcf2dc; --code:#f4f2ee;
+    --t-id:#2f5fd0; --t-int:#1b7a49; --t-dec:#0f7a7a; --t-chr:#9a4a9a; --t-str:#b06520; --t-op:#8a857c;
+    --r:10px;
+  }
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+    --bg:#16171a; --panel:#1d1f23; --panel2:#25282d; --ink:#eae8e4; --ink2:#b4b0a9; --ink3:#87837c;
+    --line:#32363c; --accent:#82a8f2; --accent-soft:#1e2941;
+    --good:#66c998; --good-soft:#162b21; --bad:#e78888; --bad-soft:#2e1c1c;
+    --warn:#ddb25e; --warn-soft:#2c2416; --code:#25282d;
+    --t-id:#82a8f2; --t-int:#66c998; --t-dec:#5fc0c0; --t-chr:#d08ad0; --t-str:#e0a05f; --t-op:#9b968e;
+  }}
+  :root[data-theme="dark"]{
+    --bg:#16171a; --panel:#1d1f23; --panel2:#25282d; --ink:#eae8e4; --ink2:#b4b0a9; --ink3:#87837c;
+    --line:#32363c; --accent:#82a8f2; --accent-soft:#1e2941;
+    --good:#66c998; --good-soft:#162b21; --bad:#e78888; --bad-soft:#2e1c1c;
+    --warn:#ddb25e; --warn-soft:#2c2416; --code:#25282d;
+    --t-id:#82a8f2; --t-int:#66c998; --t-dec:#5fc0c0; --t-chr:#d08ad0; --t-str:#e0a05f; --t-op:#9b968e;
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);line-height:1.62;font-size:16px;
+       font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  code,pre,.mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace}
+  .wrap{max-width:920px;margin:0 auto;padding:0 1.1rem 4rem}
+
+  header.top{background:var(--panel);border-bottom:1px solid var(--line);padding:1.5rem 0 0;margin-bottom:1.6rem}
+  .bar{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap}
+  h1{margin:0 0 .2rem;font-size:1.4rem;letter-spacing:-.01em}
+  .sub{margin:0 0 1.1rem;color:var(--ink3);font-size:.86rem}
+  .tbtn{background:var(--panel2);border:1px solid var(--line);color:var(--ink2);border-radius:999px;
+        padding:.3rem .8rem;font-size:.76rem;cursor:pointer}
+  nav.tabs{display:flex;gap:.1rem;overflow-x:auto;scrollbar-width:none}
+  nav.tabs::-webkit-scrollbar{display:none}
+  nav.tabs button{background:none;border:none;border-bottom:2px solid transparent;color:var(--ink3);
+        font:inherit;font-size:.86rem;padding:.55rem .75rem;cursor:pointer;white-space:nowrap}
+  nav.tabs button:hover{color:var(--ink2)}
+  nav.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent);font-weight:640}
+
+  .panel{display:none}
+  .panel.active{display:block;animation:f .18s ease}
+  @keyframes f{from{opacity:0}to{opacity:1}}
+
+  h2{font-size:1.16rem;margin:2.3rem 0 .65rem;padding-bottom:.32rem;border-bottom:1px solid var(--line);letter-spacing:-.01em}
+  h2:first-child{margin-top:.3rem}
+  h3{font-size:1rem;margin:1.5rem 0 .45rem}
+  h4{font-size:.82rem;margin:1.1rem 0 .3rem;color:var(--ink2);text-transform:uppercase;letter-spacing:.05em}
+  p{margin:.55rem 0}
+  ul,ol{margin:.55rem 0;padding-left:1.3rem}
+  li{margin:.28rem 0}
+  .lead{font-size:1.01rem;color:var(--ink2)}
+
+  pre{background:var(--code);border:1px solid var(--line);border-radius:var(--r);padding:.8rem 1rem;
+      overflow-x:auto;font-size:.81rem;line-height:1.55;margin:.75rem 0}
+  p code,li code,td code,th code,summary code{background:var(--code);border:1px solid var(--line);
+      border-radius:5px;padding:.05em .34em;font-size:.87em}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:1rem 1.15rem;margin:1.1rem 0}
+  .card>:first-child{margin-top:0}.card>:last-child{margin-bottom:0}
+  .note,.good,.bad,.warn{padding:.65rem 1rem;border-radius:0 var(--r) var(--r) 0;margin:.95rem 0}
+  .note{border-left:3px solid var(--accent);background:var(--accent-soft)}
+  .good{border-left:3px solid var(--good);background:var(--good-soft)}
+  .bad{border-left:3px solid var(--bad);background:var(--bad-soft)}
+  .warn{border-left:3px solid var(--warn);background:var(--warn-soft)}
+  .note>:first-child,.good>:first-child,.bad>:first-child,.warn>:first-child{margin-top:0}
+  .note>:last-child,.good>:last-child,.bad>:last-child,.warn>:last-child{margin-bottom:0}
+
+  .tw{overflow-x:auto;margin:.85rem 0}
+  table{border-collapse:collapse;width:100%;font-size:.86rem;min-width:360px}
+  th,td{text-align:left;padding:.45rem .6rem;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:.76rem;text-transform:uppercase;letter-spacing:.04em;color:var(--ink2);font-weight:640}
+  tbody tr:last-child td{border-bottom:none}
+
+  ol.steps{counter-reset:s;list-style:none;padding-left:0}
+  ol.steps>li{counter-increment:s;position:relative;padding-left:2.35rem;margin:1rem 0}
+  ol.steps>li::before{content:counter(s);position:absolute;left:0;top:.05rem;width:1.65rem;height:1.65rem;
+    border-radius:50%;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;
+    justify-content:center;font-size:.79rem;font-weight:700}
+
+  details{border:1px solid var(--line);border-radius:var(--r);padding:.55rem .9rem;margin:.65rem 0;background:var(--panel)}
+  details[open]{background:var(--panel2)}
+  summary{cursor:pointer;font-weight:600;font-size:.9rem;color:var(--accent)}
+  details>*:not(summary){margin-top:.55rem}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(235px,1fr));gap:.85rem;margin:.95rem 0}
+  .mini{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:.8rem .95rem}
+  .mini h4{margin-top:0}
+  .mini p{font-size:.86rem;color:var(--ink2);margin:.25rem 0 0}
+
+  /* pipeline */
+  .pipe{display:flex;flex-direction:column;gap:0;margin:1.2rem 0}
+  .stage{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:.7rem 1rem}
+  .stage.on{border-color:var(--accent);background:var(--accent-soft)}
+  .stage .nm{font-weight:650;font-size:.93rem}
+  .stage .ds{font-size:.82rem;color:var(--ink2)}
+  .stage .bd{font-size:.74rem;color:var(--ink3);text-transform:uppercase;letter-spacing:.05em}
+  .arrow{text-align:center;color:var(--ink3);font-size:.95rem;line-height:1;padding:.3rem 0}
+  .arrow span{font-size:.72rem;display:block;color:var(--ink3);margin-top:.1rem}
+
+  /* tokens */
+  .tok{display:inline-block;border:1px solid var(--line);border-radius:6px;padding:.16rem .45rem;
+       margin:.15rem .2rem .15rem 0;font-size:.78rem;background:var(--panel);white-space:nowrap}
+  .tok b{font-weight:650;font-size:.66rem;letter-spacing:.04em;display:block;line-height:1.3}
+  .tok .lit{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.84rem}
+  .tok.IDENTIFIER b{color:var(--t-id)} .tok.IDENTIFIER{border-color:var(--t-id)}
+  .tok.INTEGER b{color:var(--t-int)}   .tok.INTEGER{border-color:var(--t-int)}
+  .tok.DECIMAL b{color:var(--t-dec)}   .tok.DECIMAL{border-color:var(--t-dec)}
+  .tok.CHARACTER b{color:var(--t-chr)} .tok.CHARACTER{border-color:var(--t-chr)}
+  .tok.STRING b{color:var(--t-str)}    .tok.STRING{border-color:var(--t-str)}
+  .tok.OPERATOR b{color:var(--t-op)}   .tok.OPERATOR{border-color:var(--t-op)}
+
+  /* live tool */
+  .tool{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:1rem 1.15rem;margin:1.1rem 0}
+  .tool label{display:block;font-size:.76rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink2);margin-bottom:.3rem;font-weight:640}
+  .tool input[type=text]{width:100%;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.95rem;
+      padding:.55rem .7rem;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink)}
+  .tool input[type=text]:focus{outline:none;border-color:var(--accent)}
+  .chips{display:flex;flex-wrap:wrap;gap:.3rem;margin:.55rem 0 0}
+  .chip{background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:.2rem .6rem;
+        font-size:.75rem;cursor:pointer;font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--ink2)}
+  .chip:hover{border-color:var(--accent);color:var(--accent)}
+  .out{margin-top:.85rem}
+  .out h4{margin-top:0}
+  .treebox{background:var(--code);border:1px solid var(--line);border-radius:7px;padding:.7rem .9rem;
+      overflow-x:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.82rem;line-height:1.7;white-space:pre}
+  .nd{font-weight:650}
+  .nd.Binary{color:var(--t-op)} .nd.Literal{color:var(--t-int)} .nd.Access{color:var(--t-id)}
+  .nd.Function{color:var(--t-chr)} .nd.Group{color:var(--t-str)} .nd.Statement{color:var(--accent)}
+  .dim{color:var(--ink3)}
+  .verdict{margin-top:.7rem;font-size:.86rem;padding:.55rem .8rem;border-radius:7px}
+  .verdict.ok{background:var(--good-soft);color:var(--good)}
+  .verdict.no{background:var(--bad-soft);color:var(--bad)}
+
+  /* ladder */
+  .rung{display:flex;align-items:center;gap:.7rem;border:1px solid var(--line);border-radius:8px;
+        padding:.5rem .8rem;margin:.28rem 0;background:var(--panel)}
+  .rung .n{width:1.5rem;height:1.5rem;border-radius:50%;background:var(--panel2);color:var(--ink3);
+      display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex:none}
+  .rung .mn{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.79rem;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .rung .ops{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.78rem;color:var(--ink2);flex:none}
+  .rung.hi{border-color:var(--accent);background:var(--accent-soft)}
+  .ind{color:var(--ink3);font-size:.74rem;text-align:center;margin:.1rem 0}
+
+  .quiz{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:1rem 1.15rem;margin:.95rem 0}
+  .quiz .q{font-weight:600;margin:0 0 .7rem}
+  .quiz .qn{display:block;color:var(--ink3);font-size:.74rem;letter-spacing:.05em;font-weight:650;margin-bottom:.25rem}
+  .opts{display:flex;flex-direction:column;gap:.38rem}
+  .opt{text-align:left;font:inherit;font-size:.88rem;background:var(--bg);color:var(--ink);
+       border:1px solid var(--line);border-radius:7px;padding:.5rem .75rem;cursor:pointer}
+  .opt:hover:not(:disabled){border-color:var(--accent);background:var(--accent-soft)}
+  .opt:disabled{cursor:default;opacity:.72}
+  .opt.correct{border-color:var(--good);background:var(--good-soft);color:var(--good);font-weight:600;opacity:1}
+  .opt.wrong{border-color:var(--bad);background:var(--bad-soft);color:var(--bad);opacity:1}
+  .fb{display:none;margin-top:.65rem;font-size:.87rem;padding:.55rem .8rem;border-radius:7px}
+  .fb.show{display:block}
+  .fb.ok{background:var(--good-soft);color:var(--good)}
+  .fb.no{background:var(--bad-soft);color:var(--bad)}
+  .fb b{display:block;margin-bottom:.15rem}
+  .score{font-size:.83rem;color:var(--ink3);margin-top:.9rem}
+
+  footer{border-top:1px solid var(--line);margin-top:3rem;padding-top:1rem;color:var(--ink3);font-size:.79rem}
+
+  @media(max-width:560px){
+    body{font-size:15px} h1{font-size:1.18rem}
+    .wrap{padding:0 .8rem 3rem}
+    nav.tabs button{padding:.5rem .55rem;font-size:.8rem}
+    .rung{flex-wrap:wrap}
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap" style="padding-bottom:0">
+    <div class="bar">
+      <div>
+        <h1>From Text to Tree</h1>
+        <p class="sub">How the lexer works, how it feeds the parser, and exactly what to build for Project 2A</p>
+      </div>
+      <button class="tbtn" id="tbtn" type="button">Theme</button>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-tab="p1" aria-selected="true">1. Start here</button>
+      <button role="tab" data-tab="p2" aria-selected="false">2. The lexer</button>
+      <button role="tab" data-tab="p3" aria-selected="false">3. The rules</button>
+      <button role="tab" data-tab="p4" aria-selected="false">4. The tree</button>
+      <button role="tab" data-tab="p5" aria-selected="false">5. The parser</button>
+      <button role="tab" data-tab="p6" aria-selected="false">6. Build it</button>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- ============ 1 ============ -->
+<section class="panel active" id="p1">
+
+  <p class="lead">Start with one fact. <strong>Source code is just text.</strong> A file containing <code>LET x = 5 + 3;</code> is fourteen characters. It means nothing to a computer until a program reads it and decides what to do.</p>
+
+  <p>That program is what you are building this semester. It is not six assignments. It is <strong>one program</strong>, built in six pieces, and each piece hands its output to the next.</p>
+
+  <h2>The pipeline</h2>
+
+  <div class="pipe">
+    <div class="stage"><div class="bd">input</div><div class="nm mono">"LET x = 5 + 3;"</div><div class="ds">Text a human typed. Just characters.</div></div>
+    <div class="arrow">&darr;<span>LEXER &middot; Project 1 &middot; done</span></div>
+    <div class="stage"><div class="bd">tokens</div><div class="nm mono">[LET] [x] [=] [5] [+] [3] [;]</div><div class="ds">A flat list of "words". No structure yet.</div></div>
+    <div class="arrow">&darr;<span>PARSER &middot; Project 2 &middot; you are here</span></div>
+    <div class="stage on"><div class="bd">tree (AST)</div><div class="nm mono">Source &rarr; Field "x" &rarr; Binary "+"</div><div class="ds">Structure. Now the shape carries the meaning.</div></div>
+    <div class="arrow">&darr;<span>ANALYZER &middot; Project 4</span></div>
+    <div class="stage"><div class="bd">checked tree</div><div class="nm">Types and names verified</div><div class="ds">Does x exist? Can you add these two things?</div></div>
+    <div class="arrow">&darr;<span>INTERPRETER &middot; P3 &nbsp;|&nbsp; GENERATOR &middot; P5</span></div>
+    <div class="stage"><div class="bd">output</div><div class="nm">x = 8</div><div class="ds">Run it, or print equivalent Java source.</div></div>
+  </div>
+
+  <h2>Where the homework fits</h2>
+
+  <p>The syllabus says it outright in the grade table: <code>HW1 - Supplements Lexing</code> and <code>HW2 - Supplements Parsing</code>. Each homework is the paper warm-up for the project part that follows.</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>Homework</th><th>What it drilled</th><th>Feeds</th></tr></thead>
+    <tbody>
+      <tr><td><strong>HW1</strong> Regex and JUnit</td><td>writing regex patterns, writing your own tests</td><td><strong>P1 Lexer</strong></td></tr>
+      <tr><td><strong>HW2</strong> Grammar and AST quiz</td><td>reading grammar rules, naming AST nodes</td><td><strong>P2 Parser</strong></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note">
+    <p><strong>HW1 was regex</strong> because the lexer's <code>peek</code> takes regex strings. <code>peek("[A-Za-z_]")</code> is a regex. You could not write the lexer without it.</p>
+    <p><strong>HW2 was grammar and AST</strong> because the parser does nothing but read grammar rules and construct AST nodes. That is the entire job. The quiz is not a finished side quest. It is the design document for the thing due this week.</p>
+  </div>
+
+  <h2>Does HW2 still apply to Project 2A?</h2>
+
+  <p>Yes, and almost all of it is unchanged. The two grammars were compared rule by rule:</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>Rule from HW2</th><th>Needed for 2A?</th><th>Changed in P2?</th></tr></thead>
+    <tbody>
+      <tr><td><code>expression</code> and all six rules below it</td><td><strong>yes</strong></td><td>identical</td></tr>
+      <tr><td><code>identifier</code>, <code>string</code>, <code>escape</code>, <code>operator</code></td><td><strong>yes</strong></td><td>identical</td></tr>
+      <tr><td><code>statement</code>, last branch only</td><td><strong>yes</strong></td><td>identical</td></tr>
+      <tr><td><code>statement</code>, the other five branches</td><td>no, that is 2B</td><td>FOR changed</td></tr>
+      <tr><td><code>source</code>, <code>field</code>, <code>method</code></td><td>no, that is 2B</td><td>field gained CONST</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="good"><p>Everything Project 2A touches is word for word the same as what you studied for HW2. That work transfers directly.</p></div>
+
+  <div class="warn">
+    <p><strong>Two things did change, for later.</strong> The FOR loop was completely redesigned, from <code>FOR id IN expr DO ... END</code> to a C-style <code>FOR (init; cond; incr) ... END</code>. And the AST class names went from <code>Ast.Stmt</code> / <code>Ast.Expr</code> to <code>Ast.Statement</code> / <code>Ast.Expression</code>. Do not write the FOR loop from memory in two weeks, and make sure the P2 version of <code>Ast.java</code> is the one in your project folder.</p>
+  </div>
+
+  <h2>What Project 2A actually is</h2>
+
+  <p>A parser is a function with a very specific contract:</p>
+
+  <pre>INPUT:   List&lt;Token&gt;     <span class="dim">&lt;- exactly what your P1 lexer outputs</span>
+OUTPUT:  Ast tree        <span class="dim">&lt;- objects from Ast.java, which you were given</span></pre>
+
+  <p>You wrote the thing that makes the input. You were handed the classes that make the output. Your only job is the conversion in the middle. <strong>Flat list in, tree out.</strong></p>
+
+  <div class="grid">
+    <div class="mini"><h4>2A, expressions</h4><p>The value stuff: <code>1 + 2</code>, <code>x.y</code>, <code>f(a, b)</code>, <code>"hello"</code>, <code>(x)</code>. Plus expression and assignment statements.</p></div>
+    <div class="mini"><h4>2B, complete</h4><p>Adds the structure around it: <code>IF</code>, <code>WHILE</code>, <code>FOR</code>, <code>RETURN</code>, <code>DEF</code>, <code>LET</code>.</p></div>
+  </div>
+
+  <p>You submit exactly one file: <strong><code>Parser.java</code></strong>. Nothing else.</p>
+
+</section>
+
+<!-- ============ 2 ============ -->
+<section class="panel" id="p2">
+
+  <p class="lead">The lexer turns characters into words. That is the whole job. It does not care whether the program makes sense, exactly like splitting an English sentence into words without checking grammar.</p>
+
+  <h2>A token is three things</h2>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>Field</th><th>What</th><th>For <code>x</code> in <code>LET x = 5;</code></th></tr></thead>
+    <tbody>
+      <tr><td><code>type</code></td><td>which of six kinds</td><td>IDENTIFIER</td></tr>
+      <tr><td><code>literal</code></td><td>the exact text</td><td><code>x</code></td></tr>
+      <tr><td><code>index</code></td><td>where it started</td><td>4</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>The index is there so errors can point at the right character later.</p>
+
+  <h2>There are exactly six token types</h2>
+
+  <p>Every character of every program becomes one of these. That is the complete list, nothing else exists.</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>Type</th><th>What it is</th><th>Examples</th></tr></thead>
+    <tbody>
+      <tr><td><span class="tok IDENTIFIER"><b>IDENTIFIER</b></span></td><td>a bare word, no quotes</td><td><code>x</code> <code>banana</code> <code>getName</code> <code>_temp</code> <code>LET</code></td></tr>
+      <tr><td><span class="tok INTEGER"><b>INTEGER</b></span></td><td>a whole number</td><td><code>5</code> <code>42</code> <code>-1</code> <code>+10</code></td></tr>
+      <tr><td><span class="tok DECIMAL"><b>DECIMAL</b></span></td><td>a number with a dot</td><td><code>5.5</code> <code>-1.0</code></td></tr>
+      <tr><td><span class="tok CHARACTER"><b>CHARACTER</b></span></td><td>one thing in single quotes</td><td><code>'c'</code> <code>'\n'</code></td></tr>
+      <tr><td><span class="tok STRING"><b>STRING</b></span></td><td>anything in double quotes</td><td><code>"hello"</code> <code>""</code></td></tr>
+      <tr><td><span class="tok OPERATOR"><b>OPERATOR</b></span></td><td>everything else</td><td><code>+</code> <code>==</code> <code>;</code> <code>(</code> <code>.</code> <code>%</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note">
+    <p><strong>A string is never an identifier.</strong> The double quotes are the whole difference. A grammar slot that says <code>identifier</code> accepts only IDENTIFIER tokens. A slot that says <code>string</code> accepts only STRING tokens. They are not interchangeable.</p>
+  </div>
+
+  <h2>Try it yourself</h2>
+
+  <p>Type anything. This runs the same rules your lexer runs.</p>
+
+  <div class="tool">
+    <label for="lexin">Source text</label>
+    <input type="text" id="lexin" value="LET x = 5 + 3;" spellcheck="false" autocomplete="off">
+    <div class="chips" id="lexchips"></div>
+    <div class="out">
+      <h4>Tokens</h4>
+      <div id="lexout"></div>
+    </div>
+  </div>
+
+  <h2>Four things that surprise everyone</h2>
+
+  <h3>1. Keywords are just identifiers</h3>
+  <pre>"LET"   ->  [IDENTIFIER(LET)]
+"IF"    ->  [IDENTIFIER(IF)]
+"NIL"   ->  [IDENTIFIER(NIL)]
+"TRUE"  ->  [IDENTIFIER(TRUE)]</pre>
+  <p>The lexer has no idea keywords exist. To it, <code>LET</code> and <code>banana</code> are the same thing: a word.</p>
+  <p>Keywords become keywords one stage later, when the <strong>parser</strong> looks at a token and asks "is your text spelled L-E-T?" That is what single quotes in the grammar mean. <code>'LET'</code> means an IDENTIFIER token whose text happens to be LET. There is no reserved word list anywhere in this language.</p>
+
+  <h3>2. Numbers swallow their sign</h3>
+  <pre>"x+10"    ->  [IDENTIFIER(x), INTEGER(+10)]
+"x + 10"  ->  [IDENTIFIER(x), OPERATOR(+), INTEGER(10)]</pre>
+  <div class="bad"><p>With no spaces there is <strong>no plus operator at all</strong>. The number rule is <code>[+-]? [0-9]+ ...</code>, so the sign belongs to the number. The lexer is greedy and takes it.</p></div>
+  <p>This means <code>x + 10</code> is a valid expression and <code>x+10</code> is not. Whitespace changes the answer.</p>
+
+  <h3>3. Identifiers can contain hyphens</h3>
+  <pre>"x-10"  ->  [IDENTIFIER(x-10)]</pre>
+  <p>One single token. The rule is <code>[A-Za-z_] [A-Za-z0-9_-]*</code>, and that trailing <code>-</code> inside the brackets allows hyphens. So <code>x-10</code> is a variable whose name is literally <code>x-10</code>.</p>
+
+  <h3>4. Only some two-character operators merge</h3>
+  <pre>"&lt;="  ->  [OPERATOR(&lt;=)]                 merged
+"!="  ->  [OPERATOR(!=)]                 merged
+"||"  ->  [OPERATOR(|), OPERATOR(|)]     NOT merged
+"&amp;&amp;"  ->  [OPERATOR(&amp;), OPERATOR(&amp;)]     NOT merged</pre>
+  <p>The rule is <code>[&lt;&gt;!=] '='?</code>, so only those four characters followed by an equals sign combine. Everything else is one character at a time.</p>
+
+  <div class="good">
+    <p><strong>The habit to build:</strong> when the parser misbehaves, print the tokens first. Half of debugging Project 2 is discovering the input was not what you assumed.</p>
+  </div>
+
+  <h2>peek and match</h2>
+
+  <p>Your lexer is built almost entirely from two helpers, and the parser reuses the exact same idea one level up.</p>
+
+  <div class="grid">
+    <div class="mini"><h4>peek</h4><p>"Are the next characters what I am about to describe? Do not move."</p></div>
+    <div class="mini"><h4>match</h4><p>"Same question, but if the answer is yes, eat them."</p></div>
+  </div>
+
+  <p><code>match</code> is <code>peek</code> plus movement. That is the only difference. Look at <code>lexIdentifier</code>:</p>
+
+  <pre>match("[A-Za-z_]");                  <span class="dim">// eat the first letter</span>
+while (match("[A-Za-z0-9_-]")) { }   <span class="dim">// eat letters and digits until you cannot</span>
+return chars.emit(Token.Type.IDENTIFIER);</pre>
+
+  <p>Read it out loud and it says what it does. That is the pattern for the entire lexer, and you are about to repeat it for the parser.</p>
+
+</section>
+
+<!-- ============ 3 ============ -->
+<section class="panel" id="p3">
+
+  <p class="lead">A grammar is the rulebook. It says which sequences of tokens are legal. It looks intimidating and it is actually five symbols.</p>
+
+  <h2>The notation</h2>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>Symbol</th><th>Means</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td><code>::=</code></td><td>is defined as</td><td><code>expression ::= logical_expression</code></td></tr>
+      <tr><td><code>'LET'</code></td><td>this exact text must appear here</td><td>the literal word LET</td></tr>
+      <tr><td><code>|</code></td><td>or, pick one</td><td><code>'TRUE' | 'FALSE'</code></td></tr>
+      <tr><td><code>?</code></td><td>optional, zero or one time</td><td><code>('=' expression)?</code></td></tr>
+      <tr><td><code>*</code></td><td>zero or more times</td><td><code>statement*</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>Every rule is made of three ingredients</h2>
+
+  <p>Take this rule apart:</p>
+  <pre>field ::= 'LET' identifier ('=' expression)? ';'</pre>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>Piece</th><th>Ingredient</th><th>Means</th></tr></thead>
+    <tbody>
+      <tr><td><code>'LET'</code></td><td><strong>literal</strong>, in quotes</td><td>this exact text must be here</td></tr>
+      <tr><td><code>identifier</code></td><td><strong>token type</strong></td><td>any word goes here</td></tr>
+      <tr><td><code>expression</code></td><td><strong>another rule</strong></td><td>go run that rule and come back</td></tr>
+      <tr><td><code>';'</code></td><td><strong>literal</strong></td><td>this exact text</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p><strong>How to tell a token type from another rule:</strong> the token types are the six names from the lexer, <code>identifier</code>, <code>integer</code>, <code>decimal</code>, <code>character</code>, <code>string</code>, <code>operator</code>. Anything else lowercase is another rule you go look up.</p>
+
+  <p>Now read the rule as a sentence: <em>the word LET, then any word, then optionally an equals sign and a whole expression, then a semicolon.</em></p>
+
+  <pre>LET   x    =   5   ;
+ |    |    |   |   |
+'LET' id  '='  |  ';'
+              expression</pre>
+
+  <h2>The four-step check</h2>
+
+  <p>This is the procedure for answering "is this input valid for rule X." Do not read it like a programmer. Walk it like a machine.</p>
+
+  <ol class="steps">
+    <li><strong>Lex it by hand first.</strong> Write out the tokens before you look at any rule. This is the step everyone skips and it is where most wrong answers come from.</li>
+    <li><strong>Copy down the rule.</strong></li>
+    <li><strong>Walk the rule left to right</strong>, crossing off tokens as you consume them.</li>
+    <li><strong>Ask two questions.</strong> Did every required part get satisfied? Did I use up every token?</li>
+  </ol>
+
+  <p>If either answer in step 4 is no, the input is invalid.</p>
+
+  <div class="grid">
+    <div class="mini"><h4>Failure A: leftover tokens</h4><p>The rule finished but tokens remain. Valid plus garbage still means invalid.</p></div>
+    <div class="mini"><h4>Failure B: missing tokens</h4><p>The rule demands something and it is not there.</p></div>
+  </div>
+
+  <h3>Three reading rules</h3>
+  <ul>
+    <li><strong>Quoted means keyword.</strong> If a word appears in the grammar inside single quotes it is reserved. If it never appears in quotes anywhere, it is just an ordinary name.</li>
+    <li><strong>Star and question mark can match zero times.</strong> <code>statement*</code> is happy with no statements at all.</li>
+    <li><strong>The parser checks shape, not meaning.</strong> It has no idea whether a variable exists. <code>banana + 7</code> parses fine even though banana was never declared. Checking that names exist is the Analyzer, Project 4.</li>
+  </ul>
+
+  <h2>Worked examples</h2>
+
+  <details open>
+    <summary><code>FOR EACH IN array DO END</code> against the statement rule</summary>
+    <p><strong>Tokens:</strong> six plain identifiers. FOR, EACH, IN, array, DO, END.</p>
+    <p><strong>Rule:</strong> <code>'FOR' identifier 'IN' expression 'DO' statement* 'END'</code></p>
+    <div class="tw"><table>
+      <thead><tr><th>Rule wants</th><th>Token</th><th>OK?</th></tr></thead>
+      <tbody>
+        <tr><td><code>'FOR'</code></td><td>FOR</td><td>yes</td></tr>
+        <tr><td><code>identifier</code></td><td>EACH</td><td>yes, EACH is not quoted anywhere in the grammar</td></tr>
+        <tr><td><code>'IN'</code></td><td>IN</td><td>yes</td></tr>
+        <tr><td><code>expression</code></td><td>array</td><td>yes, a bare name is an expression</td></tr>
+        <tr><td><code>'DO'</code></td><td>DO</td><td>yes</td></tr>
+        <tr><td><code>statement*</code></td><td>nothing</td><td>yes, star allows zero</td></tr>
+        <tr><td><code>'END'</code></td><td>END</td><td>yes</td></tr>
+      </tbody>
+    </table></div>
+    <div class="good"><p><strong>Valid.</strong> Nothing missing, nothing left over. The empty body is fine because of the star.</p></div>
+  </details>
+
+  <details>
+    <summary><code>x+10</code> against the expression rule</summary>
+    <p><strong>Tokens:</strong> <code>[IDENTIFIER(x), INTEGER(+10)]</code>. Only two, and neither is an operator.</p>
+    <p><strong>Rule:</strong> <code>additive_expression ::= multiplicative_expression (('+' | '-') multiplicative_expression)*</code></p>
+    <ul>
+      <li>The first part consumes <code>x</code>. Good.</li>
+      <li>The loop needs an OPERATOR token spelled <code>+</code>. The next token is INTEGER <code>+10</code>. Not an operator. Loop runs zero times.</li>
+      <li>The rule returns, having produced just <code>x</code>.</li>
+    </ul>
+    <div class="bad"><p><strong>Invalid.</strong> INTEGER(+10) is still sitting there. Leftover tokens.</p></div>
+  </details>
+
+  <details>
+    <summary><code>nil</code> against the expression rule</summary>
+    <p><strong>Tokens:</strong> <code>[IDENTIFIER(nil)]</code></p>
+    <p>Walk the alternatives of <code>primary_expression</code> in order:</p>
+    <ul>
+      <li><code>'NIL'</code> is uppercase. Our token is lowercase. No match.</li>
+      <li>Not TRUE, not FALSE, not a number, not a character, not a string, no paren.</li>
+      <li><code>identifier</code> is <code>[A-Za-z_][A-Za-z0-9_-]*</code>. Does <code>nil</code> match? Yes.</li>
+    </ul>
+    <div class="good"><p><strong>Valid</strong>, but as a <em>variable named nil</em>, not as the NIL literal. "Is it legal" and "what does it mean" are different questions.</p></div>
+  </details>
+
+  <details>
+    <summary><code>1 &lt; x || y &lt; 10</code> against the expression rule</summary>
+    <p><strong>Tokens:</strong> <code>[INTEGER(1), OPERATOR(&lt;), IDENTIFIER(x), OPERATOR(|), OPERATOR(|), IDENTIFIER(y), OPERATOR(&lt;), INTEGER(10)]</code></p>
+    <p>The logical operators in this language are the <strong>words</strong> <code>AND</code> and <code>OR</code>. The symbols <code>||</code> and <code>&amp;&amp;</code> appear nowhere in the grammar, and they do not even lex as one token.</p>
+    <ul>
+      <li>The comparison level consumes <code>1 &lt; x</code>.</li>
+      <li>The logical loop asks: is the next token the word AND or OR? It is <code>OPERATOR(|)</code>. Neither. Loop runs zero times.</li>
+    </ul>
+    <div class="bad"><p><strong>Invalid.</strong> Five tokens left over. Write <code>1 &lt; x OR y &lt; 10</code> and it works.</p></div>
+  </details>
+
+  <h2>The full grammar for Project 2A</h2>
+
+  <p>This is all of it. The highlighted part is what you implement this week.</p>
+
+  <pre>expression            ::= logical_expression
+
+logical_expression    ::= comparison_expression (('AND' | 'OR') comparison_expression)*
+
+comparison_expression ::= additive_expression
+                          (('&lt;' | '&gt;' | '&lt;=' | '&gt;=' | '==' | '!=') additive_expression)*
+
+additive_expression   ::= multiplicative_expression (('+' | '-') multiplicative_expression)*
+
+multiplicative_expression ::= secondary_expression (('*' | '/') secondary_expression)*
+
+secondary_expression  ::= primary_expression
+                          ('.' identifier ('(' (expression (',' expression)*)? ')')?)*
+
+primary_expression    ::= 'NIL' | 'TRUE' | 'FALSE' |
+                          integer | decimal | character | string |
+                          '(' expression ')' |
+                          identifier ('(' (expression (',' expression)*)? ')')?
+
+statement             ::= ... five other branches, those are 2B ... |
+                          expression ('=' expression)? ';'      <span class="dim">&lt;- the only one for 2A</span></pre>
+
+</section>
+
+<!-- ============ 4 ============ -->
+<section class="panel" id="p4">
+
+  <p class="lead">The parser's output is a tree. Here is why a flat list is not enough, and what the tree is actually made of.</p>
+
+  <h2>Why a tree</h2>
+
+  <p>Order of operations is a shape, not a sequence. <code>1 + 2 * 3</code> and <code>1 * 2 + 3</code> have almost the same tokens but mean different things. A flat list cannot express that. A tree can:</p>
+
+  <pre>   1 + 2 * 3                1 * 2 + 3
+
+       +                        +
+      / \                      / \
+     1   *                    *   3
+        / \                  / \
+       2   3                1   2
+
+    = 7                      = 5</pre>
+
+  <p>In the left tree the multiply sits <em>inside</em> the add, so it happens first. Precedence is not a rule stored somewhere at runtime. It is baked into the shape.</p>
+
+  <h2>An AST node is just a Java object</h2>
+
+  <p>This is the unlock. Forget "tree" for a second. <code>Ast.Expression.Binary</code> is a class with three fields:</p>
+
+  <pre>public Binary(String operator, Ast.Expression left, Ast.Expression right)</pre>
+
+  <p>So when you draw this:</p>
+  <pre>      Binary "+"
+      /        \
+ Literal 1   Literal 2</pre>
+
+  <p>you are drawing this:</p>
+  <pre>new Ast.Expression.Binary("+",
+    new Ast.Expression.Literal(new BigInteger("1")),
+    new Ast.Expression.Literal(new BigInteger("2")))</pre>
+
+  <div class="note"><p>A tree is what nested constructor calls look like when you draw them. Branches are constructor arguments. Your parser is a machine that reads tokens and emits nested <code>new</code> calls.</p></div>
+
+  <h2>The five expression node types</h2>
+
+  <p>These are the only five. Project 2A is about exactly these.</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>Node</th><th>Fields</th><th>Code that makes it</th></tr></thead>
+    <tbody>
+      <tr><td><span class="nd Literal">Literal</span></td><td>one value</td><td><code>5</code> <code>"hi"</code> <code>'c'</code> <code>TRUE</code> <code>NIL</code></td></tr>
+      <tr><td><span class="nd Group">Group</span></td><td>one child</td><td><code>(1 + 2)</code></td></tr>
+      <tr><td><span class="nd Binary">Binary</span></td><td>operator, left, right</td><td><code>1 + 2</code> <code>x &lt; 10</code> <code>a AND b</code></td></tr>
+      <tr><td><span class="nd Access">Access</span></td><td>optional receiver, name</td><td><code>x</code> &nbsp; <code>obj.field</code></td></tr>
+      <tr><td><span class="nd Function">Function</span></td><td>optional receiver, name, arguments</td><td><code>f(a, b)</code> &nbsp; <code>x.toString()</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Access and Function are the same shape</h3>
+
+  <p>Two independent switches, four combinations:</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th></th><th>no parentheses</th><th>with parentheses</th></tr></thead>
+    <tbody>
+      <tr><th>no receiver</th><td><code>x</code> &rarr; Access</td><td><code>f()</code> &rarr; Function</td></tr>
+      <tr><th>has receiver</th><td><code>x.y</code> &rarr; Access</td><td><code>x.y()</code> &rarr; Function</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p><strong>Parentheses decide Access versus Function. The receiver decides plain versus attached.</strong></p>
+
+  <h2>Build a tree yourself</h2>
+
+  <p>Type an expression. This lexes it and parses it using the real grammar, then draws the tree and tells you whether anything was left over.</p>
+
+  <div class="tool">
+    <label for="parsein">Expression or statement</label>
+    <input type="text" id="parsein" value="1 + 2 * 3" spellcheck="false" autocomplete="off">
+    <div class="chips" id="parsechips"></div>
+    <div class="out">
+      <h4>Tokens</h4>
+      <div id="ptok"></div>
+      <h4 style="margin-top:.9rem">Tree</h4>
+      <div class="treebox" id="ptree"></div>
+      <div id="pverdict"></div>
+    </div>
+  </div>
+
+  <h2>What "highest" means</h2>
+
+  <p>Highest just means <strong>the outermost box</strong>. Forget trees and think nesting:</p>
+
+  <pre>x == 10;   parsed with the statement rule
+
++---------------------------------------+
+|  Statement.Expression                 |  &lt;-- highest, the answer
+|                                       |
+|    +-------------------------------+  |
+|    |  Binary "=="                  |  |
+|    |                               |  |
+|    |   +----------+  +----------+  |  |
+|    |   | Access x |  | Lit 10   |  |  |
+|    |   +----------+  +----------+  |  |
+|    +-------------------------------+  |
++---------------------------------------+</pre>
+
+  <p>Four nodes exist. The answer is the one box containing everything else. There is always exactly one.</p>
+
+  <div class="note">
+    <p><strong>The shortcut.</strong> The rule you were asked about determines the answer. Asked with <code>source</code>, it is always <code>Ast.Source</code>. Asked with <code>statement</code>, it always starts with <code>Ast.Statement.</code> Asked with <code>expression</code>, it always starts with <code>Ast.Expression.</code> The rule you start with produces the outermost box, by definition.</p>
+  </div>
+
+  <h2>More trees to study</h2>
+
+  <details open>
+    <summary><code>(1 + 2) * 3</code></summary>
+    <pre>       Binary "*"
+       /        \
+    Group     Literal 3
+      |
+  Binary "+"
+   /      \
+Lit 1   Lit 2</pre>
+    <p>Parentheses become a real <code>Group</code> node that survives into the tree, and it forces the add underneath the multiply.</p>
+  </details>
+
+  <details>
+    <summary><code>a.b.c()</code></summary>
+    <pre>Function "c"
+  receiver: Access "b"
+              receiver: Access "a"</pre>
+    <p>Three nodes nested left to right. <code>c</code> is on the outside because it came last. Each dot takes everything built so far and puts it in the receiver slot of a new node.</p>
+  </details>
+
+  <details>
+    <summary><code>x &lt; 10 OR y AND z</code></summary>
+    <pre>        Binary "AND"
+        /          \
+   Binary "OR"    Access z
+    /       \
+ Binary "&lt;"  Access y
+  /      \
+Access x  Lit 10</pre>
+    <p>Surprising if you know Java. <code>AND</code> and <code>OR</code> sit on the <strong>same line</strong> of the same rule, so they have <strong>equal precedence</strong> here and just run left to right. <code>AND</code> ends up at the root because it came last.</p>
+  </details>
+
+  <details>
+    <summary>A whole small program</summary>
+    <pre>LET count = 0;
+
+DEF add(a, b) DO
+    RETURN a + b;
+END</pre>
+    <pre>Source
+ |
+ +-- fields:
+ |     Field "count"
+ |       value: Literal(0)
+ |
+ +-- methods:
+       Method "add", parameters=[a, b]
+         statements:
+           Statement.Return
+             value: Binary "+"
+                      left:  Access "a"
+                      right: Access "b"</pre>
+    <p>Seven nodes, seven constructor calls. That is what Project 2B produces. Project 2A produces the expression parts.</p>
+  </details>
+
+  <h2>All sixteen AST classes</h2>
+
+  <pre>Ast
+ +-- Source            the whole file
+ +-- Field             a top-level variable
+ +-- Method            a function definition
+ |
+ +-- Statement   <span class="dim">(abstract: "a thing you DO")</span>
+ |     Expression, Declaration, Assignment,
+ |     If, For, While, Return
+ |
+ +-- Expression  <span class="dim">(abstract: "a thing that HAS A VALUE")</span>
+       Literal, Group, Binary, Access, Function</pre>
+
+  <p><strong>Expression has a value. Statement does something.</strong> <code>5 + 3</code> equals 8, so it is an expression. <code>IF x DO ... END</code> does not equal anything, so it is a statement. Statements contain expressions. Expressions never contain statements. That is why the two groups are separate.</p>
+
+  <div class="good"><p>You never edit <code>Ast.java</code> and you never submit it. It has zero TODOs. It was given to you finished.</p></div>
+
+</section>
+
+<!-- ============ 5 ============ -->
+<section class="panel" id="p5">
+
+  <p class="lead">One idea runs the whole assignment. Everything else is a consequence of it.</p>
+
+  <div class="card">
+    <p style="font-size:1.03rem;margin:0"><strong>Every rule in the grammar becomes one Java method. Every reference to another rule becomes a method call.</strong></p>
+  </div>
+
+  <p>That is why it is called <em>recursive descent</em>. You descend through the rules, and because rules refer back to each other, the methods call each other recursively. <code>Parser.java</code> is not eighteen mysterious TODOs. It is eighteen transcriptions.</p>
+
+  <h2>Your lexer and your parser are the same machine</h2>
+
+  <p>The professor designed them to match. You already wrote one of them and it works.</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th></th><th>Lexer (P1, done)</th><th>Parser (P2, now)</th></tr></thead>
+    <tbody>
+      <tr><td>reads</td><td>characters</td><td>tokens</td></tr>
+      <tr><td>produces</td><td>tokens</td><td>AST nodes</td></tr>
+      <tr><td>state holder</td><td><code>CharStream</code></td><td><code>TokenStream</code></td></tr>
+      <tr><td>same three methods</td><td colspan="2"><code>has(offset)</code>, <code>get(offset)</code>, <code>advance()</code></td></tr>
+      <tr><td>look ahead</td><td><code>peek(String...)</code></td><td><code>peek(Object...)</code></td></tr>
+      <tr><td>look and consume</td><td><code>match(String...)</code></td><td><code>match(Object...)</code></td></tr>
+      <tr><td>compares by</td><td>regex on a character</td><td>token type <em>or</em> literal text</td></tr>
+      <tr><td>one method per</td><td>token type</td><td>grammar rule</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note">
+    <p><strong>The only genuinely new idea</strong> is that the parser's <code>peek</code> takes <code>Object...</code> instead of <code>String...</code>, because it accepts two kinds of thing:</p>
+    <pre>peek(Token.Type.IDENTIFIER)   <span class="dim">// any word</span>
+peek("LET")                   <span class="dim">// the specific word LET</span></pre>
+    <p>That dual behavior is also how keywords work. There is no reserved word list. A keyword is a token whose spelling the parser checked.</p>
+  </div>
+
+  <h2>The ladder: seven methods</h2>
+
+  <p>The expression rules form a chain. Each one calls the next.</p>
+
+  <div id="ladder"></div>
+
+  <p class="ind">loosest at the top, tightest at the bottom</p>
+
+  <div class="good">
+    <p><strong>Lower on the ladder binds tighter</strong>, because it finishes first and ends up deeper in the tree. There is no precedence table anywhere in the code. Precedence <em>is</em> the call order.</p>
+  </div>
+
+  <h2>Everything climbs all the way down</h2>
+
+  <p>Even parsing just the number <code>5</code> walks through all seven:</p>
+
+  <pre>parseExpression              "not my job, pass it down"
+  parseLogicalExpression     "any AND or OR? no. pass it down"
+    parseEqualityExpression  "any &lt; &gt; == != ? no. pass it down"
+      parseAdditiveExpression          "any + or - ? no. pass it down"
+        parseMultiplicativeExpression  "any * or / ? no. pass it down"
+          parseSecondaryExpression     "any dot? no. pass it down"
+            parsePrimaryExpression     "an INTEGER! eat it."
+                                       -&gt; Literal(5)
+          &lt;- Literal(5)
+        &lt;- Literal(5)
+      &lt;- Literal(5)
+    &lt;- Literal(5)
+  &lt;- Literal(5)
+&lt;- Literal(5)</pre>
+
+  <p>Seven calls down, seven returns up, to parse one token. That is normal and correct.</p>
+
+  <h2>Each rung has exactly two outcomes</h2>
+
+  <pre>1. Ask the rung below me for one thing.
+2. Is MY operator the next token?
+     NO  -> hand back what I got, untouched.
+     YES -> eat it, ask the rung below for another thing,
+            wrap both in a Binary, and check again.</pre>
+
+  <pre>        PASS THROUGH                    WRAP
+
+   parseAdditive                  parseAdditive
+        |                              |
+        v                          Binary "+"
+   [whatever came up]              /        \
+                           [came up]     [next thing]</pre>
+
+  <p>The tree that comes out is the record of which rungs said yes. Two rungs fire on <code>1 + 2 * 3</code>, and the tree has exactly two Binary nodes.</p>
+
+  <h2>The template, four jobs</h2>
+
+  <pre>parseAdditiveExpression:
+
+  1. left = parseMultiplicativeExpression()      <span class="dim">get one thing from below</span>
+  2. while the next token is "+" or "-":         <span class="dim">the ( ... )* in the grammar</span>
+  3.     operator = current token's literal      <span class="dim">peek first, you need the text</span>
+         advance past it
+         right = parseMultiplicativeExpression()
+  4.     left = new Binary(operator, left, right)   <span class="dim">wrap what you have so far</span>
+  return left</pre>
+
+  <p>That <code>left = new Binary(...)</code> reassignment is what makes <code>1 + 2 + 3</code> come out as <code>(1 + 2) + 3</code> rather than <code>1 + (2 + 3)</code>. Left to right, which matters for subtraction: <code>10 - 3 - 2</code> must be 5, not 9.</p>
+
+  <h3>Four methods, same code, two swaps</h3>
+  <div class="tw">
+  <table>
+    <thead><tr><th>Method</th><th>Operators in its while</th><th>Calls</th></tr></thead>
+    <tbody>
+      <tr><td><code>parseLogicalExpression</code></td><td><code>AND</code> <code>OR</code></td><td>parseEqualityExpression</td></tr>
+      <tr><td><code>parseEqualityExpression</code></td><td><code>&lt;</code> <code>&gt;</code> <code>&lt;=</code> <code>&gt;=</code> <code>==</code> <code>!=</code></td><td>parseAdditiveExpression</td></tr>
+      <tr><td><code>parseAdditiveExpression</code></td><td><code>+</code> <code>-</code></td><td>parseMultiplicativeExpression</td></tr>
+      <tr><td><code>parseMultiplicativeExpression</code></td><td><code>*</code> <code>/</code></td><td>parseSecondaryExpression</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>And <code>parseExpression</code> is one line: return <code>parseLogicalExpression()</code>.</p>
+
+  <div class="warn">
+    <p><strong>Naming mismatch, do not rename.</strong> The grammar calls the rule <code>comparison_expression</code>. The skeleton method is <code>parseEqualityExpression</code>. Same thing, different name. Keep the skeleton's name, the grader expects it.</p>
+  </div>
+
+  <h2>Where each node type is born</h2>
+
+  <pre>parseExpression                 -&gt; nothing, pure delegation
+
+parseLogicalExpression          \
+parseEqualityExpression          |  all four produce
+parseAdditiveExpression          |  ONLY Binary
+parseMultiplicativeExpression   /
+
+parseSecondaryExpression        -&gt; Access    <span class="dim">(with receiver: x.y)</span>
+                                   Function  <span class="dim">(with receiver: x.y())</span>
+
+parsePrimaryExpression          -&gt; Literal   <span class="dim">(5, "hi", TRUE, NIL)</span>
+                                   Group     <span class="dim">((...))</span>
+                                   Access    <span class="dim">(bare: x)</span>
+                                   Function  <span class="dim">(bare: f())</span></pre>
+
+  <p>Four of the seven are Binary factories, one handles the dot, one makes atoms, one delegates. That is why the build order says write one and copy it four times.</p>
+
+  <h2>parsePrimaryExpression, branch by branch</h2>
+
+  <p>The only method that is genuinely different, because it is where tokens become values. A list of <code>if</code>s in the same order as the grammar.</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>Branch</th><th>Check</th><th>Produce</th></tr></thead>
+    <tbody>
+      <tr><td>NIL</td><td><code>match("NIL")</code></td><td><code>Literal(null)</code></td></tr>
+      <tr><td>TRUE / FALSE</td><td><code>match("TRUE")</code></td><td><code>Literal(Boolean.TRUE)</code></td></tr>
+      <tr><td>integer</td><td><code>peek(Token.Type.INTEGER)</code></td><td><code>Literal(new BigInteger(text))</code></td></tr>
+      <tr><td>decimal</td><td><code>peek(Token.Type.DECIMAL)</code></td><td><code>Literal(new BigDecimal(text))</code></td></tr>
+      <tr><td>character</td><td><code>peek(Token.Type.CHARACTER)</code></td><td>strip quotes, unescape, <code>Literal(char)</code></td></tr>
+      <tr><td>string</td><td><code>peek(Token.Type.STRING)</code></td><td>strip quotes, unescape, <code>Literal(String)</code></td></tr>
+      <tr><td>group</td><td><code>match("(")</code></td><td>parse an expression, demand <code>)</code>, <code>Group(...)</code></td></tr>
+      <tr><td>identifier</td><td><code>peek(Token.Type.IDENTIFIER)</code></td><td>parens means Function, otherwise Access</td></tr>
+      <tr><td>none matched</td><td>fall through</td><td>throw ParseException</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Three things that trip people here</h3>
+  <ul>
+    <li><strong>BigInteger, not int.</strong> <code>Ast.java</code> compares by exact type and the tests build <code>new BigInteger("1")</code>. Same for BigDecimal.</li>
+    <li><strong>Literals need processing, not copying.</strong> The token for <code>'c'</code> is three characters including quotes. Strip them with <code>substring(1, length - 1)</code>, then convert escapes so the two characters backslash-n become one real newline.</li>
+    <li><strong>The group branch is the recursion.</strong> This is the bottom of the ladder and it calls <code>parseExpression</code>, the top.</li>
+  </ul>
+
+  <h2>The ladder is actually a loop</h2>
+
+  <pre>   parseExpression  &lt;-------------+
+        |                          |
+        v                          |
+    ...five rungs...               |
+        |                          |
+        v                          |
+   parsePrimaryExpression          |
+        |                          |
+   sees "(" ----------------------+</pre>
+
+  <p>That is what makes <code>((1 + 2) * (3 - 4))</code> work. Every set of parentheses starts a fresh climb down the whole ladder. The loop is the "recursive" in recursive descent.</p>
+
+  <h2>parseSecondaryExpression, the dot</h2>
+
+  <p><strong>Plain English:</strong> parse one thing, then keep swallowing <code>.something</code> as long as there are dots.</p>
+
+  <pre>receiver = parsePrimaryExpression()
+
+while match("."):
+    require an identifier, grab its name, advance
+    if match("("):
+        receiver = Function(receiver, name, arguments)
+    else:
+        receiver = Access(receiver, name)
+
+return receiver</pre>
+
+  <p>Same accumulator trick as the binary methods, but it wraps into <code>receiver</code> instead of <code>left</code>.</p>
+
+  <h3>The argument list, written once and reused</h3>
+  <pre>if the next token is not ")":
+    parse an expression, add it
+    while match(","):
+        parse an expression, add it
+require ")"</pre>
+  <div class="good"><p><strong>Trailing commas fail for free.</strong> On <code>f(a, b,)</code> the loop matches the second comma, calls parseExpression, which sees <code>)</code> and throws. No special handling needed.</p></div>
+
+  <h2>parseStatement</h2>
+  <pre>expression = parseExpression()
+
+if match("="):
+    value = parseExpression()
+    require ";"
+    return Statement.Assignment(expression, value)
+
+require ";"
+return Statement.Expression(expression)</pre>
+  <p>Direct transcription of <code>expression ('=' expression)? ';'</code>. Note the assignment target is a full expression, not a name. That is what makes <code>x.y = 10;</code> work.</p>
+
+</section>
+
+<!-- ============ 6 ============ -->
+<section class="panel" id="p6">
+
+  <p class="lead">What to write, in what order, and what will bite you.</p>
+
+  <h2>Scope: ten methods now, eight later</h2>
+
+  <div class="grid">
+    <div class="mini">
+      <h4>Write these ten</h4>
+      <p class="mono" style="font-size:.79rem">peek &middot; match &middot; parseExpression &middot; parseLogicalExpression &middot; parseEqualityExpression &middot; parseAdditiveExpression &middot; parseMultiplicativeExpression &middot; parseSecondaryExpression &middot; parsePrimaryExpression &middot; parseStatement</p>
+    </div>
+    <div class="mini">
+      <h4>Leave these until 2B</h4>
+      <p class="mono" style="font-size:.79rem">parseSource &middot; parseField &middot; parseMethod &middot; parseDeclarationStatement &middot; parseIfStatement &middot; parseForStatement &middot; parseWhileStatement &middot; parseReturnStatement</p>
+    </div>
+  </div>
+
+  <p>Those eight keep throwing <code>UnsupportedOperationException</code>. That is correct for this submission. Writing them now means doing next week's work against the wrong grammar, because the FOR loop changed.</p>
+
+  <h2>Build order</h2>
+
+  <ol class="steps">
+    <li><strong>peek and match.</strong> Nothing runs without them. About twenty lines. Start from your lexer's versions and swap <code>chars</code> for <code>tokens</code>.</li>
+    <li><strong>parsePrimaryExpression.</strong> The biggest method, and it unblocks every test. Literal and Group tests go green.</li>
+    <li><strong>parseMultiplicativeExpression.</strong> Write it once, carefully, using the four-job template.</li>
+    <li><strong>Copy it upward four times.</strong> Additive, equality, logical, and the one-line parseExpression. Binary tests go green.</li>
+    <li><strong>parseSecondaryExpression.</strong> The dot. Access and Function tests go green.</li>
+    <li><strong>parseStatement.</strong> The last two tests go green.</li>
+    <li><strong>Error indices</strong> and your own extra tests.</li>
+  </ol>
+
+  <p>Steps 1 through 4 cover most of the tests. Get those done before the first test submission.</p>
+
+  <h2>What passing looks like</h2>
+
+  <p>Eighteen provided cases across seven groups:</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>Input</th><th>Expected node</th></tr></thead>
+    <tbody>
+      <tr><td><code>TRUE</code></td><td><code>Literal(Boolean.TRUE)</code></td></tr>
+      <tr><td><code>1</code></td><td><code>Literal(BigInteger)</code></td></tr>
+      <tr><td><code>2.0</code></td><td><code>Literal(BigDecimal)</code></td></tr>
+      <tr><td><code>'c'</code></td><td><code>Literal('c')</code>, quotes stripped</td></tr>
+      <tr><td><code>"string"</code></td><td><code>Literal("string")</code>, quotes stripped</td></tr>
+      <tr><td><code>"Hello,\nWorld!"</code></td><td>escape converted to a real newline</td></tr>
+      <tr><td><code>(expr)</code></td><td><code>Group(Access)</code></td></tr>
+      <tr><td><code>expr1 + expr2</code></td><td><code>Binary("+", ...)</code></td></tr>
+      <tr><td><code>name</code></td><td><code>Access(empty, "name")</code></td></tr>
+      <tr><td><code>obj.field</code></td><td><code>Access(Optional.of(Access(obj)), "field")</code></td></tr>
+      <tr><td><code>name()</code></td><td><code>Function(empty, "name", [])</code></td></tr>
+      <tr><td><code>name(e1, e2, e3)</code></td><td><code>Function(empty, "name", [3 args])</code></td></tr>
+      <tr><td><code>name();</code></td><td><code>Statement.Expression(Function)</code></td></tr>
+      <tr><td><code>name = value;</code></td><td><code>Statement.Assignment(Access, Access)</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>Five traps</h2>
+
+  <div class="warn">
+    <p><strong>1. Two different Ast.java files exist.</strong> One names things <code>Ast.Stmt</code> and <code>Ast.Expr</code>, which is the HW2 quiz version. The other uses <code>Ast.Statement</code> and <code>Ast.Expression</code>, which is P2. The provided tests use the P2 spelling. Wrong file means nothing compiles and the error will not obviously point at the cause. Check this first.</p>
+  </div>
+
+  <div class="warn">
+    <p><strong>2. The provided test contradicts the spec grammar.</strong> The grammar says the logical operators are the words <code>AND</code> and <code>OR</code>. The provided test file hands the parser <code>&amp;&amp;</code> and expects <code>Binary("&amp;&amp;", ...)</code>. Accepting all four spellings, <code>AND</code>, <code>OR</code>, <code>&amp;&amp;</code>, <code>||</code>, costs one extra condition and satisfies both. Then post the question to the course forum, since asking a good question publicly is worth participation credit.</p>
+  </div>
+
+  <div class="warn">
+    <p><strong>3. The provided tests do not check for leftover tokens.</strong> The helper compares the returned node and stops. A buggy parser that reads <code>x</code> and ignores <code>+ 10</code> would still pass some of them. The real grader almost certainly checks. Write your own tests that verify the stream is empty at the end.</p>
+  </div>
+
+  <div class="warn">
+    <p><strong>4. Error index math is graded but untested.</strong> If a bad token is present, report its <code>getIndex()</code>. If tokens ran out, report the character just past the last one: <code>previous.getIndex() + previous.getLiteral().length()</code>. You get the previous token with <code>tokens.get(-1)</code>, because <code>get(offset)</code> returns <code>tokens.get(index + offset)</code>.</p>
+  </div>
+
+  <div class="warn">
+    <p><strong>5. A private GitHub repo with the peer mentor added is required to pass the course.</strong> Not the assignment, the course. Do it now, it takes five minutes.</p>
+  </div>
+
+  <h2>Check yourself</h2>
+  <div id="quiz"></div>
+  <p class="score" id="score"></p>
+
+  <h2>The one sentence</h2>
+  <div class="card">
+    <p style="margin:0;font-size:1.02rem">A parser is the grammar rewritten as Java methods, one method per rule, and the order the methods call each other is what makes multiplication happen before addition.</p>
+  </div>
+  <p>If you can say that back and explain why, you can write Project 2A, and you can write 2B on your own.</p>
+
+</section>
+
+</div>
+
+<div class="wrap"><footer>Reference page for COP 4020 Project 2A. Token behaviour shown here matches the reference lexer for this language.</footer></div>
+
+<script>
+(function(){
+/* ---------- tabs + theme ---------- */
+var btns=document.querySelectorAll('nav.tabs button'), pans=document.querySelectorAll('.panel');
+btns.forEach(function(b){b.addEventListener('click',function(){
+  btns.forEach(function(x){x.setAttribute('aria-selected','false')});
+  pans.forEach(function(p){p.classList.remove('active')});
+  b.setAttribute('aria-selected','true');
+  document.getElementById(b.dataset.tab).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+});});
+var root=document.documentElement;
+function cur(){return root.getAttribute('data-theme')||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');}
+document.getElementById('tbtn').addEventListener('click',function(){
+  var n=cur()==='dark'?'light':'dark'; root.setAttribute('data-theme',n);
+  try{localStorage.setItem('ftt-theme',n)}catch(e){}
+});
+try{var sv=localStorage.getItem('ftt-theme'); if(sv)root.setAttribute('data-theme',sv);}catch(e){}
+
+/* ---------- LEXER (mirrors the Java lexer) ---------- */
+function isLetter(c){return /[A-Za-z_]/.test(c)}
+function isIdChar(c){return /[A-Za-z0-9_\-]/.test(c)}
+function isDigit(c){return /[0-9]/.test(c)}
+
+function lex(src){
+  var toks=[], i=0;
+  function at(o){return i+o<src.length?src[i+o]:''}
+  while(i<src.length){
+    var c=src[i];
+    if(/[ \t\n\r\b]/.test(c)){ i++; continue; }
+    var start=i;
+    if(isLetter(c)){
+      i++; while(i<src.length&&isIdChar(src[i]))i++;
+      toks.push({type:'IDENTIFIER',literal:src.slice(start,i),index:start}); continue;
+    }
+    // number: digit, or sign+nonzero digit, or sign+digit+dot+digit
+    var signNum = /[+\-]/.test(c) && ( /[1-9]/.test(at(1)) || (isDigit(at(1))&&at(2)==='.'&&isDigit(at(3))) );
+    if(isDigit(c)||signNum){
+      if(/[+\-]/.test(src[i]))i++;
+      if(src[i]==='0'){ i++; }
+      else { i++; while(i<src.length&&isDigit(src[i]))i++; }
+      if(src[i]==='.'&&isDigit(src[i+1])){
+        i++; while(i<src.length&&isDigit(src[i]))i++;
+        toks.push({type:'DECIMAL',literal:src.slice(start,i),index:start}); continue;
+      }
+      toks.push({type:'INTEGER',literal:src.slice(start,i),index:start}); continue;
+    }
+    if(c==="'"){
+      i++;
+      if(src[i]==='\\'){i+=2;} else if(i<src.length&&!/['\n\r]/.test(src[i])){i++;}
+      else throw {msg:'Expected a single character.',index:i};
+      if(src[i]!=="'") throw {msg:'Expected a closing quote.',index:i};
+      i++;
+      toks.push({type:'CHARACTER',literal:src.slice(start,i),index:start}); continue;
+    }
+    if(c==='"'){
+      i++;
+      while(i<src.length&&src[i]!=='"'){
+        if(src[i]==='\\'){i+=2;}
+        else if(/[\n\r]/.test(src[i])) throw {msg:'Unterminated string.',index:i};
+        else i++;
+      }
+      if(i>=src.length) throw {msg:'Unterminated string.',index:i};
+      i++;
+      toks.push({type:'STRING',literal:src.slice(start,i),index:start}); continue;
+    }
+    if(/[<>!=]/.test(c)&&at(1)==='='){ i+=2; toks.push({type:'OPERATOR',literal:src.slice(start,i),index:start}); continue; }
+    i++; toks.push({type:'OPERATOR',literal:src.slice(start,i),index:start});
+  }
+  return toks;
+}
+
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function renderTokens(toks){
+  if(!toks.length) return '<span class="dim">no tokens</span>';
+  return toks.map(function(t){
+    return '<span class="tok '+t.type+'"><b>'+t.type+'</b><span class="lit">'+esc(t.literal)+'</span></span>';
+  }).join('');
+}
+
+/* ---------- PARSER (mirrors the grammar) ---------- */
+function Parser(toks){ this.t=toks; this.i=0; }
+Parser.prototype.has=function(o){return this.i+o<this.t.length};
+Parser.prototype.get=function(o){return this.t[this.i+o]};
+Parser.prototype.peekLit=function(s){return this.has(0)&&this.get(0).literal===s};
+Parser.prototype.peekType=function(s){return this.has(0)&&this.get(0).type===s};
+Parser.prototype.matchLit=function(s){if(this.peekLit(s)){this.i++;return true}return false};
+Parser.prototype.err=function(m){
+  var idx;
+  if(this.has(0)) idx=this.get(0).index;
+  else if(this.t.length) { var p=this.t[this.t.length-1]; idx=p.index+p.literal.length; }
+  else idx=0;
+  throw {msg:m,index:idx};
+};
+Parser.prototype.anyLit=function(list){
+  for(var k=0;k<list.length;k++) if(this.peekLit(list[k])) return true;
+  return false;
+};
+Parser.prototype.chain=function(ops,next){
+  var left=this[next]();
+  while(this.anyLit(ops)){
+    var op=this.get(0).literal; this.i++;
+    var right=this[next]();
+    left={n:'Binary',op:op,kids:[left,right]};
+  }
+  return left;
+};
+Parser.prototype.expression=function(){return this.logical()};
+Parser.prototype.logical=function(){return this.chain(['AND','OR','&&','||'],'equality')};
+Parser.prototype.equality=function(){return this.chain(['<','>','<=','>=','==','!='],'additive')};
+Parser.prototype.additive=function(){return this.chain(['+','-'],'multiplicative')};
+Parser.prototype.multiplicative=function(){return this.chain(['*','/'],'secondary')};
+Parser.prototype.args=function(){
+  var a=[];
+  if(!this.peekLit(')')){
+    a.push(this.expression());
+    while(this.matchLit(',')) a.push(this.expression());
+  }
+  if(!this.matchLit(')')) this.err('Expected a closing parenthesis.');
+  return a;
+};
+Parser.prototype.secondary=function(){
+  var r=this.primary();
+  while(this.matchLit('.')){
+    if(!this.peekType('IDENTIFIER')) this.err("Expected an identifier after '.'.");
+    var name=this.get(0).literal; this.i++;
+    if(this.matchLit('(')) r={n:'Function',op:name,kids:[{n:'receiver',op:'',kids:[r]}].concat(this.args().map(function(x){return x}))};
+    else r={n:'Access',op:name,kids:[{n:'receiver',op:'',kids:[r]}]};
+  }
+  return r;
+};
+Parser.prototype.primary=function(){
+  if(this.matchLit('NIL'))   return {n:'Literal',op:'NIL (null)',kids:[]};
+  if(this.matchLit('TRUE'))  return {n:'Literal',op:'TRUE (Boolean)',kids:[]};
+  if(this.matchLit('FALSE')) return {n:'Literal',op:'FALSE (Boolean)',kids:[]};
+  if(this.peekType('INTEGER')){var v=this.get(0).literal;this.i++;return {n:'Literal',op:v+' (BigInteger)',kids:[]};}
+  if(this.peekType('DECIMAL')){var d=this.get(0).literal;this.i++;return {n:'Literal',op:d+' (BigDecimal)',kids:[]};}
+  if(this.peekType('CHARACTER')){var ch=this.get(0).literal;this.i++;return {n:'Literal',op:ch+' (Character)',kids:[]};}
+  if(this.peekType('STRING')){var s=this.get(0).literal;this.i++;return {n:'Literal',op:s+' (String)',kids:[]};}
+  if(this.matchLit('(')){
+    var inner=this.expression();
+    if(!this.matchLit(')')) this.err('Expected a closing parenthesis.');
+    return {n:'Group',op:'',kids:[inner]};
+  }
+  if(this.peekType('IDENTIFIER')){
+    var nm=this.get(0).literal; this.i++;
+    if(this.matchLit('(')) return {n:'Function',op:nm,kids:this.args()};
+    return {n:'Access',op:nm,kids:[]};
+  }
+  this.err('Expected an expression.');
+};
+Parser.prototype.statement=function(){
+  var e=this.expression();
+  if(this.matchLit('=')){
+    var v=this.expression();
+    if(!this.matchLit(';')) this.err('Expected a semicolon.');
+    return {n:'Statement',op:'Assignment',kids:[e,v]};
+  }
+  if(!this.matchLit(';')) this.err('Expected a semicolon.');
+  return {n:'Statement',op:'Expression',kids:[e]};
+};
+
+function drawTree(node,prefix,last,out){
+  if(node.n==='receiver'){
+    out.push(prefix+(last?'└─ ':'├─ ')+'<span class="dim">receiver:</span>');
+    var np=prefix+(last?'   ':'│  ');
+    drawTree(node.kids[0],np,true,out);
+    return;
+  }
+  var label='<span class="nd '+node.n+'">'+node.n+'</span>'+(node.op?' <span class="dim">'+esc(node.op)+'</span>':'');
+  out.push(prefix+(prefix===''?'':(last?'└─ ':'├─ '))+label);
+  var np=prefix===''?'':(prefix+(last?'   ':'│  '));
+  node.kids.forEach(function(k,idx){ drawTree(k,np,idx===node.kids.length-1,out); });
+}
+
+function runParser(){
+  var src=document.getElementById('parsein').value;
+  var tokEl=document.getElementById('ptok'), treeEl=document.getElementById('ptree'), vEl=document.getElementById('pverdict');
+  var toks;
+  try{ toks=lex(src); }
+  catch(e){ tokEl.innerHTML='<span class="dim">lexer error</span>'; treeEl.textContent='';
+            vEl.innerHTML='<div class="verdict no">Lexer error: '+esc(e.msg)+' at index '+e.index+'</div>'; return; }
+  tokEl.innerHTML=renderTokens(toks);
+  if(!toks.length){ treeEl.textContent=''; vEl.innerHTML='<div class="verdict no">Nothing to parse.</div>'; return; }
+  var p=new Parser(toks), tree, isStmt=toks[toks.length-1].literal===';';
+  try{ tree=isStmt?p.statement():p.expression(); }
+  catch(e){ treeEl.textContent=''; vEl.innerHTML='<div class="verdict no"><b>Invalid.</b> ParseException: '+esc(e.msg)+' (index '+e.index+')</div>'; return; }
+  var out=[]; drawTree(tree,'',true,out); treeEl.innerHTML=out.join('\n');
+  if(p.i<toks.length){
+    var left=toks.slice(p.i).map(function(t){return t.literal}).join(' ');
+    vEl.innerHTML='<div class="verdict no"><b>Invalid: leftover tokens.</b> The rule finished but these were never consumed: <code>'+esc(left)+'</code></div>';
+  } else {
+    vEl.innerHTML='<div class="verdict ok"><b>Valid.</b> Every token was consumed and the rule completed.</div>';
+  }
+}
+
+/* wire up the two tools */
+var lexSamples=['LET x = 5 + 3;','x+10','x + 10','x-10','NIL TRUE 5 \'c\' "hi"','1.2.3','a || b','f(x, y)'];
+var parseSamples=['1 + 2 * 3','1 * 2 + 3','(1 + 2) * 3','x.y.z()','f(a, b, c)','x < 10 OR y AND z','x+10','nil','1 < x || y < 10','f(a, b,)','name = value;','x.y = 10;'];
+
+function chips(hostId,inputId,list,run){
+  var h=document.getElementById(hostId);
+  list.forEach(function(s){
+    var b=document.createElement('button'); b.className='chip'; b.type='button'; b.textContent=s;
+    b.addEventListener('click',function(){document.getElementById(inputId).value=s;run();});
+    h.appendChild(b);
+  });
+}
+function runLexer(){
+  var src=document.getElementById('lexin').value, el=document.getElementById('lexout');
+  try{ el.innerHTML=renderTokens(lex(src)); }
+  catch(e){ el.innerHTML='<span class="verdict no" style="display:inline-block">Lexer error: '+esc(e.msg)+' at index '+e.index+'</span>'; }
+}
+document.getElementById('lexin').addEventListener('input',runLexer);
+document.getElementById('parsein').addEventListener('input',runParser);
+chips('lexchips','lexin',lexSamples,runLexer);
+chips('parsechips','parsein',parseSamples,runParser);
+runLexer(); runParser();
+
+/* ---------- ladder ---------- */
+var rungs=[
+  ['parseExpression','(delegates only)'],
+  ['parseLogicalExpression','AND  OR'],
+  ['parseEqualityExpression','&lt;  &gt;  &lt;=  &gt;=  ==  !='],
+  ['parseAdditiveExpression','+  -'],
+  ['parseMultiplicativeExpression','*  /'],
+  ['parseSecondaryExpression','.'],
+  ['parsePrimaryExpression','(eats tokens)']
+];
+var lh=document.getElementById('ladder');
+rungs.forEach(function(r,i){
+  var d=document.createElement('div');
+  d.className='rung'+(i===6?' hi':'');
+  d.innerHTML='<div class="n">'+(i+1)+'</div><div class="mn">'+r[0]+'</div><div class="ops">'+r[1]+'</div>';
+  lh.appendChild(d);
+  if(i<rungs.length-1){ var a=document.createElement('div'); a.className='ind'; a.textContent='calls'; lh.appendChild(a); }
+});
+
+/* ---------- quiz ---------- */
+var QS=[
+  {q:'How many tokens does <code>y-5</code> produce?',o:['One','Two','Three','Four'],a:0,
+   ok:'Exactly.',no:'Check the identifier rule.',
+   e:'The identifier rule is [A-Za-z_][A-Za-z0-9_-]*, which allows hyphens. So y-5 is a single IDENTIFIER whose name is literally y-5.'},
+  {q:'Why does <code>x+10</code> fail the expression rule?',o:['Plus is not an operator','The lexer makes +10 one token','Names cannot precede numbers','The rule needs parentheses'],a:1,
+   ok:'Right.',no:'Lex it first.',
+   e:'The number rule allows a leading sign, so the lexer takes +10 as one INTEGER. That leaves no + operator, the additive loop never runs, and INTEGER(+10) is left over. With a space, x + 10 is valid.'},
+  {q:'Which part of the rule makes <code>IF x DO END</code> legal with an empty body?',o:['The quotes on DO','The question mark on ELSE','The star on statement','The expression rule'],a:2,
+   ok:'Correct.',no:'Look at the repetition symbols.',
+   e:'statement* means zero or more. Zero is allowed, so an empty body still satisfies the rule.'},
+  {q:'<code>nil</code> is a valid expression because it matches:',o:['The NIL literal','The string rule','The identifier rule','The operator rule'],a:2,
+   ok:'Yes.',no:'Compare the spelling.',
+   e:'The grammar quotes NIL in uppercase, so lowercase nil does not match it. It falls through to the identifier branch and parses as a variable named nil.'},
+  {q:'<code>f(a,)</code> is invalid because:',o:['Commas are not allowed','An expression must follow a comma','Arguments must be numbers','Parentheses must be escaped'],a:1,
+   ok:'Exactly.',no:'Walk the argument rule.',
+   e:'The rule is (expression (\',\' expression)*)? so every comma must be followed by an expression. After the last comma the parser finds a closing paren and throws.'},
+  {q:'Parsed with the expression rule, <code>x.y()</code> has which node at the root?',o:['Access','Group','Binary','Function'],a:3,
+   ok:'Right.',no:'Look for the parentheses.',
+   e:'Parentheses decide Access versus Function. x.y would be Access. x.y() is a call, so Function, with Access(x) in the receiver slot.'},
+  {q:'In <code>1 * 2 + 3</code>, which node is highest?',o:['Literal 1','Binary "*"','Binary "+"','Literal 3'],a:2,
+   ok:'Correct.',no:'Highest means outermost.',
+   e:'parseMultiplicative runs inside parseAdditive, so 1 * 2 finishes first and becomes a completed node. The + then wraps it, putting + on the outside.'},
+  {q:'What makes multiplication bind tighter than addition?',o:['A precedence table','The order the methods call each other','The token types','The AST class names'],a:1,
+   ok:'Exactly.',no:'There is no table anywhere.',
+   e:'parseAdditive calls parseMultiplicative, so the multiply finishes first and ends up deeper in the tree. Precedence is purely the call order.'},
+  {q:'How many of the 18 methods are needed for Project 2A?',o:['All 18','Ten','Four','Two'],a:1,
+   ok:'Correct.',no:'Count the expression chain.',
+   e:'Ten: peek, match, the seven expression methods, and parseStatement. The other eight stay as UnsupportedOperationException until 2B.'},
+  {q:'An integer literal is stored in the AST as:',o:['int','long','BigInteger','String'],a:2,
+   ok:'Right.',no:'Check what the tests construct.',
+   e:'The tests build new BigInteger("1") and Ast.java compares by exact type. Decimals use BigDecimal for the same reason.'},
+  {q:'Which method contains the recursion back to the top of the chain?',o:['parseStatement','parseAdditiveExpression','parsePrimaryExpression','parseSecondaryExpression'],a:2,
+   ok:'Yes.',no:'Look for the parentheses branch.',
+   e:'The group branch in parsePrimaryExpression calls parseExpression, the top of the ladder. That loop lets expressions nest forever.'},
+  {q:'The parser decides whether a variable actually exists.',o:['True','False'],a:1,
+   ok:'Right.',no:'That belongs to a later stage.',
+   e:'The parser only checks shape. banana + 7 parses fine even though banana was never declared. Checking that names exist is the Analyzer, Project 4.'}
+];
+var host=document.getElementById('quiz'), answered=0, right=0;
+QS.forEach(function(item,i){
+  var d=document.createElement('div'); d.className='quiz';
+  d.innerHTML='<p class="q"><span class="qn">Question '+(i+1)+'</span>'+item.q+'</p><div class="opts">'+
+    item.o.map(function(t,j){return '<button class="opt" data-i="'+j+'">'+t+'</button>'}).join('')+
+    '</div><div class="fb"></div>';
+  host.appendChild(d);
+  var fb=d.querySelector('.fb');
+  d.querySelectorAll('.opt').forEach(function(b){
+    b.addEventListener('click',function(){
+      var pick=+b.dataset.i, good=pick===item.a;
+      d.querySelectorAll('.opt').forEach(function(x){x.disabled=true; if(+x.dataset.i===item.a)x.classList.add('correct');});
+      if(!good)b.classList.add('wrong');
+      fb.className='fb show '+(good?'ok':'no');
+      fb.innerHTML='<b>'+(good?item.ok:item.no)+'</b>'+item.e;
+      answered++; if(good)right++;
+      document.getElementById('score').textContent=right+' of '+answered+' correct, '+QS.length+' total.';
+    });
+  });
+});
+})();
+</script>
+</body>
+</html>
