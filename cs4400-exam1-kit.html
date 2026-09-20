@@ -1,0 +1,1717 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CS 4400 Exam 1 Kit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@400;600;700&family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#e7eae2; --panel:#f2f4ec; --panel2:#dde2d6;
+  --graphite:#22262a; --muted:#5d6663; --rule:#c0c7ba;
+  --red:#bf3024; --red-soft:#bf302418; --blue:#2f5d8a; --blue-soft:#2f5d8a14;
+  --sans:"IBM Plex Sans Condensed","Arial Narrow",Arial,system-ui,sans-serif;
+  --serif:"IBM Plex Serif",Georgia,"Times New Roman",serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  --s0:.8125rem; --s1:1rem; --s2:1.25rem; --s3:1.5625rem; --s4:1.953rem; --s5:2.44rem;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#15191a; --panel:#1d2322; --panel2:#272e2c;
+    --graphite:#dfe4dc; --muted:#98a19b; --rule:#39413c;
+    --red:#ff7263; --red-soft:#ff726322; --blue:#84b6e4; --blue-soft:#84b6e41a;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#15191a; --panel:#1d2322; --panel2:#272e2c;
+  --graphite:#dfe4dc; --muted:#98a19b; --rule:#39413c;
+  --red:#ff7263; --red-soft:#ff726322; --blue:#84b6e4; --blue-soft:#84b6e41a;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 112px);-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--graphite);font-family:var(--serif);font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px;margin:0 auto;padding:0 clamp(16px,3.6vw,38px)}
+.prose{max-width:68ch}
+h1,h2,h3,h4,h5{font-family:var(--sans);font-weight:600;line-height:1.16;letter-spacing:-.01em;margin:0}
+h2{font-size:var(--s4);margin:0 0 .35em}
+h3{font-size:var(--s3);margin:2.2em 0 .5em;padding-bottom:.25em;border-bottom:1px solid var(--rule)}
+h4{font-size:var(--s2);margin:1.9em 0 .45em}
+h5{font-size:var(--s1);margin:1.5em 0 .3em}
+p{margin:0 0 1em}
+a{color:var(--blue)}
+ul,ol{margin:0 0 1em;padding-left:1.25em}
+li{margin-bottom:.4em}
+code{font-family:var(--mono);font-size:.85em;background:var(--panel2);padding:.1em .34em;border-radius:2px}
+pre{font-family:var(--mono);font-size:.82rem;line-height:1.58;background:var(--panel2);border-left:3px solid var(--graphite);padding:13px 15px;overflow-x:auto;margin:1.1em 0;white-space:pre}
+pre code{background:none;padding:0;font-size:inherit}
+
+/* header + tabs */
+.top{border-bottom:1px solid var(--rule);padding:clamp(26px,4vw,44px) 0 clamp(18px,3vw,26px)}
+.top h1{font-size:clamp(1.7rem,4.6vw,2.6rem)}
+.top p{color:var(--muted);margin:.5em 0 0;max-width:60ch;font-size:var(--s1)}
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:40;background:var(--paper);border-bottom:2px solid var(--graphite)}
+.tabs-inner{display:flex;gap:0;overflow-x:auto;scrollbar-width:none}
+.tabs-inner::-webkit-scrollbar{display:none}
+.tab{
+  font-family:var(--sans);font-size:var(--s1);font-weight:600;background:transparent;border:none;
+  color:var(--muted);padding:15px 20px;cursor:pointer;white-space:nowrap;border-bottom:4px solid transparent;margin-bottom:-2px;
+}
+.tab[aria-selected="true"]{color:var(--graphite);border-bottom-color:var(--red)}
+.tab:focus-visible{outline:2px solid var(--blue);outline-offset:-3px}
+.tab small{display:block;font-weight:400;font-size:.72rem;color:var(--muted);letter-spacing:.01em}
+.panel{padding:clamp(26px,4vw,46px) 0 90px}
+.panel[hidden]{display:none}
+.subnav{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 2.4em;padding-bottom:1.2em;border-bottom:1px solid var(--rule)}
+.subnav a{font-family:var(--sans);font-size:var(--s0);text-decoration:none;color:var(--muted);border:1px solid var(--rule);padding:5px 11px}
+.subnav a:hover,.subnav a:focus-visible{color:var(--graphite);border-color:var(--graphite)}
+
+/* figures */
+figure{margin:1.6em 0;background:var(--panel);border:1px solid var(--rule);padding:15px}
+figure svg{display:block;width:100%;height:auto}
+figcaption{font-family:var(--sans);font-size:var(--s0);color:var(--muted);margin-top:11px;line-height:1.45}
+.scroll-x{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.scroll-x svg{min-width:520px}
+.scroll-x.big svg{min-width:900px}
+.e-fill{fill:none;stroke:var(--graphite);stroke-width:1.6}
+.e-line{stroke:var(--graphite);stroke-width:1.6;fill:none}
+.e-dash{fill:none;stroke:var(--graphite);stroke-width:1.6;stroke-dasharray:5 4}
+.e-txt{font-family:var(--sans);font-size:13px;fill:var(--graphite);text-anchor:middle;dominant-baseline:middle}
+.e-sm{font-family:var(--sans);font-size:11px;fill:var(--graphite);text-anchor:middle;dominant-baseline:middle}
+.e-card{font-family:var(--sans);font-size:13px;font-weight:700;fill:var(--graphite);text-anchor:middle;dominant-baseline:middle}
+.ans{stroke:var(--red)!important}
+.ans-t{fill:var(--red)!important}
+
+/* legend */
+.legend{display:grid;grid-template-columns:repeat(auto-fill,minmax(212px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);margin:1.6em 0}
+.leg{background:var(--panel);padding:13px 13px 11px}
+.leg svg{display:block;width:100%;height:auto;margin-bottom:7px}
+.leg b{font-family:var(--sans);font-size:var(--s1);display:block}
+.leg span{font-size:var(--s0);color:var(--muted);line-height:1.42;display:block;margin-top:1px}
+
+/* tables */
+.tbl{width:100%;border-collapse:collapse;font-family:var(--sans);font-size:var(--s0);margin:1.4em 0}
+.tbl th,.tbl td{border:1px solid var(--rule);padding:7px 9px;text-align:left;vertical-align:top}
+.tbl th{background:var(--panel2);font-weight:600}
+.tbl td code,.tbl th code{background:none;padding:0}
+.tbl.data{font-family:var(--mono);font-size:.76rem}
+.tbl.data th{font-family:var(--sans);font-size:var(--s0)}
+.tbl.tight td,.tbl.tight th{padding:5px 8px}
+
+/* reveal */
+.reveal{border:1px solid var(--graphite);margin:1.2em 0;background:var(--panel)}
+.reveal>summary{font-family:var(--sans);font-size:var(--s1);font-weight:600;padding:12px 15px;cursor:pointer;list-style:none;display:flex;gap:10px;align-items:center;color:var(--graphite)}
+.reveal>summary::-webkit-details-marker{display:none}
+.reveal>summary::before{content:"+";font-size:var(--s3);line-height:1;color:var(--red);flex:none;width:.7em}
+.reveal[open]>summary::before{content:"\2212"}
+.reveal[open]>summary{border-bottom:1px solid var(--rule);background:var(--panel2)}
+.reveal-body{padding:2px 15px 15px}
+.reveal-body>:first-child{margin-top:1em}
+.reveal-body figure{background:var(--panel2)}
+.reveal-body pre{background:var(--panel)}
+
+/* question blocks */
+.qbox{border-left:3px solid var(--graphite);padding:2px 0 2px 16px;margin:1.9em 0 1.2em}
+.qbox .qn{font-family:var(--sans);font-size:var(--s0);color:var(--red);display:block;margin-bottom:.3em}
+.qbox p:last-child{margin-bottom:0}
+.opts-static{font-family:var(--sans);font-size:var(--s0);color:var(--muted);margin:.5em 0 0}
+.note{background:var(--panel2);border-left:3px solid var(--red);padding:13px 15px;margin:1.4em 0;font-size:var(--s0);line-height:1.58}
+.note b{font-family:var(--sans);font-size:var(--s1);display:block;margin-bottom:.2em}
+.key{background:var(--panel);border:1px solid var(--red);padding:11px 14px;margin:1.1em 0;font-family:var(--sans);font-size:var(--s1)}
+.key b{color:var(--red)}
+.grid2{display:grid;gap:1.2em;grid-template-columns:minmax(0,1fr)}
+@media(min-width:820px){.grid2{grid-template-columns:repeat(2,minmax(0,1fr))}}
+footer{border-top:1px solid var(--rule);padding:28px 0 60px;color:var(--muted);font-family:var(--sans);font-size:var(--s0)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media print{.tabs,.subnav{display:none}.panel[hidden]{display:block!important}.reveal-body{display:block!important}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <h1>CS 4400 Exam 1 Kit</h1>
+    <p>Everything the exam covers, the full practice paper worked, and SQL Practice Set 2 solved. Spring 2026, version B-1.</p>
+  </div>
+</header>
+
+<div class="tabs">
+  <div class="wrap tabs-inner" role="tablist" aria-label="Sections">
+    <button class="tab" role="tab" id="tab-cheat" aria-controls="p-cheat" aria-selected="true" type="button">Cheat sheet<small>every rule you need</small></button>
+    <button class="tab" role="tab" id="tab-exam" aria-controls="p-exam" aria-selected="false" type="button">Exam 1<small>all 60 points worked</small></button>
+    <button class="tab" role="tab" id="tab-sql" aria-controls="p-sql" aria-selected="false" type="button">SQL Practice Set 2<small>26 queries solved</small></button>
+  </div>
+</div>
+
+<!-- =====================  TAB 1: CHEAT SHEET  ===================== -->
+<main class="wrap">
+<div class="panel" id="p-cheat" role="tabpanel" aria-labelledby="tab-cheat">
+
+  <div class="subnav">
+    <a href="#c-notation">Notation</a>
+    <a href="#c-attrs">Attributes</a>
+    <a href="#c-card">Cardinality</a>
+    <a href="#c-part">Participation</a>
+    <a href="#c-weak">Weak entities</a>
+    <a href="#c-spec">Subtypes</a>
+    <a href="#c-counts">Counting rules</a>
+    <a href="#c-phrase">Scenario phrases</a>
+    <a href="#c-terms">Terminology</a>
+    <a href="#c-sql">SQL</a>
+    <a href="#c-traps">Traps</a>
+  </div>
+
+  <h3 id="c-notation">Notation: every mark that appears on this exam</h3>
+
+  <div class="legend">
+    <div class="leg">
+      <svg viewBox="0 0 200 60" aria-hidden="true"><rect x="46" y="12" width="108" height="36" class="e-fill"/><text x="100" y="30" class="e-txt">Employee</text></svg>
+      <b>Entity</b><span>A thing you keep rows about. Becomes a table.</span>
+    </div>
+    <div class="leg">
+      <svg viewBox="0 0 200 60" aria-hidden="true"><rect x="46" y="12" width="108" height="36" class="e-fill"/><rect x="51" y="17" width="98" height="26" class="e-fill"/><text x="100" y="30" class="e-sm">Estate Plans</text></svg>
+      <b>Weak entity</b><span>Cannot exist without its owner.</span>
+    </div>
+    <div class="leg">
+      <svg viewBox="0 0 200 60" aria-hidden="true"><path d="M100 8 L152 30 L100 52 L48 30 Z" class="e-fill"/><text x="100" y="30" class="e-sm">OWNS</text></svg>
+      <b>Relationship</b><span>A link between entities.</span>
+    </div>
+    <div class="leg">
+      <svg viewBox="0 0 200 60" aria-hidden="true"><path d="M100 8 L152 30 L100 52 L48 30 Z" class="e-fill"/><path d="M100 15 L143 30 L100 45 L57 30 Z" class="e-fill"/><text x="100" y="30" class="e-sm">ENROLL</text></svg>
+      <b>Identifying relationship</b><span>Supplies a weak entity its identity.</span>
+    </div>
+    <div class="leg">
+      <svg viewBox="0 0 200 60" aria-hidden="true"><ellipse cx="100" cy="30" rx="52" ry="18" class="e-fill"/><text x="100" y="30" class="e-sm">salary</text></svg>
+      <b>Attribute</b><span>One column.</span>
+    </div>
+    <div class="leg">
+      <svg viewBox="0 0 200 60" aria-hidden="true"><ellipse cx="100" cy="30" rx="52" ry="18" class="e-fill"/><text x="100" y="28" class="e-sm">client_id</text><path d="M78 37 H122" class="e-line" stroke-width="1.3"/></svg>
+      <b>Key attribute</b><span>Solid underline. The primary key.</span>
+    </div>
+    <div class="leg">
+      <svg viewBox="0 0 200 60" aria-hidden="true"><ellipse cx="100" cy="30" rx="58" ry="18" class="e-fill"/><text x="100" y="28" class="e-sm">estate_number</text><path d="M66 37 H134" class="e-line" stroke-width="1.3" stroke-dasharray="4 3"/></svg>
+      <b>Partial key</b><span>Dashed underline. Unique only inside one owner.</span>
+    </div>
+    <div class="leg">
+      <svg viewBox="0 0 200 60" aria-hidden="true"><ellipse cx="100" cy="30" rx="54" ry="20" class="e-fill"/><ellipse cx="100" cy="30" rx="47" ry="14" class="e-fill"/><text x="100" y="30" class="e-sm">lawyers</text></svg>
+      <b>Multivalued</b><span>May hold more than one value.</span>
+    </div>
+    <div class="leg">
+      <svg viewBox="0 0 200 60" aria-hidden="true"><ellipse cx="100" cy="30" rx="52" ry="18" class="e-dash"/><text x="100" y="30" class="e-sm">age</text></svg>
+      <b>Derived</b><span>Computed, never stored.</span>
+    </div>
+    <div class="leg">
+      <svg viewBox="0 0 200 60" aria-hidden="true"><ellipse cx="100" cy="14" rx="32" ry="12" class="e-fill"/><text x="100" y="14" class="e-sm">name</text><path d="M84 22 L52 38 M116 22 L148 38" class="e-line"/><ellipse cx="48" cy="48" rx="30" ry="12" class="e-fill"/><text x="48" y="48" class="e-sm">fname</text><ellipse cx="152" cy="48" rx="30" ry="12" class="e-fill"/><text x="152" y="48" class="e-sm">lname</text></svg>
+      <b>Composite</b><span>Splits into named parts.</span>
+    </div>
+    <div class="leg">
+      <svg viewBox="0 0 200 60" aria-hidden="true"><rect x="6" y="16" width="52" height="26" class="e-fill"/><path d="M58 29 H106" class="e-line"/><path d="M138 13 L174 29 L138 45 L102 29 Z" class="e-fill"/></svg>
+      <b>Partial participation</b><span>Single line. A row may sit out.</span>
+    </div>
+    <div class="leg">
+      <svg viewBox="0 0 200 60" aria-hidden="true"><rect x="6" y="16" width="52" height="26" class="e-fill"/><path d="M58 27 H106 M58 31 H106" class="e-line"/><path d="M138 13 L174 29 L138 45 L102 29 Z" class="e-fill"/></svg>
+      <b>Total participation</b><span>Double line. Every row must take part.</span>
+    </div>
+    <div class="leg">
+      <svg viewBox="0 0 200 60" aria-hidden="true"><text x="28" y="30" class="e-card">1</text><path d="M38 30 H64" class="e-line"/><path d="M98 14 L132 30 L98 46 L64 30 Z" class="e-fill"/><path d="M132 30 H158" class="e-line"/><text x="170" y="30" class="e-card">N</text></svg>
+      <b>Cardinality ratio</b><span>1, N or M beside each entity.</span>
+    </div>
+    <div class="leg">
+      <svg viewBox="0 0 200 60" aria-hidden="true"><path d="M100 2 V13" class="e-line"/><circle cx="100" cy="24" r="11" class="e-fill"/><text x="100" y="24" class="e-sm">d</text><path d="M92 32 L54 44 M108 32 L146 44" class="e-line"/><rect x="18" y="44" width="70" height="14" class="e-fill"/><rect x="112" y="44" width="70" height="14" class="e-fill"/></svg>
+      <b>Specialization</b><span>d disjoint, o overlapping.</span>
+    </div>
+  </div>
+
+  <h3 id="c-attrs">Attribute types</h3>
+  <table class="tbl">
+    <thead><tr><th style="width:20%">Type</th><th style="width:22%">Drawn as</th><th style="width:26%">Example</th><th>How you would store it</th></tr></thead>
+    <tbody>
+      <tr><td>Simple</td><td>Plain oval</td><td><code>salary</code>, <code>email</code></td><td>One column.</td></tr>
+      <tr><td>Composite</td><td>Oval with child ovals</td><td><code>name</code> into fname, lname</td><td>Usually one column per leaf. Only the leaves become columns.</td></tr>
+      <tr><td>Multivalued</td><td>Double oval</td><td><code>lawyers</code>, <code>paymentOptions</code></td><td>A separate table, because a column cannot hold a list.</td></tr>
+      <tr><td>Derived</td><td>Dashed oval</td><td><code>age</code> from date of birth</td><td>Nothing. You compute it on demand.</td></tr>
+      <tr><td>Key</td><td>Solid underline</td><td><code>client_id</code></td><td><code>PRIMARY KEY</code>.</td></tr>
+      <tr><td>Partial key</td><td>Dashed underline</td><td><code>estate_number</code></td><td>Part of a composite primary key, with the owner's key.</td></tr>
+      <tr><td>Composite key</td><td>Underlined parent with children</td><td><code>equity_id</code> from order_date, order_number</td><td><code>PRIMARY KEY (order_date, order_number)</code>.</td></tr>
+      <tr><td>Relationship attribute</td><td>Oval hanging off a diamond</td><td><code>start_date</code> on OWNS</td><td>A column on the junction table.</td></tr>
+    </tbody>
+  </table>
+
+  <h3 id="c-card">Cardinality ratio</h3>
+  <div class="prose">
+    <p>The label sits on the line next to an entity, and it answers this: <strong>one row on the far side can reach how many of this one?</strong> Get the direction right and the rest is easy.</p>
+  </div>
+  <table class="tbl">
+    <thead><tr><th style="width:14%">Ratio</th><th style="width:40%">Meaning</th><th>In SQL</th></tr></thead>
+    <tbody>
+      <tr><td>1 : 1</td><td>Each side pairs with at most one of the other.</td><td>Foreign key plus a unique constraint, or merge into one table.</td></tr>
+      <tr><td>1 : N</td><td>The 1 side reaches many. The N side reaches one.</td><td>Foreign key column on the N side.</td></tr>
+      <tr><td>M : N</td><td>Both sides reach many.</td><td>A junction table holding both keys.</td></tr>
+    </tbody>
+  </table>
+  <div class="key"><b>Direction check.</b> In <code>DEPARTMENT 1 - WORKS_FOR - N EMPLOYEE</code>, the 1 sits beside DEPARTMENT and means an employee has one department. The N beside EMPLOYEE means a department has many employees.</div>
+
+  <h3 id="c-part">Participation</h3>
+  <div class="prose">
+    <p>Cardinality caps the maximum. Participation sets the minimum, and it is carried only by line weight.</p>
+    <ul>
+      <li><strong>Single line, partial.</strong> Minimum 0. Some rows on this side never appear in the relationship.</li>
+      <li><strong>Double line, total.</strong> Minimum 1. Every single row on this side must appear. Also called an existence dependency.</li>
+    </ul>
+    <p>Three consequences worth memorizing, because the exam tests all three:</p>
+    <ol>
+      <li>If X is total and the other side is empty, X must be empty too.</li>
+      <li>If X is total and X is labelled 1, then X can never outnumber the other side.</li>
+      <li>Deleting one row can only break a total participation constraint. Nothing else fails from a single deletion.</li>
+    </ol>
+  </div>
+
+  <h3 id="c-weak">Weak entities</h3>
+  <div class="prose">
+    <p>A weak entity has no key of its own. Room 204 means nothing until you know the building. Four marks always travel together, so if you draw one and not the others, something is wrong.</p>
+    <ol>
+      <li><strong>Double rectangle</strong> on the weak entity.</li>
+      <li><strong>Double diamond</strong> on the relationship that identifies it.</li>
+      <li><strong>Dashed underline</strong> on its partial key.</li>
+      <li><strong>Double lines</strong> from the weak entity to that relationship, always total. It cannot exist unattached.</li>
+    </ol>
+    <p>The owner side is usually 1, and in SQL the whole thing is <code>PRIMARY KEY (owner_key, partial_key)</code>.</p>
+  </div>
+  <figure>
+    <svg viewBox="0 0 520 100" role="img" aria-label="Owner entity joined by double lines and a double diamond to a weak entity with a dashed underlined partial key">
+      <rect x="14" y="30" width="116" height="40" class="e-fill"/><text x="72" y="50" class="e-txt">Building</text>
+      <text x="150" y="36" class="e-card">1</text>
+      <path d="M130 48 H182 M130 52 H182" class="e-line"/>
+      <path d="M232 26 L282 50 L232 74 L182 50 Z" class="e-fill"/><path d="M232 33 L272 50 L232 67 L192 50 Z" class="e-fill"/>
+      <text x="232" y="50" class="e-sm">CONTAINS</text>
+      <text x="304" y="36" class="e-card">N</text>
+      <path d="M282 48 H334 M282 52 H334" class="e-line"/>
+      <rect x="334" y="30" width="116" height="40" class="e-fill"/><rect x="339" y="35" width="106" height="30" class="e-fill"/>
+      <text x="392" y="50" class="e-sm">Room</text>
+      <ellipse cx="392" cy="90" rx="52" ry="0" class="e-fill" style="display:none"/>
+    </svg>
+    <figcaption>Every double mark in one picture. Building is the owner, Room cannot exist without it.</figcaption>
+  </figure>
+
+  <h3 id="c-spec">Specialization, superclass and subclass</h3>
+  <div class="prose">
+    <p>One entity that comes in flavours. The subclass inherits every attribute and relationship of the parent, and adds its own. Two <em>independent</em> switches sit on the diagram. Read them separately, because the exam grades them separately.</p>
+  </div>
+  <table class="tbl">
+    <thead><tr><th style="width:28%">Switch</th><th style="width:20%">Mark</th><th>Means</th></tr></thead>
+    <tbody>
+      <tr><td rowspan="2">Letter in the circle</td><td><code>d</code> disjoint</td><td>A row belongs to at most one subclass.</td></tr>
+      <tr><td><code>o</code> overlapping</td><td>A row may belong to several subclasses at once.</td></tr>
+      <tr><td rowspan="2">Line from parent to circle</td><td>Single, partial</td><td>A row may belong to no subclass at all.</td></tr>
+      <tr><td>Double, total</td><td>Every row must belong to at least one subclass.</td></tr>
+    </tbody>
+  </table>
+  <div class="key"><b>All four combinations are legal.</b> Disjoint and total means exactly one. Overlapping and partial means zero, one or several. Never assume the letter implies the line weight.</div>
+  <div class="prose">
+    <p>The small arc drawn on each branch is the subset symbol. It points from the subclass toward the parent and carries no extra meaning you have to mark.</p>
+  </div>
+
+  <h3 id="c-counts">Counting rules: minimum and maximum set sizes</h3>
+  <div class="prose">
+    <p>Given a relationship between A and B, the exam asks whether some set of row counts could exist, or how many relationship instances are possible. Turn each mark into arithmetic.</p>
+  </div>
+  <table class="tbl">
+    <thead><tr><th style="width:34%">What the diagram shows</th><th>The rule it gives you</th></tr></thead>
+    <tbody>
+      <tr><td>A is total</td><td>If A has any rows, B must have rows too. |A| &gt; 0 forces |B| &gt; 0.</td></tr>
+      <tr><td>A is total and A is labelled 1</td><td>|A| is capped by |B|. Each B row can serve only one A, and every A needs at least one B, so |A| &le; |B|.</td></tr>
+      <tr><td>Both sides total, 1:1</td><td>|A| = |B| exactly.</td></tr>
+      <tr><td>Both sides partial</td><td>No constraint on counts at all. Even 0 relationship rows is fine.</td></tr>
+    </tbody>
+  </table>
+  <table class="tbl">
+    <thead><tr><th style="width:20%">Ratio</th><th style="width:34%">Most relationship rows possible</th><th>Fewest relationship rows possible</th></tr></thead>
+    <tbody>
+      <tr><td>M : N</td><td>|A| &times; |B|</td><td>0 if both partial. If A is total, at least |A|. If both are total, at least the larger of |A| and |B|.</td></tr>
+      <tr><td>1 : N, with 1 on A</td><td>|B|, since each B row can pair with only one A</td><td>0 if both partial, |B| if B is total, |A| if A is total</td></tr>
+      <tr><td>1 : 1</td><td>The smaller of |A| and |B|</td><td>0 if both partial, otherwise the size of whichever side is total</td></tr>
+    </tbody>
+  </table>
+
+  <h3 id="c-phrase">Scenario phrase to notation</h3>
+  <div class="prose">
+    <p>Exam scenarios are a checklist in disguise. Each clause exists to trigger exactly one mark. This is the lookup table to write on the crib sheet.</p>
+  </div>
+  <table class="tbl">
+    <thead><tr><th style="width:46%">Phrase in the scenario</th><th>Mark it forces</th></tr></thead>
+    <tbody>
+      <tr><td>"uniquely identifies", "is recognized by"</td><td>Key attribute, solid underline</td></tr>
+      <tr><td>"a combination of X and Y", "made up of"</td><td>Composite attribute</td></tr>
+      <tr><td>"a list of", "one or more", "all the"</td><td>Multivalued, double oval</td></tr>
+      <tr><td>"the database calculates", "derived from"</td><td>Derived, dashed oval</td></tr>
+      <tr><td>"all", "every", "must", "each X has to"</td><td>Total participation, double line</td></tr>
+      <tr><td>"can", "may", "some", "optionally"</td><td>Partial participation, single line</td></tr>
+      <tr><td>"exactly one"</td><td>Cardinality 1 <em>and</em> total participation, both marks</td></tr>
+      <tr><td>"at most one"</td><td>Cardinality 1, participation stays partial</td></tr>
+      <tr><td>"as many as they prefer", "any number of"</td><td>N or M</td></tr>
+      <tr><td>"cannot exist without"</td><td>Weak entity, double rectangle</td></tr>
+      <tr><td>"identified by X and the Y that tracks it"</td><td>Identifying relationship, double diamond, partial key</td></tr>
+      <tr><td>"X, Y, or both"</td><td>Overlapping, <code>o</code></td></tr>
+      <tr><td>"either X or Y", "one type only"</td><td>Disjoint, <code>d</code></td></tr>
+      <tr><td>"could be neither", "some are not"</td><td>Partial specialization, single line into the circle</td></tr>
+      <tr><td>"every X is an A or a B"</td><td>Total specialization, double line into the circle</td></tr>
+      <tr><td>"the system tracks the date when"</td><td>Attribute on the relationship, not on either entity</td></tr>
+      <tr><td>"recorded for an investor" where Investor is a subclass</td><td>Attribute on the subclass, not the parent</td></tr>
+    </tbody>
+  </table>
+
+  <h3 id="c-terms">Terminology</h3>
+  <div class="grid2">
+    <div>
+      <h5>Data model</h5>
+      <table class="tbl tight">
+        <tbody>
+          <tr><th style="width:42%">Schema</th><td>The design. Table structures, types, constraints. Changes rarely.</td></tr>
+          <tr><th>Instance, or state</th><td>The rows in the tables right now. Changes constantly.</td></tr>
+          <tr><th>Relation</th><td>A table.</td></tr>
+          <tr><th>Tuple</th><td>A row.</td></tr>
+          <tr><th>Attribute</th><td>A column.</td></tr>
+          <tr><th>Domain</th><td>The set of values a column may hold.</td></tr>
+          <tr><th>Degree</th><td>Number of columns in a relation. For a relationship, the number of entities it links.</td></tr>
+          <tr><th>NULL</th><td>Unknown, not applicable, or missing. Not zero and not an empty string.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <h5>Keys</h5>
+      <table class="tbl tight">
+        <tbody>
+          <tr><th style="width:42%">Superkey</th><td>Any set of columns that identifies a row uniquely, extras allowed.</td></tr>
+          <tr><th>Candidate key</th><td>A minimal superkey. Remove any column and it stops being unique.</td></tr>
+          <tr><th>Primary key</th><td>The candidate key you chose. Never NULL.</td></tr>
+          <tr><th>Composite key</th><td>A key made of more than one column.</td></tr>
+          <tr><th>Foreign key</th><td>A column pointing at another table's primary key.</td></tr>
+          <tr><th>Partial key</th><td>A weak entity's key, unique only within one owner.</td></tr>
+          <tr><th>Entity integrity</th><td>No part of a primary key may be NULL.</td></tr>
+          <tr><th>Referential integrity</th><td>A foreign key must match a real row, or be NULL.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="grid2">
+    <div>
+      <h5>ER concepts</h5>
+      <table class="tbl tight">
+        <tbody>
+          <tr><th style="width:42%">Entity type</th><td>The category, drawn as the box.</td></tr>
+          <tr><th>Entity set</th><td>All the rows of that type at one moment.</td></tr>
+          <tr><th>Relationship type</th><td>The diamond.</td></tr>
+          <tr><th>Recursive relationship</th><td>An entity related to itself, like a beneficiary nominating a beneficiary.</td></tr>
+          <tr><th>Role name</th><td>A label on the line saying which part each side plays in a recursive relationship.</td></tr>
+          <tr><th>Owner entity</th><td>The strong entity a weak entity depends on.</td></tr>
+          <tr><th>Structural constraint</th><td>Cardinality and participation together, sometimes written (min, max).</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <h5>Subtypes and architecture</h5>
+      <table class="tbl tight">
+        <tbody>
+          <tr><th style="width:42%">Specialization</th><td>Splitting a parent into subclasses, top down.</td></tr>
+          <tr><th>Generalization</th><td>Spotting a shared parent for existing entities, bottom up.</td></tr>
+          <tr><th>Inheritance</th><td>A subclass gets all the parent's attributes and relationships.</td></tr>
+          <tr><th>Three-schema architecture</th><td>External views, conceptual schema, internal storage.</td></tr>
+          <tr><th>Logical data independence</th><td>Change the conceptual schema without rewriting the views.</td></tr>
+          <tr><th>Physical data independence</th><td>Change storage without touching the conceptual schema.</td></tr>
+          <tr><th>DDL and DML</th><td>DDL defines structure, CREATE and ALTER. DML moves data, SELECT, INSERT, UPDATE, DELETE.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <h3 id="c-sql">SQL reference</h3>
+
+  <h4>The order a query actually runs</h4>
+  <div class="prose">
+    <p>You write it in one order and the engine runs it in another. Every tracing question is answered by walking these seven steps in this exact sequence.</p>
+  </div>
+  <table class="tbl">
+    <thead><tr><th style="width:8%">Step</th><th style="width:22%">Clause</th><th>What happens</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><code>FROM</code></td><td>Collect the rows from the tables.</td></tr>
+      <tr><td>2</td><td><code>WHERE</code></td><td>Throw away rows that fail the test. Runs before any grouping, so it cannot see aggregates.</td></tr>
+      <tr><td>3</td><td><code>GROUP BY</code></td><td>Collapse the survivors into one row per distinct combination.</td></tr>
+      <tr><td>4</td><td><code>HAVING</code></td><td>Throw away whole groups. This is where aggregates get tested.</td></tr>
+      <tr><td>5</td><td><code>SELECT</code></td><td>Build the output columns, compute expressions, apply aliases.</td></tr>
+      <tr><td>6</td><td><code>ORDER BY</code></td><td>Sort the finished rows.</td></tr>
+      <tr><td>7</td><td><code>LIMIT</code> / <code>OFFSET</code></td><td>Skip, then take.</td></tr>
+    </tbody>
+  </table>
+  <div class="key"><b>WHERE or HAVING?</b> If the test looks at one row, it is WHERE. If it looks at a whole group, meaning it contains COUNT, SUM, AVG, MIN or MAX, it is HAVING.</div>
+
+  <h4>Aggregates</h4>
+  <table class="tbl">
+    <thead><tr><th style="width:26%">Function</th><th>Behaviour</th></tr></thead>
+    <tbody>
+      <tr><td><code>COUNT(*)</code></td><td>Counts rows, including rows full of NULLs.</td></tr>
+      <tr><td><code>COUNT(col)</code></td><td>Counts rows where that column is not NULL. This is where the two differ.</td></tr>
+      <tr><td><code>COUNT(DISTINCT col)</code></td><td>Counts different non-NULL values.</td></tr>
+      <tr><td><code>SUM</code>, <code>AVG</code></td><td>Skip NULLs entirely. AVG divides by the count of non-NULL values, not by the row count.</td></tr>
+      <tr><td><code>MIN</code>, <code>MAX</code></td><td>Skip NULLs. Work on text and dates as well as numbers.</td></tr>
+      <tr><td>No <code>GROUP BY</code></td><td>The whole table is one group, so you get exactly one row back.</td></tr>
+    </tbody>
+  </table>
+
+  <h4>NULL, in three-valued logic</h4>
+  <div class="prose">
+    <ul>
+      <li>Any comparison with NULL gives <em>unknown</em>, never true. <code>salary = NULL</code> and <code>salary &lt;&gt; NULL</code> both match nothing.</li>
+      <li>Only <code>IS NULL</code> and <code>IS NOT NULL</code> can test for it.</li>
+      <li><code>WHERE</code> keeps a row only when the test is true. Unknown is discarded, so rows with NULL vanish silently from both <code>=</code> and <code>&lt;&gt;</code> filters.</li>
+      <li><code>NOT IN</code> against a subquery that contains even one NULL returns no rows at all. <code>IN</code> is safe.</li>
+      <li>Aggregates ignore NULL, but <code>COUNT(*)</code> does not.</li>
+      <li><code>GROUP BY</code> puts all the NULLs together in one group.</li>
+    </ul>
+  </div>
+
+  <h4>Operators worth knowing cold</h4>
+  <table class="tbl">
+    <thead><tr><th style="width:28%">Operator</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><code>BETWEEN a AND b</code></td><td>Inclusive of both ends. Same as <code>&gt;= a AND &lt;= b</code>.</td></tr>
+      <tr><td><code>IN (list)</code></td><td>Matches any value in the list or subquery.</td></tr>
+      <tr><td><code>LIKE '%abc%'</code></td><td><code>%</code> is any number of characters, <code>_</code> is exactly one.</td></tr>
+      <tr><td><code>'%aya'</code> versus <code>'%aya%'</code></td><td>The first anchors at the end, the second matches anywhere.</td></tr>
+      <tr><td><code>DISTINCT</code></td><td>Removes duplicate output rows, applied across all selected columns together.</td></tr>
+      <tr><td><code>CONCAT(a, b, c)</code></td><td>Joins strings. Can wrap an aggregate, as in <code>CONCAT(note, ': ', MIN(id))</code>.</td></tr>
+      <tr><td><code>AS</code></td><td>Renames a column. The alias is not visible to WHERE, because SELECT runs later.</td></tr>
+      <tr><td><code>ORDER BY a DESC, b ASC</code></td><td>Sorts by the first key, then breaks ties with the second.</td></tr>
+      <tr><td><code>LIMIT n OFFSET k</code></td><td>Skip k rows, then return up to n. Returns fewer than n if the rows run out.</td></tr>
+    </tbody>
+  </table>
+  <div class="key"><b>Ranked rows.</b> For "the nth through mth highest", use <code>ORDER BY col DESC LIMIT (m - n + 1) OFFSET (n - 1)</code>. Third through seventh is <code>LIMIT 5 OFFSET 2</code>.</div>
+
+  <h4>Nested queries</h4>
+  <pre><code>SELECT customer_id, username
+FROM Customers
+WHERE customer_id NOT IN (
+      SELECT customer_id FROM Orders WHERE order_note = 'Express'
+);</code></pre>
+  <div class="prose">
+    <p>Trace it inside out. Run the inner query first, write its result down as a plain list of values, then substitute that list and run the outer query. That habit alone answers most nested tracing questions.</p>
+  </div>
+
+  <h3 id="c-traps">The traps this exam repeats</h3>
+  <div class="prose">
+    <ol>
+      <li><strong>A multivalued attribute never requires more than one value.</strong> The double oval grants permission. One value satisfies it.</li>
+      <li><strong>Two owners may reuse the same partial key.</strong> Two companies can both have a car with plate ABC123.</li>
+      <li><strong>Total participation is an existence rule.</strong> Empty the far side and everything that totally participates must be empty as well.</li>
+      <li><strong>The letter and the line are independent.</strong> A <code>d</code> circle can sit on a single line, meaning at most one subtype and possibly none.</li>
+      <li><strong><code>&lt;&gt;</code> silently drops NULL rows.</strong> Counting employees whose supervisor is not 333445555 excludes the employee with no supervisor at all.</li>
+      <li><strong>Strict beats inclusive.</strong> "More than 5 hours" excludes exactly 5.0. Read the boundary word twice.</li>
+      <li><strong>WHERE before grouping, HAVING after.</strong> Filtering rows and filtering groups produce different answers.</li>
+      <li><strong>OFFSET is one less than the rank.</strong> The 3rd row means OFFSET 2.</li>
+      <li><strong>Write the column headers</strong> in tracing answers. They are part of the mark.</li>
+      <li><strong>Attach subclass attributes to the subclass.</strong> Putting them on the parent loses the point even when everything else is right.</li>
+    </ol>
+  </div>
+</div>
+
+<!-- =====================  TAB 2: EXAM 1  ===================== -->
+<div class="panel" id="p-exam" role="tabpanel" aria-labelledby="tab-exam" hidden>
+
+  <div class="subnav">
+    <a href="#x1">1. EER Diagramming, 26</a>
+    <a href="#x2">2. EERD Interpretation, 8</a>
+    <a href="#x3">3. Cardinality, 10</a>
+    <a href="#x4">4. SQL Queries, 16</a>
+    <a href="#x-ref">Reference database</a>
+  </div>
+
+  <div class="prose">
+    <p>The full paper, question by question, with a solution button under each. Sixty points across four sections. Attempt each one before opening the answer, because the explanation assumes you already tried.</p>
+  </div>
+
+  <h3 id="x1">Section 1. EER Diagramming, 26 points</h3>
+  <div class="prose">
+    <p>An estate and equity management firm wants a database tracking client assets, ownership, and estate planning. Part of the diagram is already drawn. Four numbered boxes are empty, and four numbered paragraphs describe what goes in them.</p>
+    <p>The instruction on the paper: include <em>all</em> elements relevant to the description, meaning attributes, partial and total participation, cardinality, and superclass or subclass relationships.</p>
+  </div>
+
+  <figure class="scroll-x big">
+    <svg viewBox="0 0 900 540" role="img" aria-label="The partially drawn exam diagram, with four empty numbered boxes">
+      <rect x="20" y="20" width="420" height="250" class="e-dash" stroke="var(--red)" stroke-width="1.2"/>
+      <circle cx="44" cy="44" r="13" fill="none" stroke="var(--red)" stroke-width="1.4"/><text x="44" y="44" class="e-sm ans-t">1</text>
+      <rect x="600" y="150" width="290" height="230" class="e-dash" stroke="var(--red)" stroke-width="1.2"/>
+      <circle cx="866" cy="174" r="13" fill="none" stroke="var(--red)" stroke-width="1.4"/><text x="866" y="174" class="e-sm ans-t">2</text>
+      <rect x="20" y="286" width="250" height="230" class="e-dash" stroke="var(--red)" stroke-width="1.2"/>
+      <circle cx="44" cy="492" r="13" fill="none" stroke="var(--red)" stroke-width="1.4"/><text x="44" y="492" class="e-sm ans-t">3</text>
+      <rect x="300" y="286" width="240" height="200" class="e-dash" stroke="var(--red)" stroke-width="1.2"/>
+      <circle cx="516" cy="310" r="13" fill="none" stroke="var(--red)" stroke-width="1.4"/><text x="516" y="310" class="e-sm ans-t">4</text>
+
+      <rect x="196" y="86" width="140" height="44" class="e-fill"/><text x="266" y="108" class="e-txt">Client</text>
+      <ellipse cx="516" cy="54" rx="50" ry="17" class="e-fill"/><text x="516" y="54" class="e-sm">start_date</text>
+      <ellipse cx="600" cy="80" rx="48" ry="17" class="e-fill"/><text x="600" y="80" class="e-sm">end_date</text>
+      <path d="M336 104 L446 140 M336 112 L444 148" class="e-line"/>
+      <text x="432" y="122" class="e-card">M</text>
+      <path d="M540 148 L520 71 M556 150 L582 97" class="e-line"/>
+      <path d="M546 116 L620 152 L546 188 L472 152 Z" class="e-fill"/><text x="546" y="152" class="e-txt">OWNS</text>
+      <text x="556" y="204" class="e-card">N</text>
+      <path d="M576 180 L646 268" class="e-line"/>
+      <rect x="170" y="300" width="120" height="40" class="e-fill"/><text x="230" y="320" class="e-txt">Investor</text>
+      <rect x="320" y="300" width="140" height="40" class="e-fill"/><text x="390" y="320" class="e-txt">Beneficiary</text>
+      <rect x="646" y="268" width="140" height="44" class="e-fill"/><text x="716" y="290" class="e-txt">Equity Asset</text>
+      <path d="M712 312 V352 M720 312 V352" class="e-line"/>
+      <circle cx="716" cy="368" r="15" class="e-fill"/><text x="716" y="368" class="e-txt">d</text>
+      <path d="M704 378 L648 412 M728 378 L784 412" class="e-line"/>
+      <rect x="596" y="412" width="104" height="42" class="e-fill"/><text x="648" y="433" class="e-txt">Gold</text>
+      <rect x="732" y="412" width="104" height="42" class="e-fill"/><text x="784" y="433" class="e-txt">Land</text>
+      <ellipse cx="588" cy="500" rx="42" ry="16" class="e-fill"/><text x="588" y="500" class="e-sm">purity</text>
+      <ellipse cx="678" cy="500" rx="42" ry="16" class="e-fill"/><text x="678" y="500" class="e-sm">weight</text>
+      <ellipse cx="770" cy="500" rx="46" ry="16" class="e-fill"/><text x="770" y="500" class="e-sm">address</text>
+      <ellipse cx="858" cy="500" rx="36" ry="16" class="e-fill"/><text x="858" y="500" class="e-sm">size</text>
+      <path d="M612 484 L634 454 M672 484 L660 454 M772 484 L768 454 M846 484 L800 454" class="e-line"/>
+    </svg>
+    <figcaption>What is printed on the paper. Everything in black is given. The four dashed boxes are yours to fill. OWNS is already M:N with a double line on the Client side, and Gold and Land already sit under a disjoint, total specialization.</figcaption>
+  </figure>
+
+  <div class="qbox">
+    <span class="qn">Paragraph 1 &rarr; Box 1</span>
+    <p>The primary goal is to track clients and the roles they play within the firm. The system stores information about every person who interacts with the firm, where some clients may act as investors, beneficiaries, or both, while other clients could not choose to be either. The firm recognizes its top investors by recording the total investments worth made by an investor. When a person is registered, they are assigned a client ID that uniquely identifies them. The system also stores each client's name (combination of first and last name), date of birth, and email. For legal purposes, the database calculates a client's age for tax benefit.</p>
+  </div>
+
+  <details class="reveal">
+    <summary>Show solution for box 1</summary>
+    <div class="reveal-body">
+      <figure class="scroll-x">
+        <svg viewBox="0 0 640 350" role="img" aria-label="Solution for box one">
+          <ellipse cx="185" cy="26" rx="44" ry="16" class="e-fill ans"/><text x="185" y="26" class="e-sm ans-t">fname</text>
+          <ellipse cx="292" cy="26" rx="44" ry="16" class="e-fill ans"/><text x="292" y="26" class="e-sm ans-t">lname</text>
+          <ellipse cx="238" cy="76" rx="46" ry="16" class="e-fill ans"/><text x="238" y="76" class="e-sm ans-t">name</text>
+          <path d="M198 40 L218 62 M280 40 L258 62" class="e-line ans"/>
+          <ellipse cx="404" cy="60" rx="66" ry="16" class="e-fill ans"/><text x="404" y="60" class="e-sm ans-t">date_of_birth</text>
+          <ellipse cx="486" cy="112" rx="42" ry="16" class="e-fill ans"/><text x="486" y="112" class="e-sm ans-t">email</text>
+          <ellipse cx="104" cy="92" rx="34" ry="16" class="e-fill ans"/><text x="104" y="90" class="e-sm ans-t">id</text>
+          <path d="M94 99 H114" class="e-line ans" stroke-width="1.3"/>
+          <ellipse cx="66" cy="152" rx="38" ry="16" class="e-dash ans"/><text x="66" y="152" class="e-sm ans-t">age</text>
+          <path d="M238 92 L284 132 M356 74 L346 132 M452 118 L378 152 M138 98 L246 140 M104 152 H246" class="e-line ans"/>
+          <rect x="246" y="132" width="132" height="44" class="e-fill"/><text x="312" y="154" class="e-txt">Client</text>
+          <path d="M312 176 V202" class="e-line ans"/>
+          <circle cx="312" cy="218" r="16" class="e-fill ans"/><text x="312" y="218" class="e-txt ans-t">o</text>
+          <path d="M300 228 L214 264 M324 228 L424 264" class="e-line ans"/>
+          <rect x="136" y="264" width="140" height="40" class="e-fill"/><text x="206" y="284" class="e-txt">Investor</text>
+          <rect x="360" y="264" width="150" height="40" class="e-fill"/><text x="435" y="284" class="e-txt">Beneficiary</text>
+          <ellipse cx="76" cy="324" rx="72" ry="17" class="e-fill ans"/><text x="76" y="324" class="e-sm ans-t">total_investment</text>
+          <path d="M142 314 L172 304" class="e-line ans"/>
+        </svg>
+      </figure>
+      <div class="prose">
+        <h5>Why, clause by clause</h5>
+        <table class="tbl">
+          <thead><tr><th style="width:46%">Clause</th><th>Mark, and the reason</th></tr></thead>
+          <tbody>
+            <tr><td>a client ID that uniquely identifies them</td><td><code>id</code> in a plain oval, name <strong>underlined</strong>. Unique identification is the definition of a key attribute.</td></tr>
+            <tr><td>name, a combination of first and last name</td><td><code>name</code> as a parent oval with <code>fname</code> and <code>lname</code> hanging below it. "Combination of" is the standard composite phrasing. Only the leaves become real columns.</td></tr>
+            <tr><td>date of birth, and email</td><td>Two plain ovals. Nothing special is claimed about them.</td></tr>
+            <tr><td>the database <em>calculates</em> a client's age</td><td><code>age</code> in a <strong>dashed</strong> oval. Calculated means derived, so it is never stored. If it were stored it would go stale every birthday, which is the real reason the notation exists.</td></tr>
+            <tr><td>investors, beneficiaries, <em>or both</em></td><td><code>o</code> inside the circle. Overlapping, because one client can be in both subclasses at once. A <code>d</code> here would be wrong.</td></tr>
+            <tr><td>other clients could not choose to be either</td><td><strong>Single</strong> line from Client into the circle. Partial specialization, because a client can belong to no subclass. This is a separate mark from the letter, and it is a separate point.</td></tr>
+            <tr><td>total investments worth made by an <em>investor</em></td><td><code>total_investment</code> attached to <strong>Investor</strong>, not to Client. Only investors have one, and putting it on the parent would give every client the attribute through inheritance.</td></tr>
+          </tbody>
+        </table>
+        <div class="note"><b>The two marks people miss</b>Drawing a double line into the circle, which contradicts "could not choose to be either", and hanging total_investment off Client. Both look right at a glance and both lose points.</div>
+      </div>
+    </div>
+  </details>
+
+  <div class="qbox">
+    <span class="qn">Paragraph 2 &rarr; Box 2</span>
+    <p>All clients must own assets. An asset is recognized by an equity ID in the database, which is made up of a combination of its order date and order number. As the market grows more volatile, it is important to store the cost of each asset so that the firm can review this in future. The firm has an adverse history of court cases. To deal with legal obligations, the database must keep a record of the list of lawyers for each equity asset.</p>
+  </div>
+
+  <details class="reveal">
+    <summary>Show solution for box 2</summary>
+    <div class="reveal-body">
+      <figure class="scroll-x">
+        <svg viewBox="0 0 580 230" role="img" aria-label="Solution for box two">
+          <ellipse cx="128" cy="26" rx="62" ry="16" class="e-fill ans"/><text x="128" y="26" class="e-sm ans-t">order_number</text>
+          <ellipse cx="300" cy="26" rx="54" ry="16" class="e-fill ans"/><text x="300" y="26" class="e-sm ans-t">order_date</text>
+          <ellipse cx="214" cy="80" rx="48" ry="16" class="e-fill ans"/><text x="214" y="78" class="e-sm ans-t">equity_id</text>
+          <path d="M180 87 H248" class="e-line ans" stroke-width="1.3"/>
+          <path d="M152 40 L192 64 M276 40 L238 64" class="e-line ans"/>
+          <path d="M214 96 L230 108" class="e-line ans"/>
+          <rect x="196" y="108" width="150" height="46" class="e-fill"/><text x="271" y="131" class="e-txt">Equity Asset</text>
+          <ellipse cx="470" cy="92" rx="66" ry="22" class="e-fill ans"/><ellipse cx="470" cy="92" rx="58" ry="15" class="e-fill ans"/>
+          <text x="470" y="92" class="e-sm ans-t">lawyers</text>
+          <path d="M404 100 L346 118" class="e-line ans"/>
+          <ellipse cx="452" cy="168" rx="42" ry="16" class="e-fill ans"/><text x="452" y="168" class="e-sm ans-t">cost</text>
+          <path d="M410 160 L346 144" class="e-line ans"/>
+        </svg>
+      </figure>
+      <div class="prose">
+        <h5>Why, clause by clause</h5>
+        <ul>
+          <li><strong>"recognized by an equity ID"</strong> makes <code>equity_id</code> the key, so its name is underlined with a solid line.</li>
+          <li><strong>"made up of a combination of its order date and order number"</strong> makes that key composite. Draw <code>order_date</code> and <code>order_number</code> as children below it. Do not underline the children, the parent carries the underline.</li>
+          <li><strong>"store the cost of each asset"</strong> is one plain oval.</li>
+          <li><strong>"keep a record of the list of lawyers"</strong> is the only double oval on the page. A list cannot fit in one column, so multivalued it is. In SQL this becomes a second table, <code>asset_lawyers(equity_id, lawyer)</code>.</li>
+        </ul>
+        <p>The first sentence, "all clients must own assets", is not yours to draw. It is the double line already printed on the Client side of OWNS. Read it as a worked example of the same rule you are applying elsewhere.</p>
+      </div>
+    </div>
+  </details>
+
+  <div class="qbox">
+    <span class="qn">Paragraph 3 &rarr; Box 3</span>
+    <p>To manage how their assets are distributed, an investor must enroll in exactly one estate plan. An estate plan is customized for each investor and is unique to them. An estate plan cannot exist without an investor and is identified by the plan number and an investor that tracks it. The system also stores an initiation date of each estate plan.</p>
+  </div>
+
+  <details class="reveal">
+    <summary>Show solution for box 3</summary>
+    <div class="reveal-body">
+      <figure class="scroll-x">
+        <svg viewBox="0 0 460 310" role="img" aria-label="Solution for box three">
+          <rect x="146" y="8" width="140" height="40" class="e-fill"/><text x="216" y="28" class="e-txt">Investor</text>
+          <path d="M212 48 V94 M220 48 V94" class="e-line ans"/>
+          <text x="194" y="70" class="e-card ans-t">1</text>
+          <path d="M216 94 L276 120 L216 146 L156 120 Z" class="e-fill ans"/>
+          <path d="M216 101 L266 120 L216 139 L166 120 Z" class="e-fill ans"/>
+          <text x="216" y="120" class="e-sm ans-t">ENROLL</text>
+          <path d="M212 146 V192 M220 146 V192" class="e-line ans"/>
+          <text x="194" y="170" class="e-card ans-t">1</text>
+          <rect x="146" y="192" width="140" height="46" class="e-fill ans"/>
+          <rect x="151" y="197" width="130" height="36" class="e-fill ans"/>
+          <text x="216" y="215" class="e-sm ans-t">Estate Plans</text>
+          <ellipse cx="66" cy="168" rx="62" ry="17" class="e-fill ans"/><text x="66" y="168" class="e-sm ans-t">initiation_date</text>
+          <path d="M122 179 L152 198" class="e-line ans"/>
+          <path d="M216 238 V258" class="e-line ans"/>
+          <ellipse cx="216" cy="276" rx="66" ry="17" class="e-fill ans"/><text x="216" y="274" class="e-sm ans-t">estate_number</text>
+          <path d="M172 285 H260" class="e-line ans" stroke-width="1.3" stroke-dasharray="4 3"/>
+        </svg>
+      </figure>
+      <div class="prose">
+        <h5>Why, clause by clause</h5>
+        <ul>
+          <li><strong>"cannot exist without an investor"</strong> makes Estate Plans a weak entity, so the rectangle is doubled.</li>
+          <li><strong>"identified by the plan number <em>and an investor</em> that tracks it"</strong> is the giveaway line for an identifying relationship. The plan number alone does not identify a plan, you also need to know whose plan it is. So ENROLL becomes a double diamond and <code>estate_number</code> gets a <strong>dashed</strong> underline.</li>
+          <li><strong>"must enroll in exactly one estate plan"</strong> gives two marks at once. "One" is the cardinality, "must" is total participation on the Investor side, so a double line.</li>
+          <li><strong>"customized for each investor and is unique to them"</strong> makes the other side a 1 as well, so the relationship is 1:1.</li>
+          <li><strong>"cannot exist without"</strong> also forces a double line on the Estate Plans side. Weak entities always participate totally in their identifying relationship. There is no such thing as a floating weak entity.</li>
+          <li><strong>"stores an initiation date"</strong> is a plain oval on Estate Plans.</li>
+        </ul>
+        <div class="note"><b>Sanity check</b>Four doubled marks in this one box: two lines, the diamond, and the rectangle, plus a dashed rather than solid underline. If you drew a double rectangle without a double diamond, or the other way round, go back. They always appear together.</div>
+        <p>In SQL this box is <code>PRIMARY KEY (investor_id, estate_number)</code> on the estate plan table.</p>
+      </div>
+    </div>
+  </details>
+
+  <div class="qbox">
+    <span class="qn">Paragraph 4 &rarr; Box 4</span>
+    <p>Beneficiaries can register other beneficiaries as nominees. A beneficiary can be registered as a nominee by at most one beneficiary. However, a beneficiary may nominate as many beneficiaries as they prefer. The system must track the date when a nominee was registered in the database.</p>
+  </div>
+
+  <details class="reveal">
+    <summary>Show solution for box 4</summary>
+    <div class="reveal-body">
+      <figure class="scroll-x">
+        <svg viewBox="0 0 470 230" role="img" aria-label="Solution for box four">
+          <rect x="30" y="16" width="160" height="42" class="e-fill"/><text x="110" y="37" class="e-txt">Beneficiary</text>
+          <path d="M190 34 H330 V92" class="e-line ans"/>
+          <text x="312" y="66" class="e-card ans-t">N</text>
+          <path d="M110 58 V124 H268" class="e-line ans"/>
+          <text x="150" y="108" class="e-card ans-t">1</text>
+          <path d="M330 92 L392 124 L330 156 L268 124 Z" class="e-fill ans"/>
+          <text x="330" y="124" class="e-sm ans-t">NOMINEE</text>
+          <path d="M310 150 L268 176" class="e-line ans"/>
+          <ellipse cx="216" cy="190" rx="52" ry="17" class="e-fill ans"/><text x="216" y="190" class="e-sm ans-t">enroll_date</text>
+        </svg>
+      </figure>
+      <div class="prose">
+        <h5>Why, clause by clause</h5>
+        <p>Both lines leave Beneficiary and both arrive at the same diamond. That is a <strong>recursive relationship</strong>, an entity related to itself, and it only looks strange. The notation is identical to every other relationship.</p>
+        <ul>
+          <li><strong>"registered as a nominee by at most one beneficiary"</strong> caps the nominating side at <strong>1</strong>. Each person is claimed by one nominator at most.</li>
+          <li><strong>"may nominate as many beneficiaries as they prefer"</strong> makes the other direction <strong>N</strong>.</li>
+          <li><strong>"can" and "may"</strong> throughout keep participation partial, so single lines on both connections. A beneficiary who nominates nobody and is nominated by nobody is legal.</li>
+          <li><strong>"track the date when a nominee was registered"</strong> is an attribute of the <em>registration event</em>, not of a person, so it hangs off the diamond. Putting it on Beneficiary would be wrong, because one beneficiary can nominate several people on several different dates.</li>
+        </ul>
+        <p>In SQL: a nullable <code>nominated_by</code> foreign key on the beneficiary table, pointing at the beneficiary table, plus a <code>nominated_on</code> date column.</p>
+      </div>
+    </div>
+  </details>
+
+  <h3 id="x2">Section 2. EERD Interpretation, 8 points</h3>
+  <div class="prose">
+    <p>The Georgia Tech Transportation System EERD, four true or false questions at two points each. The paper adds two assumptions: no attribute can be NULL, and if an entity or relationship exists then all of its attributes exist and are valid.</p>
+  </div>
+
+  <figure class="scroll-x big">
+    <svg viewBox="0 0 1180 620" role="img" aria-label="The full transportation EERD with TaxiService, Car and its subtypes, Person with Passenger and Driver subtypes, Location, and Trip">
+      <ellipse cx="175" cy="50" rx="40" ry="16" class="e-fill"/><text x="175" y="48" class="e-sm">name</text><path d="M148 58 H202" class="e-line" stroke-width="1.2"/>
+      <ellipse cx="300" cy="46" rx="48" ry="16" class="e-fill"/><text x="300" y="46" class="e-sm">revenue</text>
+      <path d="M180 66 L205 90 M285 62 L262 90" class="e-line"/>
+      <rect x="150" y="90" width="150" height="42" class="e-fill"/><text x="225" y="111" class="e-txt">TaxiService</text>
+      <path d="M225 132 V152" class="e-line"/><text x="242" y="144" class="e-card">1</text>
+      <path d="M225 152 L300 182 L225 212 L150 182 Z" class="e-fill"/>
+      <path d="M225 159 L290 182 L225 205 L160 182 Z" class="e-fill"/>
+      <text x="225" y="182" class="e-sm">Owns</text>
+      <path d="M225 212 V252" class="e-line"/><text x="242" y="234" class="e-card">N</text>
+      <rect x="150" y="252" width="150" height="44" class="e-fill"/><rect x="155" y="257" width="140" height="34" class="e-fill"/>
+      <text x="225" y="274" class="e-txt">Car</text>
+      <ellipse cx="62" cy="236" rx="48" ry="16" class="e-fill"/><text x="62" y="234" class="e-sm">plateNum</text><path d="M32 243 H92" class="e-line" stroke-width="1.2" stroke-dasharray="4 3"/>
+      <ellipse cx="48" cy="288" rx="40" ry="16" class="e-fill"/><text x="48" y="288" class="e-sm">status</text>
+      <ellipse cx="64" cy="340" rx="56" ry="16" class="e-fill"/><text x="64" y="340" class="e-sm">maxCapacity</text>
+      <path d="M110 244 L150 258 M88 286 L150 276 M116 330 L150 292" class="e-line"/>
+      <path d="M221 296 V334 M229 296 V334" class="e-line"/>
+      <circle cx="225" cy="348" r="14" class="e-fill"/><text x="225" y="348" class="e-sm">d</text>
+      <path d="M214 357 L168 392 M236 357 L292 392" class="e-line"/>
+      <rect x="108" y="392" width="116" height="36" class="e-fill"/><text x="166" y="410" class="e-sm">Regular</text>
+      <rect x="244" y="392" width="128" height="36" class="e-fill"/><text x="308" y="410" class="e-sm">Self-Driving</text>
+      <ellipse cx="74" cy="458" rx="42" ry="16" class="e-fill"/><text x="74" y="458" class="e-sm">carType</text>
+      <ellipse cx="206" cy="466" rx="62" ry="16" class="e-fill"/><text x="206" y="466" class="e-sm">inspectionDate</text>
+      <ellipse cx="428" cy="404" rx="44" ry="16" class="e-fill"/><text x="428" y="404" class="e-sm">version</text>
+      <path d="M112 448 L146 428 M200 450 L190 428 M384 406 L372 408" class="e-line"/>
+
+      <ellipse cx="628" cy="26" rx="50" ry="16" class="e-fill"/><text x="628" y="26" class="e-sm">phoneNum</text>
+      <ellipse cx="762" cy="16" rx="44" ry="15" class="e-fill"/><text x="762" y="14" class="e-sm">personID</text><path d="M736 23 H788" class="e-line" stroke-width="1.2"/>
+      <ellipse cx="884" cy="18" rx="46" ry="15" class="e-fill"/><text x="884" y="18" class="e-sm">firstName</text>
+      <ellipse cx="1000" cy="44" rx="44" ry="16" class="e-fill"/><text x="1000" y="44" class="e-sm">lastName</text>
+      <path d="M668 38 L730 62 M766 31 L776 62 M860 32 L842 62 M958 52 L868 68" class="e-line"/>
+      <rect x="720" y="62" width="150" height="42" class="e-fill"/><text x="795" y="83" class="e-txt">Person</text>
+      <path d="M795 104 V126" class="e-line"/>
+      <circle cx="795" cy="140" r="14" class="e-fill"/><text x="795" y="140" class="e-sm">o</text>
+      <path d="M784 149 L704 190 M806 149 L886 190" class="e-line"/>
+      <rect x="594" y="190" width="140" height="40" class="e-fill"/><text x="664" y="210" class="e-txt">Passenger</text>
+      <ellipse cx="596" cy="146" rx="52" ry="15" class="e-fill"/><text x="596" y="144" class="e-sm">passengerID</text><path d="M562 152 H630" class="e-line" stroke-width="1.2"/>
+      <ellipse cx="500" cy="164" rx="52" ry="16" class="e-fill"/><text x="500" y="164" class="e-sm">subscription</text>
+      <ellipse cx="470" cy="216" rx="66" ry="21" class="e-fill"/><ellipse cx="470" cy="216" rx="58" ry="14" class="e-fill"/><text x="470" y="216" class="e-sm">paymentOptions</text>
+      <path d="M612 161 L636 190 M540 177 L596 192 M536 216 L594 212" class="e-line"/>
+      <rect x="856" y="190" width="140" height="40" class="e-fill"/><text x="926" y="210" class="e-txt">Driver</text>
+      <ellipse cx="1010" cy="148" rx="42" ry="15" class="e-fill"/><text x="1010" y="146" class="e-sm">driverID</text><path d="M986 154 H1034" class="e-line" stroke-width="1.2"/>
+      <ellipse cx="1108" cy="190" rx="66" ry="21" class="e-fill"/><ellipse cx="1108" cy="190" rx="58" ry="14" class="e-fill"/><text x="1108" y="190" class="e-sm">certifications</text>
+      <ellipse cx="1090" cy="246" rx="52" ry="16" class="e-fill"/><text x="1090" y="246" class="e-sm">licenseNum</text>
+      <path d="M984 161 L958 190 M1044 194 L996 202 M1040 240 L996 222" class="e-line"/>
+
+      <path d="M664 230 V292" class="e-line"/><text x="681" y="262" class="e-card">1</text>
+      <path d="M664 292 L722 318 L664 344 L606 318 Z" class="e-fill"/><text x="664" y="318" class="e-sm">requests</text>
+      <path d="M660 344 L676 470 M668 344 L684 470" class="e-line"/><text x="643" y="408" class="e-card">N</text>
+      <path d="M926 230 V292" class="e-line"/><text x="943" y="262" class="e-card">1</text>
+      <path d="M926 292 L984 318 L926 344 L868 318 Z" class="e-fill"/><text x="926" y="318" class="e-sm">drives</text>
+      <path d="M922 344 L772 468 M928 350 L778 474" class="e-line"/><text x="886" y="398" class="e-card">N</text>
+
+      <path d="M300 274 L362 290" class="e-line"/><text x="330" y="272" class="e-card">1</text>
+      <path d="M420 264 L478 290 L420 316 L362 290 Z" class="e-fill"/><text x="420" y="290" class="e-sm">facilitates</text>
+      <path d="M478 288 L646 470 M482 294 L650 476" class="e-line"/><text x="524" y="322" class="e-card">N</text>
+
+      <rect x="300" y="470" width="136" height="40" class="e-fill"/><text x="368" y="490" class="e-txt">Location</text>
+      <ellipse cx="320" cy="562" rx="50" ry="15" class="e-fill"/><text x="320" y="560" class="e-sm">locationID</text><path d="M290 568 H350" class="e-line" stroke-width="1.2"/>
+      <ellipse cx="454" cy="558" rx="44" ry="16" class="e-fill"/><text x="454" y="558" class="e-sm">address</text>
+      <path d="M334 546 L348 510 M440 542 L412 510" class="e-line"/>
+      <path d="M436 480 L472 456" class="e-line"/><text x="452" y="444" class="e-card">1</text>
+      <path d="M524 426 L580 452 L524 478 L468 452 Z" class="e-fill"/><text x="524" y="452" class="e-sm">pickupAt</text>
+      <path d="M580 450 L640 476 M578 456 L638 482" class="e-line"/><text x="606" y="434" class="e-card">N</text>
+      <path d="M436 500 L472 540" class="e-line"/><text x="452" y="528" class="e-card">1</text>
+      <path d="M524 522 L580 548 L524 574 L468 548 Z" class="e-fill"/><text x="524" y="548" class="e-sm">dropoffAt</text>
+      <path d="M580 544 L642 516 M582 550 L644 522" class="e-line"/><text x="612" y="566" class="e-card">N</text>
+
+      <rect x="640" y="470" width="150" height="48" class="e-fill"/><text x="715" y="494" class="e-txt">Trip</text>
+      <ellipse cx="910" cy="470" rx="40" ry="15" class="e-fill"/><text x="910" y="468" class="e-sm">tripID</text><path d="M888 476 H932" class="e-line" stroke-width="1.2"/>
+      <ellipse cx="906" cy="422" rx="38" ry="16" class="e-fill"/><text x="906" y="422" class="e-sm">fare</text>
+      <ellipse cx="906" cy="520" rx="44" ry="16" class="e-fill"/><text x="906" y="520" class="e-sm">status</text>
+      <ellipse cx="860" cy="568" rx="48" ry="16" class="e-fill"/><text x="860" y="568" class="e-sm">startTime</text>
+      <ellipse cx="724" cy="582" rx="44" ry="16" class="e-fill"/><text x="724" y="582" class="e-sm">endTime</text>
+      <path d="M870 474 L790 484 M872 430 L790 476 M862 518 L790 504 M826 556 L768 518 M722 566 L716 518" class="e-line"/>
+    </svg>
+    <figcaption>Redrawn from the exam for legibility, with every mark preserved. Car is a weak entity owned by TaxiService. Trip participates totally in requests, drives, facilitates, pickupAt and dropoffAt.</figcaption>
+  </figure>
+
+  <div class="qbox">
+    <span class="qn">Question 1</span>
+    <p>Apart from Regular and Self-Driving Car types, no other subtypes of cars can exist in the database.</p>
+    <p class="opts-static">True &nbsp; / &nbsp; False</p>
+  </div>
+  <details class="reveal">
+    <summary>Show solution</summary>
+    <div class="reveal-body prose">
+      <div class="key"><b>True.</b></div>
+      <p>Look at the line running from Car down into the <code>d</code> circle. It is drawn <strong>doubled</strong>, which makes the specialization <em>total</em>. Total specialization says every single Car row must belong to at least one of the subclasses shown.</p>
+      <p>The diagram is the complete schema for this system. If a third subtype were allowed, it would have to be drawn. Since the specialization is total and only two branches exist, a car that is neither Regular nor Self-Driving has nowhere to live in the database.</p>
+      <p><strong>What would change the answer.</strong> Make that a single line, and the specialization becomes partial. A Car could then sit outside both subtypes, and the statement would be false. The <code>d</code> is doing something different: it says a car cannot be Regular <em>and</em> Self-Driving at the same time. Letter and line weight are separate facts.</p>
+    </div>
+  </details>
+
+  <div class="qbox">
+    <span class="qn">Question 2</span>
+    <p>A Driver must have more than one certification, having one is not sufficient.</p>
+    <p class="opts-static">True &nbsp; / &nbsp; False</p>
+  </div>
+  <details class="reveal">
+    <summary>Show solution</summary>
+    <div class="reveal-body prose">
+      <div class="key"><b>False.</b></div>
+      <p><code>certifications</code> is drawn as a double oval, which makes it a <strong>multivalued attribute</strong>. That notation says the attribute is <em>permitted</em> to hold several values. It does not say it must.</p>
+      <p>A driver with exactly one certification satisfies a multivalued attribute perfectly. So does a driver with six.</p>
+      <p><strong>Why this trick works.</strong> The exam takes a notation that grants permission and restates it as one that imposes a requirement. Watch for the same move with participation: a single line permits a row to sit out, it does not require it to.</p>
+      <p>The one thing the paper's assumption does add is that the attribute is never empty. Combined with "no NULLs", a driver has at least one certification. Still not "more than one".</p>
+    </div>
+  </details>
+
+  <div class="qbox">
+    <span class="qn">Question 3</span>
+    <p>Two different TaxiService companies may own Cars with the same plate number.</p>
+    <p class="opts-static">True &nbsp; / &nbsp; False</p>
+  </div>
+  <details class="reveal">
+    <summary>Show solution</summary>
+    <div class="reveal-body prose">
+      <div class="key"><b>True.</b></div>
+      <p>Car is drawn with a <strong>double rectangle</strong>, and Owns is a <strong>double diamond</strong>. Car is a weak entity, owned and identified by TaxiService. That makes <code>plateNum</code> a <strong>partial key</strong>, shown with a dashed underline.</p>
+      <p>A partial key is only unique within one owner. The real key of a Car is the TaxiService plus the plate number together. Two rows sharing <code>ABC123</code> are perfectly legal as long as the owning companies differ.</p>
+      <pre><code>PRIMARY KEY (taxiservice_name, plateNum)</code></pre>
+      <p><strong>What would change the answer.</strong> Draw Car as a single rectangle with <code>plateNum</code> solidly underlined, and the plate becomes a full primary key. Then no two cars anywhere could share one, and the statement would be false.</p>
+    </div>
+  </details>
+
+  <div class="qbox">
+    <span class="qn">Question 4</span>
+    <p>If there are 0 Cars in the database, then there cannot be any Trips present in the system.</p>
+    <p class="opts-static">True &nbsp; / &nbsp; False</p>
+  </div>
+  <details class="reveal">
+    <summary>Show solution</summary>
+    <div class="reveal-body prose">
+      <div class="key"><b>True.</b></div>
+      <p>Follow the <code>facilitates</code> relationship. The line entering Trip is <strong>doubled</strong>, so Trip participates totally: every Trip row must be attached to a Car.</p>
+      <p>With zero Cars there is nothing for a Trip to attach to, so no Trip can satisfy its own constraint. The Trip table has to be empty as well.</p>
+      <p><strong>The general rule.</strong> Total participation is an existence dependency, and it always runs the same direction. If side X totally participates in a relationship with side Y, then emptying Y forces X to empty too. Note the direction is one-way: zero Trips would not force zero Cars, because Car's side of <code>facilitates</code> is a single line. A car can sit in the lot all day.</p>
+    </div>
+  </details>
+
+  <h3 id="x3">Section 3. Database Cardinality and Participation, 10 points</h3>
+
+  <h4>Part A. Possible or impossible?</h4>
+  <div class="prose">
+    <p>For each case, decide whether the given entity set sizes could exist in this EERD. Consistent with the relationships and participation constraints means <strong>Possible</strong>. Violating them means <strong>Impossible</strong>.</p>
+  </div>
+
+  <figure class="scroll-x">
+    <svg viewBox="0 0 560 180" role="img" aria-label="Employee joined by double lines to works on and Project, and by a single line to managed by which joins Manager with a double line">
+      <rect x="216" y="10" width="128" height="42" class="e-fill"/><text x="280" y="31" class="e-txt">Employee</text>
+      <path d="M232 52 L186 74 M236 59 L190 81" class="e-line"/><text x="212" y="80" class="e-card">N</text>
+      <path d="M146 66 L196 90 L146 114 L96 90 Z" class="e-fill"/><text x="146" y="90" class="e-sm">works on</text>
+      <path d="M104 100 L66 118 M108 107 L70 125" class="e-line"/><text x="108" y="132" class="e-card">M</text>
+      <rect x="6" y="122" width="120" height="44" class="e-fill"/><text x="66" y="144" class="e-txt">Project</text>
+      <path d="M330 52 L372 76" class="e-line"/><text x="356" y="64" class="e-card">N</text>
+      <path d="M418 56 L470 82 L418 108 L366 82 Z" class="e-fill"/><text x="418" y="82" class="e-sm">managed by</text>
+      <path d="M460 96 L498 118 M456 103 L494 125" class="e-line"/><text x="452" y="126" class="e-card">1</text>
+      <rect x="440" y="122" width="120" height="44" class="e-fill"/><text x="500" y="144" class="e-txt">Manager</text>
+    </svg>
+    <figcaption>Three double lines and one single line. Employee and Project both participate totally in works on. Manager participates totally in managed by. Employee's side of managed by is a single line.</figcaption>
+  </figure>
+
+  <table class="tbl">
+    <thead><tr><th style="width:56%">Case</th><th>Your answer</th></tr></thead>
+    <tbody>
+      <tr><td>Employee: 2, Project: 3, Manager: 1</td><td>Possible / Impossible</td></tr>
+      <tr><td>Employee: 4, Project: 2, Manager: 7</td><td>Possible / Impossible</td></tr>
+      <tr><td>Employee: 3, Project: 0, Manager: 3</td><td>Possible / Impossible</td></tr>
+    </tbody>
+  </table>
+
+  <details class="reveal">
+    <summary>Show solution</summary>
+    <div class="reveal-body prose">
+      <h5>First, turn the marks into arithmetic</h5>
+      <ul>
+        <li>Double line at Employee on <em>works on</em>: every employee needs at least one project.</li>
+        <li>Double line at Project: every project needs at least one employee.</li>
+        <li>Double line at Manager on <em>managed by</em>, with a <strong>1</strong> on that side: every manager must manage at least one employee, and each employee answers to at most one manager. Therefore managers can never outnumber employees.</li>
+        <li>Single line at Employee on <em>managed by</em>: an employee may have no manager. Nothing to check.</li>
+      </ul>
+
+      <h5>Case 1. Employee 2, Project 3, Manager 1 &rarr; <span style="color:var(--red)">Possible</span></h5>
+      <p>Both employees can be assigned a project. Because works on is M:N, those two employees can cover all three projects between them, so no project is left unstaffed. The single manager needs at least one employee and there are two available. Nothing breaks.</p>
+
+      <h5>Case 2. Employee 4, Project 2, Manager 7 &rarr; <span style="color:var(--red)">Impossible</span></h5>
+      <p>This is the counting rule. Each of the seven managers must manage at least one employee. The <strong>1</strong> on the manager side means an employee can be assigned to only one manager, so no employee can be shared. Seven managers would need seven different employees and only four exist.</p>
+      <p>The projects are fine here: 4 employees and 2 projects satisfies both totality rules in an M:N relationship. Only the manager count fails, and one failure is enough.</p>
+
+      <h5>Case 3. Employee 3, Project 0, Manager 3 &rarr; <span style="color:var(--red)">Impossible</span></h5>
+      <p>The double line at Employee says every employee works on at least one project. With zero projects there is nothing to work on, so three employees cannot exist. The manager count of 3 against 3 employees would have been fine on its own.</p>
+
+      <div class="note"><b>The portable version</b>When the side labelled 1 carries a double line, that side can never outnumber the other side. And whenever a side carries a double line, emptying the opposite side forces this side empty too. Those two sentences settle nearly every question of this shape.</div>
+    </div>
+  </details>
+
+  <h4>Part B. Build the diagram from the data</h4>
+  <div class="prose">
+    <p>Here is a complete database instance. The Checkout table records which Books are checked out by which Members, plus the checkout and due dates. Complete the EERD template to model the Checkout relationship between Member and Book.</p>
+    <p><strong>The paper adds a hint:</strong> if the last tuple were removed from the Checkout table, the database should no longer be compliant with the constraints of this relation.</p>
+  </div>
+
+  <div class="grid2">
+    <div>
+      <h5>Member</h5>
+      <table class="tbl data">
+        <thead><tr><th>Member_ID</th><th>Member_Name</th><th>Member_Type</th></tr></thead>
+        <tbody>
+          <tr><td>M1</td><td>Alex Morgan</td><td>Standard</td></tr>
+          <tr><td>M2</td><td>Sofia Alvarez</td><td>Premium</td></tr>
+          <tr><td>M3</td><td>Noah Kim</td><td>Standard</td></tr>
+          <tr><td>M4</td><td>Kiran Hassan</td><td>Standard</td></tr>
+          <tr><td>M5</td><td>Sophie Suzuki</td><td>Premium</td></tr>
+          <tr><td>M6</td><td>Evan James</td><td>Premium</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <h5>Book</h5>
+      <table class="tbl data">
+        <thead><tr><th>Book_ID</th><th>Title</th><th>Genre</th></tr></thead>
+        <tbody>
+          <tr><td>B1</td><td>1984</td><td>Dystopian</td></tr>
+          <tr><td>B2</td><td>Atonement</td><td>Historical Fiction</td></tr>
+          <tr><td>B3</td><td>Harry Potter</td><td>Fantasy</td></tr>
+          <tr><td>B4</td><td>Frankenstein</td><td>Science Fiction</td></tr>
+          <tr><td>B5</td><td>Divergent</td><td>Dystopian</td></tr>
+          <tr><td>B6</td><td>Dune</td><td>Science Fiction</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <h5>Checkout</h5>
+  <table class="tbl data">
+    <thead><tr><th>Member_ID</th><th>Book_ID</th><th>Checkout_Date</th><th>Due Date</th></tr></thead>
+    <tbody>
+      <tr><td>M1</td><td>B2</td><td>2025-07-02</td><td>2025-07-16</td></tr>
+      <tr><td>M1</td><td>B1</td><td>2024-03-14</td><td>2024-03-28</td></tr>
+      <tr><td>M2</td><td>B3</td><td>2024-11-13</td><td>2024-11-27</td></tr>
+      <tr><td>M3</td><td>B2</td><td>2023-03-25</td><td>2023-04-08</td></tr>
+      <tr><td>M4</td><td>B4</td><td>2025-09-14</td><td>2025-09-28</td></tr>
+      <tr><td>M5</td><td>B5</td><td>2024-01-15</td><td>2024-01-29</td></tr>
+      <tr><td>M5</td><td>B6</td><td>2026-01-02</td><td>2026-01-16</td></tr>
+    </tbody>
+  </table>
+
+  <figure class="scroll-x">
+    <svg viewBox="0 0 540 150" role="img" aria-label="Blank template with dashed boxes for cardinality and dashed lines for participation">
+      <rect x="10" y="48" width="120" height="42" class="e-fill"/><text x="70" y="69" class="e-txt">Member</text>
+      <rect x="146" y="50" width="52" height="34" class="e-dash" stroke-width="1.1"/>
+      <rect x="152" y="14" width="30" height="28" class="e-dash" stroke-width="1.1"/>
+      <path d="M198 66 H214" class="e-dash" stroke-width="1.1"/>
+      <path d="M270 40 L326 69 L270 98 L214 69 Z" class="e-fill"/><text x="270" y="69" class="e-sm">Checks_Out</text>
+      <rect x="342" y="50" width="52" height="34" class="e-dash" stroke-width="1.1"/>
+      <rect x="352" y="14" width="30" height="28" class="e-dash" stroke-width="1.1"/>
+      <path d="M326 69 H342" class="e-dash" stroke-width="1.1"/>
+      <rect x="410" y="48" width="120" height="42" class="e-fill"/><text x="470" y="69" class="e-txt">Book</text>
+      <path d="M260 98 L224 124" class="e-line"/><path d="M282 98 L318 124" class="e-line"/>
+      <ellipse cx="196" cy="134" rx="52" ry="15" class="e-fill"/><text x="196" y="134" class="e-sm">Checkout_Date</text>
+      <ellipse cx="344" cy="134" rx="44" ry="15" class="e-fill"/><text x="344" y="134" class="e-sm">Due_Date</text>
+    </svg>
+    <figcaption>The template as printed. Small boxes take the cardinality letters, the dashed connections take the line weights.</figcaption>
+  </figure>
+
+  <details class="reveal">
+    <summary>Show solution</summary>
+    <div class="reveal-body">
+      <figure class="scroll-x">
+        <svg viewBox="0 0 540 150" role="img" aria-label="Completed template: M to N, single line on Member, double line on Book">
+          <rect x="10" y="48" width="120" height="42" class="e-fill"/><text x="70" y="69" class="e-txt">Member</text>
+          <text x="168" y="30" class="e-card ans-t">M</text>
+          <path d="M130 69 H214" class="e-line ans"/>
+          <path d="M270 40 L326 69 L270 98 L214 69 Z" class="e-fill"/><text x="270" y="69" class="e-sm">Checks_Out</text>
+          <text x="368" y="30" class="e-card ans-t">N</text>
+          <path d="M326 65 H410 M326 73 H410" class="e-line ans"/>
+          <rect x="410" y="48" width="120" height="42" class="e-fill"/><text x="470" y="69" class="e-txt">Book</text>
+          <path d="M260 98 L224 124" class="e-line"/><path d="M282 98 L318 124" class="e-line"/>
+          <ellipse cx="196" cy="134" rx="52" ry="15" class="e-fill"/><text x="196" y="134" class="e-sm">Checkout_Date</text>
+          <ellipse cx="344" cy="134" rx="44" ry="15" class="e-fill"/><text x="344" y="134" class="e-sm">Due_Date</text>
+        </svg>
+      </figure>
+      <div class="prose">
+        <div class="key"><b>M:N, single line on Member, double line on Book.</b></div>
+
+        <h5>Cardinality is M:N</h5>
+        <p>Scan the Checkout table in both directions. M1 appears twice, borrowing B2 and B1, so one member reaches many books. B2 appears twice, borrowed by M1 and M3, so one book reaches many members. Both sides reach many, so neither side can be a 1.</p>
+
+        <h5>Member is partial, a single line</h5>
+        <p>Go down the Member table and look for anyone missing from Checkout. <strong>M6, Evan James, never appears.</strong> A double line would forbid that, and the question states this is a complete and valid database instance. So Member participation must be partial.</p>
+        <p>This is the whole technique for these questions: a row in an entity table that never shows up in the relationship table is proof of partial participation.</p>
+
+        <h5>Book is total, a double line</h5>
+        <p>Every book B1 through B6 does appear in Checkout, which is consistent with total participation but does not by itself prove it. Partial would also allow all six to appear. That is exactly what the odd hint is for.</p>
+        <p>The last tuple is M5 borrowing B6, and it is the <strong>only</strong> row mentioning B6. Delete it and B6 becomes a book nobody ever checked out. The question says deleting it must break the database. A book with no checkout row only breaks a rule if every book is required to have one, which is total participation on the Book side.</p>
+
+        <div class="note"><b>Generalize the hint</b>Whenever a question says "removing this row would make the database invalid", it is handing you a total participation constraint. Find which entity that row was the last link for, and put the double line on that side.</div>
+      </div>
+    </div>
+  </details>
+
+  <h3 id="x4">Section 4. SQL Queries, 16 points</h3>
+  <div class="prose">
+    <p>Tracing, not writing. Each query runs against the <code>ecommerce_store</code> database printed on the reference page at the bottom of this tab. Write the output table including the column headers in the first row. Assume proper floating point division, not integer division.</p>
+  </div>
+
+  <div class="qbox">
+    <span class="qn">Question 1</span>
+    <pre><code>SELECT CONCAT(order_note, ': ', MIN(order_id)) AS batch_log,
+       AVG((quantity / customer_id)) * 10 AS avg_qty
+FROM Orders
+GROUP BY order_note;</code></pre>
+  </div>
+
+  <details class="reveal">
+    <summary>Show solution</summary>
+    <div class="reveal-body">
+      <table class="tbl data">
+        <thead><tr><th>batch_log</th><th>avg_qty</th></tr></thead>
+        <tbody>
+          <tr><td>Gift Box: 301</td><td>30</td></tr>
+          <tr><td>Express: 302</td><td>15</td></tr>
+          <tr><td>Front Door: 303</td><td>5</td></tr>
+        </tbody>
+      </table>
+      <div class="prose">
+        <h5>Step 1. Group the rows</h5>
+        <p>There is no WHERE, so all seven orders survive. <code>GROUP BY order_note</code> splits them into three groups, so the answer has exactly three rows. Knowing the row count before doing any arithmetic is a good check.</p>
+        <table class="tbl data">
+          <thead><tr><th>Group</th><th>Orders in it</th><th>quantity / customer_id for each</th></tr></thead>
+          <tbody>
+            <tr><td>Gift Box</td><td>301, 304, 306</td><td>2/1 = 2, &nbsp; 2/2 = 1, &nbsp; 6/1 = 6</td></tr>
+            <tr><td>Express</td><td>302, 305</td><td>1/2 = 0.5, &nbsp; 5/2 = 2.5</td></tr>
+            <tr><td>Front Door</td><td>303, 307</td><td>4/5 = 0.8, &nbsp; 1/5 = 0.2</td></tr>
+          </tbody>
+        </table>
+
+        <h5>Step 2. The first column</h5>
+        <p><code>MIN(order_id)</code> is computed per group, then glued to the note by <code>CONCAT</code> with the literal <code>': '</code> in the middle. An aggregate can sit inside a string function like this, which is what makes the column look unusual.</p>
+        <ul>
+          <li>Gift Box, smallest order_id of 301, 304, 306 is <strong>301</strong>.</li>
+          <li>Express, smallest of 302 and 305 is <strong>302</strong>.</li>
+          <li>Front Door, smallest of 303 and 307 is <strong>303</strong>.</li>
+        </ul>
+
+        <h5>Step 3. The second column</h5>
+        <p>Read the nesting carefully. The division happens <em>per row first</em>, then AVG averages those quotients, then the result is multiplied by 10. Averaging the quantities and dividing once would give different numbers.</p>
+        <ul>
+          <li>Gift Box: (2 + 1 + 6) / 3 = 3, times 10 = <strong>30</strong>.</li>
+          <li>Express: (0.5 + 2.5) / 2 = 1.5, times 10 = <strong>15</strong>.</li>
+          <li>Front Door: (0.8 + 0.2) / 2 = 0.5, times 10 = <strong>5</strong>.</li>
+        </ul>
+        <p>Notice AVG divides by the number of rows in the group, not by the number of rows in the table.</p>
+        <div class="note"><b>Marks live in the header row</b>The output columns are named by the aliases, so the first row of your answer table is <code>batch_log</code> and <code>avg_qty</code>. Writing the data without the headers throws away part of the mark.</div>
+      </div>
+    </div>
+  </details>
+
+  <div class="qbox">
+    <span class="qn">Question 2a</span>
+    <pre><code>SELECT DISTINCT customer_id
+FROM Orders
+WHERE order_note IN ('Express', 'Front Door');</code></pre>
+  </div>
+
+  <details class="reveal">
+    <summary>Show solution</summary>
+    <div class="reveal-body">
+      <table class="tbl data">
+        <thead><tr><th>customer_id</th></tr></thead>
+        <tbody><tr><td>2</td></tr><tr><td>5</td></tr></tbody>
+      </table>
+      <div class="prose">
+        <p>Keep only orders whose note is Express or Front Door. That is orders 302, 303, 305 and 307, belonging to customers 2, 5, 2 and 5.</p>
+        <p><code>DISTINCT</code> then collapses the duplicates, leaving 2 and 5. One column in, one column out.</p>
+        <p>Do this part carefully even though it is easy, because part b feeds on it.</p>
+      </div>
+    </div>
+  </details>
+
+  <div class="qbox">
+    <span class="qn">Question 2b</span>
+    <pre><code>SELECT customer_id, username, full_name
+FROM Customers
+WHERE customer_id NOT IN (
+      SELECT DISTINCT customer_id
+      FROM Orders
+      WHERE order_note IN ('Express', 'Front Door')
+)
+ORDER BY username DESC
+LIMIT 5
+OFFSET 1;</code></pre>
+  </div>
+
+  <details class="reveal">
+    <summary>Show solution</summary>
+    <div class="reveal-body">
+      <table class="tbl data">
+        <thead><tr><th>customer_id</th><th>username</th><th>full_name</th></tr></thead>
+        <tbody>
+          <tr><td>3</td><td>mike_chen</td><td>Michael Chen</td></tr>
+          <tr><td>1</td><td>jsmith99</td><td>John Smith</td></tr>
+        </tbody>
+      </table>
+      <div class="prose">
+        <h5>Step 1. Substitute the inner query</h5>
+        <p>The subquery is exactly part a, so it returns 2 and 5. Rewrite the outer query as if the list were typed in by hand, which makes it much easier to trace:</p>
+        <pre><code>WHERE customer_id NOT IN (2, 5)</code></pre>
+
+        <h5>Step 2. Filter</h5>
+        <p>Customers 1, 2, 3, 4 and 5 exist. Dropping 2 and 5 leaves customers <strong>1, 3 and 4</strong>. Three rows.</p>
+
+        <h5>Step 3. Sort</h5>
+        <p><code>ORDER BY username DESC</code> sorts the usernames in reverse alphabetical order, not by customer_id:</p>
+        <ol>
+          <li><code>sara_jones</code>, customer 4</li>
+          <li><code>mike_chen</code>, customer 3</li>
+          <li><code>jsmith99</code>, customer 1</li>
+        </ol>
+
+        <h5>Step 4. Skip, then take</h5>
+        <p><code>OFFSET 1</code> throws away the first row, so sara_jones is gone. <code>LIMIT 5</code> then asks for up to five rows, but only two remain, so you get both. A LIMIT larger than the available rows is not an error, you simply get what is left.</p>
+        <div class="note"><b>Two traps in one question</b>Sorting by the wrong column, since the output starts with customer_id but the sort key is username. And expecting five rows because the query says LIMIT 5. Also remember that OFFSET is applied after the sort, never before.</div>
+        <p>One safety note for real work: <code>NOT IN</code> against a subquery that can return a NULL yields no rows at all. Here <code>customer_id</code> is a primary key on the Orders side, so no NULL can appear and the query is safe.</p>
+      </div>
+    </div>
+  </details>
+
+  <h3 id="x-ref">Reference database: ecommerce_store</h3>
+  <div class="prose"><p>The tear-off page from the exam. Everything section 4 needs.</p></div>
+
+  <h5>Customers, primary key customer_id</h5>
+  <table class="tbl data">
+    <thead><tr><th>customer_id</th><th>username</th><th>full_name</th><th>email</th><th>register_date</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>jsmith99</td><td>John Smith</td><td>jsmith@email.com</td><td>2025-01-10</td></tr>
+      <tr><td>2</td><td>emilyw</td><td>Emily Watson</td><td>emilyw@email.com</td><td>2025-02-18</td></tr>
+      <tr><td>3</td><td>mike_chen</td><td>Michael Chen</td><td>mchen@email.com</td><td>2025-04-05</td></tr>
+      <tr><td>4</td><td>sara_jones</td><td>Sara Jones</td><td>sjones@email.com</td><td>2025-01-22</td></tr>
+      <tr><td>5</td><td>alex_kumar</td><td>Alex Kumar</td><td>akumar@email.com</td><td>2025-03-15</td></tr>
+    </tbody>
+  </table>
+
+  <h5>Products, primary key product_id</h5>
+  <table class="tbl data">
+    <thead><tr><th>product_id</th><th>name</th><th>category</th><th>price</th><th>stock</th><th>max_cap</th><th>seller_id</th></tr></thead>
+    <tbody>
+      <tr><td>000</td><td>Wired Earbuds</td><td>Electronics</td><td>40.00</td><td>50</td><td>100</td><td>4</td></tr>
+      <tr><td>001</td><td>Yoga Mat</td><td>Home</td><td>20.00</td><td>60</td><td>100</td><td>5</td></tr>
+      <tr><td>010</td><td>Coffee Maker</td><td>Kitchen</td><td>80.00</td><td>20</td><td>50</td><td>2</td></tr>
+      <tr><td>100</td><td>Desk Lamp</td><td>Electronics</td><td>30.00</td><td>30</td><td>50</td><td>1</td></tr>
+      <tr><td>111</td><td>Backpack</td><td>Home</td><td>60.00</td><td>40</td><td>50</td><td>3</td></tr>
+    </tbody>
+  </table>
+
+  <h5>Orders, primary key order_id</h5>
+  <table class="tbl data">
+    <thead><tr><th>order_id</th><th>product_id</th><th>customer_id</th><th>quantity</th><th>order_note</th></tr></thead>
+    <tbody>
+      <tr><td>301</td><td>000</td><td>1</td><td>2</td><td>Gift Box</td></tr>
+      <tr><td>302</td><td>000</td><td>2</td><td>1</td><td>Express</td></tr>
+      <tr><td>303</td><td>001</td><td>5</td><td>4</td><td>Front Door</td></tr>
+      <tr><td>304</td><td>001</td><td>2</td><td>2</td><td>Gift Box</td></tr>
+      <tr><td>305</td><td>010</td><td>2</td><td>5</td><td>Express</td></tr>
+      <tr><td>306</td><td>100</td><td>1</td><td>6</td><td>Gift Box</td></tr>
+      <tr><td>307</td><td>111</td><td>5</td><td>1</td><td>Front Door</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- =====================  TAB 3: SQL PRACTICE SET 2  ===================== -->
+<div class="panel" id="p-sql" role="tabpanel" aria-labelledby="tab-sql" hidden>
+
+  <div class="subnav">
+    <a href="#s-how">How to run it</a>
+    <a href="#s-data">The database</a>
+    <a href="#s-basic">Basic queries</a>
+    <a href="#s-agg">Aggregates</a>
+    <a href="#s-group">Grouping</a>
+    <a href="#s-order">Ordering and limits</a>
+  </div>
+
+  <div class="prose">
+    <p>All 26 queries from Practice Set 2, each with a worked solution. These are more advanced single-table queries using grouping, aggregates and conditions, closer to exam difficulty than Practice Set 1.</p>
+    <p>Every solution here was checked against the expected results built into the autograder, so they match what the grader wants.</p>
+  </div>
+
+  <h3 id="s-how">How to run these</h3>
+  <div class="prose">
+    <ol>
+      <li>Run <code>company_practice_init.sql</code> once in MySQL Workbench. It builds the <code>company</code> database and installs the grading procedures.</li>
+      <li>Write each answer into <code>company_practice_student.sql</code>, between the two lines that say not to touch anything.</li>
+      <li>Run that file. It prints a scoring summary showing expected rows, your rows, matches, missing and excess.</li>
+    </ol>
+    <p>Every answer is wrapped as a view, and the number has to match the practice sheet:</p>
+    <pre><code>create or replace view practiceQuery14 as
+select * from employee
+where dno = 5 and salary between 30000 and 40000;</code></pre>
+    <div class="note"><b>Why a correct query can still score zero elsewhere</b>The autograder runs each query against five different database states, not just the one below. A query that hardcodes a value it should compute passes state 0 and fails the other four. If the summary shows a perfect score on one state and zeros after it, that is the cause. The grader compares result sets and ignores row order, so ORDER BY is only checked where it decides what LIMIT returns. Write it anyway, the exam grades it.</div>
+  </div>
+
+  <h3 id="s-data">The company database</h3>
+  <div class="prose"><p>The starting state, which is the classic COMPANY schema. Keep this open while you trace. Tables <code>department</code>, <code>dept_locations</code> and <code>dependent</code> also exist but this practice set never touches them.</p></div>
+
+  <details class="reveal" open>
+    <summary>employee, project and works_on rows</summary>
+    <div class="reveal-body">
+      <h5>employee</h5>
+      <table class="tbl data">
+        <thead><tr><th>fname</th><th>lname</th><th>ssn</th><th>bdate</th><th>address</th><th>sex</th><th>salary</th><th>superssn</th><th>dno</th></tr></thead>
+        <tbody>
+          <tr><td>John</td><td>Smith</td><td>123456789</td><td>1965-01-09</td><td>731 Fondren, Houston TX</td><td>M</td><td>30000</td><td>333445555</td><td>5</td></tr>
+          <tr><td>Franklin</td><td>Wong</td><td>333445555</td><td>1955-12-08</td><td>638 Voss, Houston TX</td><td>M</td><td>40000</td><td>888665555</td><td>5</td></tr>
+          <tr><td>Joyce</td><td>English</td><td>453453453</td><td>1972-07-31</td><td>5631 Rice, Houston TX</td><td>F</td><td>25000</td><td>333445555</td><td>5</td></tr>
+          <tr><td>Ramesh</td><td>Narayan</td><td>666884444</td><td>1962-09-15</td><td>975 Fire Oak, Humble TX</td><td>M</td><td>38000</td><td>333445555</td><td>5</td></tr>
+          <tr><td>James</td><td>Borg</td><td>888665555</td><td>1937-11-10</td><td>450 Stone, Houston TX</td><td>M</td><td>55000</td><td style="color:var(--red)">NULL</td><td>1</td></tr>
+          <tr><td>Jennifer</td><td>Wallace</td><td>987654321</td><td>1941-06-20</td><td>291 Berry, Bellaire TX</td><td>F</td><td>43000</td><td>888665555</td><td>4</td></tr>
+          <tr><td>Ahmad</td><td>Jabbar</td><td>987987987</td><td>1969-03-29</td><td>980 Dallas, Houston TX</td><td>M</td><td>25000</td><td>987654321</td><td>4</td></tr>
+          <tr><td>Alicia</td><td>Zelaya</td><td>999887777</td><td>1968-01-19</td><td>3321 Castle, Spring TX</td><td>F</td><td>25000</td><td>987654321</td><td>4</td></tr>
+        </tbody>
+      </table>
+      <div class="grid2">
+        <div>
+          <h5>project</h5>
+          <table class="tbl data">
+            <thead><tr><th>pname</th><th>pnumber</th><th>plocation</th><th>dnum</th></tr></thead>
+            <tbody>
+              <tr><td>ProductX</td><td>1</td><td>Bellaire</td><td>5</td></tr>
+              <tr><td>ProductY</td><td>2</td><td>Sugarland</td><td>5</td></tr>
+              <tr><td>ProductZ</td><td>3</td><td>Houston</td><td>5</td></tr>
+              <tr><td>Computerization</td><td>10</td><td>Stafford</td><td>4</td></tr>
+              <tr><td>Reorganization</td><td>20</td><td>Houston</td><td>1</td></tr>
+              <tr><td>Newbenefits</td><td>30</td><td>Stafford</td><td>4</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <h5>works_on</h5>
+          <table class="tbl data">
+            <thead><tr><th>essn</th><th>pno</th><th>hours</th></tr></thead>
+            <tbody>
+              <tr><td>123456789</td><td>1</td><td>32.5</td></tr>
+              <tr><td>123456789</td><td>2</td><td>7.5</td></tr>
+              <tr><td>333445555</td><td>2</td><td>10.0</td></tr>
+              <tr><td>333445555</td><td>3</td><td>10.0</td></tr>
+              <tr><td>333445555</td><td>10</td><td>10.0</td></tr>
+              <tr><td>333445555</td><td>20</td><td>10.0</td></tr>
+              <tr><td>453453453</td><td>1</td><td>20.0</td></tr>
+              <tr><td>453453453</td><td>2</td><td>20.0</td></tr>
+              <tr><td>666884444</td><td>3</td><td>40.0</td></tr>
+              <tr><td>888665555</td><td>20</td><td style="color:var(--red)">NULL</td></tr>
+              <tr><td>987654321</td><td>20</td><td>15.0</td></tr>
+              <tr><td>987654321</td><td>30</td><td>20.0</td></tr>
+              <tr><td>987987987</td><td>10</td><td>35.0</td></tr>
+              <tr><td>987987987</td><td>30</td><td>5.0</td></tr>
+              <tr><td>999887777</td><td>10</td><td>10.0</td></tr>
+              <tr><td>999887777</td><td>30</td><td>30.0</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="note"><b>Two rows to keep an eye on</b>James Borg has no supervisor, and employee 888665555 has NULL hours on project 20. Several questions in this set are built around exactly those two NULLs.</div>
+    </div>
+  </details>
+
+  <h3 id="s-basic">Basic queries and conditions</h3>
+
+  <div class="qbox"><span class="qn">practiceQuery14</span>
+    <p>Retrieve all information for employees in department 5 whose salary is between $30,000 and $40,000.</p></div>
+  <details class="reveal"><summary>Show solution</summary><div class="reveal-body">
+    <pre><code>select * from employee
+where dno = 5 and salary between 30000 and 40000;</code></pre>
+    <div class="prose">
+      <p>"All information" means every column, so <code>select *</code> rather than naming columns.</p>
+      <p><code>BETWEEN</code> is <strong>inclusive on both ends</strong>, so an employee earning exactly 30000 or exactly 40000 is included. Writing <code>&gt; 30000 and &lt; 40000</code> would silently drop two rows.</p>
+      <p>Returns Smith at 30000, Wong at 40000 and Narayan at 38000. English is in department 5 but earns 25000, so she is out.</p>
+    </div>
+  </div></details>
+
+  <div class="qbox"><span class="qn">practiceQuery18</span>
+    <p>Retrieve the first and last names of all employees who do not have supervisors.</p></div>
+  <details class="reveal"><summary>Show solution</summary><div class="reveal-body">
+    <pre><code>select fname, lname from employee
+where superssn is null;</code></pre>
+    <div class="prose">
+      <p>"Does not have" means the column holds NULL, and NULL needs its own operator.</p>
+      <p><code>superssn = null</code> returns an empty result, every time. A comparison against NULL evaluates to <em>unknown</em>, and WHERE keeps only rows where the test is true. Unknown is thrown away exactly like false.</p>
+      <p>Only James Borg qualifies.</p>
+    </div>
+  </div></details>
+
+  <div class="qbox"><span class="qn">practiceQuery43</span>
+    <p>Display the sum of 4 and 6 as 'my_sum', the product of 3 and 7 as 'my_product', and the difference of 9 and 5 as 'my_difference'.</p></div>
+  <details class="reveal"><summary>Show solution</summary><div class="reveal-body">
+    <pre><code>select 4 + 6 as my_sum,
+       3 * 7 as my_product,
+       9 - 5 as my_difference;</code></pre>
+    <div class="prose">
+      <p>No <code>FROM</code> clause, because no table is involved. SELECT can evaluate plain arithmetic and hand back a single row: 10, 21, 4.</p>
+      <p>The point of the exercise is <code>AS</code>. Without aliases the column headers would be the expressions themselves, and the grader checks the names.</p>
+    </div>
+  </div></details>
+
+  <div class="qbox"><span class="qn">practiceQuery52</span>
+    <p>Retrieve the first name, last name and address of all employees, and display the first and last name as a combined 'Whole Name'. (Hint: use concat)</p></div>
+  <details class="reveal"><summary>Show solution</summary><div class="reveal-body">
+    <pre><code>select concat(fname, ' ', lname) as 'Whole Name',
+       address
+from employee;</code></pre>
+    <div class="prose">
+      <p>The output has <strong>two</strong> columns, not three. The combined name <em>replaces</em> the two separate ones rather than being added next to them, which is what "display the first and last name as a combined" is asking for.</p>
+      <p>The middle argument <code>' '</code> is the space between them. Leave it out and you get <code>JohnSmith</code>.</p>
+    </div>
+  </div></details>
+
+  <div class="qbox"><span class="qn">practiceQuery63</span>
+    <p>Retrieve the first name, last name and address of all employees who are in department 5 or earn more than 30000 in salary.</p></div>
+  <details class="reveal"><summary>Show solution</summary><div class="reveal-body">
+    <pre><code>select fname, lname, address from employee
+where dno = 5 or salary &gt; 30000;</code></pre>
+    <div class="prose">
+      <p><code>OR</code>, so a row qualifies by satisfying either condition. Six of the eight employees come back: the four in department 5, plus Borg at 55000 and Wallace at 43000.</p>
+      <p>Note "more than 30000" is strict, so Smith at exactly 30000 would not qualify on salary alone. He is in the result only because he is in department 5.</p>
+    </div>
+  </div></details>
+
+  <div class="qbox"><span class="qn">practiceQuery66</span>
+    <p>Retrieve the first name, last name, address and birthdate of all employees born after January 1st, 1964 and before August 10th, 1970.</p></div>
+  <details class="reveal"><summary>Show solution</summary><div class="reveal-body">
+    <pre><code>select fname, lname, address, bdate from employee
+where bdate &gt; '1964-01-01' and bdate &lt; '1970-08-10';</code></pre>
+    <div class="prose">
+      <p>Dates are written as quoted strings in <code>YYYY-MM-DD</code> form and compare with the ordinary operators, where later means greater.</p>
+      <p>"After" and "before" are both strict, so use <code>&gt;</code> and <code>&lt;</code> rather than <code>BETWEEN</code>, which would include the endpoints. No employee sits exactly on either date here, so both happen to give the same answer, but only one matches the wording.</p>
+      <p>Three rows: Smith 1965, Zelaya 1968, Jabbar 1969. English at 1972 falls outside the upper bound.</p>
+    </div>
+  </div></details>
+
+  <div class="qbox"><span class="qn">practiceQuery70</span>
+    <p>Retrieve the first name, last name and address of all employees in the order of last name and then first name.</p></div>
+  <details class="reveal"><summary>Show solution</summary><div class="reveal-body">
+    <pre><code>select fname, lname, address from employee
+order by lname, fname;</code></pre>
+    <div class="prose">
+      <p><code>ORDER BY</code> is ascending unless you say otherwise, so no keyword is needed. Listing two columns means sort by last name, then use first name only to break ties.</p>
+      <p>The sort order has nothing to do with the order columns appear in SELECT.</p>
+    </div>
+  </div></details>
+
+  <div class="qbox"><span class="qn">practiceQuery75</span>
+    <p>Retrieve the first name, last name and address of all employees whose last names contain the pattern 'aya' where the pattern is not at the end of the string.</p></div>
+  <details class="reveal"><summary>Show solution</summary><div class="reveal-body">
+    <pre><code>select fname, lname, address from employee
+where lname like '%aya%'
+  and lname not like '%aya';</code></pre>
+    <div class="prose">
+      <p>Two conditions, because the question has two parts. <code>'%aya%'</code> finds the pattern anywhere. <code>'%aya'</code> anchors it to the end, since nothing follows the pattern, so <code>NOT LIKE '%aya'</code> rules out the ones that finish with it.</p>
+      <p>Narayan contains aya in the middle and survives. Zelaya ends with it and is excluded. Only one row comes back.</p>
+      <p>Remember the two wildcards: <code>%</code> is any run of characters including none, <code>_</code> is exactly one character.</p>
+    </div>
+  </div></details>
+
+  <h3 id="s-agg">Aggregates</h3>
+
+  <div class="qbox"><span class="qn">practiceQuery19</span>
+    <p>Find the sum of the salaries of all employees, the maximum salary, the minimum salary, and the average salary.</p></div>
+  <details class="reveal"><summary>Show solution</summary><div class="reveal-body">
+    <pre><code>select sum(salary), max(salary), min(salary), avg(salary)
+from employee;</code></pre>
+    <div class="prose">
+      <p>No <code>GROUP BY</code>, so the entire table counts as one group and you get exactly one row back. That is worth knowing as a sanity check: an aggregate without grouping always returns one row.</p>
+      <p>Put the four functions in the order the question names them. Result: 281000, 55000, 25000, and an average of 35125.</p>
+    </div>
+  </div></details>
+
+  <div class="qbox"><span class="qn">practiceQuery81</span>
+    <p>Retrieve the sum of the salaries for all employees in department number 5.</p></div>
+  <details class="reveal"><summary>Show solution</summary><div class="reveal-body">
+    <pre><code>select sum(salary) from employee
+where dno = 5;</code></pre>
+    <div class="prose">
+      <p><code>WHERE</code> runs before the aggregate, so SUM only sees the four department 5 rows: 30000 + 40000 + 25000 + 38000 = 133000.</p>
+      <p>This is the model for the WHERE and HAVING distinction. The filter looks at a single row's <code>dno</code>, so it is a WHERE.</p>
+    </div>
+  </div></details>
+
+  <div class="qbox"><span class="qn">practiceQuery86</span>
+    <p>Retrieve the number of employees whose superssn is not equal to 333445555.</p></div>
+  <details class="reveal"><summary>Show solution</summary><div class="reveal-body">
+    <pre><code>select count(*) from employee
+where superssn &lt;&gt; 333445555;</code></pre>
+    <div class="prose">
+      <div class="key"><b>The answer is 4, not 5.</b></div>
+      <p>Eight employees, three of them supervised by 333445555, so instinct says five remain. It returns four.</p>
+      <p>James Borg has <code>NULL</code> in <code>superssn</code>. Comparing NULL to anything, including with <code>&lt;&gt;</code>, produces <em>unknown</em> rather than true. WHERE only keeps rows that test true, so Borg is silently dropped.</p>
+      <p>This is the most instructive query in the set. Pair it with query 18 and you have the whole of three-valued logic: NULL is not a value you can compare, it is the absence of one.</p>
+      <p>If you genuinely wanted Borg counted, you would write <code>where superssn &lt;&gt; 333445555 or superssn is null</code>.</p>
+    </div>
+  </div></details>
+
+  <div class="qbox"><span class="qn">practiceQuery139</span>
+    <p>Retrieve the total salary paid to employees who were born between January 1st, 1962 and January 1st 1969.</p></div>
+  <details class="reveal"><summary>Show solution</summary><div class="reveal-body">
+    <pre><code>select sum(salary) from employee
+where bdate between '1962-01-01' and '1969-01-01';</code></pre>
+    <div class="prose">
+      <p>"Between" in the question maps directly to <code>BETWEEN</code>, endpoints included.</p>
+      <p>Three employees fall inside the window: Smith 1965, Narayan 1962, Zelaya 1968. Total 93000.</p>
+      <p>Watch Ahmad Jabbar, born 1969-03-29. That is 1969, but it is after January 1st, so he is outside the range. Reading the year and stopping there is the error to avoid.</p>
+    </div>
+  </div></details>
+
+  <h3 id="s-group">Grouping and HAVING</h3>
+  <div class="prose">
+    <p>Every question below hinges on the same decision. Filtering rows uses <code>WHERE</code> and happens before grouping. Filtering whole groups uses <code>HAVING</code> and happens after. Get that right and these are all short.</p>
+  </div>
+
+  <div class="qbox"><span class="qn">practiceQuery89</span>
+    <p>Retrieve the department number, minimum salary, average salary and maximum salary for the employees in each department with less than four employees.</p></div>
+  <details class="reveal"><summary>Show solution</summary><div class="reveal-body">
+    <pre><code>select dno, min(salary), avg(salary), max(salary)
+from employee
+group by dno
+having count(*) &lt; 4;</code></pre>
+    <div class="prose">
+      <p>"In each department" is the <code>GROUP BY</code>. "With less than four employees" is a statement about a whole group, so it is <code>HAVING</code>.</p>
+      <p>Put the four output columns in the order the question lists them: number, minimum, average, maximum.</p>
+      <p>Department 5 has four employees so it fails the test. Department 1 returns 55000 three times, since Borg is alone. Department 4 returns 25000, 31000, 43000.</p>
+      <p><code>COUNT(*)</code> in HAVING does not have to appear in SELECT. You can test something you do not display.</p>
+    </div>
+  </div></details>
+
+  <div class="qbox"><span class="qn">practiceQuery100</span>
+    <p>Retrieve the total number of employees whose salaries exceed $25,000 in each department.</p></div>
+  <details class="reveal"><summary>Show solution</summary><div class="reveal-body">
+    <pre><code>select dno, count(*) from employee
+where salary &gt; 25000
+group by dno;</code></pre>
+    <div class="prose">
+      <div class="key"><b>This one is WHERE, not HAVING.</b></div>
+      <p>The salary test looks at one employee at a time, so it filters rows before any grouping happens. Writing <code>group by dno having salary &gt; 25000</code> is the classic wrong answer, and it either errors or gives nonsense because <code>salary</code> is not a property of a group.</p>
+      <p>Trace it in order. WHERE keeps the five employees over 25000: Smith, Wong, Narayan, Borg and Wallace. GROUP BY then buckets those survivors: department 5 gets 3, department 1 gets 1, department 4 gets 1.</p>
+      <p>Side effect worth noticing: a department where nobody earns over 25000 disappears from the output entirely, because its rows were all removed before grouping. It does not appear with a count of zero.</p>
+      <p>Compare directly with query 102 below, which is the same shape but genuinely needs HAVING.</p>
+    </div>
+  </div></details>
+
+  <div class="qbox"><span class="qn">practiceQuery102</span>
+    <p>Retrieve the department numbers for departments where fewer than four employees work.</p></div>
+  <details class="reveal"><summary>Show solution</summary><div class="reveal-body">
+    <pre><code>select dno from employee
+group by dno
+having count(*) &lt; 4;</code></pre>
+    <div class="prose">
+      <p>Now the test is about the group. You cannot know whether a department has fewer than four employees by looking at any single row, so the filter has to run after grouping. That makes it <code>HAVING</code>.</p>
+      <p>Departments 1 and 4 come back. Only <code>dno</code> is displayed, even though COUNT is what the filter used.</p>
+      <p>Hold 100 and 102 side by side. Same table, same style of wording, opposite clause. The deciding question is always: does this test need a whole group to answer it?</p>
+    </div>
+  </div></details>
+
+  <div class="qbox"><span class="qn">practiceQuery132</span>
+    <p>Display the department number and number of employees for departments where the total salary exceeds 100000.</p></div>
+  <details class="reveal"><summary>Show solution</summary><div class="reveal-body">
+    <pre><code>select dno, count(*) from employee
+group by dno
+having sum(salary) &gt; 100000;</code></pre>
+    <div class="prose">
+      <p>You display <code>COUNT</code> but filter on <code>SUM</code>. HAVING can use any aggregate, not just the one in SELECT.</p>
+      <p>Department totals: 5 has 133000, 4 has 93000, 1 has 55000. Only department 5 clears the bar, returning 5 and 4 employees.</p>
+    </div>
+  </div></details>
+
+  <div class="qbox"><span class="qn">practiceQuery133</span>
+    <p>Retrieve the SSNs of employees who are assigned to more than one project, considering only those projects where the employee worked more than 5 hours.</p></div>
+  <details class="reveal"><summary>Show solution</summary><div class="reveal-body">
+    <pre><code>select essn from works_on
+where hours &gt; 5
+group by essn
+having count(*) &gt; 1;</code></pre>
+    <div class="prose">
+      <p>Both clauses in one query, doing different jobs. "Considering only those projects where the employee worked more than 5 hours" throws away rows, so WHERE. "Assigned to more than one project" counts what is left per employee, so HAVING.</p>
+      <p>Order matters. WHERE runs first, then the counting happens on the survivors only.</p>
+      <div class="key"><b>The boundary trap.</b> Ahmad Jabbar, 987987987, works 35 hours on project 10 and exactly 5.0 hours on project 30. Five is not <em>more than</em> five, so that row is discarded and he is left with a single qualifying project. He does not appear in the answer.</div>
+      <p>Also note that employee 888665555 has NULL hours, and <code>NULL &gt; 5</code> is unknown, so that row goes too.</p>
+      <p>Five SSNs come back: 123456789, 333445555, 453453453, 987654321 and 999887777.</p>
+    </div>
+  </div></details>
+
+  <div class="qbox"><span class="qn">practiceQuery134</span>
+    <p>Retrieve the project numbers where the average hours worked per employee on the project is greater than 20 and at least two employees are assigned to the project.</p></div>
+  <details class="reveal"><summary>Show solution</summary><div class="reveal-body">
+    <pre><code>select pno from works_on
+group by pno
+having avg(hours) &gt; 20 and count(*) &gt;= 2;</code></pre>
+    <div class="prose">
+      <p>Two conditions, both about the group, so both live in HAVING joined by <code>AND</code>. Group by project this time rather than by employee.</p>
+      <p>Watch the two different thresholds: "greater than 20" is strict, "at least two" is inclusive, so <code>&gt;</code> and <code>&gt;=</code>.</p>
+      <p>Running the groups: project 1 averages 26.25 across 2 people and qualifies. Project 3 averages 25 across 2 people and qualifies. Projects 2, 10, 20 and 30 all average under 20. Answer: 1 and 3.</p>
+      <p>Project 20 is a quiet lesson. It has three assignment rows, but one has NULL hours. <code>AVG</code> ignores NULL and divides by 2, while <code>COUNT(*)</code> still counts 3. The two functions disagree about how many rows there are, which is exactly why <code>COUNT(*)</code> and <code>COUNT(hours)</code> are different functions.</p>
+    </div>
+  </div></details>
+
+  <div class="qbox"><span class="qn">practiceQuery138</span>
+    <p>Retrieve the SSNs of employees who on average worked more than 15 hours while working on 2 or more projects.</p></div>
+  <details class="reveal"><summary>Show solution</summary><div class="reveal-body">
+    <pre><code>select essn from works_on
+group by essn
+having avg(hours) &gt; 15 and count(*) &gt;= 2;</code></pre>
+    <div class="prose">
+      <p>Same shape as 134, grouped by employee instead of project. No WHERE at all, because nothing filters individual rows here.</p>
+      <p>Wong, 333445555, is the interesting exclusion. He is on four projects, easily clearing the "2 or more" bar, but ten hours on each averages exactly 10, which fails the first condition. Passing one test is not enough.</p>
+      <p>Five SSNs qualify: 123456789 averaging 20, 453453453 averaging 20, 987654321 averaging 17.5, 987987987 averaging 20, and 999887777 averaging 20.</p>
+    </div>
+  </div></details>
+
+  <div class="qbox"><span class="qn">practiceQuery155</span>
+    <p>Retrieve the department number and sex, and the number of employees for each (department, sex) combination. Order by department number ascending, then sex ascending.</p></div>
+  <details class="reveal"><summary>Show solution</summary><div class="reveal-body">
+    <pre><code>select dno, sex, count(*) from employee
+group by dno, sex
+order by dno asc, sex asc;</code></pre>
+    <div class="prose">
+      <p>Grouping by two columns creates one group per distinct <em>pair</em>, not one per column. Five combinations exist in this data, so five rows come out.</p>
+      <p>Rule of thumb: everything in SELECT that is not inside an aggregate has to appear in GROUP BY. Here that is <code>dno</code> and <code>sex</code>.</p>
+      <p>Result: department 1 has 1 male, department 4 has 2 female and 1 male, department 5 has 1 female and 3 male.</p>
+    </div>
+  </div></details>
+
+  <div class="qbox"><span class="qn">practiceQuery156</span>
+    <p>Retrieve for each department and salary, the number of employees that earn that salary. Order by salary descending and department ascending.</p></div>
+  <details class="reveal"><summary>Show solution</summary><div class="reveal-body">
+    <pre><code>select dno, salary, count(*) from employee
+group by dno, salary
+order by salary desc, dno asc;</code></pre>
+    <div class="prose">
+      <p>Grouping on a numeric column feels odd but works the same way: each distinct department and salary pair becomes one row.</p>
+      <p>Almost every count is 1, because most salaries are unique within a department. The exception is department 4 at 25000, where Jabbar and Zelaya both sit, giving a count of 2.</p>
+      <p>The two sort directions differ, so write both keywords out. <code>ORDER BY salary desc, dno</code> would also work since ASC is the default, but being explicit is safer under time pressure.</p>
+    </div>
+  </div></details>
+
+  <h3 id="s-order">Ordering, ranking and limits</h3>
+
+  <div class="qbox"><span class="qn">practiceQuery157</span>
+    <p>Retrieve information for the 3rd-7th highest salaried employees. Display first name, last name, SSN and salary.</p></div>
+  <details class="reveal"><summary>Show solution</summary><div class="reveal-body">
+    <pre><code>select fname, lname, ssn, salary from employee
+order by salary desc
+limit 5 offset 2;</code></pre>
+    <div class="prose">
+      <div class="key"><b>nth through mth means <code>LIMIT (m - n + 1) OFFSET (n - 1)</code>.</b></div>
+      <p>Third through seventh is five rows, so LIMIT 5. To start at the third you skip two, so OFFSET 2. The off by one comes from OFFSET counting rows skipped rather than naming a position.</p>
+      <p>Sorted descending the salaries run 55000, 43000, 40000, 38000, 30000, 25000, 25000, 25000. Skipping the first two leaves Wong, Narayan, Smith, English and Jabbar.</p>
+      <p>Column order matters here: the question asks for first name, last name, SSN, salary, which is not the order they sit in the table.</p>
+      <p>One caveat for real work rather than the exam. Three employees tie at 25000, and which of them lands in seventh place is not guaranteed by the SQL standard when the sort key has ties. On this fixed data you will get a consistent answer, so do not spend time debugging that row.</p>
+    </div>
+  </div></details>
+
+  <div class="qbox"><span class="qn">practiceQuery161</span>
+    <p>Retrieve the SSN, first name, last name, and salary of employees ordered by salary in descending order. Display only the 3rd and 4th highest paid employees.</p></div>
+  <details class="reveal"><summary>Show solution</summary><div class="reveal-body">
+    <pre><code>select ssn, fname, lname, salary from employee
+order by salary desc
+limit 2 offset 2;</code></pre>
+    <div class="prose">
+      <p>Same formula as 157. Third and fourth is two rows, so LIMIT 2, and starting at the third means skipping two, so OFFSET 2.</p>
+      <p>Returns Franklin Wong at 40000 and Ramesh Narayan at 38000.</p>
+      <p>Note the column order differs from 157: SSN comes first here. Read that part of the question, it is free marks either way.</p>
+    </div>
+  </div></details>
+
+  <div class="qbox"><span class="qn">practiceQuery158</span>
+    <p>Retrieve each department number and the number of projects associated with that department. Display only the top two departments with the highest number of associated projects.</p></div>
+  <details class="reveal"><summary>Show solution</summary><div class="reveal-body">
+    <pre><code>select dnum, count(*) from project
+group by dnum
+order by count(*) desc
+limit 2;</code></pre>
+    <div class="prose">
+      <p>The only question in this set that queries the <code>project</code> table, and the department column there is called <code>dnum</code>, not <code>dno</code>. Reaching for <code>dno</code> out of habit is an easy mistake.</p>
+      <p>"Top two" means sort then cut, so <code>ORDER BY ... DESC LIMIT 2</code>. No OFFSET, because you start from the first row.</p>
+      <p>You can sort by an aggregate directly. Department 5 owns ProductX, ProductY and ProductZ for 3. Department 4 owns Computerization and Newbenefits for 2. Department 1 has only Reorganization and gets cut.</p>
+    </div>
+  </div></details>
+
+  <div class="qbox"><span class="qn">practiceQuery159</span>
+    <p>Retrieve each department number and the number of employees in that department. Display only departments with at least 2 employees, ordered by employee count in descending order.</p></div>
+  <details class="reveal"><summary>Show solution</summary><div class="reveal-body">
+    <pre><code>select dno, count(*) from employee
+group by dno
+having count(*) &gt;= 2
+order by count(*) desc;</code></pre>
+    <div class="prose">
+      <p>Three clauses stacked in the order they run: group, filter the groups, then sort. Getting them out of order is a syntax error, so the sequence GROUP BY then HAVING then ORDER BY is worth memorizing as a block.</p>
+      <p>"At least 2" is inclusive, so <code>&gt;=</code>. Department 5 with 4 and department 4 with 3 survive. Department 1 has a single employee and is dropped.</p>
+    </div>
+  </div></details>
+
+  <div class="qbox"><span class="qn">practiceQuery160</span>
+    <p>Retrieve each supervisor SSN and the number of employees they supervise. Display only supervisors who supervise at least 2 employees, ordered by the supervised employee count in descending order.</p></div>
+  <details class="reveal"><summary>Show solution</summary><div class="reveal-body">
+    <pre><code>select superssn, count(*) from employee
+group by superssn
+having count(*) &gt;= 2
+order by count(*) desc;</code></pre>
+    <div class="prose">
+      <p>Grouping by <code>superssn</code> asks "who reports to whom" using only the employee table, since the supervisor is just another employee referenced by SSN. That self-referencing column is the recursive relationship from the EER half of the course, showing up as data.</p>
+      <p>Three supervisors qualify: 333445555 with 3 reports, then 888665555 and 987654321 with 2 each.</p>
+      <p>There is a fourth group you never see. James Borg has NULL in <code>superssn</code>, and <code>GROUP BY</code> collects all the NULLs into their own group, unlike WHERE which discards them. That group has one member, so HAVING removes it. Had the threshold been 1, a NULL row would have appeared in your output, which surprises people.</p>
+    </div>
+  </div></details>
+
+  <div class="note"><b>If you only drill five of these</b>Do 86 and 18 for NULL behaviour, 100 and 102 back to back for WHERE against HAVING, and 157 for the LIMIT and OFFSET arithmetic. Those five cover the mistakes that appear on exams.</div>
+</div>
+</main>
+
+<footer class="wrap">
+  <p>Built from the CS 4400 Spring 2026 Exam 1 paper and answer key, and SQL Practice Set 2. Notation follows Elmasri and Navathe. Solutions verified against the autograder's expected results.</p>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  var tabs=[].slice.call(document.querySelectorAll('.tab'));
+  var panels=tabs.map(function(t){return document.getElementById(t.getAttribute('aria-controls'));});
+
+  function show(i,push){
+    tabs.forEach(function(t,j){
+      t.setAttribute('aria-selected', j===i?'true':'false');
+      panels[j].hidden = j!==i;
+    });
+    if(push){
+      var id=tabs[i].id.replace('tab-','');
+      if(history.replaceState) history.replaceState(null,'','#'+id);
+    }
+  }
+
+  tabs.forEach(function(t,i){
+    t.addEventListener('click',function(){show(i,true);window.scrollTo({top:0,behavior:'auto'});});
+    t.addEventListener('keydown',function(e){
+      var d = e.key==='ArrowRight'?1 : e.key==='ArrowLeft'?-1 : 0;
+      if(!d) return;
+      e.preventDefault();
+      var n=(i+d+tabs.length)%tabs.length;
+      tabs[n].focus(); show(n,true);
+    });
+  });
+
+  // open the tab named in the URL, and follow in-page links across tabs
+  function openFromHash(){
+    var h=(location.hash||'').replace('#','');
+    if(!h) return;
+    var direct=tabs.map(function(t){return t.id.replace('tab-','');}).indexOf(h);
+    if(direct>-1){ show(direct,false); return; }
+    var el=document.getElementById(h);
+    if(!el) return;
+    var host=el.closest('.panel');
+    if(host){
+      var idx=panels.indexOf(host);
+      if(idx>-1 && panels[idx].hidden){ show(idx,false); el.scrollIntoView(); }
+    }
+  }
+  window.addEventListener('hashchange',openFromHash);
+  openFromHash();
+})();
+</script>
+</body>
+</html>
