@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sound Into Pixels: the Renderer, the Loop, the Shapes</title>
+<style>
+  :root{
+    --bg:#fcfbf9; --panel:#fff; --panel2:#f4f2ee; --ink:#1b1a18; --ink2:#55524c; --ink3:#8a857c;
+    --line:#e3dfd7; --accent:#2f5fd0; --accent-soft:#e9effc;
+    --good:#1b7a49; --good-soft:#e5f4ec; --bad:#b02f2f; --bad-soft:#fbeaea;
+    --warn:#95640b; --warn-soft:#fcf2dc; --code:#f4f2ee;
+    --stage:#0c0c10;
+    --r:10px;
+  }
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+    --bg:#16171a; --panel:#1d1f23; --panel2:#25282d; --ink:#eae8e4; --ink2:#b4b0a9; --ink3:#87837c;
+    --line:#32363c; --accent:#82a8f2; --accent-soft:#1e2941;
+    --good:#66c998; --good-soft:#162b21; --bad:#e78888; --bad-soft:#2e1c1c;
+    --warn:#ddb25e; --warn-soft:#2c2416; --code:#25282d;
+  }}
+  :root[data-theme="dark"]{
+    --bg:#16171a; --panel:#1d1f23; --panel2:#25282d; --ink:#eae8e4; --ink2:#b4b0a9; --ink3:#87837c;
+    --line:#32363c; --accent:#82a8f2; --accent-soft:#1e2941;
+    --good:#66c998; --good-soft:#162b21; --bad:#e78888; --bad-soft:#2e1c1c;
+    --warn:#ddb25e; --warn-soft:#2c2416; --code:#25282d;
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);line-height:1.62;font-size:16px;
+       font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  code,pre,.mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace}
+  .wrap{max-width:920px;margin:0 auto;padding:0 1.1rem 4rem}
+
+  header.top{background:var(--panel);border-bottom:1px solid var(--line);padding:1.5rem 0 0;margin-bottom:1.6rem}
+  .bar{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap}
+  h1{margin:0 0 .2rem;font-size:1.4rem;letter-spacing:-.01em}
+  .sub{margin:0 0 1.1rem;color:var(--ink3);font-size:.86rem}
+  .tbtn{background:var(--panel2);border:1px solid var(--line);color:var(--ink2);border-radius:999px;
+        padding:.3rem .8rem;font-size:.76rem;cursor:pointer}
+  nav.tabs{display:flex;gap:.1rem;overflow-x:auto;scrollbar-width:none}
+  nav.tabs::-webkit-scrollbar{display:none}
+  nav.tabs button{background:none;border:none;border-bottom:2px solid transparent;color:var(--ink3);
+        font:inherit;font-size:.86rem;padding:.55rem .75rem;cursor:pointer;white-space:nowrap}
+  nav.tabs button:hover{color:var(--ink2)}
+  nav.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent);font-weight:640}
+
+  .panel{display:none}
+  .panel.active{display:block;animation:f .18s ease}
+  @keyframes f{from{opacity:0}to{opacity:1}}
+
+  h2{font-size:1.16rem;margin:2.3rem 0 .65rem;padding-bottom:.32rem;border-bottom:1px solid var(--line);letter-spacing:-.01em}
+  h2:first-child{margin-top:.3rem}
+  h3{font-size:1rem;margin:1.5rem 0 .45rem}
+  h4{font-size:.82rem;margin:1.1rem 0 .3rem;color:var(--ink2);text-transform:uppercase;letter-spacing:.05em}
+  p{margin:.55rem 0}
+  ul,ol{margin:.55rem 0;padding-left:1.3rem}
+  li{margin:.28rem 0}
+  .lead{font-size:1.01rem;color:var(--ink2)}
+
+  pre{background:var(--code);border:1px solid var(--line);border-radius:var(--r);padding:.8rem 1rem;
+      overflow-x:auto;font-size:.81rem;line-height:1.55;margin:.75rem 0}
+  p code,li code,td code,th code,summary code{background:var(--code);border:1px solid var(--line);
+      border-radius:5px;padding:.05em .34em;font-size:.87em}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:1rem 1.15rem;margin:1.1rem 0}
+  .card>:first-child{margin-top:0}.card>:last-child{margin-bottom:0}
+  .note,.good,.bad,.warn{padding:.65rem 1rem;border-radius:0 var(--r) var(--r) 0;margin:.95rem 0}
+  .note{border-left:3px solid var(--accent);background:var(--accent-soft)}
+  .good{border-left:3px solid var(--good);background:var(--good-soft)}
+  .bad{border-left:3px solid var(--bad);background:var(--bad-soft)}
+  .warn{border-left:3px solid var(--warn);background:var(--warn-soft)}
+  .note>:first-child,.good>:first-child,.bad>:first-child,.warn>:first-child{margin-top:0}
+  .note>:last-child,.good>:last-child,.bad>:last-child,.warn>:last-child{margin-bottom:0}
+
+  .tw{overflow-x:auto;margin:.85rem 0}
+  table{border-collapse:collapse;width:100%;font-size:.86rem;min-width:340px}
+  th,td{text-align:left;padding:.45rem .6rem;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:.76rem;text-transform:uppercase;letter-spacing:.04em;color:var(--ink2);font-weight:640}
+  tbody tr:last-child td{border-bottom:none}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:.85rem;margin:.95rem 0}
+  .mini{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:.8rem .95rem}
+  .mini h4{margin-top:0}
+  .mini p{font-size:.86rem;color:var(--ink2);margin:.25rem 0 0}
+
+  /* live widgets */
+  .lab{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:1rem 1.15rem;margin:1.1rem 0}
+  .lab h4{margin-top:0}
+  .stage{background:var(--stage);border:1px solid var(--line);border-radius:8px;display:block;width:100%}
+  .ctrls{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin-top:.7rem}
+  .btn{background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:7px;
+       padding:.38rem .8rem;font:inherit;font-size:.83rem;cursor:pointer}
+  .btn:hover{border-color:var(--accent);color:var(--accent)}
+  .btn.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+  .ctrls label{font-size:.8rem;color:var(--ink2);display:flex;align-items:center;gap:.4rem}
+  input[type=range]{width:120px}
+  .readout{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.78rem;color:var(--ink3);
+           margin-top:.5rem;display:flex;gap:1.1rem;flex-wrap:wrap}
+  .readout b{color:var(--ink);font-weight:600}
+
+  .twoup{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+  .twoup .cap{font-size:.76rem;color:var(--ink3);text-align:center;margin:.3rem 0 0}
+  @media(max-width:560px){ .twoup{grid-template-columns:1fr} }
+
+  /* pool inspector */
+  #poolgrid{display:grid;grid-template-columns:repeat(30,1fr);gap:2px;margin-top:.6rem}
+  .cell{aspect-ratio:1;border-radius:2px;background:var(--panel2)}
+  .cell.alive{background:var(--good)}
+
+  /* bins strip */
+  .binsrow{display:flex;gap:1px;align-items:flex-end;height:70px;margin-top:.4rem}
+  .binbar{flex:1;background:var(--accent);border-radius:1px 1px 0 0;min-height:1px}
+
+  details{border:1px solid var(--line);border-radius:var(--r);padding:.55rem .9rem;margin:.65rem 0;background:var(--panel)}
+  details[open]{background:var(--panel2)}
+  summary{cursor:pointer;font-weight:600;font-size:.9rem;color:var(--accent)}
+  details>*:not(summary){margin-top:.55rem}
+
+  ol.steps{counter-reset:s;list-style:none;padding-left:0}
+  ol.steps>li{counter-increment:s;position:relative;padding-left:2.35rem;margin:1rem 0}
+  ol.steps>li::before{content:counter(s);position:absolute;left:0;top:.05rem;width:1.65rem;height:1.65rem;
+    border-radius:50%;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;
+    justify-content:center;font-size:.79rem;font-weight:700}
+
+  .quiz{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:1rem 1.15rem;margin:.95rem 0}
+  .quiz .q{font-weight:600;margin:0 0 .7rem}
+  .quiz .qn{display:block;color:var(--ink3);font-size:.74rem;letter-spacing:.05em;font-weight:650;margin-bottom:.25rem}
+  .opts{display:flex;flex-direction:column;gap:.38rem}
+  .opt{text-align:left;font:inherit;font-size:.88rem;background:var(--bg);color:var(--ink);
+       border:1px solid var(--line);border-radius:7px;padding:.5rem .75rem;cursor:pointer}
+  .opt:hover:not(:disabled){border-color:var(--accent);background:var(--accent-soft)}
+  .opt:disabled{cursor:default;opacity:.72}
+  .opt.correct{border-color:var(--good);background:var(--good-soft);color:var(--good);font-weight:600;opacity:1}
+  .opt.wrong{border-color:var(--bad);background:var(--bad-soft);color:var(--bad);opacity:1}
+  .fb{display:none;margin-top:.65rem;font-size:.87rem;padding:.55rem .8rem;border-radius:7px}
+  .fb.show{display:block}
+  .fb.ok{background:var(--good-soft);color:var(--good)}
+  .fb.no{background:var(--bad-soft);color:var(--bad)}
+  .fb b{display:block;margin-bottom:.15rem}
+  .score{font-size:.83rem;color:var(--ink3);margin-top:.9rem}
+
+  footer{border-top:1px solid var(--line);margin-top:3rem;padding-top:1rem;color:var(--ink3);font-size:.79rem}
+  @media(max-width:560px){ body{font-size:15px} h1{font-size:1.18rem} .wrap{padding:0 .8rem 3rem} }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap" style="padding-bottom:0">
+    <div class="bar">
+      <div>
+        <h1>Sound Into Pixels</h1>
+        <p class="sub">How the loop, the bars, and the particles actually work</p>
+      </div>
+      <button class="tbtn" id="tbtn" type="button">Theme</button>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-tab="t1" aria-selected="true">1. Big picture</button>
+      <button role="tab" data-tab="t2" aria-selected="false">2. The numbers</button>
+      <button role="tab" data-tab="t3" aria-selected="false">3. The loop</button>
+      <button role="tab" data-tab="t4" aria-selected="false">4. Bars</button>
+      <button role="tab" data-tab="t5" aria-selected="false">5. Particles</button>
+      <button role="tab" data-tab="t6" aria-selected="false">6. Recap</button>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- ============ 1 ============ -->
+<section class="panel active" id="t1">
+
+  <p class="lead">The whole job in one sentence: <strong>sound comes in as numbers, a picture goes out.</strong> Three files split that work up.</p>
+
+  <h2>Think of a TV</h2>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>Part</th><th>Job</th><th>File</th></tr></thead>
+    <tbody>
+      <tr><td>the <strong>contract</strong></td><td>"every show must be 30 minutes and have credits"</td><td><code>renderer.ts</code></td></tr>
+      <tr><td>the <strong>projector</strong></td><td>flips to the next picture 60 times a second</td><td><code>loop.ts</code></td></tr>
+      <tr><td>the <strong>show</strong></td><td>what is actually on screen</td><td><code>bars.ts</code>, <code>particles.ts</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>The projector does not care what is showing. The show does not know it is being played on a loop. They only agree on the contract.</p>
+
+  <div class="note"><p>That is the entire architecture. Everything else is detail.</p></div>
+
+  <h2>The contract</h2>
+
+  <p><strong>Julio does not write this file. It was handed to him finished.</strong> It says one thing: anything that draws must have a <code>draw</code> function taking three arguments.</p>
+
+  <pre>draw(ctx, frame, settings)</pre>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>Argument</th><th>What it is</th><th>Think of it as</th></tr></thead>
+    <tbody>
+      <tr><td><code>ctx</code></td><td>the drawing tools</td><td>your pencil and the paper</td></tr>
+      <tr><td><code>frame</code></td><td>the sound as numbers</td><td>what the music is doing right now</td></tr>
+      <tr><td><code>settings</code></td><td>user preferences</td><td>colours, sensitivity</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>Because <code>bars</code> and <code>particles</code> both obey this exact shape, the app swaps between them by changing one line. That is the only reason a contract exists.</p>
+
+  <h2>The flow</h2>
+
+  <pre>main.ts     "here is a canvas, a source of numbers, and the bars renderer"
+   |
+   v
+loop.ts     every 16ms: get numbers -&gt; call draw() -&gt; schedule the next one
+   |
+   v
+bars.ts     one picture: 48 bars, tall where it is loud
+   |
+   v
+canvas      moving bars in the side panel</pre>
+
+  <p>Change one line in <code>main.ts</code>:</p>
+  <pre>renderer: () =&gt; bars,        <span style="opacity:.6">becomes</span>        renderer: () =&gt; particles,</pre>
+  <p>and the same loop now drives dots instead of bars. Neither file changed.</p>
+
+  <h2>Who wrote what</h2>
+  <div class="grid">
+    <div class="mini"><h4>Given to him</h4><p><code>renderer.ts</code>, the canvas helper, the side panel shell, the settings. All finished before he started.</p></div>
+    <div class="mini"><h4>He writes</h4><p><code>loop.ts</code> and <code>bars.ts</code> for LOS-12. <code>particles.ts</code> for LOS-24.</p></div>
+    <div class="mini"><h4>Somebody else</h4><p>The audio engine and the three sources, tab, mic and file. Those are separate tickets.</p></div>
+  </div>
+
+</section>
+
+<!-- ============ 2 ============ -->
+<section class="panel" id="t2">
+
+  <p class="lead">Before any drawing makes sense, you have to know what the sound actually looks like as data.</p>
+
+  <h2>frame.bins is the music</h2>
+
+  <pre>frame.bins        // 1024 numbers, each 0 to 255
+frame.sampleRate  // 48000
+frame.fftSize     // 2048
+frame.pulse       // beat detector, always 0 for now</pre>
+
+  <p><strong>1024 slots.</strong> Slot 0 is the deepest bass. Slot 1023 is the highest treble. The value is how loud that pitch is, right now.</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>Situation</th><th>bins looks like</th></tr></thead>
+    <tbody>
+      <tr><td>silence</td><td><code>[0, 0, 0, 0, 0, ...]</code></td></tr>
+      <tr><td>a kick drum</td><td><code>[220, 195, 140, 30, 5, 0, ...]</code></td></tr>
+      <tr><td>a cymbal</td><td><code>[5, 8, 12, ... , 150, 180, 170]</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="good"><p><strong>And it gets completely refilled 60 times a second.</strong> That is the only reason anything on screen moves.</p></div>
+
+  <h2>Watch it move</h2>
+
+  <p>Every bar below is one slice of the 1024 numbers. This is fake audio, but it behaves like the real thing: a moving spectrum with a bass thump on the beat.</p>
+
+  <div class="lab">
+    <div class="binsrow" id="binsrow"></div>
+    <div class="readout">
+      <span>bins[0] <b id="b0">0</b></span>
+      <span>bins[100] <b id="b100">0</b></span>
+      <span>bins[500] <b id="b500">0</b></span>
+      <span>bins[1000] <b id="b1000">0</b></span>
+    </div>
+    <div class="ctrls">
+      <button class="btn on" id="binsToggle" type="button">Pause</button>
+    </div>
+  </div>
+
+  <p>Notice the left side is always busier than the right. Real music has far more energy in the bass than the treble. That single fact drives the most confusing part of <code>bars.ts</code>, coming up in tab 4.</p>
+
+  <h2>Where the numbers come from</h2>
+
+  <p>Nobody writes any maths. The browser has a thing called an <code>AnalyserNode</code> that does it:</p>
+
+  <pre>analyser.getByteFrequencyData(bins);   // fills the array, 0 to 255</pre>
+
+  <p>One function call, and the array is full of fresh numbers. That is a teammate's ticket, not Julio's. Until it lands, a fake generator fills the same array and nothing downstream can tell the difference.</p>
+
+</section>
+
+<!-- ============ 3 ============ -->
+<section class="panel" id="t3">
+
+  <p class="lead"><code>loop.ts</code> is 39 lines and it draws absolutely nothing. It is a timer that tells somebody else to draw.</p>
+
+  <h2>The setup, runs once</h2>
+
+  <pre>const ctx = options.canvas.getContext('2d');
+if (!ctx) throw new Error('render: 2d context unavailable');
+
+let handle = 0;
+let running = false;</pre>
+
+  <p>Grab the drawing tools once. Getting them every frame would be wasteful.</p>
+  <p><code>running</code> is an on/off switch. <code>handle</code> is a ticket number the browser hands back so you can cancel later.</p>
+
+  <h2>tick, the heartbeat</h2>
+
+  <pre>const tick = (): void =&gt; {
+  if (!running) return;                                    <span style="opacity:.55">// 1</span>
+  resizeToDisplaySize(options.canvas);                     <span style="opacity:.55">// 2</span>
+  options.renderer().draw(ctx, options.nextFrame(), options.settings());  <span style="opacity:.55">// 3</span>
+  handle = requestAnimationFrame(tick);                    <span style="opacity:.55">// 4</span>
+};</pre>
+
+  <ol class="steps">
+    <li><strong>Stopped? Quit.</strong> The switch check.</li>
+    <li><strong>Fix the canvas size.</strong> If the user dragged the panel wider, match it.</li>
+    <li><strong>Do the work.</strong> Ask who is drawing today, ask for fresh numbers, hand both over.</li>
+    <li><strong>Book the next one.</strong> <code>requestAnimationFrame</code> means "call me again before the next screen refresh", about 16 milliseconds later.</li>
+  </ol>
+
+  <div class="note"><p>Step 4 is what makes it a loop. Each frame schedules the next one. There is no <code>while</code> anywhere.</p></div>
+
+  <h2>Watch the loop run</h2>
+
+  <p>Nothing fancy is being drawn here. This is just the heartbeat, counting.</p>
+
+  <div class="lab">
+    <canvas class="stage" id="loopStage" height="120"></canvas>
+    <div class="ctrls">
+      <button class="btn on" id="loopStart" type="button">Running</button>
+      <button class="btn" id="loopHide" type="button">Simulate hidden panel</button>
+    </div>
+    <div class="readout">
+      <span>frames drawn <b id="loopFrames">0</b></span>
+      <span>fps <b id="loopFps">0</b></span>
+      <span>ms per frame <b id="loopMs">0</b></span>
+      <span>state <b id="loopState">running</b></span>
+    </div>
+  </div>
+
+  <p>Click <strong>Simulate hidden panel</strong> and the counter freezes. Click again and it resumes. That is exactly what this does:</p>
+
+  <pre>document.addEventListener('visibilitychange', () =&gt; {
+  if (document.visibilityState === 'hidden') stop();
+  else start();
+});</pre>
+
+  <p>The ticket says why: <em>a hidden panel burning a core is a battery bug.</em> No point doing 60 calculations a second for a screen nobody can see.</p>
+
+  <h2>Start and stop</h2>
+
+  <pre>const start = (): void =&gt; {
+  if (running) return;      <span style="opacity:.55">// already going, do not double it</span>
+  running = true;
+  handle = requestAnimationFrame(tick);
+};
+
+const stop = (): void =&gt; {
+  running = false;
+  cancelAnimationFrame(handle);
+};</pre>
+
+  <div class="warn">
+    <p><code>if (running) return</code> matters. Without it, calling <code>start()</code> twice creates two loops racing each other and everything runs at double speed. Easy bug to create, hard to spot.</p>
+  </div>
+
+  <h2>The 16 millisecond budget</h2>
+
+  <p>60 frames a second means each frame has about <strong>16 milliseconds</strong> to finish everything. Go over and the animation stutters.</p>
+  <p>That budget is why the ticket says no allocation inside the loop, and why the particle pool has a cap.</p>
+
+</section>
+
+<!-- ============ 4 ============ -->
+<section class="panel" id="t4">
+
+  <p class="lead"><code>bars.ts</code> is 35 lines. It draws 48 vertical bars. Tall bar means that frequency is loud.</p>
+
+  <h2>Watch it</h2>
+
+  <div class="lab">
+    <canvas class="stage" id="barsStage" height="220"></canvas>
+    <div class="ctrls">
+      <button class="btn on" id="barsRun" type="button">Running</button>
+      <label>gain <input type="range" id="barsGain" min="0.2" max="3" step="0.1" value="1"><b id="barsGainV" class="mono">1.0</b></label>
+    </div>
+  </div>
+
+  <h2>Step 1: wipe the canvas</h2>
+
+  <pre>ctx.clearRect(0, 0, width, height);</pre>
+  <p>Erase everything. Fresh start every frame. Without this, old bars would pile up on top of new ones.</p>
+
+  <h2>Step 2: the confusing part, and it is about hearing</h2>
+
+  <p>The 1024 bins are evenly spaced, about 23 Hz apart. But musical octaves <strong>double</strong>:</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>Octave</th><th>Range</th><th>How many bins</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>20 to 40 Hz</td><td>1 bin</td></tr>
+      <tr><td>5</td><td>320 to 640 Hz</td><td>14 bins</td></tr>
+      <tr><td>9</td><td>5120 to 10240 Hz</td><td>218 bins</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>Split those evenly across 48 bars and everything a human cares about lands in the first three bars. The other 45 show inaudible hiss.</p>
+
+  <p><strong>See it for yourself.</strong> Same music, same bars, two different mappings:</p>
+
+  <div class="lab">
+    <div class="twoup">
+      <div>
+        <canvas class="stage" id="linStage" height="150"></canvas>
+        <p class="cap">linear mapping, wrong</p>
+      </div>
+      <div>
+        <canvas class="stage" id="logStage" height="150"></canvas>
+        <p class="cap">log mapping, right</p>
+      </div>
+    </div>
+    <div class="ctrls">
+      <button class="btn on" id="cmpRun" type="button">Running</button>
+    </div>
+  </div>
+
+  <p>On the left, all the movement is crushed into the far left and the rest is dead. On the right, the whole width is alive. Same numbers, different spacing.</p>
+
+  <p>That is what this line does:</p>
+
+  <pre>const start = Math.round(low * Math.pow(ratio, bar / BAR_COUNT));
+const end   = Math.round(low * Math.pow(ratio, (bar + 1) / BAR_COUNT));</pre>
+
+  <p>Bar 1 covers a couple of bins. Bar 48 covers hundreds. The bars get logarithmically wider.</p>
+
+  <div class="note"><p>The ticket says it plainly: <em>linear mapping crams all musical detail into the left edge.</em> Now you can see what that sentence means.</p></div>
+
+  <h2>Step 3: average and draw</h2>
+
+  <pre>let total = 0;
+for (let i = start; i &lt; last; i++) total += frame.bins[i] ?? 0;
+
+const level = Math.min((total / (last - start) / 255) * settings.gain, 1);
+const barHeight = level * height;
+
+ctx.fillStyle = settings.palette[bar % settings.palette.length] ?? '#ffffff';
+ctx.fillRect(bar * barWidth, height - barHeight, barWidth - 1, barHeight);</pre>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>Line</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td><code>total += ...</code></td><td>add up the bins in this bar's range</td></tr>
+      <tr><td><code>/ (last - start)</code></td><td>turn the total into an average</td></tr>
+      <tr><td><code>/ 255</code></td><td>turn 0-255 into 0-1</td></tr>
+      <tr><td><code>* settings.gain</code></td><td>the user's sensitivity knob</td></tr>
+      <tr><td><code>Math.min(..., 1)</code></td><td>never go above full height</td></tr>
+      <tr><td><code>level * height</code></td><td>0-1 becomes pixels</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="warn">
+    <p><strong>Why <code>height - barHeight</code>?</strong> Because y counts <em>downward</em> on a canvas. <code>(0,0)</code> is the top left corner. A tall bar has to start near the top, so you subtract its height from the bottom.</p>
+  </div>
+
+  <p><code>barWidth - 1</code> leaves a one pixel gap so the bars do not merge into a solid block.</p>
+
+</section>
+
+<!-- ============ 5 ============ -->
+<section class="panel" id="t5">
+
+  <p class="lead">Same contract, different picture. Dots instead of bars. But there is one idea here that the whole ticket is graded on.</p>
+
+  <h2>Watch it</h2>
+
+  <div class="lab">
+    <canvas class="stage" id="partStage" height="240"></canvas>
+    <div class="ctrls">
+      <button class="btn on" id="partRun" type="button">Running</button>
+      <button class="btn on" id="partTrail" type="button">Trails on</button>
+      <label>gain <input type="range" id="partGain" min="0.2" max="3" step="0.1" value="1"><b id="partGainV" class="mono">1.0</b></label>
+    </div>
+    <div class="readout">
+      <span>alive <b id="partAlive">0</b> / 240</span>
+      <span>spawned this frame <b id="partSpawn">0</b></span>
+      <span>objects created since load <b id="partAlloc">240</b></span>
+    </div>
+  </div>
+
+  <div class="good">
+    <p>Watch that last number. <strong>It never goes up.</strong> 240 objects were made when the page loaded and not one has been created since, no matter how many dots you see.</p>
+  </div>
+
+  <h2>The pool, the idea that matters</h2>
+
+  <pre>const pool = Array.from({ length: MAX_PARTICLES }, () =&gt; ({
+  x: 0, y: 0, vx: 0, vy: 0, age: 0, life: 0, band: 0,
+}));</pre>
+
+  <p><strong>240 dot objects, created once when the file loads. Never again.</strong></p>
+
+  <p>Think of a parking lot with 240 painted spots. You never build new spots and you never demolish any. Cars come and go, the spots stay.</p>
+
+  <p>A dot is <strong>dead</strong> when <code>age &gt;= life</code>. Dead does not mean deleted, it means the spot is free. At startup every dot has <code>age: 0, life: 0</code>, and <code>0 &gt;= 0</code> is true, so all 240 start empty.</p>
+
+  <h3>See the parking lot</h3>
+
+  <p>Each square is one slot in the pool. Green means a dot is alive in it. Grey means free.</p>
+
+  <div class="lab">
+    <div id="poolgrid"></div>
+    <p style="font-size:.82rem;color:var(--ink3);margin-top:.6rem">Squares flick between grey and green constantly. That is recycling. A square going green did not get created, it got reused.</p>
+  </div>
+
+  <h3>Why it has to work this way</h3>
+
+  <p>The obvious version looks like this:</p>
+  <pre>dots.push(newDot());               <span style="opacity:.55">// makes a new object</span>
+dots = dots.filter(d =&gt; d.alive);  <span style="opacity:.55">// makes a new array</span></pre>
+
+  <div class="bad">
+    <p>That is hundreds of objects a second for the garbage collector to clean up. While it cleans, <strong>the animation freezes for a few milliseconds</strong> and the user sees a stutter.</p>
+  </div>
+
+  <p>That is the entire reason the ticket says <em>fixed-size particle pool, no per-frame allocation</em>.</p>
+
+  <h2>Bands: chopping the sound into 4</h2>
+
+  <p>1024 numbers is too many to work with. Squash them:</p>
+
+  <pre>bins[0   .. 255]  -&gt;  band 0   bass
+bins[256 .. 511]  -&gt;  band 1
+bins[512 .. 767]  -&gt;  band 2
+bins[768 .. 1023] -&gt;  band 3   treble</pre>
+
+  <p>Average each chunk. Four loudness readings, four spawn sources, four lanes across the canvas.</p>
+
+  <h2>What draw does, four steps</h2>
+
+  <h3>1. Wash, do not wipe</h3>
+  <pre>ctx.fillStyle = 'rgba(12, 12, 16, 0.22)';
+ctx.fillRect(0, 0, width, height);</pre>
+  <p>Paint near-black at 22% opacity over everything. Old dots get darker each frame instead of vanishing, which gives motion trails for free. Hit <strong>Trails on/off</strong> above to see the difference. One line, big change.</p>
+
+  <h3>2. Spawn from loudness</h3>
+  <pre>const energy = Math.min((total / size / 255) * settings.gain, 1);
+if (energy &lt; THRESHOLD) continue;
+
+for (let n = 0; n &lt; Math.round(energy * MAX_SPAWN); n++) {
+  spawn(band, energy, width, height);
+}</pre>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>energy</th><th>dots spawned</th></tr></thead>
+    <tbody>
+      <tr><td>0.95</td><td>3</td></tr>
+      <tr><td>0.71</td><td>2</td></tr>
+      <tr><td>0.20</td><td>1</td></tr>
+      <tr><td>0.15</td><td>none, below the threshold</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>The threshold stops background hiss from spawning dots during silence.</p>
+
+  <h3>3. spawn revives a dead dot</h3>
+  <pre>p.x = ((band + 0.5) / BANDS) * width;   <span style="opacity:.55">// this band's lane</span>
+p.y = height;                            <span style="opacity:.55">// the bottom</span>
+p.vx = (Math.random() - 0.5) * energy * 0.012;
+p.vy = -energy * 0.02;                   <span style="opacity:.55">// negative is up</span>
+p.age = 0;
+p.life = 60;</pre>
+
+  <p>On a 400px canvas the lanes land at x = 50, 150, 250, 350. Bass on the left, treble on the right.</p>
+  <p><code>Math.random() - 0.5</code> gives a number from -0.5 to +0.5, so half the dots drift left and half drift right.</p>
+  <p><code>vy</code> scales with energy. <strong>That is "velocity by magnitude" from the ticket.</strong> Loud music launches dots harder.</p>
+
+  <div class="note"><p>Nothing was created here. Seven numbers were overwritten in a spot that already existed.</p></div>
+
+  <h3>4. Move, fade, draw</h3>
+  <pre>p.x += p.vx * width;
+p.y += p.vy * height;
+p.age += 1;
+
+ctx.globalAlpha = 1 - p.age / p.life;
+ctx.beginPath();
+ctx.arc(p.x, p.y, height * 0.006, 0, TAU);
+ctx.fill();</pre>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>age</th><th>alpha</th><th>looks like</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>1.00</td><td>solid</td></tr>
+      <tr><td>30</td><td>0.50</td><td>half faded</td></tr>
+      <tr><td>59</td><td>0.02</td><td>nearly gone</td></tr>
+      <tr><td>60</td><td>dead</td><td>skipped next frame</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p><strong>That is "faded by age" from the ticket.</strong></p>
+
+  <p><code>beginPath</code> then <code>arc</code> then <code>fill</code> is just "draw a filled circle". Those three always travel together.</p>
+
+</section>
+
+<!-- ============ 6 ============ -->
+<section class="panel" id="t6">
+
+  <h2>The three sentences</h2>
+
+  <p>If you can explain these back without looking, you understand the code.</p>
+
+  <div class="card">
+    <ol>
+      <li style="margin:.6rem 0"><strong><code>loop.ts</code> never draws anything.</strong> It is a timer that calls somebody else's <code>draw</code>.</li>
+      <li style="margin:.6rem 0"><strong>The bars are log-spaced because human hearing is log-spaced</strong>, not because of anything about code.</li>
+      <li style="margin:.6rem 0"><strong>"Spawn" does not create a dot.</strong> It finds a dead one and overwrites its numbers, which is why the animation never stutters.</li>
+    </ol>
+  </div>
+
+  <p>Number three is the one the ticket is actually graded on. If it does not feel obvious yet, go back to the parking lot in tab 5 and watch the grid again.</p>
+
+  <h2>The map, one more time</h2>
+
+  <pre>              frame.bins = [180, 176, 90, 45, 12, ...]
+                            |
+                            |  refilled 60 times a second
+                            v
+  +-------------------------------------------------------+
+  |  loop.ts        every 16ms:                            |
+  |                   get numbers                          |
+  |                   call renderer().draw(...)            |
+  |                   schedule the next frame              |
+  +-------------------------------------------------------+
+                            |
+              +-------------+-------------+
+              v                           v
+  +---------------------+    +---------------------------+
+  |  bars.ts            |    |  particles.ts             |
+  |  48 bars            |    |  240 recycled dots        |
+  |  log-spaced         |    |  spawn by energy          |
+  |  tall where loud    |    |  fade by age              |
+  +---------------------+    +---------------------------+
+              |                           |
+              +-------------+-------------+
+                            v
+                      pixels on screen</pre>
+
+  <h2>What ties back to the tickets</h2>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>Ticket says</th><th>Which code</th></tr></thead>
+    <tbody>
+      <tr><td>requestAnimationFrame loop</td><td><code>tick</code> scheduling itself</td></tr>
+      <tr><td>Renderer interface so modes are swappable</td><td><code>renderer()</code> called fresh each frame</td></tr>
+      <tr><td>Log-scale the bin-to-x mapping</td><td><code>Math.pow(ratio, bar / BAR_COUNT)</code></td></tr>
+      <tr><td>Pause when the panel is hidden</td><td>the <code>visibilitychange</code> listener</td></tr>
+      <tr><td>No allocation inside the frame loop</td><td>hoisted <code>ctx</code>, reused frame object, the pool</td></tr>
+      <tr><td>Fixed-size particle pool</td><td><code>Array.from({ length: 240 })</code> at module level</td></tr>
+      <tr><td>Spawned by band energy</td><td>the threshold check and spawn count</td></tr>
+      <tr><td>Velocity by magnitude</td><td><code>p.vy = -energy * 0.02</code></td></tr>
+      <tr><td>Faded by age</td><td><code>globalAlpha = 1 - age / life</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>Check yourself</h2>
+  <div id="quiz"></div>
+  <p class="score" id="score"></p>
+
+</section>
+
+</div>
+
+<div class="wrap"><footer>Every animation on this page runs the same logic as the real files, driven by a synthetic spectrum instead of live audio.</footer></div>
+
+<script>
+(function(){
+/* ---------- tabs + theme ---------- */
+var btns=document.querySelectorAll('nav.tabs button'), pans=document.querySelectorAll('.panel');
+btns.forEach(function(b){b.addEventListener('click',function(){
+  btns.forEach(function(x){x.setAttribute('aria-selected','false')});
+  pans.forEach(function(p){p.classList.remove('active')});
+  b.setAttribute('aria-selected','true');
+  document.getElementById(b.dataset.tab).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+});});
+var root=document.documentElement;
+function cur(){return root.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');}
+document.getElementById('tbtn').addEventListener('click',function(){
+  var n=cur()==='dark'?'light':'dark'; root.setAttribute('data-theme',n);
+  try{localStorage.setItem('sp-theme',n)}catch(e){}
+});
+try{var sv=localStorage.getItem('sp-theme'); if(sv)root.setAttribute('data-theme',sv);}catch(e){}
+
+/* ---------- fake audio, shared by every widget ---------- */
+var BINS = 1024;
+var bins = new Uint8Array(BINS);
+var t = 0;
+
+function fillBins(){
+  t += 0.016;
+  var beat = Math.pow(Math.max(0, Math.sin(t * 3.1)), 10);
+  for (var i = 0; i < BINS; i++){
+    var rolloff = Math.exp(-i / 170);
+    var wobble  = Math.sin(i * 0.028 + t * 2.2) * 0.32 + 0.6;
+    var mid     = Math.exp(-Math.pow((i - 180) / 120, 2)) * Math.sin(t * 1.7) * 0.35;
+    var bass    = i < 70 ? beat * 0.85 : 0;
+    var v = (wobble * rolloff + Math.max(0, mid) + bass) * 255;
+    bins[i] = Math.max(0, Math.min(255, Math.round(v)));
+  }
+}
+
+var PALETTE = ['#4f8ef7','#37c39a','#f2b544','#ef6f6c','#a97bd8','#4fd0e0'];
+var GAIN_DEFAULT = 1;
+
+function fitCanvas(cv){
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  var w = Math.round(cv.clientWidth * dpr);
+  var h = Math.round((cv.getAttribute('height') || 200) * dpr);
+  if (cv.width !== w || cv.height !== h){ cv.width = w; cv.height = h; }
+}
+
+/* ---------- master clock ---------- */
+var subs = [];
+function every(fn){ subs.push(fn); }
+var lastT = performance.now(), fps = 60, frameMs = 16;
+(function master(now){
+  var dt = now - lastT; lastT = now;
+  fps = fps * 0.9 + (1000 / Math.max(dt,1)) * 0.1;
+  frameMs = frameMs * 0.9 + dt * 0.1;
+  fillBins();
+  for (var i=0;i<subs.length;i++) subs[i]();
+  requestAnimationFrame(master);
+})(performance.now());
+
+/* ---------- TAB 2: bins strip ---------- */
+var STRIP = 64;
+var stripEls = [];
+var strip = document.getElementById('binsrow');
+for (var s=0; s<STRIP; s++){
+  var d = document.createElement('div'); d.className = 'binbar'; strip.appendChild(d); stripEls.push(d);
+}
+var binsLive = true;
+document.getElementById('binsToggle').addEventListener('click', function(){
+  binsLive = !binsLive; this.textContent = binsLive ? 'Pause' : 'Resume'; this.classList.toggle('on', binsLive);
+});
+var r0=document.getElementById('b0'), r100=document.getElementById('b100'),
+    r500=document.getElementById('b500'), r1000=document.getElementById('b1000');
+every(function(){
+  if (!binsLive) return;
+  var per = BINS / STRIP;
+  for (var i=0;i<STRIP;i++){
+    var sum=0;
+    for (var j=i*per; j<(i+1)*per; j++) sum += bins[j];
+    var avg = sum / per / 255;
+    stripEls[i].style.height = Math.max(1, avg * 70) + 'px';
+  }
+  r0.textContent = bins[0]; r100.textContent = bins[100];
+  r500.textContent = bins[500]; r1000.textContent = bins[1000];
+});
+
+/* ---------- TAB 3: loop demo ---------- */
+var loopCv = document.getElementById('loopStage');
+var loopCtx = loopCv.getContext('2d');
+var loopRunning = true, loopFrames = 0;
+var elF=document.getElementById('loopFrames'), elFps=document.getElementById('loopFps'),
+    elMs=document.getElementById('loopMs'), elState=document.getElementById('loopState');
+document.getElementById('loopStart').addEventListener('click', function(){
+  loopRunning = !loopRunning;
+  this.textContent = loopRunning ? 'Running' : 'Stopped';
+  this.classList.toggle('on', loopRunning);
+  elState.textContent = loopRunning ? 'running' : 'stopped';
+});
+document.getElementById('loopHide').addEventListener('click', function(){
+  loopRunning = !loopRunning;
+  this.classList.toggle('on', !loopRunning);
+  this.textContent = loopRunning ? 'Simulate hidden panel' : 'Panel hidden, click to show';
+  elState.textContent = loopRunning ? 'running' : 'paused (hidden)';
+  var sb = document.getElementById('loopStart');
+  sb.textContent = loopRunning ? 'Running' : 'Stopped';
+  sb.classList.toggle('on', loopRunning);
+});
+every(function(){
+  if (!loopRunning) return;
+  fitCanvas(loopCv);
+  loopFrames++;
+  var w = loopCv.width, h = loopCv.height;
+  loopCtx.clearRect(0,0,w,h);
+  var cx = w/2, cy = h/2, r = Math.min(w,h) * 0.3;
+  loopCtx.strokeStyle = 'rgba(255,255,255,0.15)'; loopCtx.lineWidth = 2;
+  loopCtx.beginPath(); loopCtx.arc(cx,cy,r,0,Math.PI*2); loopCtx.stroke();
+  var a = (loopFrames % 60) / 60 * Math.PI * 2 - Math.PI/2;
+  loopCtx.strokeStyle = '#4f8ef7'; loopCtx.lineWidth = 3;
+  loopCtx.beginPath(); loopCtx.arc(cx,cy,r,-Math.PI/2,a); loopCtx.stroke();
+  loopCtx.fillStyle = '#e9e7e3';
+  loopCtx.font = (r*0.5)+'px ui-monospace, monospace';
+  loopCtx.textAlign='center'; loopCtx.textBaseline='middle';
+  loopCtx.fillText(String(loopFrames % 60), cx, cy);
+  elF.textContent = loopFrames;
+  elFps.textContent = fps.toFixed(0);
+  elMs.textContent = frameMs.toFixed(1);
+});
+
+/* ---------- shared bars drawing ---------- */
+function drawBars(ctx, w, h, barCount, gain, useLog){
+  ctx.clearRect(0,0,w,h);
+  var low = 1, high = BINS, ratio = high / low;
+  var bw = w / barCount;
+  for (var b=0; b<barCount; b++){
+    var start, end;
+    if (useLog){
+      start = Math.round(low * Math.pow(ratio, b / barCount));
+      end   = Math.round(low * Math.pow(ratio, (b+1) / barCount));
+    } else {
+      start = Math.round(b * BINS / barCount);
+      end   = Math.round((b+1) * BINS / barCount);
+    }
+    var last = Math.max(start+1, Math.min(end, BINS));
+    var total = 0;
+    for (var i=start; i<last; i++) total += bins[i];
+    var level = Math.min((total / (last-start) / 255) * gain, 1);
+    var bh = level * h;
+    ctx.fillStyle = PALETTE[b % PALETTE.length];
+    ctx.fillRect(b*bw, h-bh, bw-Math.max(1, bw*0.12), bh);
+  }
+}
+
+/* ---------- TAB 4: main bars ---------- */
+var barsCv = document.getElementById('barsStage'), barsCtx = barsCv.getContext('2d');
+var barsRunning = true, barsGain = GAIN_DEFAULT;
+document.getElementById('barsRun').addEventListener('click', function(){
+  barsRunning = !barsRunning;
+  this.textContent = barsRunning ? 'Running' : 'Stopped';
+  this.classList.toggle('on', barsRunning);
+});
+var bg = document.getElementById('barsGain'), bgv = document.getElementById('barsGainV');
+bg.addEventListener('input', function(){ barsGain = +this.value; bgv.textContent = barsGain.toFixed(1); });
+every(function(){
+  if (!barsRunning) return;
+  fitCanvas(barsCv);
+  drawBars(barsCtx, barsCv.width, barsCv.height, 48, barsGain, true);
+});
+
+/* ---------- TAB 4: linear vs log ---------- */
+var linCv = document.getElementById('linStage'), linCtx = linCv.getContext('2d');
+var logCv = document.getElementById('logStage'), logCtx = logCv.getContext('2d');
+var cmpRunning = true;
+document.getElementById('cmpRun').addEventListener('click', function(){
+  cmpRunning = !cmpRunning;
+  this.textContent = cmpRunning ? 'Running' : 'Stopped';
+  this.classList.toggle('on', cmpRunning);
+});
+every(function(){
+  if (!cmpRunning) return;
+  fitCanvas(linCv); fitCanvas(logCv);
+  drawBars(linCtx, linCv.width, linCv.height, 32, 1, false);
+  drawBars(logCtx, logCv.width, logCv.height, 32, 1, true);
+});
+
+/* ---------- TAB 5: particles ---------- */
+var MAX_PARTICLES = 240, BANDS = 4, THRESHOLD = 0.18, MAX_SPAWN = 3, TAU = Math.PI*2;
+var pool = [];
+for (var p=0; p<MAX_PARTICLES; p++){
+  pool.push({ x:0, y:0, vx:0, vy:0, age:0, life:0, band:0 });
+}
+var ALLOCATED = MAX_PARTICLES;   // never increases
+
+var partCv = document.getElementById('partStage'), partCtx = partCv.getContext('2d');
+var partRunning = true, partTrails = true, partGain = GAIN_DEFAULT, spawnedThisFrame = 0;
+document.getElementById('partRun').addEventListener('click', function(){
+  partRunning = !partRunning;
+  this.textContent = partRunning ? 'Running' : 'Stopped';
+  this.classList.toggle('on', partRunning);
+});
+document.getElementById('partTrail').addEventListener('click', function(){
+  partTrails = !partTrails;
+  this.textContent = partTrails ? 'Trails on' : 'Trails off';
+  this.classList.toggle('on', partTrails);
+});
+var pg = document.getElementById('partGain'), pgv = document.getElementById('partGainV');
+pg.addEventListener('input', function(){ partGain = +this.value; pgv.textContent = partGain.toFixed(1); });
+
+var poolCells = [];
+var poolGrid = document.getElementById('poolgrid');
+for (var c=0; c<MAX_PARTICLES; c++){
+  var el = document.createElement('div'); el.className = 'cell'; poolGrid.appendChild(el); poolCells.push(el);
+}
+
+function spawnDot(band, energy, w, h){
+  for (var i=0; i<MAX_PARTICLES; i++){
+    var d = pool[i];
+    if (d.age < d.life) continue;
+    d.x = ((band + 0.5) / BANDS) * w;
+    d.y = h;
+    d.vx = (Math.random() - 0.5) * energy * 0.012;
+    d.vy = -energy * 0.02;
+    d.age = 0;
+    d.life = 60;
+    d.band = band;
+    spawnedThisFrame++;
+    return;
+  }
+}
+
+var elAlive=document.getElementById('partAlive'), elSpawn=document.getElementById('partSpawn'),
+    elAlloc=document.getElementById('partAlloc');
+
+every(function(){
+  if (!partRunning) return;
+  fitCanvas(partCv);
+  var w = partCv.width, h = partCv.height;
+  spawnedThisFrame = 0;
+
+  partCtx.globalAlpha = 1;
+  if (partTrails){
+    partCtx.fillStyle = 'rgba(12, 12, 16, 0.22)';
+    partCtx.fillRect(0,0,w,h);
+  } else {
+    partCtx.clearRect(0,0,w,h);
+  }
+
+  var size = Math.floor(BINS / BANDS);
+  for (var band=0; band<BANDS; band++){
+    var total = 0;
+    for (var i=band*size; i<(band+1)*size; i++) total += bins[i];
+    var energy = Math.min((total / size / 255) * partGain, 1);
+    if (energy < THRESHOLD) continue;
+    var n = Math.round(energy * MAX_SPAWN);
+    for (var k=0; k<n; k++) spawnDot(band, energy, w, h);
+  }
+
+  var alive = 0;
+  for (var j=0; j<MAX_PARTICLES; j++){
+    var d = pool[j];
+    var isAlive = d.age < d.life;
+    if (poolCells[j].classList.contains('alive') !== isAlive){
+      poolCells[j].classList.toggle('alive', isAlive);
+    }
+    if (!isAlive) continue;
+    alive++;
+    d.x += d.vx * w;
+    d.y += d.vy * h;
+    d.age += 1;
+    partCtx.globalAlpha = 1 - d.age / d.life;
+    partCtx.fillStyle = PALETTE[d.band % PALETTE.length];
+    partCtx.beginPath();
+    partCtx.arc(d.x, d.y, h * 0.008, 0, TAU);
+    partCtx.fill();
+  }
+  partCtx.globalAlpha = 1;
+
+  elAlive.textContent = alive;
+  elSpawn.textContent = spawnedThisFrame;
+  elAlloc.textContent = ALLOCATED;
+});
+
+/* ---------- quiz ---------- */
+var QS=[
+  {q:'What does <code>loop.ts</code> draw?',
+   o:['Bars','Dots','Nothing','The background'],a:2,
+   ok:'Right.',no:'Look at what it calls.',
+   e:'It is a timer. It calls renderer().draw() and lets the shape mode do all the drawing.'},
+  {q:'What is <code>frame.bins</code>?',
+   o:['Pixel colours','Loudness per pitch','Canvas sizes','Dot positions'],a:1,
+   ok:'Correct.',no:'It comes from the sound, not the screen.',
+   e:'1024 numbers, each 0 to 255. Slot 0 is the deepest bass, slot 1023 the highest treble. Refilled 60 times a second.'},
+  {q:'Why are the bars spaced logarithmically?',
+   o:['It runs faster','It uses less memory','Pitch doubles per octave','Canvas requires it'],a:2,
+   ok:'Yes.',no:'It is about hearing, not code.',
+   e:'Bins are evenly spaced but octaves double. A linear mapping puts every musically interesting bin in the left 10% of the canvas.'},
+  {q:'What does "spawn" do to a particle?',
+   o:['Creates a new object','Reuses a dead slot','Clones an existing dot','Resizes the pool'],a:1,
+   ok:'Exactly.',no:'Think about the parking lot.',
+   e:'It finds a slot where age >= life and overwrites its numbers. Nothing is created, which is why the animation never stutters.'},
+  {q:'What makes a particle fade out?',
+   o:['Its distance','Its colour','Its speed','Its age'],a:3,
+   ok:'Right.',no:'One value counts up every frame.',
+   e:'globalAlpha = 1 - age / life. At age 0 it is solid, at age 60 of 60 it is invisible and the slot goes free.'},
+  {q:'Why pause the loop when the panel is hidden?',
+   o:['To save battery','To free memory','To reset the canvas','To reload settings'],a:0,
+   ok:'Correct.',no:'The ticket gives the reason.',
+   e:'A hidden panel burning a CPU core is a battery bug. There is no point drawing 60 times a second for a screen nobody sees.'},
+  {q:'How long does one frame have to finish its work?',
+   o:['About 16 ms','About 60 ms','About 200 ms','About 1 second'],a:0,
+   ok:'Yes.',no:'Divide one second by sixty.',
+   e:'60 frames per second gives roughly 16 milliseconds each. Go over and the animation visibly stutters.'},
+  {q:'What decides how many dots spawn in a frame?',
+   o:['The canvas width','The band loudness','The frame number','The palette size'],a:1,
+   ok:'Exactly.',no:'It is the thing that reacts to music.',
+   e:'Math.round(energy * MAX_SPAWN). Louder band, more dots. Below the threshold, none at all, so silence stays still.'}
+];
+var host=document.getElementById('quiz'), answered=0, right=0;
+QS.forEach(function(item,i){
+  var d=document.createElement('div'); d.className='quiz';
+  d.innerHTML='<p class="q"><span class="qn">Question '+(i+1)+'</span>'+item.q+'</p><div class="opts">'+
+    item.o.map(function(x,j){return '<button class="opt" data-i="'+j+'">'+x+'</button>'}).join('')+
+    '</div><div class="fb"></div>';
+  host.appendChild(d);
+  var fb=d.querySelector('.fb');
+  d.querySelectorAll('.opt').forEach(function(b){
+    b.addEventListener('click',function(){
+      var pick=+b.dataset.i, good=pick===item.a;
+      d.querySelectorAll('.opt').forEach(function(x){x.disabled=true; if(+x.dataset.i===item.a)x.classList.add('correct');});
+      if(!good)b.classList.add('wrong');
+      fb.className='fb show '+(good?'ok':'no');
+      fb.innerHTML='<b>'+(good?item.ok:item.no)+'</b>'+item.e;
+      answered++; if(good)right++;
+      document.getElementById('score').textContent=right+' of '+answered+' correct, '+QS.length+' total.';
+    });
+  });
+});
+})();
+</script>
+</body>
+</html>
