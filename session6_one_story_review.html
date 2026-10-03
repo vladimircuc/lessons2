@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session 6: One story, from the cable to the web page</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f4f0e6; --card:#fffdf7; --card2:#faf6ec; --ink:#1e2530; --ink2:#5d6675; --rule:#e2dbcb; --rule2:#c9bfa9;
+  --blue:#2b55b8; --blue2:#1f4192; --blue-soft:#e8eefb;
+  --letter:#ffe08a; --letter-d:#7a5a00; --tcp:#d3c4ff; --tcp-d:#4a2f9e; --ip:#ffbe95; --ip-d:#9a3d10; --eth:#9fe0d8; --eth-d:#0e5f5a;
+  --ok:#2f9e5b; --ok-soft:#e5f5eb; --bad:#d64545; --bad-soft:#fbe9e9;
+  --sans:'Atkinson Hyperlegible', 'Segoe UI', system-ui, sans-serif;
+  --mono:'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+  --hand:'Caveat', 'Segoe Print', 'Bradley Hand', cursive;
+}
+*{box-sizing:border-box;min-width:0}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:18px;line-height:1.65}
+.wrap{max-width:820px;margin:0 auto;padding:0 20px}
+h1{font-size:2.2rem;line-height:1.15;margin:.2em 0 .4em;letter-spacing:-.01em}
+h2{font-size:1.7rem;line-height:1.2;margin:.1em 0 .6em;letter-spacing:-.01em}
+h3{font-size:1.2rem;margin:1.5em 0 .4em}
+p{margin:.75em 0;max-width:68ch}
+ul,ol{max-width:68ch;padding-left:1.25em}
+li{margin:.35em 0}
+code{font-family:var(--mono);font-size:.9em;background:var(--card2);border:1px solid var(--rule);border-radius:6px;padding:.05em .4em}
+pre{font-family:var(--mono);font-size:.86rem;line-height:1.55;background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:14px 16px;overflow:auto;position:relative;margin:14px 0}
+pre code{background:none;border:0;padding:0;font-size:inherit}
+pre .copy{position:absolute;top:8px;right:8px;background:var(--card2);border:1px solid var(--rule2);color:var(--ink2);border-radius:8px;padding:3px 10px;font:inherit;font-size:.78rem;cursor:pointer}
+.mono{font-family:var(--mono)}
+.muted{color:var(--ink2)}
+b{font-weight:700}
+.term{font-weight:700;border-bottom:2px solid var(--letter);padding-bottom:1px}
+
+header.top{padding:40px 0 18px}
+header .meta{color:var(--ink2);margin:0;font-size:.98rem}
+.lede{font-size:1.15rem;color:var(--ink2);max-width:62ch}
+.sticky{position:sticky;top:0;z-index:30;background:rgba(244,240,230,.94);backdrop-filter:blur(6px);border-bottom:1px solid var(--rule);padding:10px 0}
+.tabs{display:flex;flex-wrap:wrap;gap:8px}
+.tabs button{font:inherit;font-size:.92rem;border:1.5px solid var(--rule2);background:var(--card);color:var(--ink);padding:7px 14px;border-radius:999px;cursor:pointer}
+.tabs button:hover{border-color:var(--ink2)}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+main{padding:28px 0 60px}
+.pane{display:none}
+.pane.active{display:block}
+.pane-nav{display:flex;justify-content:space-between;gap:12px;margin-top:44px;padding-top:20px;border-top:1px solid var(--rule)}
+.pane-nav button{font:inherit;background:var(--card);border:1.5px solid var(--rule2);color:var(--ink);padding:10px 16px;border-radius:12px;cursor:pointer}
+.pane-nav button:hover{border-color:var(--ink2)}
+.pane-nav .sp{flex:1}
+:where(button,input,select,textarea,summary,[tabindex]):focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+.note{background:var(--card);border:1px solid var(--rule);border-left:6px solid var(--letter);border-radius:0 14px 14px 0;padding:14px 18px;margin:18px 0;max-width:68ch}
+.note.blue{border-left-color:var(--blue)}
+.note p{margin:.3em 0}
+
+table.t{border-collapse:collapse;width:100%;margin:14px 0;font-size:.95rem;background:var(--card);border:1px solid var(--rule);border-radius:12px;overflow:hidden}
+table.t th,table.t td{padding:10px 12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--rule)}
+table.t tr:last-child td{border-bottom:0}
+table.t th{background:var(--card2);font-weight:700;color:var(--ink2)}
+.chip{display:inline-block;padding:1px 9px;border-radius:999px;font-size:.85em;font-weight:700}
+.chip.letter{background:var(--letter);color:var(--letter-d)}.chip.tcp{background:var(--tcp);color:var(--tcp-d)}.chip.ip{background:var(--ip);color:var(--ip-d)}.chip.eth{background:var(--eth);color:var(--eth-d)}
+
+/* widget card */
+.widget{background:var(--card);border:1px solid var(--rule);border-radius:18px;padding:20px;margin:22px 0}
+.widget h4{margin:0 0 4px;font-size:1.05rem}
+.widget .sub{margin:0 0 14px;color:var(--ink2);font-size:.95rem}
+.row{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center}
+.btn{font:inherit;font-size:.95rem;background:var(--blue);color:#fff;border:1.5px solid var(--blue);padding:9px 16px;border-radius:12px;cursor:pointer}
+.btn:hover{background:var(--blue2);border-color:var(--blue2)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.alt{background:var(--card);color:var(--ink);border-color:var(--rule2)}
+.btn.alt:hover{border-color:var(--ink2);background:var(--card2)}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:.88rem;color:var(--ink2)}
+label.f input,label.f select,label.f textarea{font:inherit;font-size:1rem;color:var(--ink);background:var(--card2);border:1.5px solid var(--rule2);border-radius:10px;padding:8px 10px;min-width:160px}
+input[type=range]{accent-color:var(--blue);min-width:140px}
+.story{margin-top:14px}
+.story .text{background:var(--card2);border:1px solid var(--rule);border-radius:14px;padding:14px 16px;font-size:1.05rem;min-height:74px}
+.story .text b{color:var(--blue2)}
+.story .ctrl{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:12px}
+.dots{display:flex;gap:6px;flex-wrap:wrap}
+.dots span{width:9px;height:9px;border-radius:50%;background:var(--rule2)}
+.dots span.on{background:var(--blue)}
+.dots span.done{background:var(--ink2)}
+
+svg.scene{width:100%;height:auto;display:block;background:var(--card2);border:1px solid var(--rule);border-radius:14px}
+svg.scene text{font-family:var(--sans);fill:var(--ink)}
+svg.scene .pc rect,svg.scene .sw rect{fill:var(--card);stroke:var(--ink);stroke-width:2}
+svg.scene .pc .scr{fill:#dfe7f5}
+svg.scene .pc.on rect,svg.scene .sw.on rect{stroke:var(--blue);stroke-width:3.5}
+svg.scene .pc.on .scr{fill:var(--blue-soft)}
+svg.scene .led{fill:var(--rule2)}
+svg.scene .sw.on .led{fill:var(--ok)}
+svg.scene .link{stroke:var(--rule2);stroke-width:4;stroke-linecap:round}
+svg.scene .link.on{stroke:var(--blue)}
+svg.scene .link.shout{stroke:var(--ip-d);stroke-dasharray:7 7}
+svg.scene .env{fill:var(--eth);stroke:var(--eth-d);stroke-width:1.5}
+@media (prefers-reduced-motion:no-preference){ svg.scene .link{transition:stroke .3s} .env-box{animation:pop .25s ease-out} @keyframes pop{from{transform:scale(.96);opacity:.6}to{transform:none;opacity:1}} }
+
+/* packets widget */
+.pk-list{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.pk{background:var(--card2);border:1.5px solid var(--rule2);border-radius:12px;padding:8px 10px 10px;min-width:130px;max-width:100%;flex:1 1 150px}
+.pk .n{display:inline-block;background:var(--ink);color:var(--paper);font-family:var(--mono);font-size:.78rem;border-radius:6px;padding:1px 7px;margin-bottom:6px}
+.pk .body{font-family:var(--hand);font-size:1.35rem;line-height:1.2;overflow-wrap:anywhere;white-space:pre-wrap}
+.pk.lost{border-style:dashed;opacity:.55}
+
+/* addresses widget */
+.addr-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:14px}
+.addr{background:var(--card2);border:1.5px solid var(--rule2);border-radius:14px;padding:14px;cursor:pointer;text-align:left;font:inherit;color:var(--ink)}
+.addr:hover{border-color:var(--ink2)}
+.addr.on{border-color:var(--blue);background:var(--blue-soft)}
+.addr .k{font-size:.85rem;color:var(--ink2);margin-bottom:4px}
+.addr .v{font-family:var(--mono);font-size:.95rem;font-weight:600;overflow-wrap:anywhere}
+.addr .tag{font-size:.85rem;margin-top:6px}
+.match{margin-top:16px;display:grid;gap:10px}
+.mq{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;background:var(--card2);border:1px solid var(--rule);border-radius:12px;padding:10px 12px}
+.mq .q{flex:1 1 220px;font-weight:700}
+.mq button{font:inherit;font-size:.9rem;background:var(--card);border:1.5px solid var(--rule2);border-radius:999px;padding:5px 12px;cursor:pointer;color:var(--ink)}
+.mq button.ok{background:var(--ok-soft);border-color:var(--ok)}
+.mq button.no{background:var(--bad-soft);border-color:var(--bad);color:var(--ink2)}
+.mq button:disabled{cursor:default}
+
+/* envelopes */
+.env-stage{margin-top:14px;display:grid;grid-template-columns:1fr;gap:12px}
+.env-side{font-size:.9rem;color:var(--ink2);display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}
+.env-box{position:relative;border-radius:14px;padding:34px 14px 14px;border:2px solid}
+.env-box::before{content:"";position:absolute;left:0;right:0;top:0;height:28px;background:rgba(0,0,0,.09);clip-path:polygon(0 0,100% 0,50% 100%);border-radius:12px 12px 0 0}
+.env-box .lab{position:absolute;top:6px;left:12px;font-size:.78rem;font-weight:700;letter-spacing:.01em}
+.env-box .addr-lines{font-family:var(--mono);font-size:.82rem;line-height:1.5;margin-bottom:10px;overflow-wrap:anywhere}
+.env-box .addr-lines span{display:block}
+.env-box.tcp{background:var(--tcp);border-color:var(--tcp-d)}.env-box.tcp .lab{color:var(--tcp-d)}
+.env-box.ip{background:var(--ip);border-color:var(--ip-d)}.env-box.ip .lab{color:var(--ip-d)}
+.env-box.eth{background:var(--eth);border-color:var(--eth-d)}.env-box.eth .lab{color:var(--eth-d)}
+.env-box.opened{opacity:.35;padding-top:14px}
+.env-box.opened::before{display:none}
+.env-box.opened .lab{position:static;display:block;margin-bottom:6px}
+.env-box.opened .addr-lines{display:none}
+.letter{background:var(--letter);border:2px dashed var(--letter-d);border-radius:12px;padding:12px 14px;font-family:var(--hand);font-size:1.5rem;line-height:1.25;color:#3b2d00;overflow-wrap:anywhere;white-space:pre-wrap}
+.letter.small{font-size:1.15rem;padding:8px 10px}
+.layers{display:grid;grid-template-columns:1fr;gap:8px;margin:14px 0}
+.layers .ly{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;align-items:baseline;background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:10px 14px}
+.layers .ly .name{font-weight:700;white-space:nowrap}
+.layers .ly .what{color:var(--ink2);font-size:.95rem}
+
+/* same network */
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:14px}
+.mini{background:var(--card2);border:1px solid var(--rule);border-radius:12px;padding:10px 12px;font-size:.9rem}
+.mini h5{margin:0 0 6px;font-size:.9rem}
+.mini table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:.82rem}
+.mini td{padding:3px 4px;border-bottom:1px dashed var(--rule)}
+.mini td.new{color:var(--ok);font-weight:600}
+.mini .empty{color:var(--ink2);font-style:italic;font-family:var(--sans)}
+.wire{margin-top:10px;font-size:.9rem;color:var(--ink2);min-height:24px}
+
+/* chat (TCP/UDP) */
+.chat{display:flex;flex-direction:column;gap:8px;background:var(--card2);border:1px solid var(--rule);border-radius:14px;padding:14px;min-height:120px;margin-top:14px}
+.chat .who{display:flex;justify-content:space-between;font-weight:700;color:var(--ink2);font-size:.9rem;margin-bottom:4px}
+.bub{max-width:min(78%,420px);padding:9px 14px;border-radius:16px;background:var(--card);border:1.5px solid var(--rule2);font-size:1rem}
+.bub.A{align-self:flex-start;border-bottom-left-radius:4px}
+.bub.B{align-self:flex-end;border-bottom-right-radius:4px;background:var(--blue-soft)}
+.bub .tag{display:block;font-family:var(--mono);font-size:.74rem;color:var(--ink2);margin-top:3px}
+.bub.lost{border-style:dashed;border-color:var(--bad);opacity:.7}
+.bub.lost .tag{color:var(--bad)}
+.bub.cur{box-shadow:0 0 0 3px var(--blue-soft)}
+
+/* trip */
+.trip-stack{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px;min-height:40px}
+.tchip{padding:6px 12px;border-radius:999px;font-weight:700;font-size:.9rem;border:2px solid}
+.tchip.letter{background:var(--letter);border-color:var(--letter-d);color:var(--letter-d)}
+.tchip.tcp{background:var(--tcp);border-color:var(--tcp-d);color:var(--tcp-d)}
+.tchip.ip{background:var(--ip);border-color:var(--ip-d);color:var(--ip-d)}
+.tchip.eth{background:var(--eth);border-color:var(--eth-d);color:var(--eth-d)}
+.tchip.off{opacity:.3;text-decoration:line-through}
+.trip-where{font-size:.9rem;color:var(--ink2);margin-top:6px}
+
+/* checks */
+.check{background:var(--card);border:1px solid var(--rule);border-radius:16px;padding:16px 18px;margin:20px 0;max-width:68ch}
+.check .q{margin:0 0 12px;font-weight:700}
+.check .q::before{content:"Quick check";display:inline-block;font-weight:700;font-size:.78rem;color:var(--blue2);background:var(--blue-soft);border-radius:999px;padding:1px 10px;margin-right:10px;vertical-align:2px}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+.opts button{font:inherit;font-size:.95rem;background:var(--card2);border:1.5px solid var(--rule2);color:var(--ink);padding:9px 12px;border-radius:12px;cursor:pointer;text-align:left}
+.opts button:hover{border-color:var(--ink2)}
+.opts button.ok{background:var(--ok-soft);border-color:var(--ok)}
+.opts button.no{background:var(--bad-soft);border-color:var(--bad);color:var(--ink2)}
+.opts button:disabled{cursor:default}
+.fb{margin-top:12px;display:none}
+.fb.show{display:block}
+.fb .v{font-weight:700;margin-right:6px}
+.fb .v.ok{color:var(--ok)}.fb .v.no{color:var(--bad)}
+
+details.reveal{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:0 16px;margin:10px 0;max-width:68ch}
+details.reveal summary{cursor:pointer;padding:12px 0;font-weight:700;color:var(--blue2)}
+details.reveal[open] summary{border-bottom:1px solid var(--rule)}
+details.reveal .body{padding:6px 0 14px}
+.gl{display:grid;grid-template-columns:1fr;gap:8px;max-width:72ch}
+.gl div{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:10px 14px}
+.gl b{display:block;margin-bottom:2px}
+.hw{list-style:none;padding:0;max-width:68ch}
+.hw li{background:var(--card);border:1px solid var(--rule);border-radius:14px;padding:14px 16px;margin:12px 0;display:grid;grid-template-columns:26px 1fr;gap:10px}
+.hw li input{width:18px;height:18px;margin-top:5px;accent-color:var(--blue)}
+.hw li h4{margin:0 0 4px;font-size:1.05rem}
+.hw .send{color:var(--ink2);font-size:.93rem}
+.hw .send b{color:var(--ink)}
+/* flashcards */
+.fc{margin-top:12px;display:grid;gap:10px}
+.fc .card{background:var(--letter);border:2px dashed var(--letter-d);border-radius:14px;min-height:130px;display:flex;align-items:center;justify-content:center;text-align:center;padding:18px;cursor:pointer;font-size:1.15rem;color:#3b2d00}
+.fc .card.back{background:var(--card2);border:2px solid var(--rule2);color:var(--ink)}
+.fc .card small{display:block;color:inherit;opacity:.7;font-size:.8rem;margin-top:6px}
+.tutor{border:1.5px dashed var(--rule2);border-radius:12px;padding:0 16px;margin-top:30px;max-width:68ch}
+.tutor summary{color:var(--ink2);padding:10px 0;cursor:pointer;font-size:.92rem}
+.tutor .body{padding:4px 0 14px;font-size:.95rem}
+@media (max-width:520px){ body{font-size:17px} h1{font-size:1.8rem} h2{font-size:1.45rem} .widget{padding:14px} .env-box{padding:30px 10px 10px} }
+
+/* session 2 additions */
+.bits{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.bit{flex:1 1 64px;max-width:90px;background:var(--card2);border:2px solid var(--rule2);border-radius:12px;padding:10px 6px;text-align:center;cursor:pointer;font:inherit;color:var(--ink)}
+.bit .val{font-family:var(--mono);font-size:.85rem;color:var(--ink2)}
+.bit .sw{display:block;margin:8px auto 0;width:40px;height:22px;border-radius:999px;background:var(--rule2);position:relative;transition:background .15s}
+.bit .sw::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--card);transition:left .15s}
+.bit.on{border-color:var(--blue);background:var(--blue-soft)}
+.bit.on .sw{background:var(--blue)}
+.bit.on .sw::after{left:21px}
+.bit .b{display:block;margin-top:8px;font-family:var(--mono);font-weight:600;font-size:1.1rem}
+.sum{margin-top:14px;font-size:1.15rem}
+.sum .mono{font-weight:600}
+.octets{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:14px}
+.oct{background:var(--card2);border:1px solid var(--rule);border-radius:12px;padding:8px 6px;text-align:center;min-width:0}
+.oct .dec{font-family:var(--mono);font-weight:600;font-size:1rem}
+.oct .bin{display:flex;justify-content:center;gap:2px;margin-top:6px;flex-wrap:wrap}
+.oct .bin span{width:14px;height:20px;border-radius:4px;font-family:var(--mono);font-size:.72rem;display:inline-flex;align-items:center;justify-content:center}
+.oct .bin span.net{background:var(--blue);color:#fff}
+.oct .bin span.host{background:var(--letter);color:var(--letter-d)}
+.oct .lbl{font-size:.75rem;color:var(--ink2);margin-top:4px}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:10px;font-size:.88rem;color:var(--ink2)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:6px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:14px}
+.fact{background:var(--card2);border:1px solid var(--rule);border-radius:12px;padding:8px 10px}
+.fact .k{font-size:.8rem;color:var(--ink2)}
+.fact .v{font-family:var(--mono);font-weight:600;font-size:.98rem;overflow-wrap:anywhere}
+.cmp{display:grid;grid-template-columns:auto repeat(4,minmax(0,1fr));gap:6px;align-items:center;margin-top:14px;font-family:var(--mono);font-size:.9rem}
+.cmp .lab{font-family:var(--sans);font-size:.85rem;color:var(--ink2);text-align:right;padding-right:6px}
+.cmp .cell{background:var(--card2);border:1px solid var(--rule);border-radius:8px;padding:6px 4px;text-align:center;min-width:0}
+.cmp .cell.net{border-color:var(--blue);background:var(--blue-soft)}
+.cmp .cell.host{border-color:var(--letter-d);background:var(--letter);opacity:.6}
+.cmp .cell.bad{border-color:var(--bad);background:var(--bad-soft)}
+.verdict{margin-top:14px;padding:12px 14px;border-radius:12px;font-weight:700;border:2px solid}
+.verdict.same{background:var(--ok-soft);border-color:var(--ok)}
+.verdict.diff{background:var(--ip);border-color:var(--ip-d);color:var(--ip-d)}
+.drill{margin-top:14px}
+.drill .qbox{background:var(--card2);border:1px solid var(--rule);border-radius:14px;padding:16px;font-size:1.15rem}
+.drill .qbox .mono{font-weight:600}
+.drill .meta{display:flex;flex-wrap:wrap;gap:10px 18px;margin:10px 0;font-size:.9rem;color:var(--ink2)}
+.drill .meta b{color:var(--ink)}
+.drill .timer{font-family:var(--mono);font-weight:600}
+.drill .timer.low{color:var(--bad)}
+.drill input[type=text]{font:inherit;font-family:var(--mono);font-size:1.05rem;padding:9px 12px;border:2px solid var(--rule2);border-radius:12px;background:var(--card);flex:1 1 200px;min-width:0}
+.drill .res{margin-top:12px;padding:12px 14px;border-radius:12px;display:none}
+.drill .res.show{display:block}
+.drill .res.ok{background:var(--ok-soft);border:1.5px solid var(--ok)}
+.drill .res.no{background:var(--bad-soft);border:1.5px solid var(--bad)}
+.drill .work{margin-top:10px;font-family:var(--mono);font-size:.88rem;line-height:1.7;white-space:pre-wrap;background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:10px 12px}
+.ports{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;margin-top:12px}
+.port{background:var(--card2);border:2px solid var(--rule2);border-radius:12px;padding:8px;text-align:center}
+.port .name{font-weight:700}
+.port .ip{font-family:var(--mono);font-size:.72rem;color:var(--ink2)}
+.port button{font:inherit;font-size:.82rem;margin-top:6px;border-radius:999px;border:1.5px solid var(--rule2);background:var(--card);padding:3px 10px;cursor:pointer;color:var(--ink)}
+.port.v10{border-color:#2b55b8;background:#e8eefb}.port.v10 button{border-color:#2b55b8;color:#1f4192}
+.port.v20{border-color:#2f9e5b;background:#e5f5eb}.port.v20 button{border-color:#2f9e5b;color:#1e6e3d}
+.port.hear{box-shadow:0 0 0 3px var(--ip)}
+.port.deaf{opacity:.4}
+.tchip.eth.swap{border-style:dashed}
+
+/* interview questions */
+.iq-head{margin-top:34px}
+.iq-head p{color:var(--ink2);margin-top:.2em}
+.iq{background:var(--card);border:1px solid var(--rule);border-left:6px solid var(--ip-d);border-radius:0 16px 16px 0;padding:16px 18px;margin:16px 0;max-width:68ch}
+.iq .lab{display:inline-block;font-weight:700;font-size:.78rem;color:var(--ip-d);background:var(--ip);border-radius:999px;padding:1px 10px;margin-bottom:8px}
+.iq .qtxt{font-size:1.08rem;font-weight:700;margin:0 0 4px}
+.iq details.reveal{margin:8px 0 0;background:var(--card2)}
+.iq details.reveal summary{padding:10px 0;font-size:.95rem}
+.iq ul{margin:.3em 0;padding-left:1.2em}
+.iq li{margin:.25em 0}
+.iq .fu{margin:.5em 0 0;font-size:.95rem}
+.iq .fu b{color:var(--ip-d)}
+
+/* session 3 additions */
+.settings{background:var(--card2);border:1.5px solid var(--rule2);border-radius:12px;padding:10px 14px;font-size:.9rem;margin-top:12px}
+.settings h5{margin:0 0 6px;font-size:.9rem}
+.settings .kv{display:grid;grid-template-columns:110px 1fr;gap:4px 10px;font-family:var(--mono);font-size:.84rem}
+.settings .kv .k{color:var(--ink2);font-family:var(--sans)}
+.settings .kv .v.new{color:var(--ok);font-weight:600}
+.settings .kv .v.none{color:var(--ink2);font-style:italic;font-family:var(--sans)}
+.side{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:14px;margin-top:12px}
+@media (max-width:700px){.side{grid-template-columns:1fr}}
+.bub.S{align-self:flex-end;border-bottom-right-radius:4px;background:var(--blue-soft)}
+.bub.broadcast{border-style:dashed;border-color:var(--ip-d)}
+.cachet{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:.8rem;background:var(--card2);border-radius:10px;overflow:hidden;margin-top:10px}
+.cachet th{font-family:var(--sans);font-weight:600;color:var(--ink2);text-align:left;padding:6px 8px;border-bottom:1px solid var(--rule)}
+.cachet td{padding:6px 8px;border-bottom:1px solid var(--rule)}
+.cachet .empty{color:var(--ink2);font-style:italic;font-family:var(--sans)}
+svg.scene .cloud{fill:var(--card);stroke:var(--ink);stroke-width:2}
+svg.scene .cloud.on{stroke:var(--blue);stroke-width:3.5}
+.http{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+@media (max-width:700px){.http{grid-template-columns:1fr}}
+.http pre{margin:0;font-size:.82rem;min-height:150px;white-space:pre-wrap;overflow-wrap:anywhere}
+.http h5{margin:0 0 6px;font-size:.88rem;color:var(--ink2)}
+.http .m{background:var(--tcp);color:var(--tcp-d);border-radius:4px;padding:0 3px;font-weight:600}
+.http .p{background:var(--letter);color:var(--letter-d);border-radius:4px;padding:0 3px;font-weight:600}
+.http .h{background:var(--eth);color:var(--eth-d);border-radius:4px;padding:0 3px}
+.http .st{border-radius:4px;padding:0 3px;font-weight:600}
+.http .st.ok{background:var(--ok-soft);color:var(--ok)}.http .st.warn{background:var(--ip);color:var(--ip-d)}.http .st.bad{background:var(--bad-soft);color:var(--bad)}
+.cert{background:var(--card);border:2px solid var(--eth-d);border-radius:14px;padding:12px 14px;font-size:.88rem;margin-top:10px;position:relative}
+.cert .lock{position:absolute;top:10px;right:12px;font-size:1.3rem}
+.cert h5{margin:0 0 6px;font-size:.92rem}
+.cert .kv{display:grid;grid-template-columns:100px 1fr;gap:3px 10px}
+.cert .kv .k{color:var(--ink2)}
+.cert.bad{border-color:var(--bad);background:var(--bad-soft)}
+.cert.dim{opacity:.35}
+.eaves{background:var(--card2);border:1px solid var(--rule);border-radius:12px;padding:10px 14px;font-size:.88rem;margin-top:10px}
+.eaves h5{margin:0 0 6px;font-size:.9rem}
+.eaves ul{margin:0;padding-left:1.1em}
+.eaves .see{color:var(--ip-d)}.eaves .hide{color:var(--ok);text-decoration:line-through}
+.rtt{display:inline-flex;gap:6px;align-items:center;font-size:.9rem;color:var(--ink2);margin-top:8px}
+.rtt b{font-family:var(--mono);color:var(--ink)}
+
+/* session 4 additions */
+svg.scene .rt rect{fill:var(--card);stroke:var(--ink);stroke-width:2}
+svg.scene .rt.on rect{stroke:var(--blue);stroke-width:3.5}
+svg.scene .net{fill:var(--letter);stroke:var(--letter-d);stroke-width:1.5}
+svg.scene .link.path{stroke:var(--blue);stroke-width:5}
+svg.scene .link.dead{stroke:var(--bad);stroke-dasharray:6 6;stroke-width:3}
+svg.scene .link.flood{stroke:var(--ip-d);stroke-dasharray:4 4}
+svg.scene text.cost{font-family:var(--mono);font-size:12px;font-weight:600;fill:var(--ink)}
+svg.scene text.cost.dead{fill:var(--bad);text-decoration:line-through}
+svg.scene .as{fill:var(--card);stroke:var(--ink);stroke-width:2}
+svg.scene .as.on{stroke:var(--blue);stroke-width:3.5}
+svg.scene .as.src{fill:var(--tcp)}
+svg.scene text.ann{font-family:var(--mono);font-size:10.5px;fill:var(--ip-d);font-weight:600}
+.rtabs{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:12px}
+.rtab{background:var(--card2);border:1.5px solid var(--rule2);border-radius:12px;padding:10px}
+.rtab h5{margin:0 0 6px;font-size:.9rem}
+.rtab .rw{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;font-family:var(--mono);font-size:.8rem;padding:3px 0;border-bottom:1px dashed var(--rule)}
+.rtab .rw .conn{color:var(--ok);font-family:var(--sans);font-size:.8rem}
+.rtab select{font:inherit;font-family:var(--mono);font-size:.8rem;padding:3px 6px;border-radius:8px;border:1.5px solid var(--rule2);background:var(--card)}
+.rtab.on{border-color:var(--blue);background:var(--blue-soft)}
+.hops{margin-top:10px;font-family:var(--mono);font-size:.82rem;background:var(--card2);border:1px solid var(--rule);border-radius:10px;padding:8px 12px;min-height:40px}
+.hops div{padding:2px 0}
+.hops .bad{color:var(--bad);font-weight:600}.hops .good{color:var(--ok);font-weight:600}
+.maptab{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:.8rem;background:var(--card2);border-radius:10px;overflow:hidden;margin-top:10px}
+.maptab th{font-family:var(--sans);font-weight:600;color:var(--ink2);text-align:left;padding:5px 8px;border-bottom:1px solid var(--rule)}
+.maptab td{padding:5px 8px;border-bottom:1px solid var(--rule)}
+.maptab tr.dead td{color:var(--bad);text-decoration:line-through}
+.maptab tr.on td{background:var(--blue-soft)}
+.maptab tr.match td{background:var(--ok-soft)}
+.maptab tr.win td{background:var(--blue-soft);font-weight:600}
+.maptab td.chosen{color:var(--ok);font-weight:700}
+.lpm{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin-top:12px}
+@media (max-width:700px){.lpm{grid-template-columns:1fr}}
+
+/* session 5 additions */
+.ws{background:var(--card);border:1.5px solid var(--rule2);border-radius:12px;overflow:hidden;margin-top:12px;font-family:var(--mono);font-size:.78rem}
+.ws .bar{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--card2);border-bottom:1px solid var(--rule)}
+.ws .bar input{flex:1;min-width:0;font:inherit;font-family:var(--mono);font-size:.82rem;padding:6px 10px;border-radius:8px;border:2px solid var(--rule2);background:#eaf5ec}
+.ws .bar input.bad{background:var(--bad-soft);border-color:var(--bad)}
+.ws .bar input.empty{background:var(--card)}
+.ws .bar button{font:inherit;font-family:var(--sans);font-size:.82rem;background:var(--card);border:1.5px solid var(--rule2);border-radius:8px;padding:5px 10px;cursor:pointer;color:var(--ink)}
+.ws .list{overflow:auto;max-height:300px}
+.ws table{border-collapse:collapse;width:100%;min-width:640px}
+.ws th{text-align:left;font-weight:600;color:var(--ink2);padding:5px 8px;border-bottom:1px solid var(--rule);background:var(--card2);position:sticky;top:0;font-family:var(--sans);font-size:.76rem}
+.ws td{padding:4px 8px;border-bottom:1px solid var(--rule);white-space:nowrap;cursor:pointer}
+.ws tr.pARP td{background:#fff6d9}.ws tr.pDNS td{background:#e8eefb}.ws tr.pTCP td{background:#ede7ff}.ws tr.pHTTP td{background:#e2f6f3}.ws tr.pDHCP td{background:#ffeadb}.ws tr.pICMP td{background:#fde8f1}
+.ws tr.sel td{outline:2px solid var(--blue);outline-offset:-2px;font-weight:600}
+.ws tr.ev td{box-shadow:inset 4px 0 0 var(--bad)}
+.ws .details{border-top:2px solid var(--rule2);background:var(--card2);padding:8px 10px;min-height:60px;font-family:var(--mono);font-size:.78rem}
+.ws .details .sec{margin:2px 0}
+.ws .details .sec .ttl{cursor:pointer;font-weight:700;padding:3px 6px;border-radius:6px;display:inline-block}
+.ws .details .sec .ttl::before{content:"\25B8";display:inline-block;width:14px;color:var(--ink2)}
+.ws .details .sec.open .ttl::before{content:"\25BE"}
+.ws .details .sec.eth .ttl{background:var(--eth);color:var(--eth-d)}.ws .details .sec.ip .ttl{background:var(--ip);color:var(--ip-d)}.ws .details .sec.tcp .ttl,.ws .details .sec.udp .ttl{background:var(--tcp);color:var(--tcp-d)}.ws .details .sec.arp .ttl,.ws .details .sec.dns .ttl,.ws .details .sec.http .ttl,.ws .details .sec.dhcp .ttl,.ws .details .sec.icmp .ttl{background:var(--letter);color:var(--letter-d)}
+.ws .details .sec .lines{display:none;padding:2px 0 4px 24px;color:var(--ink)}
+.ws .details .sec.open .lines{display:block}
+.ws .details .sec .lines div{padding:1px 0}
+.ws .status{padding:5px 10px;font-size:.76rem;color:var(--ink2);background:var(--card2);border-top:1px solid var(--rule);font-family:var(--sans)}
+.ws .note{border:0;background:var(--blue-soft);margin:0;border-radius:0;padding:8px 12px;font-family:var(--sans);font-size:.88rem}
+.tasks{margin-top:12px;display:grid;gap:8px}
+.task{background:var(--card);border:1.5px solid var(--rule2);border-radius:12px;padding:10px 12px;display:grid;grid-template-columns:28px 1fr;gap:8px 10px;align-items:start}
+.task .n{width:26px;height:26px;border-radius:50%;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem}
+.task.done .n{background:var(--ok)}
+.task .q{font-weight:600}
+.task .row{margin-top:6px}
+.task input{font:inherit;font-family:var(--mono);font-size:.9rem;padding:6px 10px;border-radius:8px;border:1.5px solid var(--rule2);background:var(--card2);min-width:160px;flex:1 1 160px}
+.task .fb{font-size:.9rem;margin-top:6px}
+.task .fb.ok{color:var(--ok)}.task .fb.no{color:var(--bad)}
+.task .hint{font-size:.85rem;color:var(--ink2);margin-top:4px}
+.steps-list li{margin:.6em 0}
+.steps-list b{color:var(--blue2)}
+.td{background:#1e2530;color:#e6e9ef;border-radius:12px;padding:12px 14px;font-family:var(--mono);font-size:.76rem;line-height:1.7;overflow:auto;margin-top:12px}
+.td .ln{white-space:pre;display:block}
+.td .f{cursor:pointer;border-radius:3px;padding:0 2px}
+.td .f:hover,.td .f.on{background:#5a4a12;color:#ffe08a}
+.td .cmd{color:#9fe0d8}
+.diag{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin-top:12px}
+.diag button{font:inherit;font-size:.9rem;text-align:left;background:var(--card2);border:1.5px solid var(--rule2);border-radius:12px;padding:9px 12px;cursor:pointer;color:var(--ink)}
+.diag button:hover{border-color:var(--ink2)}
+.diag button.ok{background:var(--ok-soft);border-color:var(--ok)}.diag button.no{background:var(--bad-soft);border-color:var(--bad);color:var(--ink2)}
+.diag button:disabled{cursor:default}
+.pred{margin-top:10px;background:var(--card2);border:1px solid var(--rule);border-radius:12px;padding:10px 12px}
+.pred .q{font-weight:600;margin-bottom:8px}
+
+/* session 6 additions */
+.frame{display:flex;gap:4px;margin:12px 0;flex-wrap:wrap}
+.frame div{padding:10px 8px;border-radius:8px;font-family:var(--mono);font-size:.78rem;text-align:center;border:2px solid;min-width:0;flex:1 1 90px;overflow-wrap:anywhere}
+.frame .fd{background:var(--eth);border-color:var(--eth-d)}.frame .fs{background:var(--eth);border-color:var(--eth-d);opacity:.8}.frame .ft{background:var(--eth);border-color:var(--eth-d);opacity:.6}
+.frame .fp{background:var(--ip);border-color:var(--ip-d);flex:2 1 160px}
+.frame .fc2{background:var(--card2);border-color:var(--rule2);color:var(--ink2)}
+.frame div.on{outline:3px solid var(--blue)}
+.wire{height:14px;border-radius:7px;background:var(--rule);position:relative;overflow:hidden;margin:10px 0}
+.wire .bit{position:absolute;top:3px;width:8px;height:8px;border-radius:50%;background:var(--blue)}
+.wire .bit.z{background:var(--rule2)}
+.env2{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:12px}
+.envcard{border-radius:14px;padding:12px 14px;border:2px solid;font-size:.92rem}
+.envcard.ip{background:var(--ip);border-color:var(--ip-d)}.envcard.eth{background:var(--eth);border-color:var(--eth-d)}
+.envcard h5{margin:0 0 6px;font-size:.9rem}
+.envcard .big{font-family:var(--mono);font-weight:700;font-size:1rem}
+.envcard .why{font-size:.85rem;margin-top:6px;color:var(--ink)}
+.tbls{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:10px}
+.tbl{background:var(--card2);border:1.5px solid var(--rule2);border-radius:12px;padding:8px 10px;font-size:.82rem;opacity:.55}
+.tbl.on{opacity:1;border-color:var(--blue);background:var(--blue-soft)}
+.tbl h5{margin:0 0 6px;font-size:.84rem}
+.tbl table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:.76rem}
+.tbl td{padding:2px 4px;border-bottom:1px dashed var(--rule)}
+.tbl tr.hit td{background:var(--letter);font-weight:600}
+.board{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:12px}
+.board button{font:inherit;font-size:.9rem;background:var(--card2);border:1.5px solid var(--rule2);border-radius:12px;padding:10px 8px;cursor:pointer;color:var(--ink);text-align:center}
+.board button:hover{border-color:var(--ink2)}
+.board button.on{background:var(--blue-soft);border-color:var(--blue)}
+.board button small{display:block;color:var(--ink2);font-size:.75rem;margin-top:2px}
+.why{margin-top:12px;background:var(--card2);border:1px solid var(--rule);border-radius:14px;padding:12px 14px;display:grid;grid-template-columns:140px 1fr;gap:6px 12px;font-size:.92rem}
+@media (max-width:560px){.why{grid-template-columns:1fr}}
+.why .k{color:var(--ink2);font-weight:600}
+.match2{display:grid;gap:8px;margin-top:12px}
+.mq2{display:grid;grid-template-columns:1fr;gap:6px;background:var(--card2);border:1px solid var(--rule);border-radius:12px;padding:10px 12px}
+.mq2 .q{font-weight:600}
+.mq2 .os{display:flex;flex-wrap:wrap;gap:6px}
+.mq2 button{font:inherit;font-size:.85rem;background:var(--card);border:1.5px solid var(--rule2);border-radius:999px;padding:4px 11px;cursor:pointer;color:var(--ink)}
+.mq2 button.ok{background:var(--ok-soft);border-color:var(--ok)}.mq2 button.no{background:var(--bad-soft);border-color:var(--bad);color:var(--ink2)}
+.mq2 button:disabled{cursor:default}
+.score{margin-top:10px;font-weight:600}
+svg.scene .rt rect{fill:var(--card);stroke:var(--ink);stroke-width:2}
+svg.scene .rt.on rect{stroke:var(--blue);stroke-width:3.5}
+svg.scene .link.path{stroke:var(--blue);stroke-width:5}
+svg.scene .link.slow{stroke-dasharray:3 5}
+svg.scene .link.dead{stroke:var(--bad);stroke-dasharray:6 6}
+svg.scene .link.flood{stroke:var(--ip-d);stroke-dasharray:4 4}
+svg.scene text.cost{font-family:var(--mono);font-size:11px;font-weight:600;fill:var(--ink)}
+svg.scene .bld{fill:var(--card2);stroke:var(--rule2);stroke-width:1.5;stroke-dasharray:5 4}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <p class="meta">Network interview prep. Session 6: review.</p>
+    <h1>One story, from the cable to the web page</h1>
+    <p class="lede">Nothing new today. Every piece from the last five sessions, in the order the network actually uses them, with one question answered at each step: why does this exist, and why wasn't the layer below it enough? By the end you tell the whole thing as one story.</p>
+  </div>
+</header>
+<div class="sticky"><nav class="wrap tabs" id="tabs" aria-label="Sections">
+  <button data-p="p0">Start</button>
+  <button data-p="p1">The cable</button>
+  <button data-p="p2">Why two addresses</button>
+  <button data-p="p3">Switch and router</button>
+  <button data-p="p4">Filling the sorting table</button>
+  <button data-p="p5">Delivery: TCP and UDP</button>
+  <button data-p="p6">The whole picture</button>
+  <button data-p="p7">Practice and homework</button>
+</nav></div>
+
+<main class="wrap">
+
+<!-- 0 START -->
+<section class="pane" id="p0">
+  <h2>Start here</h2>
+  <p>You've seen every piece of this. What's missing is the thread between them: the reason each layer exists and what it adds that the one below couldn't do. That's what interviewers are actually probing when they ask "why do we need both a MAC and an IP" or "what's the difference between a switch and a router." This session is that thread, told once, start to finish.</p>
+
+  <h3>The one analogy we'll use all the way through</h3>
+  <p>The network is a <b>postal system</b>.</p>
+  <ul>
+    <li>A <b>building</b> is a local network: one Wi-Fi, one office floor, one switch.</li>
+    <li>Every device wears a permanent <b>badge</b> printed at the factory: its MAC address.</li>
+    <li>Inside the building a <b>mail cart</b> delivers by badge number: the switch.</li>
+    <li>A <b>street address</b> is an IP address: the building's street (the network part) plus the apartment (the host part).</li>
+    <li>A <b>post office</b> sits between buildings and sorts mail by street: the router. Its <b>sorting table</b> is the routing table.</li>
+    <li>Post offices learn their sorting tables by <b>talking to each other</b>: routing protocols.</li>
+    <li>The <b>phone book</b> turns a name into a street address: DNS.</li>
+    <li><b>Registered mail with receipts</b> is TCP. <b>Postcards</b> are UDP. The <b>apartment number</b> on the envelope is the port.</li>
+  </ul>
+  <p>Every tab adds one piece to this picture and says why the picture needed it. The widgets are smaller than usual and there are more of them. The point today is the connections, not any one mechanism.</p>
+
+  <div class="note">
+    <p><b>How we'll run it.</b> I talk less than usual. At the end of every tab you tell me that tab's piece in your own words, using the analogy, before we move on. The last tab is you telling the whole story in one go.</p>
+  </div>
+</section>
+
+<!-- 1 THE CABLE -->
+<section class="pane" id="p1">
+  <h2>The cable: how bits become a delivery</h2>
+  <p><b>The question this layer answers:</b> how do two devices on the same cable or Wi-Fi hand each other data, and how do they know which device it's for?</p>
+
+  <h3>Bits on a wire</h3>
+  <p>An Ethernet cable, or a Wi-Fi radio, carries ones and zeros as voltage changes or radio pulses. The cable knows nothing about computers, addresses, or web pages. It carries bits, in order, from one end to the other. That's all a physical layer is.</p>
+
+  <h3>Giving the bits a shape: the frame</h3>
+  <p>Bits with no agreed shape are noise. So both ends agree on a format, the <b>frame</b>: first the destination's badge number, then the sender's, then a tag saying what's inside, then the contents, then a checksum so a damaged frame can be thrown away. The badge numbers are <b>MAC addresses</b>, printed into every network card at the factory, unique in the world, never changing.</p>
+
+  <h3>How devices identify each other</h3>
+  <p>Every network card does one check on every frame it sees: is the destination badge mine? If yes, keep it and pass it up. If no, drop it. That's it. There is no "login," no lookup. On a shared medium like Wi-Fi, every device hears every frame and most of them throw most of it away. The special badge ff:ff:ff:ff:ff:ff means "everyone keep this," and that's a broadcast.</p>
+
+  <div class="widget" id="w-cable">
+    <h4>A frame on the wire</h4>
+    <p class="sub">Step through a frame leaving one card and arriving at three others. Watch who keeps it.</p>
+    <div class="wire" id="cb-wire"></div>
+    <div class="frame" id="cb-frame">
+      <div class="fd" data-f="dst">To: 02:…:0b</div><div class="fs" data-f="src">From: 02:…:0a</div><div class="ft" data-f="type">Inside: IPv4</div><div class="fp" data-f="pay">the contents (an IP packet)</div><div class="fc2" data-f="fcs">checksum</div>
+    </div>
+    <svg class="scene" id="cb-svg" viewBox="0 0 640 170" role="img" aria-label="Four devices on one switch">
+      <line class="link" id="cb-l-A" x1="110" y1="120" x2="290" y2="60"/><line class="link" id="cb-l-B" x1="260" y1="120" x2="310" y2="60"/><line class="link" id="cb-l-C" x1="410" y1="120" x2="330" y2="60"/><line class="link" id="cb-l-D" x1="560" y1="120" x2="350" y2="60"/>
+      <g class="sw" id="cb-n-SW"><rect x="260" y="20" width="120" height="40" rx="8"/><text x="320" y="45" text-anchor="middle" font-size="13" font-weight="700">mail cart (switch)</text></g>
+      <g class="pc" id="cb-n-A"><rect class="scr" x="65" y="118" width="90" height="36" rx="6"/><text x="110" y="134" text-anchor="middle" font-size="12" font-weight="700">A sends</text><text x="110" y="148" text-anchor="middle" font-size="9">badge …0a</text></g>
+      <g class="pc" id="cb-n-B"><rect class="scr" x="215" y="118" width="90" height="36" rx="6"/><text x="260" y="134" text-anchor="middle" font-size="12" font-weight="700">B</text><text x="260" y="148" text-anchor="middle" font-size="9">badge …0b</text></g>
+      <g class="pc" id="cb-n-C"><rect class="scr" x="365" y="118" width="90" height="36" rx="6"/><text x="410" y="134" text-anchor="middle" font-size="12" font-weight="700">C</text><text x="410" y="148" text-anchor="middle" font-size="9">badge …0c</text></g>
+      <g class="pc" id="cb-n-D"><rect class="scr" x="515" y="118" width="90" height="36" rx="6"/><text x="560" y="134" text-anchor="middle" font-size="12" font-weight="700">D</text><text x="560" y="148" text-anchor="middle" font-size="9">badge …0d</text></g>
+    </svg>
+    <div class="story">
+      <div class="text" id="cb-text"></div>
+      <div class="ctrl"><button class="btn alt" id="cb-prev">Back</button><button class="btn" id="cb-next">Next</button><button class="btn alt" id="cb-reset">Replay</button><div class="dots" id="cb-dots"></div></div>
+    </div>
+  </div>
+
+  <h3>The mail cart and the question to the room</h3>
+  <p>With more than two devices you need something in the middle. The <b>switch</b> is a mail cart that learns which badge sits on which cable by reading the "From" of every frame it carries, and delivers by reading the "To." It never opens the envelope. If it hasn't seen a badge yet, it shows the frame to every cable and lets the right device keep it.</p>
+  <p>One gap remains: your program knows the other device by its street address (IP), not its badge. So before the first frame, the sender asks the whole building: "who has this address? tell me your badge." That's <b>ARP</b>, and the answer goes into a small list so the question isn't asked again for a while. Everything in this tab is <b>layer 2</b>: delivery inside one building, by badge.</p>
+
+  <div class="check" data-answer="b">
+    <p class="q">A network card decides to keep a frame because:</p>
+    <div class="opts"><button data-k="a">The IP address is its own</button><button data-k="b">The destination MAC is its own</button><button data-k="c">The switch told it to</button><button data-k="d">The checksum is valid</button></div>
+    <div class="fb" data-explain="The card reads only the outer envelope. If the destination badge matches its own (or is the broadcast badge), it keeps the frame. The checksum is checked too, but the address is what decides whose frame it is."></div>
+  </div>
+  <div class="check" data-answer="c">
+    <p class="q">A switch learns which device is on which cable by:</p>
+    <div class="opts"><button data-k="a">Asking each device</button><button data-k="b">Reading IP addresses</button><button data-k="c">Reading the source MAC of frames</button><button data-k="d">A table the admin types</button></div>
+    <div class="fb" data-explain="Every frame that passes through tells the switch 'this badge is on this cable.' No configuration, no questions, no IP involved."></div>
+  </div>
+  <div class="check" data-answer="a">
+    <p class="q">ARP exists because:</p>
+    <div class="opts"><button data-k="a">Programs know IPs but frames need MACs</button><button data-k="b">Switches need IPs</button><button data-k="c">MACs change often</button><button data-k="d">Routers need badges</button></div>
+    <div class="fb" data-explain="The gap between the two addresses. The program says 'send to 192.168.1.20'; the frame needs a badge. ARP asks the building and fills the gap."></div>
+  </div>
+
+  <div class="iq-head"><h3>Tell it back</h3><p>Before moving on: in your own words, with the analogy.</p></div>
+  <div class="iq"><span class="lab">Tell it back</span>
+    <p class="qtxt">How do two devices on the same Wi-Fi get data to each other, and how does the right one know it's for them?</p>
+    <details class="reveal"><summary>What a complete answer has</summary><div class="body"><ul>
+      <li>Bits on a shared medium, shaped into frames with a destination and source MAC.</li>
+      <li>Every card checks "is this badge mine," keeps or drops. Broadcast means everyone keeps.</li>
+      <li>The switch learns badge to cable from the From field, forwards by the To field, floods when unsure.</li>
+      <li>ARP turns the IP the program knows into the MAC the frame needs.</li>
+    </ul><p class="fu"><b>Follow-up:</b> What can this layer not do? (Reach anything outside the building. Badges have no structure; there's no way to sort by them across the world.)</p></div></details>
+  </div>
+</section>
+
+<!-- 2 WHY TWO ADDRESSES -->
+<section class="pane" id="p2">
+  <h2>Why IP sits on top of MAC</h2>
+  <p><b>The question this layer answers:</b> how do you reach a device that is not in your building, when all you can do is hand frames to badges in your own building?</p>
+
+  <h3>Why badges aren't enough</h3>
+  <p>A MAC address says <em>which</em> device, but nothing about <em>where</em> it is. Two badges one digit apart can be on opposite sides of the planet. You cannot sort the world's mail by badge number: a post office would need a list of every badge on earth and where it is right now, updated every time a laptop moves. Nobody can hold that list.</p>
+
+  <h3>What IP adds</h3>
+  <p>An <b>IP address</b> is assigned when a device joins a network, and it has structure: the first part says which network (the street), the rest says which device on it (the apartment). The <b>subnet mask</b> says where the split is. Now sorting is possible: a post office doesn't need to know every apartment, only which direction each street is. That's the whole reason for a second address. MAC is who you are; IP is where you are today.</p>
+
+  <h3>The decision every sender makes</h3>
+  <p>Before writing the envelope, a device compares the destination's street to its own. Same street: the destination is in this building, so ARP for its badge and hand the frame straight to it. Different street: the destination is somewhere else, so hand the frame to the <b>post office in this building</b>, the default gateway, and let it sort from there. Either way the IP envelope says the real destination. Only the badge on the outer envelope changes: the neighbor's, or the post office's.</p>
+
+  <div class="widget" id="w-two">
+    <h4>Address the envelope</h4>
+    <p class="sub">You're laptop A, 192.168.1.10. Pick who you're writing to and watch what goes on each envelope, and why.</p>
+    <div class="row">
+      <label class="f">Writing to<select id="tw-sel"><option value="near">B, the laptop next to you (192.168.1.20)</option><option value="far">A server in another city (93.184.216.34)</option></select></label>
+    </div>
+    <div class="env2" id="tw-env"></div>
+    <div class="story"><div class="text" id="tw-text"></div></div>
+  </div>
+
+  <h3>The two addresses, side by side</h3>
+  <table class="t">
+    <thead><tr><th></th><th>MAC (badge)</th><th>IP (street address)</th></tr></thead>
+    <tbody>
+      <tr><td>Who gives it</td><td>The factory, once</td><td>The network, when you join (DHCP)</td></tr>
+      <tr><td>Changes when you move?</td><td>Never</td><td>Yes, every network</td></tr>
+      <tr><td>Has structure?</td><td>No, just a serial number</td><td>Yes: network part plus host part</td></tr>
+      <tr><td>Works where</td><td>Inside one building</td><td>Everywhere</td></tr>
+      <tr><td>Who reads it</td><td>Cards and switches</td><td>Devices and routers</td></tr>
+      <tr><td>On the trip</td><td>Rewritten at every post office</td><td>The same from start to finish</td></tr>
+    </tbody>
+  </table>
+
+  <div class="check" data-answer="c">
+    <p class="q">Why can't the whole internet run on MAC addresses alone?</p>
+    <div class="opts"><button data-k="a">There aren't enough of them</button><button data-k="b">They're too long</button><button data-k="c">They have no location structure to sort by</button><button data-k="d">Switches are too slow</button></div>
+    <div class="fb" data-explain="A badge tells you which device, never where. Sorting mail needs addresses that group by place. IP's network part is that grouping; it's the entire reason for the second address."></div>
+  </div>
+  <div class="check" data-answer="b">
+    <p class="q">Sending to a device in another city, the outer envelope (Ethernet) is addressed to:</p>
+    <div class="opts"><button data-k="a">The server's MAC</button><button data-k="b">The gateway's MAC</button><button data-k="c">The broadcast MAC</button><button data-k="d">The DNS server's MAC</button></div>
+    <div class="fb" data-explain="Badges only work inside the building, so the frame goes to the post office here. The IP envelope inside still names the real destination."></div>
+  </div>
+  <div class="check" data-answer="a">
+    <p class="q">Which address stays the same across the whole trip?</p>
+    <div class="opts"><button data-k="a">The destination IP</button><button data-k="b">The destination MAC</button><button data-k="c">Both</button><button data-k="d">Neither</button></div>
+    <div class="fb" data-explain="Layer 3 is end to end; layer 2 is hop by hop. Every post office rewrites the badge for the next building; nobody rewrites the street address."></div>
+  </div>
+
+  <div class="iq-head"><h3>Tell it back</h3><p>In your own words, with the analogy.</p></div>
+  <div class="iq"><span class="lab">Tell it back</span>
+    <p class="qtxt">Every device already has a unique MAC address. Why do we need IP addresses on top of that?</p>
+    <details class="reveal"><summary>What a complete answer has</summary><div class="body"><ul>
+      <li>MACs identify but don't locate; they have no structure, so nothing can sort by them beyond one building.</li>
+      <li>IP addresses are assigned by location and split into network and host, so a post office can sort by street without knowing every apartment.</li>
+      <li>The sender uses the mask to decide near or far, and addresses the outer envelope to the neighbor or to the gateway.</li>
+      <li>The IP envelope carries the real destination all the way; the Ethernet envelope is replaced at every hop.</li>
+    </ul><p class="fu"><b>Follow-up:</b> Why does the IP address have to change when you move to a different network? (Because it encodes where you are. A street address that followed you around would be a badge, and we already have one of those.)</p></div></details>
+  </div>
+</section>
+
+<!-- 3 SWITCH AND ROUTER -->
+<section class="pane" id="p3">
+  <h2>Where switching and routing come in</h2>
+  <p><b>The question this tab answers:</b> what do the two boxes in the middle actually do, and why are they different boxes?</p>
+
+  <h3>Two tables, two jobs</h3>
+  <p>Both the mail cart and the post office work from a table. The tables look similar and do completely different things.</p>
+  <ul>
+    <li><b>The switch's table</b> maps <em>badge to cable</em>: "badge …0b sits on cable 2." It fills itself by watching frames go by. It's about this building only, and it never looks past the outer envelope.</li>
+    <li><b>The router's table</b> maps <em>street to door</em>: "anything on 10.2.0.x goes out door 2." It's filled by hand or by routing protocols. The router opens the outer envelope, reads the street on the IP envelope, picks the door, and writes a <em>new</em> outer envelope for the next building.</li>
+  </ul>
+  <p>That's the whole difference. A switch forwards by badge inside one building and changes nothing. A router forwards by street between buildings and replaces the badge envelope every time, lowering the TTL counter by one so a lost letter can't circle forever. When several rows in the sorting table match a street, the most specific row wins (the longest prefix), which is also why the default route, "everything else," only catches what nothing else did.</p>
+
+  <div class="widget" id="w-sr">
+    <h4>One letter, two buildings, three tables</h4>
+    <p class="sub">Laptop A in building 1 writes to server B in building 2. Step through and watch which table is consulted at each stop, and which envelope changes.</p>
+    <svg class="scene" id="sr-svg" viewBox="0 0 700 200" role="img" aria-label="Two buildings connected through a router">
+      <rect class="bld" x="12" y="18" width="268" height="164" rx="12"/><text x="24" y="38" font-size="12" fill="#5d6675">Building 1: street 192.168.1.x</text>
+      <rect class="bld" x="420" y="18" width="268" height="164" rx="12"/><text x="432" y="38" font-size="12" fill="#5d6675">Building 2: street 10.2.0.x</text>
+      <line class="link" id="sr-l-1" x1="110" y1="120" x2="180" y2="120"/><line class="link" id="sr-l-2" x1="250" y1="120" x2="320" y2="120"/><line class="link" id="sr-l-3" x1="380" y1="120" x2="450" y2="120"/><line class="link" id="sr-l-4" x1="520" y1="120" x2="590" y2="120"/>
+      <g class="pc" id="sr-n-A"><rect class="scr" x="30" y="100" width="80" height="40" rx="6"/><text x="70" y="117" text-anchor="middle" font-size="12" font-weight="700">A</text><text x="70" y="131" text-anchor="middle" font-size="9">.1.10 / badge 0a</text></g>
+      <g class="sw" id="sr-n-S1"><rect x="180" y="100" width="70" height="40" rx="8"/><text x="215" y="117" text-anchor="middle" font-size="11" font-weight="700">cart 1</text><text x="215" y="131" text-anchor="middle" font-size="9">switch</text></g>
+      <g class="rt" id="sr-n-R"><rect x="320" y="92" width="60" height="56" rx="10"/><text x="350" y="112" text-anchor="middle" font-size="11" font-weight="700">post</text><text x="350" y="124" text-anchor="middle" font-size="11" font-weight="700">office</text><text x="350" y="138" text-anchor="middle" font-size="9">router</text></g>
+      <text x="300" y="150" font-size="9" fill="#5d6675">door 1: .1.1 / badge 01</text><text x="382" y="80" font-size="9" fill="#5d6675">door 2: .0.1 / badge 02</text>
+      <g class="sw" id="sr-n-S2"><rect x="450" y="100" width="70" height="40" rx="8"/><text x="485" y="117" text-anchor="middle" font-size="11" font-weight="700">cart 2</text><text x="485" y="131" text-anchor="middle" font-size="9">switch</text></g>
+      <g class="pc" id="sr-n-B"><rect class="scr" x="590" y="100" width="80" height="40" rx="6"/><text x="630" y="117" text-anchor="middle" font-size="12" font-weight="700">B</text><text x="630" y="131" text-anchor="middle" font-size="9">.0.20 / badge 0b</text></g>
+    </svg>
+    <div class="tbls" id="sr-tbls"></div>
+    <div class="trip-stack" id="sr-stack"></div>
+    <div class="story">
+      <div class="text" id="sr-text"></div>
+      <div class="ctrl"><button class="btn alt" id="sr-prev">Back</button><button class="btn" id="sr-next">Next</button><button class="btn alt" id="sr-reset">Replay</button><div class="dots" id="sr-dots"></div></div>
+    </div>
+  </div>
+
+  <h3>Switching inside, routing between</h3>
+  <p>So "switching" is delivery within a building by badge, and "routing" is delivery between buildings by street. A VLAN is drawing walls inside one building so one cart serves two separate floors that can't hear each other. A layer 3 switch is a cart that also has a sorting table, so it can be the post office between its own floors. None of this is a new idea; it's the two tables placed in different boxes.</p>
+
+  <div class="check" data-answer="b">
+    <p class="q">The switch's table maps:</p>
+    <div class="opts"><button data-k="a">Street to door</button><button data-k="b">Badge to cable</button><button data-k="c">Name to address</button><button data-k="d">Port to program</button></div>
+    <div class="fb" data-explain="MAC address to port on the switch, learned from the From field of passing frames. Street to door is the router's table."></div>
+  </div>
+  <div class="check" data-answer="c">
+    <p class="q">At the post office, which envelope is thrown away and rewritten?</p>
+    <div class="opts"><button data-k="a">The IP envelope</button><button data-k="b">The TCP envelope</button><button data-k="c">The Ethernet envelope</button><button data-k="d">None of them</button></div>
+    <div class="fb" data-explain="The badge envelope only ever has to cross one building. The router opens it, reads the street inside, and writes a fresh badge envelope for the next building. The IP envelope keeps its addresses; only TTL drops."></div>
+  </div>
+  <div class="check" data-answer="a">
+    <p class="q">A router has rows for 10.0.0.0/8 and 10.2.0.0/24. A letter for 10.2.0.20 uses:</p>
+    <div class="opts"><button data-k="a">The /24 row</button><button data-k="b">The /8 row</button><button data-k="c">Both</button><button data-k="d">The default route</button></div>
+    <div class="fb" data-explain="Most specific street wins. The /24 names this exact street; the /8 is the whole region. Same rule everywhere, whichever protocol filled the table."></div>
+  </div>
+
+  <div class="iq-head"><h3>Tell it back</h3><p>In your own words, with the analogy.</p></div>
+  <div class="iq"><span class="lab">Tell it back</span>
+    <p class="qtxt">What's the difference between a switch and a router? Use the two tables.</p>
+    <details class="reveal"><summary>What a complete answer has</summary><div class="body"><ul>
+      <li>Switch: badge to cable, learned by watching, forwards inside one building, changes nothing, never reads IP.</li>
+      <li>Router: street to door, filled by hand or by protocol, forwards between buildings, replaces the Ethernet envelope and lowers TTL, reads IP.</li>
+      <li>Longest prefix match picks among overlapping streets; the default route is the catch-all.</li>
+      <li>Layer 2 versus layer 3, hop by hop versus end to end.</li>
+    </ul><p class="fu"><b>Follow-up:</b> Why does a router lower the TTL and a switch doesn't? (A router can send a letter back toward where it came from if tables disagree, so a loop is possible and needs a counter. A switch forwards within one building where frames don't come back around in the same way.)</p></div></details>
+  </div>
+</section>
+
+<!-- 4 FILLING THE SORTING TABLE -->
+<section class="pane" id="p4">
+  <h2>How the sorting tables get filled</h2>
+  <p><b>The question this tab answers:</b> a post office needs a row for every street in the world. Who writes those rows, and how does it find the best door?</p>
+
+  <h3>Three ways a row gets into the table</h3>
+  <ol>
+    <li><b>It's on your doorstep.</b> The streets attached to the post office's own doors go in automatically. Connected routes.</li>
+    <li><b>Somebody typed it.</b> Fine for a village post office with one road out: "everything goes that way." That's the default route, and every laptop has one. It breaks when there are many roads, because nobody can type the world, and because a typed row doesn't know when a road is closed.</li>
+    <li><b>The post offices tell each other.</b> This is a routing protocol, and there are two ways to do it.</li>
+  </ol>
+
+  <h3>OSPF: the regional post offices share one map</h3>
+  <p>Inside one organization, every post office does three things. <b>Discovery:</b> it says hello out of every door, and the post offices that answer become its neighbors; the hellos keep going so a dead road is noticed in seconds. <b>Sharing:</b> it describes its own roads, each with a <b>cost</b>, and that description is passed along until every post office in the region has every description. Now they all hold the same map. <b>Choosing:</b> each one computes the cheapest route from itself to every street and writes the results into its sorting table.</p>
+  <p>The cost is the important detail. It isn't the number of post offices on the way; it's a number per road that comes from the road's speed. A fast ten-lane highway costs 1; a slow country lane costs 10. So OSPF will happily send a letter through three fast post offices rather than one slow road. Older protocols counted hops, and they would pick the slow road. When a road closes, the two post offices on it update their descriptions, the news spreads, everyone recomputes, and the tables are right again within seconds, with no human involved.</p>
+
+  <h3>BGP: the world's post offices trade promises</h3>
+  <p>Between organizations nobody shares a map; nobody would. Instead each post office tells its neighbors "I can deliver to these streets," and attaches the list of organizations the promise has already passed through. Each hop adds its own name to the front. <b>Discovery</b> here is deliberate: two post offices are configured to talk to each other, over a TCP connection, and they stay in touch. <b>Building the table:</b> a post office collects the promises it hears and keeps the best one per street. <b>Choosing:</b> its own policy first (a cheaper or preferred neighbor wins), then the shortest list of organizations. There is no map and no cost per road, because nobody can see inside anyone else's region. When a promise is withdrawn, the news ripples out the same way, over minutes rather than seconds.</p>
+
+  <div class="widget" id="w-fill">
+    <h4>Four post offices, three ways to fill P1's table</h4>
+    <p class="sub">P1 needs a row for street 10.4.0.x, which is on P4's doorstep. Two roads lead there: a slow direct road, or two fast roads through P2. Pick a method and step through.</p>
+    <div class="row">
+      <label class="f">Method<select id="fl-mode"><option value="static">Typed by hand (static)</option><option value="ospf" selected>OSPF: share the map, cheapest by cost</option><option value="bgp">BGP: trade promises, shortest list</option></select></label>
+    </div>
+    <svg class="scene" id="fl-svg" viewBox="0 0 620 190" role="img" aria-label="Four post offices">
+      <line class="link" id="fl-l-12" x1="110" y1="60" x2="300" y2="40"/><text class="cost" id="fl-c-12" x="190" y="38">cost 1 (fast)</text>
+      <line class="link" id="fl-l-24" x1="340" y1="40" x2="520" y2="60"/><text class="cost" id="fl-c-24" x="400" y="38">cost 1 (fast)</text>
+      <line class="link slow" id="fl-l-14" x1="110" y1="80" x2="520" y2="80"/><text class="cost" id="fl-c-14" x="270" y="100">cost 10 (slow direct road)</text>
+      <line class="link" id="fl-l-13" x1="90" y1="90" x2="90" y2="140"/><text class="cost" id="fl-c-13" x="98" y="120">cost 1</text>
+      <g class="rt" id="fl-n-1"><rect x="50" y="45" width="60" height="40" rx="10"/><text x="80" y="70" text-anchor="middle" font-size="13" font-weight="700">P1</text></g>
+      <g class="rt" id="fl-n-2"><rect x="290" y="20" width="60" height="40" rx="10"/><text x="320" y="45" text-anchor="middle" font-size="13" font-weight="700">P2</text></g>
+      <g class="rt" id="fl-n-4"><rect x="500" y="45" width="60" height="40" rx="10"/><text x="530" y="70" text-anchor="middle" font-size="13" font-weight="700">P4</text></g>
+      <g class="rt" id="fl-n-3"><rect x="50" y="140" width="60" height="40" rx="10"/><text x="80" y="165" text-anchor="middle" font-size="13" font-weight="700">P3</text></g>
+      <ellipse class="net" cx="590" cy="110" rx="26" ry="16"/><text x="590" y="113" text-anchor="middle" font-size="8.5">10.4.0.x</text>
+      <line class="link" x1="540" y1="85" x2="575" y2="100"/>
+    </svg>
+    <table class="maptab" id="fl-tab"></table>
+    <div class="story">
+      <div class="text" id="fl-text"></div>
+      <div class="ctrl"><button class="btn alt" id="fl-prev">Back</button><button class="btn" id="fl-next">Next</button><button class="btn alt" id="fl-reset">Replay</button><div class="dots" id="fl-dots"></div></div>
+    </div>
+  </div>
+
+  <h3>The two protocols, side by side</h3>
+  <table class="t">
+    <thead><tr><th></th><th>OSPF</th><th>BGP</th></tr></thead>
+    <tbody>
+      <tr><td>Who talks</td><td>Every post office in a region, automatically, via hellos</td><td>Specific pairs, configured, over TCP</td></tr>
+      <tr><td>What they say</td><td>"Here are my roads and their costs"</td><td>"I can deliver to these streets; here's the path so far"</td></tr>
+      <tr><td>What each one holds</td><td>The same map of the whole region</td><td>Only the promises it heard</td></tr>
+      <tr><td>How it picks</td><td>Cheapest total cost (speed-based), computed on the map</td><td>Policy first, then fewest organizations in the path</td></tr>
+      <tr><td>When a road dies</td><td>Seconds: flood, recompute</td><td>Minutes: withdraw, ripple, fall back</td></tr>
+      <tr><td>Where</td><td>Inside one organization</td><td>Between organizations, and inside huge data centers</td></tr>
+    </tbody>
+  </table>
+
+  <div class="check" data-answer="b">
+    <p class="q">OSPF picks the path with:</p>
+    <div class="opts"><button data-k="a">Fewest post offices</button><button data-k="b">Lowest total cost</button><button data-k="c">Shortest list of organizations</button><button data-k="d">Newest roads</button></div>
+    <div class="fb" data-explain="Cost comes from road speed, so a longer route over fast roads beats a short slow one. Fewest hops is what older protocols did; fewest organizations is BGP."></div>
+  </div>
+  <div class="check" data-answer="a">
+    <p class="q">How does an OSPF post office discover its neighbors?</p>
+    <div class="opts"><button data-k="a">Hello messages out of every door</button><button data-k="b">An admin lists them</button><button data-k="c">DNS</button><button data-k="d">ARP</button></div>
+    <div class="fb" data-explain="Automatic hellos, repeated, so a silent neighbor is declared dead within seconds. BGP is the opposite: neighbors are configured on purpose."></div>
+  </div>
+  <div class="check" data-answer="d">
+    <p class="q">What does a BGP post office hold?</p>
+    <div class="opts"><button data-k="a">A map of the world</button><button data-k="b">Every road's cost</button><button data-k="c">Every badge</button><button data-k="d">The promises its neighbors made</button></div>
+    <div class="fb" data-explain="No map, no costs, no view inside anyone else's region. Just 'neighbor X says it can reach street Y via this list of organizations,' and a rule for picking among them."></div>
+  </div>
+
+  <div class="iq-head"><h3>Tell it back</h3><p>In your own words, with the analogy. This is the one the dad flagged.</p></div>
+  <div class="iq"><span class="lab">Tell it back</span>
+    <p class="qtxt">Nobody can type the world's sorting tables. How do post offices fill them in, in the two ways we have?</p>
+    <details class="reveal"><summary>What a complete answer has</summary><div class="body"><ul>
+      <li>Inside a region (OSPF): say hello to find neighbors, describe your roads with costs, pass descriptions until everyone has the same map, compute the cheapest route to every street, redo it in seconds when a road dies.</li>
+      <li>Between regions (BGP): configured neighbors tell each other what streets they can deliver to, with the list of regions the promise crossed; keep the best promise per street by policy then shortest list; withdrawals ripple over minutes.</li>
+      <li>Cheapest means speed-based cost in OSPF, not hops; shortest means fewest regions in BGP, after policy.</li>
+      <li>Both end up as rows in the same sorting table, used with the same most-specific-wins rule.</li>
+    </ul><p class="fu"><b>Follow-up:</b> Why can't BGP use road costs like OSPF? (It can't see the roads. Each organization's inside is private; all a neighbor shares is the promise and the path.)</p></div></details>
+  </div>
+</section>
+
+<!-- 5 DELIVERY -->
+<section class="pane" id="p5">
+  <h2>Delivery: where TCP and UDP come in</h2>
+  <p><b>The question this layer answers:</b> the letter has reached the right building and the right device. Which program gets it, and did all of it arrive?</p>
+
+  <h3>The apartment number</h3>
+  <p>One device runs many programs. IP got the letter to the building; something has to say which apartment. That's the <b>port</b>, a number on the transport envelope: 80 is the web server, 443 the secure web server, 53 the DNS server, 22 SSH. The sender picks a random high number for itself so the reply knows which of its programs to come back to. This is layer 4, and both TCP and UDP carry ports. They differ in everything else.</p>
+
+  <h3>Registered mail: TCP</h3>
+  <p>IP delivers each packet separately and promises nothing: packets can arrive out of order, twice, or not at all, because every post office along the way is allowed to drop one when it's busy. TCP turns that into something you can build a web page on. Before any data: a three-message handshake, "can you hear me, yes can you hear me, yes," so both sides know the other is there. Then every packet is numbered, every packet gets a receipt, and anything without a receipt is sent again. The receiver puts the numbered pieces back in order. Slower, with more envelopes, and nothing is ever lost.</p>
+
+  <h3>Postcards: UDP</h3>
+  <p>No handshake, no numbers, no receipts, no resending. Send it and move on. For a video call or a game, a late packet is useless, so stopping the whole stream to resend it would only add lag; UDP drops it and keeps going. For DNS, the question is one packet and the answer is one packet, so a handshake would triple the cost; ask again if nothing comes back. The choice is always "what does this program do when a packet is late?"</p>
+
+  <div class="widget" id="w-del">
+    <h4>Registered mail or postcards</h4>
+    <p class="sub">The same message, both ways, with one packet lost in the middle. Watch what each one does about it.</p>
+    <div class="row">
+      <label class="f">Send it as<select id="dl-mode"><option value="tcp">TCP: registered mail</option><option value="udp">UDP: postcards</option></select></label>
+    </div>
+    <div class="chat" id="dl-chat"><div class="who"><span>A, port 51234</span><span>B, port 80</span></div></div>
+    <div class="story">
+      <div class="text" id="dl-text"></div>
+      <div class="ctrl"><button class="btn alt" id="dl-prev">Back</button><button class="btn" id="dl-next">Next</button><button class="btn alt" id="dl-reset">Replay</button><div class="dots" id="dl-dots"></div></div>
+    </div>
+  </div>
+
+  <h3>And the two helpers above it</h3>
+  <p>Two more pieces finish the picture and both are just letters sent this way. <b>DNS</b> is the phone book: you know a name, you need a street address before you can write any envelope at all, so you send one UDP postcard to a resolver and get one back. <b>DHCP</b> is the front desk: when you walk into the building you have only your badge, and it hands you a street address, the mask, the post office's address, and the phone book's address. Then HTTP is the actual letter the browser writes, inside registered mail, to apartment 80. HTTPS is the same letter in a locked box.</p>
+
+  <div class="check" data-answer="c">
+    <p class="q">The port number answers:</p>
+    <div class="opts"><button data-k="a">Which building</button><button data-k="b">Which device</button><button data-k="c">Which program</button><button data-k="d">Which cable</button></div>
+    <div class="fb" data-explain="Building is the network part of the IP, device is the host part (and the MAC inside the building), program is the port. Three questions, three addresses."></div>
+  </div>
+  <div class="check" data-answer="b">
+    <p class="q">A packet is lost in the middle of a TCP transfer. The receiver:</p>
+    <div class="opts"><button data-k="a">Gives up</button><button data-k="b">Keeps acknowledging only what it has, so the sender resends</button><button data-k="c">Asks DNS</button><button data-k="d">Switches to UDP</button></div>
+    <div class="fb" data-explain="Receipts are cumulative: 'I have everything up to here.' The missing piece holds the receipt in place, no receipt arrives for it, and the sender's timer fires and resends. Nothing is lost, just late."></div>
+  </div>
+  <div class="check" data-answer="a">
+    <p class="q">Why is DNS sent as a postcard?</p>
+    <div class="opts"><button data-k="a">One question, one answer; a handshake would cost more than the lookup</button><button data-k="b">Postcards are more reliable</button><button data-k="c">DNS has no port</button><button data-k="d">Routers require it</button></div>
+    <div class="fb" data-explain="Three handshake messages to send a 50-byte question is a bad trade. If the postcard is lost, the laptop asks again. Speed wins for tiny exchanges."></div>
+  </div>
+
+  <div class="iq-head"><h3>Tell it back</h3><p>In your own words, with the analogy.</p></div>
+  <div class="iq"><span class="lab">Tell it back</span>
+    <p class="qtxt">The packet has reached the right device. What still has to happen, and how do TCP and UDP do it differently?</p>
+    <details class="reveal"><summary>What a complete answer has</summary><div class="body"><ul>
+      <li>The port picks the program: the apartment number on the transport envelope.</li>
+      <li>TCP: handshake first, numbered packets, receipts, resend on silence, reassemble in order. Complete and ordered, at a cost.</li>
+      <li>UDP: send and forget. Right when late data is useless or the exchange is one packet each way.</li>
+      <li>DNS and DHCP are small UDP exchanges that happen before the real letter; HTTP is the real letter, inside TCP.</li>
+    </ul><p class="fu"><b>Follow-up:</b> Where in the trip does TCP live: on the devices, the switches, or the routers? (Only on the two end devices. Switches and routers never look at it. Reliability is end to end.)</p></div></details>
+  </div>
+</section>
+
+<!-- 6 THE WHOLE PICTURE -->
+<section class="pane" id="p6">
+  <h2>The whole picture</h2>
+  <p>Every piece, one card each. Click any card for the question it answers, the analogy, the table it keeps, and what breaks without it. Then the matching drill, then the story.</p>
+
+  <div class="widget" id="w-board">
+    <h4>Why each piece exists</h4>
+    <div class="board" id="bd-grid"></div>
+    <div class="why" id="bd-why"><span class="k">Pick a card.</span><span></span></div>
+  </div>
+
+  <div class="widget" id="w-match">
+    <h4>Which piece answers this question?</h4>
+    <p class="sub">Twelve questions. Pick the mechanism. Aim for twelve out of twelve on the second try.</p>
+    <div class="match2" id="mt-list"></div>
+    <div class="score" id="mt-score"></div>
+    <div class="row" style="margin-top:8px"><button class="btn alt" id="mt-reset">Reset the drill</button></div>
+  </div>
+
+  <h3>The story, in order</h3>
+  <p>This is the order the network uses, and the order you tell it in. Each line names the piece and the reason it's there.</p>
+  <ol>
+    <li>Bits on a cable or radio carry nothing by themselves, so devices agree on a <b>frame</b> with a destination and source <b>MAC</b>. A card keeps a frame when the badge is its own.</li>
+    <li>With more than two devices, a <b>switch</b> learns badge to cable and delivers inside the building. <b>ARP</b> turns the IP a program knows into the MAC a frame needs.</li>
+    <li>Badges can't be sorted by place, so every device also gets an <b>IP address</b> with a network part and a host part. The <b>mask</b> says where the split is, and the sender uses it to decide near or far.</li>
+    <li>Far letters go to the <b>router</b>, which opens the badge envelope, reads the street on the IP envelope, picks a door from its <b>sorting table</b> by the most specific match, lowers <b>TTL</b>, and writes a new badge envelope for the next building.</li>
+    <li>Sorting tables are filled by <b>connected</b> streets, <b>static</b> rows for villages, and <b>routing protocols</b> for everything else: <b>OSPF</b> shares one map in a region and picks the cheapest route by road speed; <b>BGP</b> trades promises between regions and picks by policy then shortest path.</li>
+    <li>At the destination device the <b>port</b> picks the program. <b>TCP</b> adds a handshake, numbering, and receipts so nothing is lost; <b>UDP</b> sends postcards when late data is useless.</li>
+    <li>Before any of it: <b>DHCP</b> handed the device its address, mask, gateway, and resolver; <b>DNS</b> turned the name into an address. On top of all of it: <b>HTTP</b> is the letter, <b>HTTPS</b> the locked box.</li>
+  </ol>
+
+  <div class="check" data-answer="b">
+    <p class="q">Which pieces are involved only at the two ends, never in the middle?</p>
+    <div class="opts"><button data-k="a">MAC and switch</button><button data-k="b">TCP and ports</button><button data-k="c">IP and TTL</button><button data-k="d">ARP and DHCP</button></div>
+    <div class="fb" data-explain="Transport is end to end: switches and routers never read ports or sequence numbers. MAC is hop by hop, IP is read by every router, ARP and DHCP are inside one building."></div>
+  </div>
+  <div class="check" data-answer="a">
+    <p class="q">Order of a page load, first to last:</p>
+    <div class="opts"><button data-k="a">DNS, TCP handshake, HTTP</button><button data-k="b">TCP handshake, DNS, HTTP</button><button data-k="c">HTTP, DNS, TCP handshake</button><button data-k="d">DNS, HTTP, TCP handshake</button></div>
+    <div class="fb" data-explain="You can't address a connection to a name, so DNS first; you can't send a request without a connection, so the handshake second; then the letter."></div>
+  </div>
+  <div class="check" data-answer="c">
+    <p class="q">Which table is filled by a routing protocol?</p>
+    <div class="opts"><button data-k="a">The switch's badge table</button><button data-k="b">The ARP table</button><button data-k="c">The router's sorting table</button><button data-k="d">The DNS cache</button></div>
+    <div class="fb" data-explain="Badge tables fill by watching frames, ARP tables by asking the building, DNS caches by asking resolvers. Only the routing table needs post offices to talk to each other."></div>
+  </div>
+
+  <div class="iq-head"><h3>Tell the whole story</h3><p>Three minutes, no notes, with the analogy where it helps. This is the session.</p></div>
+  <div class="iq"><span class="lab">Tell it back</span>
+    <p class="qtxt">Start from a cable and end with a web page on the screen. Name every piece and say why it's there.</p>
+    <details class="reveal"><summary>The rubric</summary><div class="body"><ul>
+      <li>Bits, frames, MAC as badge, card keeps what's addressed to it, broadcast.</li>
+      <li>Switch learns badge to cable; ARP bridges IP to MAC; all of it inside one building.</li>
+      <li>Why IP: location structure badges lack; network and host parts; mask; near or far decision; gateway.</li>
+      <li>Router: street to door, longest prefix, TTL, new badge envelope per hop; IP end to end.</li>
+      <li>Filling the table: connected, static and default, OSPF (hello, share, same map, cheapest by cost, seconds), BGP (configured peers, promises with paths, policy then shortest, minutes).</li>
+      <li>Port picks the program; TCP handshake, numbers, receipts, resend; UDP postcards and when.</li>
+      <li>DHCP before everything, DNS before the first envelope, HTTP as the letter, HTTPS as the locked box.</li>
+      <li>Said at each step why the layer below wasn't enough.</li>
+    </ul><p class="fu"><b>If she gets through it:</b> ask it backwards. "A web page didn't load. Walk the same story in reverse and say what could have broken at each step."</p></div></details>
+  </div>
+</section>
+
+<!-- 7 PRACTICE + HOMEWORK -->
+<section class="pane" id="p7">
+  <h2>Practice</h2>
+  <p>These are all "why" questions. Answer each in two or three sentences, out loud.</p>
+  <details class="reveal"><summary>1. Why does a frame need a destination MAC if the cable only goes to one place?</summary><div class="body"><p>Because cables usually don't: Wi-Fi and switched networks have many devices hearing or receiving frames. The badge is how each card decides whether a frame is its own.</p></div></details>
+  <details class="reveal"><summary>2. Why can't a switch deliver to another city?</summary><div class="body"><p>It only knows badges on its own cables, and badges carry no location. Reaching another city needs an address that groups by place, which is IP, and a device that sorts by it, which is a router.</p></div></details>
+  <details class="reveal"><summary>3. Why does the router rewrite the Ethernet envelope but not the IP one?</summary><div class="body"><p>The Ethernet envelope is for one building; the next building has different badges. The IP envelope names the final destination, which doesn't change until it's delivered.</p></div></details>
+  <details class="reveal"><summary>4. Why do routers need a protocol when switches don't?</summary><div class="body"><p>A switch learns everything it needs by watching the frames in its own building. A router needs to know about streets it has never seen, in buildings far away, and the only way to learn that is for routers to tell each other.</p></div></details>
+  <details class="reveal"><summary>5. Why "cost" and not "hops" in OSPF?</summary><div class="body"><p>Hops ignore speed. Three fast roads can deliver faster than one slow one. Cost is set from road speed so the cheapest total is the fastest path, not the shortest-looking one.</p></div></details>
+  <details class="reveal"><summary>6. Why doesn't BGP use costs?</summary><div class="body"><p>It can't see the roads inside other organizations. All it hears is "I can deliver there, via these organizations." So it picks by its own policy, then by the fewest organizations in the path.</p></div></details>
+  <details class="reveal"><summary>7. Why does TCP live only on the two devices and not in the routers?</summary><div class="body"><p>Reliability is a promise between the sender and the receiver. The post offices in between just carry letters and are allowed to drop them; the receipts and resending happen at the ends.</p></div></details>
+  <details class="reveal"><summary>8. Why does DNS happen before the TCP handshake?</summary><div class="body"><p>The handshake needs an IP address to send the SYN to. The name has to become an address first, and that's one postcard to the resolver.</p></div></details>
+
+  <h2 style="margin-top:44px">Homework</h2>
+  <p>Light this week on purpose. One thing, done daily.</p>
+  <ul class="hw">
+    <li><input type="checkbox" aria-label="done"><div>
+      <h4>1. Draw it, once</h4>
+      <p>On paper: two buildings, a post office between them, a laptop in one and a server in the other. Draw the envelopes on the letter at four points: leaving the laptop, inside the post office, leaving the post office, arriving at the server. Label which address changed and which didn't. Then write next to the post office the three ways its table gets filled.</p>
+      <p class="send"><b>Send:</b> a photo of the drawing.</p>
+    </div></li>
+    <li><input type="checkbox" aria-label="done"><div>
+      <h4>2. The story, daily</h4>
+      <p>Three minutes, out loud, no notes, cable to web page, using the rubric in the last tab. Record it on day one and on the last day and listen to both; the second one will be a different person.</p>
+      <p class="send"><b>Send:</b> both recordings.</p>
+    </div></li>
+    <li><input type="checkbox" aria-label="done"><div>
+      <h4>3. Connection flashcards</h4>
+      <p>These are all "why" cards. Ten minutes a day.</p>
+      <div class="fc" id="fc">
+        <div class="card" id="fc-card" tabindex="0" role="button" aria-label="flashcard"></div>
+        <div class="row"><button class="btn alt" id="fc-prev">Back</button><button class="btn" id="fc-flip">Flip</button><button class="btn alt" id="fc-next">Next</button><span class="muted" id="fc-count"></span><button class="btn alt" id="fc-shuffle">Shuffle</button></div>
+      </div>
+      <details class="reveal" style="margin-top:12px"><summary>Anki import block</summary><div class="body">
+<pre class="cmd"><code>Why does a frame carry a destination MAC?	So each card can tell whether a frame on a shared medium is its own
+What does a network card do with a frame not addressed to it?	Drops it
+Why does ARP exist?	Programs know IPs; frames need MACs
+How does a switch learn its table?	From the source MAC of frames it carries
+Why can't a switch reach another city?	Badges have no location; it only knows its own cables
+Why do we need IP on top of MAC?	MAC identifies, IP locates; IP has a network part you can sort by
+What does the subnet mask decide?	Where the network part ends and the host part begins
+How does a sender decide near or far?	Compare the destination's network part with its own
+Where does a far letter go first?	To the gateway: the router in this building
+Which address is rewritten at every router?	The destination MAC (Ethernet envelope)
+Which address never changes on the trip?	The destination IP
+The switch's table maps	Badge (MAC) to cable (port)
+The router's table maps	Street (prefix) to door (next hop)
+When several routes match, which wins?	The most specific (longest prefix)
+Why does the default route only catch leftovers?	Its prefix length is zero, so anything more specific beats it
+Why does a router lower TTL?	So a letter caught in a loop dies instead of circling forever
+Three sources of routing table rows	Connected, static, routing protocols
+Why static routes fail at scale	Nobody can type the world, and typed rows don't notice closed roads
+How does OSPF discover neighbors?	Hello messages out of every door
+What does an OSPF router share?	Its own roads and their costs
+What does every OSPF router end up holding?	The same map of the region
+How does OSPF pick a path?	Cheapest total cost, computed from the map
+What is OSPF cost based on?	Road speed: faster roads cost less
+Why cost and not hops?	Three fast roads beat one slow one
+What happens in OSPF when a road dies?	Both ends flood the change; everyone recomputes in seconds
+How do BGP neighbors find each other?	They're configured, and talk over TCP
+What does a BGP router announce?	Streets it can deliver to, with the list of organizations the promise crossed
+How does BGP pick?	Policy first, then fewest organizations in the path
+Why can't BGP use road costs?	It can't see inside other organizations
+Where is OSPF used? Where is BGP?	Inside one organization; between organizations and inside huge data centers
+What does the port answer?	Which program on the device
+Why does TCP handshake first?	So both sides know the other is there before sending data
+How does TCP handle a lost packet?	No receipt, so the sender's timer fires and it resends
+Why does UDP exist?	When late data is useless, resending only adds lag
+Why is DNS a postcard?	One question, one answer; a handshake would cost more than the lookup
+Where does TCP live: devices, switches, or routers?	Only the two end devices
+What does DHCP hand out, and when?	IP, mask, gateway, DNS server, when you join the network
+Why DNS before the TCP handshake?	The SYN needs an IP address to go to
+The story in seven words	Frame, switch, IP, router, protocols, transport, letter</code></pre>
+      </div></details>
+      <p class="send"><b>Send:</b> nothing.</p>
+    </div></li>
+  </ul>
+
+  <details class="tutor">
+    <summary>Tutor notes (for me)</summary>
+    <div class="body">
+      <p><b>This session is longer.</b> Plan two hours. Start 5, Cable 15, Two addresses 15, Switch and router 20, Filling the table 30, Delivery 15, Whole picture 20 (board 5, drill 5, her story 10). If you have to cut, cut the UDP half of the delivery widget and the board; never cut her telling it back.</p>
+      <p><b>How to run it.</b> She talks more than you. At every "Tell it back," let her go without interrupting, then open the rubric together and let her add what she missed. If she can't start, give her the first word of the analogy ("badge," "post office") and nothing else.</p>
+      <p><b>Address the dad's points directly.</b> Cable: how bits move and how devices identify each other (tab 1). Why IP on top of MAC (tab 2). Where switching and routing come in (tab 3). How tables get built, discovery, shortest paths, hops versus bandwidth (tab 4, and the OSPF widget shows the hop-count path losing to the cheaper one). TCP and UDP delivery (tab 5).</p>
+      <p><b>Red flags to catch.</b> Saying the switch reads IP. Saying the router changes the destination IP. Saying OSPF counts hops. Saying BGP has a map. Saying TCP runs on routers. Saying DNS returns a page. Each one is a two-minute detour, not a lecture.</p>
+      <p><b>Widget answers.</b> Cable: only B keeps the frame; the switch learns A on cable 1. Two addresses: near puts B's MAC on the outer envelope; far puts the router's. Switch and router: three tables consulted in order, cart 1 (badge to cable), post office (street to door, row 10.2.0.0/24), cart 2; MACs change at the router, IP and TTL shown. Filling the table: static needs her to pick door P2 or P4; OSPF picks P1 to P2 to P4 at cost 2 over the direct road at cost 10, and recomputes to the direct road (cost 10) when the P1 to P2 road dies; BGP picks the direct promise (path "P4", one organization) over "P2 P4" unless policy prefers P2. Match drill: 12 questions, mechanisms listed in the widget.</p>
+      <p><b>Next.</b> Data center (spine-leaf, why BGP inside, ECMP, the GPU angle) for half a session, then a full mock interview. Reuse the story: a spine-leaf fabric is a building where every floor's cart connects to every post office, and BGP is how the post offices talk because there are thousands of them.</p>
+    </div>
+  </details>
+</section>
+
+</main>
+
+<script>
+(function(){
+'use strict';
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* tabs */
+const panes = [...document.querySelectorAll('.pane')];
+const tabs = [...document.querySelectorAll('#tabs button')];
+function show(id, push){
+  panes.forEach(p => p.classList.toggle('active', p.id === id));
+  tabs.forEach(t => t.setAttribute('aria-selected', t.dataset.p === id ? 'true' : 'false'));
+  if(push !== false) history.replaceState(null, '', '#' + id);
+  window.scrollTo({top:0});
+}
+tabs.forEach(t => t.addEventListener('click', () => show(t.dataset.p)));
+panes.forEach((p, i) => {
+  const nav = document.createElement('div'); nav.className = 'pane-nav';
+  if(i > 0){ const b = document.createElement('button'); b.textContent = 'Back: ' + tabs[i-1].textContent; b.onclick = () => show(panes[i-1].id); nav.appendChild(b); }
+  const sp = document.createElement('div'); sp.className = 'sp'; nav.appendChild(sp);
+  if(i < panes.length-1){ const b = document.createElement('button'); b.textContent = 'Next: ' + tabs[i+1].textContent; b.onclick = () => show(panes[i+1].id); nav.appendChild(b); }
+  p.appendChild(nav);
+});
+const h0 = location.hash.slice(1);
+show(panes.some(p => p.id === h0) ? h0 : 'p0', false);
+
+/* copy buttons */
+document.querySelectorAll('pre.cmd').forEach(pre => {
+  const b = document.createElement('button'); b.className = 'copy'; b.type = 'button'; b.textContent = 'Copy';
+  b.addEventListener('click', () => navigator.clipboard.writeText(pre.querySelector('code').textContent).then(() => { b.textContent = 'Copied'; setTimeout(() => b.textContent = 'Copy', 1200); }));
+  pre.appendChild(b);
+});
+
+/* quick checks */
+document.querySelectorAll('.check').forEach(ch => {
+  const ans = ch.dataset.answer, fb = ch.querySelector('.fb'), opts = [...ch.querySelectorAll('.opts button')];
+  opts.forEach(b => b.addEventListener('click', () => {
+    if(ch.dataset.done) return;
+    if(b.dataset.k === ans){ b.classList.add('ok'); ch.dataset.done = '1'; opts.forEach(o => o.disabled = true); fb.innerHTML = '<span class="v ok">Yes.</span>' + esc(fb.dataset.explain); }
+    else { b.classList.add('no'); b.disabled = true; fb.innerHTML = '<span class="v no">Not that one.</span> Try another.'; }
+    fb.classList.add('show');
+  }));
+});
+
+/* story helper */
+function makeStory(o){
+  let steps = o.steps(), i = 0;
+  function render(){
+    const st = steps[i];
+    o.text.innerHTML = st.text;
+    o.dots.innerHTML = steps.map((_, k) => `<span class="${k < i ? 'done' : k === i ? 'on' : ''}"></span>`).join('');
+    o.prev.disabled = i === 0; o.next.disabled = i === steps.length - 1;
+    o.onStep(i, st, steps);
+  }
+  o.next.addEventListener('click', () => { if(i < steps.length-1){ i++; render(); } });
+  o.prev.addEventListener('click', () => { if(i > 0){ i--; render(); } });
+  o.reset.addEventListener('click', () => { i = 0; render(); });
+  render();
+  return { reload(){ steps = o.steps(); i = 0; render(); } };
+}
+
+/* ---------- the cable ---------- */
+(function(){
+  const svg = $('cb-svg'), wire = $('cb-wire'), frame = $('cb-frame');
+  const bits = Array.from({length:44}, (_, i) => `<span class="bit ${Math.random() < 0.5 ? 'z' : ''}" style="left:${i * 2.3}%"></span>`).join('');
+  const S = (text, nodes, links, hl, wireOn) => ({text, nodes, links, hl, wireOn});
+  const STEPS = [
+    S('A has something for B: an IP packet sitting in A\'s memory. Nothing is on the wire yet. A knows B\'s badge is \u20260b because it asked the building earlier (ARP).', ['A'], [], [], false),
+    S('A\'s card turns the frame into <b>bits</b>: a long run of ones and zeros as voltage changes on the cable. The cable carries them to the switch in order. The cable has no idea what they mean.', ['A','SW'], [['A','on']], ['pay'], true),
+    S('What gives the bits meaning is the agreed <b>shape</b>: first the destination badge \u20260b, then the sender\'s badge \u20260a, then a tag saying an IPv4 packet is inside, then the contents, then a checksum.', ['A'], [], ['dst','src','type'], true),
+    S('The <b>mail cart</b> reads the From field: badge \u20260a is on cable 1, write that down. It reads the To field: \u20260b. It hasn\'t seen that badge yet, so it sends the frame down every other cable and lets the right device keep it.', ['SW','B','C','D'], [['B','flood'],['C','flood'],['D','flood']], ['dst','src'], true),
+    S('Three cards receive the same bits. C compares the destination badge to its own \u20260c: not mine, <b>drop</b>. D: not mine, drop. B: \u20260b, <b>mine, keep</b>. Only B hands the contents up to its IP layer. That is the whole identification mechanism: is this badge mine?', ['B'], [], ['dst'], true),
+    S('When B answers, the cart reads B\'s From field and learns \u20260b is on cable 2. From now on, A to B goes down cable 2 only. Nothing was configured. The cart learned by carrying mail.', ['A','SW','B'], [['A','on'],['B','on']], ['src'], true),
+    S('Everything here is <b>layer 2</b>: delivery inside one building, by badge. What it cannot do is reach a device in another building, because a badge says who, never where. That gap is the next tab.', ['A','B'], [], [], false)
+  ];
+  makeStory({
+    text:$('cb-text'), dots:$('cb-dots'), prev:$('cb-prev'), next:$('cb-next'), reset:$('cb-reset'), steps: () => STEPS,
+    onStep(i, st){
+      wire.innerHTML = st.wireOn ? bits : '';
+      frame.querySelectorAll('[data-f]').forEach(d => d.classList.toggle('on', st.hl.includes(d.dataset.f)));
+      svg.querySelectorAll('.pc,.sw').forEach(n => n.classList.toggle('on', st.nodes.includes(n.id.replace('cb-n-',''))));
+      svg.querySelectorAll('.link').forEach(l => { l.classList.remove('on','flood'); const m = st.links.find(x => 'cb-l-' + x[0] === l.id); if(m) l.classList.add(m[1]); });
+    }
+  });
+})();
+
+/* ---------- two addresses ---------- */
+(function(){
+  function render(){
+    const far = $('tw-sel').value === 'far';
+    $('tw-env').innerHTML = `<div class="envcard ip"><h5>IP envelope (street address)</h5><div class="big">To: ${far ? '93.184.216.34' : '192.168.1.20'}</div><div class="big">From: 192.168.1.10</div><div class="why">${far ? 'The real destination, in another city. This stays the same through every post office on the way.' : 'The real destination, in this building. Same street as me: 192.168.1.'}</div></div>
+      <div class="envcard eth"><h5>Ethernet envelope (badge)</h5><div class="big">To: ${far ? '02:00:00:00:00:01 (the post office)' : '02:00:00:00:00:0b (B)'}</div><div class="big">From: 02:00:00:00:00:0a (me)</div><div class="why">${far ? 'I can only hand frames to badges in my own building, and the server isn\'t here. So the frame goes to the post office\'s badge. I found that badge with ARP for 192.168.1.1.' : 'B is in my building, so I hand the frame straight to B\'s badge. I found it with ARP for 192.168.1.20.'}</div></div>`;
+    $('tw-text').innerHTML = far
+      ? '<b>Far.</b> 93.184.216 is not my street (192.168.1), so the mask says this is not in my building. The IP envelope names the server; the badge envelope names the post office. Every post office along the way will throw the badge envelope away and write a new one. The IP envelope arrives untouched.'
+      : '<b>Near.</b> 192.168.1 is my street, so B is in my building. Both envelopes name B. The mail cart delivers it by badge and no post office is involved. Switch to the far case and watch which envelope changes.';
+  }
+  $('tw-sel').addEventListener('change', render); render();
+})();
+
+/* ---------- switch and router ---------- */
+(function(){
+  const svg = $('sr-svg'), tbls = $('sr-tbls'), stack = $('sr-stack');
+  const T = {
+    S1:{title:'Cart 1: badge to cable', rows:[['\u20260a (A)','cable 1'],['\u202601 (post office, door 1)','cable 3']]},
+    R:{title:'Post office: street to door', rows:[['192.168.1.0/24','door 1 (my own doorstep)'],['10.0.0.0/8','door 2'],['10.2.0.0/24','door 2'],['0.0.0.0/0 (everything else)','door 3, the ISP']]},
+    S2:{title:'Cart 2: badge to cable', rows:[['\u202602 (post office, door 2)','cable 1'],['\u20260b (B)','cable 4']]}
+  };
+  const S = (text, nodes, links, use, hit, items) => ({text, nodes, links, use, hit, items});
+  const L = {letter:'the letter: GET /', tcp:'TCP envelope: port 80', ip64:'IP envelope: To 10.2.0.20, TTL 64', ip63:'IP envelope: To 10.2.0.20, TTL 63', eth1:'badge envelope: To \u202601 (post office)', eth2:'badge envelope: To \u20260b (B)'};
+  const C = k => k.startsWith('eth') ? 'eth' : k.startsWith('ip') ? 'ip' : k;
+  const STEPS = [
+    S('A writes the letter. IP envelope: To 10.2.0.20, From 192.168.1.10, TTL 64. <b>Near or far?</b> 10.2.0 is not my street, so this goes to the post office. Badge envelope: To \u202601, the post office\'s door in this building (A\'s ARP table had it).', ['A'], [], null, null, [['eth1'],['ip64'],['tcp'],['letter']]),
+    S('<b>Cart 1</b> reads the To badge, \u202601, and looks it up in its badge table: cable 3. Forwards. It did not open the badge envelope and never saw the street.', ['S1'], [['1','on'],['2','on']], 'S1', 1, [['eth1'],['ip64'],['tcp'],['letter']]),
+    S('<b>The post office.</b> Badge \u202601 is mine: open the badge envelope and throw it away. Read the street: 10.2.0.20. Two rows match, 10.0.0.0/8 and 10.2.0.0/24; the more specific /24 wins: <b>door 2</b>. TTL 64 becomes 63.', ['R'], [['2','on']], 'R', 2, [['eth1','off'],['ip63'],['tcp'],['letter']]),
+    S('A <b>new badge envelope</b> for building 2: To \u20260b (B), From \u202602 (my door 2). The post office learned B\'s badge the same way A learned the post office\'s: it ARPed on door 2. Out it goes.', ['R'], [['3','on']], null, null, [['eth2','swap'],['ip63'],['tcp'],['letter']]),
+    S('<b>Cart 2</b> reads To \u20260b: cable 4. Forwards. Same job as cart 1, different building, different badges.', ['S2'], [['3','on'],['4','on']], 'S2', 1, [['eth2'],['ip63'],['tcp'],['letter']]),
+    S('<b>B.</b> Badge \u20260b: mine. Street 10.2.0.20: mine. Port 80: the web server. Delivered. The two badge envelopes had nothing in common. The IP envelope arrived with the same two addresses it left with, TTL one lower. Hop by hop below, end to end above.', ['B'], [], null, null, [['eth2','off'],['ip63','off'],['tcp','off'],['letter']])
+  ];
+  makeStory({
+    text:$('sr-text'), dots:$('sr-dots'), prev:$('sr-prev'), next:$('sr-next'), reset:$('sr-reset'), steps: () => STEPS,
+    onStep(i, st){
+      svg.querySelectorAll('.pc,.sw,.rt').forEach(n => n.classList.toggle('on', st.nodes.includes(n.id.replace('sr-n-',''))));
+      svg.querySelectorAll('.link').forEach(l => { l.classList.remove('on'); const m = st.links.find(x => 'sr-l-' + x[0] === l.id); if(m) l.classList.add(m[1]); });
+      tbls.innerHTML = ['S1','R','S2'].map(k => `<div class="tbl ${st.use === k ? 'on' : ''}"><h5>${T[k].title}</h5><table>${T[k].rows.map((r, j) => `<tr class="${st.use === k && st.hit === j ? 'hit' : ''}"><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</table></div>`).join('');
+      stack.innerHTML = st.items.map(([k, mod]) => `<span class="tchip ${C(k)} ${mod || ''}">${L[k]}</span>`).join('');
+    }
+  });
+})();
+
+/* ---------- filling the sorting table ---------- */
+(function(){
+  const svg = $('fl-svg'), tab = $('fl-tab');
+  const S = (text, nodes, links, rows) => ({text, nodes, links, rows});
+  const own = ['192.168.1.x (my own doorstep)', 'connected', ''];
+  function steps(){
+    const m = $('fl-mode').value;
+    if(m === 'static') return [
+      S('P1\'s table starts with its own doorsteps and nothing else. Letters for 10.4.0.x have nowhere to go. Someone has to type a row.', ['1'], [], [own]),
+      S('An admin types: <b>10.4.0.x via P4</b>, the direct road. It works. The admin doesn\'t know, or doesn\'t think about, the fact that this road is slow.', ['1','4'], [['14','path']], [own, ['10.4.0.x', 'via P4 (typed)', '']]),
+      S('Letters crawl over the slow road while two fast roads through P2 sit idle. A typed row knows nothing about speed.', ['1','4'], [['14','path']], [own, ['10.4.0.x', 'via P4 (typed)', '']]),
+      S('The direct road closes. The row still says P4. Letters are dropped until a human notices and retypes it. This is why a village with one road uses static routes, and nobody with a choice of roads does.', ['1'], [['14','dead']], [own, ['10.4.0.x', 'via P4 (typed, road is down)', '']])
+    ];
+    if(m === 'ospf') return [
+      S('<b>Discovery.</b> P1 says hello out of every door. P2, P3, and P4 answer: three neighbors. Every post office does this, and keeps doing it every few seconds.', ['1','2','3','4'], [['12','flood'],['13','flood'],['14','flood']], [own]),
+      S('<b>Sharing.</b> P1 describes its roads: to P2 cost 1, to P3 cost 1, to P4 cost 10. The others describe theirs. The descriptions are passed along until all four hold all four. Costs come from road speed: fast roads cost 1, the slow direct road costs 10.', ['1','2','3','4'], [['12','flood'],['13','flood'],['14','flood'],['24','flood']], [own]),
+      S('<b>The map.</b> Every post office now holds the same table of roads and costs. P1 can see the whole region without having been anywhere.', ['1','2','3','4'], [], [own, ['the map', 'P1 to P2 cost 1, P1 to P3 cost 1, P1 to P4 cost 10, P2 to P4 cost 1', 'same on all four']]),
+      S('<b>Choosing.</b> P1 computes the cheapest route to 10.4.0.x. Direct road: cost 10, one hop. Via P2: 1 + 1 = <b>2</b>, two hops. Cheapest wins: via P2. A protocol that counted hops would have picked the slow road. That is the whole reason cost exists.', ['1','2','4'], [['12','path'],['24','path']], [own, ['10.4.0.x', 'via P2', 'cost 2 (computed)']]),
+      S('<b>A road dies.</b> P1 to P2 goes down. P1 and P2 stop hearing hellos, update their descriptions, flood the change. Everyone recomputes. P1\'s new cheapest route: the direct road, cost 10. A few seconds, no human.', ['1','4'], [['12','dead'],['14','path']], [own, ['10.4.0.x', 'via P4', 'cost 10 (recomputed)']])
+    ];
+    return [
+      S('<b>No shared map.</b> These are four different organizations. P1 is configured to talk to two of them, P2 and P4, over TCP connections. P3 isn\'t a peer for this street. Nobody tells anyone what their roads cost.', ['1','2','4'], [], [own]),
+      S('<b>P4 announces</b> to its neighbors: "I can deliver to 10.4.0.x. Path so far: P4." P1 hears it directly over the slow road. P2 hears it too.', ['4','1','2'], [['14','on'],['24','on']], [own, ['10.4.0.x', 'via P4', 'path: P4']]),
+      S('<b>P2 passes it on</b> to P1 with its own name added: "Path: P2 P4." P1 now holds two promises for the same street.', ['2','1'], [['12','on']], [own, ['10.4.0.x', 'via P4', 'path: P4'], ['10.4.0.x', 'via P2', 'path: P2 P4']]),
+      S('<b>Choosing, no policy.</b> The shorter list wins: "P4" is one organization, "P2 P4" is two. P1 uses the <b>slow direct road</b>, because BGP can\'t see road speeds; it only sees who the promise passed through.', ['1','4'], [['14','path']], [own, ['10.4.0.x', 'via P4', 'path: P4, chosen'], ['10.4.0.x', 'via P2', 'path: P2 P4, backup']]),
+      S('<b>Policy.</b> P1\'s contract with P2 is cheaper, so P1 marks P2\'s promises with a higher local preference. Policy is checked before path length: now via P2, path P2 P4. The same letter takes a different door because of a contract.', ['1','2','4'], [['12','path'],['24','path']], [own, ['10.4.0.x', 'via P2', 'path: P2 P4, local pref 200, chosen'], ['10.4.0.x', 'via P4', 'path: P4, local pref 100, backup']]),
+      S('<b>A road dies.</b> P1 to P2 goes down. P2\'s promise is withdrawn (or P1 notices the peer is gone) and P1 falls back to P4\'s. A minute or so, not seconds, and the news ripples on to P1\'s own customers.', ['1','4'], [['12','dead'],['14','path']], [own, ['10.4.0.x', 'via P4', 'path: P4, chosen again']])
+    ];
+  }
+  const story = makeStory({
+    text:$('fl-text'), dots:$('fl-dots'), prev:$('fl-prev'), next:$('fl-next'), reset:$('fl-reset'), steps,
+    onStep(i, st){
+      svg.querySelectorAll('.rt').forEach(n => n.classList.toggle('on', st.nodes.includes(n.id.replace('fl-n-',''))));
+      svg.querySelectorAll('.link[id]').forEach(l => { l.classList.remove('on','path','dead','flood'); const m = st.links.find(x => 'fl-l-' + x[0] === l.id); if(m) l.classList.add(m[1]); });
+      tab.innerHTML = '<tr><th>P1\'s sorting table: street</th><th>door</th><th>how it got there</th></tr>' + st.rows.map(r => `<tr class="${r[1].includes('chosen') || r[2].includes('chosen') || r[2].includes('computed') || r[1].includes('typed') ? 'on' : ''}"><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('');
+    }
+  });
+  $('fl-mode').addEventListener('change', () => story.reload());
+})();
+
+/* ---------- delivery ---------- */
+(function(){
+  const chat = $('dl-chat');
+  const B = (w, b, tag, lost) => ({w, b, tag, lost});
+  const TCP = [
+    {b:[B('A','Hello? Can you hear me?','SYN')], t:'<b>Handshake first.</b> Nobody sends registered mail to an empty house. A asks whether B is there.'},
+    {b:[B('A','Hello? Can you hear me?','SYN'), B('B','Yes. Can you hear me?','SYN-ACK')], t:'B answers and asks back.'},
+    {b:[B('A','Hello? Can you hear me?','SYN'), B('B','Yes. Can you hear me?','SYN-ACK'), B('A','Yes.','ACK')], t:'Three messages. Both sides know the other is listening. Not one word of the letter has moved yet.'},
+    {b:[B('A','Hello? Can you hear me?','SYN'), B('B','Yes. Can you hear me?','SYN-ACK'), B('A','Yes.','ACK'), B('A','Page 1 of the letter','data, numbered 1')], t:'<b>Numbered pages.</b> The letter is cut into pieces and each one carries its number, so B can put them back in order.'},
+    {b:[B('A','Hello? Can you hear me?','SYN'), B('B','Yes. Can you hear me?','SYN-ACK'), B('A','Yes.','ACK'), B('A','Page 1 of the letter','data, numbered 1'), B('B','Got page 1.','receipt (ACK)')], t:'<b>Receipts.</b> Every page gets one.'},
+    {b:[B('A','Hello? Can you hear me?','SYN'), B('B','Yes. Can you hear me?','SYN-ACK'), B('A','Yes.','ACK'), B('A','Page 1 of the letter','data, numbered 1'), B('B','Got page 1.','receipt (ACK)'), B('A','Page 2 of the letter','data, numbered 2', true)], t:'<b>A busy post office drops page 2.</b> It\'s allowed to; IP promises nothing. B never sees it, so B never sends a receipt.'},
+    {b:[B('A','Hello? Can you hear me?','SYN'), B('B','Yes. Can you hear me?','SYN-ACK'), B('A','Yes.','ACK'), B('A','Page 1 of the letter','data, numbered 1'), B('B','Got page 1.','receipt (ACK)'), B('A','Page 2 of the letter','data, numbered 2', true), B('A','No receipt for page 2. Sending page 2 again.','resend')], t:'<b>No receipt, so resend.</b> A\'s timer ran out. Registered mail: nothing is ever lost, only late.'},
+    {b:[B('A','Hello? Can you hear me?','SYN'), B('B','Yes. Can you hear me?','SYN-ACK'), B('A','Yes.','ACK'), B('A','Page 1 of the letter','data, numbered 1'), B('B','Got page 1.','receipt (ACK)'), B('A','Page 2 of the letter','data, numbered 2', true), B('A','No receipt for page 2. Sending page 2 again.','resend'), B('B','Got page 2.','receipt (ACK)')], t:'B puts pages 1 and 2 in order and hands the whole letter to apartment 80. Complete, in order, and the post offices in between never knew any of this was happening.'}
+  ];
+  const UDP = [
+    {b:[B('A','Postcard 1','packet 1')], t:'<b>No handshake.</b> A just sends. The apartment number is still on it; that part never changes.'},
+    {b:[B('A','Postcard 1','packet 1'), B('A','Postcard 2','packet 2', true)], t:'<b>Postcard 2 is dropped</b> by a busy post office. Nobody is told. A doesn\'t know; B doesn\'t know to ask.'},
+    {b:[B('A','Postcard 1','packet 1'), B('A','Postcard 2','packet 2', true), B('A','Postcard 3','packet 3')], t:'A keeps going. B has postcards 1 and 3 and works with that. For a video call, exactly right: a frame from half a second ago isn\'t worth stopping for. For a web page, a disaster, which is why the web uses registered mail.'}
+  ];
+  const story = makeStory({
+    text:$('dl-text'), dots:$('dl-dots'), prev:$('dl-prev'), next:$('dl-next'), reset:$('dl-reset'), steps: () => ($('dl-mode').value === 'tcp' ? TCP : UDP).map(s => ({text:s.t, b:s.b})),
+    onStep(i, st){ chat.innerHTML = '<div class="who"><span>A, port 51234</span><span>B, port 80</span></div>' + st.b.map((x, k) => `<div class="bub ${x.w} ${x.lost ? 'lost' : ''} ${k === st.b.length - 1 ? 'cur' : ''}">${esc(x.b)}<span class="tag">${x.tag}${x.lost ? ' (dropped on the way)' : ''}</span></div>`).join(''); }
+  });
+  $('dl-mode').addEventListener('change', () => story.reload());
+})();
+
+/* ---------- the board ---------- */
+(function(){
+  const CARDS = [
+    ['Cable and bits', 'layer 1', 'How do signals travel between two cards?', 'The road itself.', 'none', 'Nothing moves at all.', 'session 1'],
+    ['Frame and MAC', 'layer 2', 'Which device on this cable should keep these bits?', 'The badge printed on every device; the outer envelope names a badge.', 'none', 'Every card keeps everything, or nothing; no way to say who a frame is for.', 'session 1'],
+    ['Switch', 'layer 2', 'Which cable is this badge on?', 'The mail cart inside the building.', 'badge to cable, learned by watching', 'Every frame goes to every device; the building drowns in copies.', 'session 1'],
+    ['ARP', 'layer 2 and 3', 'I know a neighbor\'s street address; what is its badge?', 'Shouting to the room: "who lives at number 20?"', 'the ARP table: address to badge, short-lived', 'You could never write the outer envelope for anyone you hadn\'t already met.', 'session 1'],
+    ['IP address', 'layer 3', 'Which device, anywhere in the world?', 'The street address: street (network part) plus apartment (host part).', 'none', 'Nothing can be sorted beyond one building; badges have no location.', 'session 2'],
+    ['Subnet mask', 'layer 3', 'Where does the street name end and the apartment begin? Is this destination in my building?', 'The line between street and apartment number.', 'none', 'Devices couldn\'t tell near from far, so they\'d never know whether to use the post office.', 'session 2'],
+    ['Gateway', 'layer 3', 'Where do I hand letters that aren\'t for my building?', 'The post office\'s door inside my building.', 'none', 'Far letters would have nowhere to go.', 'session 2'],
+    ['Router', 'layer 3', 'Which door does this street go out?', 'The post office between buildings.', 'the sorting table: street to door', 'Buildings would be islands.', 'session 2'],
+    ['Longest prefix match', 'layer 3', 'Several rows match; which one?', 'Sort by the most specific street you have; "everything else" last.', 'the rule for reading the sorting table', 'The default route would swallow everything.', 'session 4'],
+    ['TTL', 'layer 3', 'How does a lost letter stop circling?', 'A stamp count: each post office subtracts one; at zero the letter is destroyed.', 'none', 'One loop would fill the network forever.', 'session 2'],
+    ['OSPF', 'routing', 'How do the post offices in one region fill their sorting tables?', 'Everyone shares a copy of the same road map and picks the cheapest route by road speed.', 'the map, then the sorting table', 'Someone would type thousands of rows, and nothing would adapt when a road closed.', 'session 4'],
+    ['BGP', 'routing', 'How do post offices in different organizations learn what each other can deliver?', 'Neighbors trade promises with the path attached; policy first, then shortest path.', 'the promises heard, then the sorting table', 'The internet would not exist; no one would share a world map.', 'session 4'],
+    ['Port', 'layer 4', 'Which program on the device?', 'The apartment number on the envelope.', 'none', 'A device could run only one program at a time.', 'session 1'],
+    ['TCP', 'layer 4', 'Did all of it arrive, in order?', 'Registered mail: handshake, numbered pages, receipts, resend.', 'per connection: what\'s sent, what\'s acknowledged', 'Web pages would arrive with holes.', 'session 1'],
+    ['UDP', 'layer 4', 'Can I just send it and move on?', 'Postcards.', 'none', 'Video calls would stutter waiting for resends; DNS would cost a handshake.', 'session 1'],
+    ['DNS', 'application', 'What street address does this name have?', 'The phone book, distributed across the world and cached everywhere.', 'the cache, with a time limit per entry', 'You\'d type numbers instead of names.', 'session 3'],
+    ['DHCP', 'application', 'I just joined; what\'s my address, my mask, my post office, my phone book?', 'The front desk.', 'the server\'s list of leases', 'Every laptop would need its settings typed by hand on every network.', 'session 3'],
+    ['HTTP and HTTPS', 'application', 'What does the browser actually say to the server, and can anyone else read it?', 'The letter itself; HTTPS is the letter in a locked box.', 'none', 'No web.', 'session 3']
+  ];
+  const grid = $('bd-grid'), why = $('bd-why');
+  grid.innerHTML = CARDS.map((c, i) => `<button type="button" data-i="${i}">${c[0]}<small>${c[1]}</small></button>`).join('');
+  grid.addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; grid.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); const c = CARDS[+b.dataset.i];
+    why.innerHTML = `<span class="k">Piece</span><span><b>${c[0]}</b> (${c[1]}, ${c[6]})</span><span class="k">The question it answers</span><span>${c[2]}</span><span class="k">In the post office</span><span>${c[3]}</span><span class="k">What it keeps</span><span>${c[4]}</span><span class="k">Without it</span><span>${c[5]}</span>`; });
+})();
+
+/* ---------- matching drill ---------- */
+(function(){
+  const Q = [
+    ['Which device on this cable should keep this frame?', ['MAC address','IP address','Port','TTL'], 0],
+    ['Which device, anywhere in the world?', ['MAC address','IP address','Port','ARP'], 1],
+    ['Which program on that device?', ['Port','IP address','MAC address','DNS'], 0],
+    ['I know my neighbor\'s street address. What is its badge?', ['ARP','DNS','DHCP','OSPF'], 0],
+    ['Which cable is this badge on?', ['Switch\'s table','Routing table','ARP table','DNS cache'], 0],
+    ['Which door does this street go out?', ['Routing table','Switch\'s table','ARP table','Port'], 0],
+    ['Is the destination in my building or not?', ['Subnet mask','TTL','Port','ARP'], 0],
+    ['How do the post offices in one region all learn the map?', ['OSPF','BGP','DHCP','DNS'], 0],
+    ['How do post offices in different organizations learn what each other can deliver?', ['BGP','OSPF','ARP','TCP'], 0],
+    ['Did every page of my letter arrive, in order?', ['TCP','UDP','IP','DNS'], 0],
+    ['What street address does this name have?', ['DNS','DHCP','ARP','BGP'], 0],
+    ['I just joined the building. What\'s my address and who\'s my post office?', ['DHCP','DNS','ARP','OSPF'], 0]
+  ];
+  const list = $('mt-list'), score = $('mt-score');
+  let first = {}, tries = {};
+  function render(){
+    list.innerHTML = Q.map((q, i) => { const order = q[1].map((o, k) => k).sort(() => Math.random() - .5); return `<div class="mq2" data-i="${i}"><div class="q">${i+1}. ${q[0]}</div><div class="os">${order.map(k => `<button type="button" data-k="${k}">${q[1][k]}</button>`).join('')}</div></div>`; }).join('');
+    first = {}; tries = {}; score.textContent = '';
+  }
+  list.addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; const card = b.closest('.mq2'); const i = +card.dataset.i; if(card.dataset.done) return; tries[i] = (tries[i] || 0) + 1;
+    if(+b.dataset.k === Q[i][2]){ b.classList.add('ok'); card.dataset.done = '1'; card.querySelectorAll('button').forEach(x => x.disabled = true); if(tries[i] === 1) first[i] = true; }
+    else { b.classList.add('no'); b.disabled = true; }
+    const done = Object.keys(tries).filter(k => list.querySelector(`.mq2[data-i="${k}"]`).dataset.done).length;
+    if(done === Q.length) score.textContent = `${Object.keys(first).length} of 12 right on the first try.` + (Object.keys(first).length === 12 ? ' That is the whole map in your head.' : ' Reset and run it again until it\'s twelve.'); });
+  $('mt-reset').addEventListener('click', render); render();
+})();
+
+/* flashcards */
+(function(){
+  const pre = document.querySelector('#p7 pre.cmd code');
+  let cards = pre.textContent.trim().split('\n').map(l => l.split('\t')).filter(p => p.length === 2);
+  let i = 0, back = false;
+  const card = $('fc-card'), count = $('fc-count');
+  function render(){
+    const c = cards[i];
+    card.classList.toggle('back', back);
+    card.innerHTML = esc(back ? c[1] : c[0]) + `<small>${back ? 'click for the question' : 'click to flip'}</small>`;
+    count.textContent = `${i+1} of ${cards.length}`;
+  }
+  const flip = () => { back = !back; render(); };
+  card.addEventListener('click', flip);
+  card.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); flip(); } });
+  $('fc-flip').addEventListener('click', flip);
+  $('fc-next').addEventListener('click', () => { i = (i + 1) % cards.length; back = false; render(); });
+  $('fc-prev').addEventListener('click', () => { i = (i - 1 + cards.length) % cards.length; back = false; render(); });
+  $('fc-shuffle').addEventListener('click', () => { for(let k = cards.length-1; k > 0; k--){ const j = Math.floor(Math.random()*(k+1)); [cards[k], cards[j]] = [cards[j], cards[k]]; } i = 0; back = false; render(); });
+  render();
+})();
+
+})();
+</script>
+</body>
+</html>
