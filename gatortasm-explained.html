@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How GatorTasm turns sound into pictures</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Recursive:slnt,wght,CASL,CRSV,MONO@-15..0,300..900,0..1,0..1,0..1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f3f5f8;
+    --panel: #ffffff;
+    --ink: #1b2230;
+    --ink-2: #485266;
+    --ink-3: #788296;
+    --rule: #d8dde5;
+    --accent: #23688f;
+    --accent-soft: #e2eef6;
+    --yours: #c96a1f;
+    --yours-soft: #fbeee2;
+    --good: #2f7d57;
+    --good-soft: #e2f3e9;
+    --bad: #b23b3b;
+    --bad-soft: #fbe8e8;
+    --code-bg: #edf0f4;
+    --stage: #0e0f12;
+    --stage-ink: #e8eaee;
+    --stage-ink-2: #9aa2b1;
+    --radius-s: 6px;
+    --radius-m: 10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #121419;
+      --panel: #191c22;
+      --ink: #e8eaee;
+      --ink-2: #b4bbc8;
+      --ink-3: #8790a0;
+      --rule: #2b3039;
+      --accent: #6cc6ee;
+      --accent-soft: #15303d;
+      --yours: #f2994a;
+      --yours-soft: #33241a;
+      --good: #6fcf97;
+      --good-soft: #15291f;
+      --bad: #ec8b8b;
+      --bad-soft: #301b1b;
+      --code-bg: #1d2128;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #121419;
+    --panel: #191c22;
+    --ink: #e8eaee;
+    --ink-2: #b4bbc8;
+    --ink-3: #8790a0;
+    --rule: #2b3039;
+    --accent: #6cc6ee;
+    --accent-soft: #15303d;
+    --yours: #f2994a;
+    --yours-soft: #33241a;
+    --good: #6fcf97;
+    --good-soft: #15291f;
+    --bad: #ec8b8b;
+    --bad-soft: #301b1b;
+    --code-bg: #1d2128;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Recursive", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-variation-settings: "CASL" 0, "MONO" 0;
+    font-size: 17px;
+    line-height: 1.62;
+  }
+  code, pre, .mono {
+    font-family: "Recursive", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-variation-settings: "MONO" 1, "CASL" 0;
+  }
+  h1, h2, h3 {
+    font-variation-settings: "CASL" 1, "MONO" 0;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+  h1 { font-size: 2.05rem; font-weight: 800; margin: 0 0 0.5rem; }
+  h2 { font-size: 1.38rem; font-weight: 750; margin: 2.6rem 0 0.7rem; }
+  h3 { font-size: 1.08rem; font-weight: 700; margin: 1.8rem 0 0.5rem; }
+  p { margin: 0.6rem 0; max-width: 72ch; }
+  ul, ol { max-width: 72ch; padding-left: 1.3rem; margin: 0.6rem 0; }
+  li { margin: 0.32rem 0; }
+  a { color: var(--accent); }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+  .wrap { max-width: 900px; margin: 0 auto; padding: 0 1.2rem 5rem; }
+  .lead { font-size: 1.08rem; color: var(--ink-2); }
+
+  /* top */
+  header.top { background: var(--panel); border-bottom: 1px solid var(--rule); }
+  .top-inner { max-width: 900px; margin: 0 auto; padding: 1.4rem 1.2rem 0; }
+  .titlebar { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+  .sub { margin: 0 0 1rem; color: var(--ink-3); font-size: 0.92rem; }
+  .theme-btn {
+    background: none; border: 1px solid var(--rule); color: var(--ink-2);
+    border-radius: 999px; padding: 0.3rem 0.85rem; font: inherit; font-size: 0.82rem; cursor: pointer;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .theme-btn:hover { color: var(--ink); border-color: var(--ink-3); }
+
+  /* tabs as the signal chain */
+  nav.chain { display: flex; overflow-x: auto; scrollbar-width: none; gap: 0; }
+  nav.chain::-webkit-scrollbar { display: none; }
+  nav.chain button {
+    position: relative; background: none; border: none; border-bottom: 3px solid transparent;
+    color: var(--ink-3); font: inherit; font-size: 0.9rem; padding: 0.6rem 0.85rem 0.55rem; cursor: pointer; white-space: nowrap;
+  }
+  nav.chain button:hover { color: var(--ink); }
+  nav.chain button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); font-weight: 650; }
+  nav.chain button .n { color: var(--ink-3); font-variation-settings: "MONO" 1; margin-right: 0.35rem; font-size: 0.8rem; }
+  nav.chain button.yours-tab .n { color: var(--yours); }
+
+  .panel { display: none; padding-top: 1.8rem; }
+  .panel.active { display: block; }
+
+  /* blocks */
+  pre {
+    background: var(--code-bg); border-radius: var(--radius-s); padding: 0.85rem 1rem; overflow-x: auto;
+    font-size: 0.84rem; line-height: 1.55; margin: 0.9rem 0;
+  }
+  p code, li code, td code, th code { background: var(--code-bg); border-radius: 4px; padding: 0.06em 0.34em; font-size: 0.88em; }
+  .c { color: var(--ink-3); }
+
+  .think {
+    background: var(--accent-soft); border-radius: var(--radius-m); padding: 0.9rem 1.1rem; margin: 1.1rem 0;
+  }
+  .think p:first-child { margin-top: 0; }
+  .think p:last-child { margin-bottom: 0; }
+  .think strong:first-child { color: var(--accent); }
+
+  .yours {
+    border-left: 4px solid var(--yours); background: var(--yours-soft);
+    border-radius: 0 var(--radius-m) var(--radius-m) 0; padding: 0.75rem 1.05rem; margin: 1.1rem 0;
+  }
+  .yours p:first-child { margin-top: 0; }
+  .yours p:last-child { margin-bottom: 0; }
+
+  .ok { border-left: 4px solid var(--good); background: var(--good-soft); border-radius: 0 var(--radius-m) var(--radius-m) 0; padding: 0.7rem 1rem; margin: 1rem 0; }
+  .no { border-left: 4px solid var(--bad); background: var(--bad-soft); border-radius: 0 var(--radius-m) var(--radius-m) 0; padding: 0.7rem 1rem; margin: 1rem 0; }
+  .ok p, .no p { margin: 0.3rem 0; }
+
+  .tablewrap { overflow-x: auto; margin: 1rem 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9rem; min-width: 520px; }
+  th, td { text-align: left; padding: 0.55rem 0.65rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { font-weight: 650; color: var(--ink-2); font-size: 0.85rem; }
+  tr.mine td:first-child { box-shadow: inset 4px 0 0 var(--yours); padding-left: 0.9rem; }
+  .pill { display: inline-block; border-radius: 999px; padding: 0.08rem 0.55rem; font-size: 0.78rem; white-space: nowrap; }
+  .pill.main { background: var(--good-soft); color: var(--good); }
+  .pill.branch { background: var(--accent-soft); color: var(--accent); }
+  .pill.pr { background: var(--yours-soft); color: var(--yours); }
+  .pill.stub { background: var(--code-bg); color: var(--ink-3); }
+
+  /* the stage: every demo looks like the real panel */
+  .stage-box { background: var(--panel); border: 1px solid var(--rule); border-radius: var(--radius-m); padding: 1rem; margin: 1.2rem 0; }
+  canvas.stage { display: block; width: 100%; background: var(--stage); border-radius: var(--radius-s); }
+  .controls { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-top: 0.75rem; }
+  .btn {
+    background: var(--panel); color: var(--ink); border: 1px solid var(--rule); border-radius: var(--radius-s);
+    padding: 0.42rem 0.85rem; font: inherit; font-size: 0.87rem; cursor: pointer;
+  }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .controls label { font-size: 0.86rem; color: var(--ink-2); display: inline-flex; gap: 0.45rem; align-items: center; }
+  input[type=range] { width: 130px; accent-color: var(--accent); }
+  .readout { display: flex; flex-wrap: wrap; gap: 0.4rem 1.3rem; font-size: 0.84rem; color: var(--ink-3); margin-top: 0.6rem; }
+  .readout b { color: var(--ink); font-weight: 650; font-variation-settings: "MONO" 1; }
+
+  .lanes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.3rem; margin-top: 0.5rem; }
+  .lane { font-size: 0.8rem; color: var(--ink-2); text-align: center; line-height: 1.3; }
+  .lane i { display: inline-block; width: 0.65rem; height: 0.65rem; border-radius: 50%; margin-right: 0.3rem; vertical-align: -0.05rem; }
+  .lane small { display: block; color: var(--ink-3); font-variation-settings: "MONO" 1; font-size: 0.74rem; }
+
+  .twoup { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
+  .twoup figcaption { font-size: 0.85rem; color: var(--ink-2); margin-top: 0.4rem; }
+  figure { margin: 0; }
+
+  /* signal chain diagram */
+  .flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 0.4rem; margin: 1.2rem 0; }
+  .flow .step {
+    flex: 1 1 120px; background: var(--panel); border: 1px solid var(--rule); border-radius: var(--radius-s);
+    padding: 0.6rem 0.7rem; font-size: 0.85rem; line-height: 1.35; position: relative;
+  }
+  .flow .step b { display: block; font-size: 0.92rem; }
+  .flow .step span { color: var(--ink-3); }
+  .flow .step.mine { border-color: var(--yours); box-shadow: inset 0 -3px 0 var(--yours); }
+  .flow .arrow { align-self: center; color: var(--ink-3); font-size: 1.1rem; }
+
+  /* pool grid */
+  .pool { display: grid; grid-template-columns: repeat(40, 1fr); gap: 2px; margin-top: 0.7rem; }
+  .pool i { aspect-ratio: 1; border-radius: 2px; background: var(--code-bg); }
+  .pool i.on { background: var(--good); }
+
+  /* paint swatches */
+  .paint { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; margin: 0.9rem 0; }
+  .wall { background: var(--stage); border-radius: var(--radius-s); padding: 1.1rem; min-height: 120px; display: flex; flex-direction: column; justify-content: flex-end; }
+  .floor { height: 70px; border-radius: 4px; }
+  .wall p { color: var(--stage-ink-2); font-size: 0.8rem; margin: 0.5rem 0 0; }
+
+  /* spike runs */
+  .run { border: 1px solid var(--rule); background: var(--panel); border-radius: var(--radius-m); padding: 0.9rem 1rem; margin: 1rem 0; }
+  .run-head { display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+  .run-head h3 { margin: 0; }
+  .run ol { margin: 0.6rem 0 0.2rem; }
+  .run li { transition: background 0.25s; border-radius: 4px; padding: 0.1rem 0.3rem; }
+  .run li.lit { background: var(--accent-soft); }
+  .result { font-weight: 650; }
+  .result.fail { color: var(--bad); }
+  .result.pass { color: var(--good); }
+
+  /* sequence lists */
+  ol.seq { counter-reset: s; list-style: none; padding-left: 0; }
+  ol.seq > li { counter-increment: s; position: relative; padding-left: 2.3rem; margin: 0.85rem 0; }
+  ol.seq > li::before {
+    content: counter(s); position: absolute; left: 0; top: 0.05rem; width: 1.6rem; height: 1.6rem; border-radius: 50%;
+    background: var(--accent-soft); color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; font-variation-settings: "MONO" 1;
+  }
+
+  /* quiz */
+  .quiz { background: var(--panel); border: 1px solid var(--rule); border-radius: var(--radius-m); padding: 1rem 1.1rem; margin: 0.9rem 0; }
+  .quiz .q { font-weight: 650; margin: 0 0 0.7rem; }
+  .quiz .qn { display: block; color: var(--ink-3); font-size: 0.78rem; font-weight: 600; margin-bottom: 0.2rem; }
+  .opts { display: flex; flex-direction: column; gap: 0.38rem; }
+  .opt { text-align: left; font: inherit; font-size: 0.92rem; background: var(--paper); color: var(--ink); border: 1px solid var(--rule); border-radius: var(--radius-s); padding: 0.5rem 0.75rem; cursor: pointer; }
+  .opt:hover:not(:disabled) { border-color: var(--accent); }
+  .opt:disabled { cursor: default; opacity: 0.7; }
+  .opt.correct { border-color: var(--good); background: var(--good-soft); color: var(--good); font-weight: 650; opacity: 1; }
+  .opt.wrong { border-color: var(--bad); background: var(--bad-soft); color: var(--bad); opacity: 1; }
+  .fb { display: none; margin-top: 0.65rem; font-size: 0.9rem; padding: 0.55rem 0.8rem; border-radius: var(--radius-s); }
+  .fb.show { display: block; }
+  .fb.good { background: var(--good-soft); color: var(--good); }
+  .fb.badfb { background: var(--bad-soft); color: var(--bad); }
+  .fb b { display: block; margin-bottom: 0.15rem; }
+  .score { color: var(--ink-3); font-size: 0.88rem; }
+
+  .say { counter-reset: s; list-style: none; padding-left: 0; }
+  .say li { counter-increment: s; background: var(--panel); border: 1px solid var(--rule); border-radius: var(--radius-m); padding: 0.75rem 1rem 0.75rem 3rem; position: relative; margin: 0.6rem 0; }
+  .say li::before { content: counter(s); position: absolute; left: 1rem; top: 0.72rem; font-weight: 800; color: var(--yours); font-variation-settings: "CASL" 1; }
+
+  footer { border-top: 1px solid var(--rule); margin-top: 3.5rem; padding-top: 1rem; color: var(--ink-3); font-size: 0.82rem; }
+
+  @media (max-width: 640px) {
+    body { font-size: 16px; }
+    h1 { font-size: 1.6rem; }
+    .twoup, .paint { grid-template-columns: 1fr; }
+    .pool { grid-template-columns: repeat(24, 1fr); }
+    .flow .arrow { display: none; }
+    .wrap { padding: 0 0.9rem 4rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .run li { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <div class="titlebar">
+      <div>
+        <h1>How GatorTasm turns sound into pictures</h1>
+        <p class="sub">The whole extension, then the parts you built: particles, the bands fix, and the tab capture spike.</p>
+      </div>
+      <button class="theme-btn" id="themeBtn" type="button">Switch theme</button>
+    </div>
+    <nav class="chain" role="tablist" aria-label="Sections">
+      <button role="tab" data-tab="t1" aria-selected="true"><span class="n">1</span>Big picture</button>
+      <button role="tab" data-tab="t2" aria-selected="false"><span class="n">2</span>The map</button>
+      <button role="tab" data-tab="t3" aria-selected="false"><span class="n">3</span>Sound to numbers</button>
+      <button role="tab" data-tab="t4" aria-selected="false"><span class="n">4</span>The heartbeat</button>
+      <button role="tab" data-tab="t5" aria-selected="false" class="yours-tab"><span class="n">5</span>Your particles</button>
+      <button role="tab" data-tab="t6" aria-selected="false" class="yours-tab"><span class="n">6</span>The bands fix</button>
+      <button role="tab" data-tab="t7" aria-selected="false" class="yours-tab"><span class="n">7</span>Tab capture spike</button>
+      <button role="tab" data-tab="t8" aria-selected="false"><span class="n">8</span>Tests and teamwork</button>
+      <button role="tab" data-tab="t9" aria-selected="false"><span class="n">9</span>Recap and quiz</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- ================================================================== 1 -->
+<section class="panel active" id="t1" role="tabpanel">
+
+  <div class="stage-box">
+    <canvas class="stage" id="heroStage" style="height:260px" aria-label="Live particle visualizer reacting to a simulated song"></canvas>
+    <div class="lanes" id="heroLanes"></div>
+  </div>
+
+  <p class="lead">That is your particle mode, running the same logic as <code>particles.ts</code>, fed by a pretend song. Each column of dots belongs to one range of sound, from deep bass on the left to cymbals on the right.</p>
+
+  <h2>The whole project in one sentence</h2>
+  <p>Sound goes in, the browser turns it into a list of numbers 60 times a second, and a renderer turns those numbers into a picture.</p>
+  <p>Everything else in the repo exists to make that sentence work: getting the sound, measuring it, keeping time, and drawing.</p>
+
+  <h2>Think of a live concert</h2>
+  <p>Every part of the extension has a job, like the crew at a concert. Keep this picture in your head. Every later tab uses it.</p>
+
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Part</th><th>At the concert</th><th>In the code</th></tr></thead>
+    <tbody>
+      <tr><td>Background worker</td><td>The box office at the door. You click the icon, it lets you in and opens the stage.</td><td><code>entrypoints/background.ts</code></td></tr>
+      <tr><td>Side panel</td><td>The stage. The show happens here, on a canvas.</td><td><code>entrypoints/sidepanel/</code></td></tr>
+      <tr><td>Audio sources</td><td>The cables plugged into the desk: a browser tab, the microphone, or a music file.</td><td><code>audio/sources/</code></td></tr>
+      <tr><td>Audio engine</td><td>The mixing desk, with a meter that splits sound into low, middle and high.</td><td><code>audio/engine.ts</code></td></tr>
+      <tr><td>Render loop</td><td>The stage manager with a metronome, saying "next picture" 60 times a second.</td><td><code>render/loop.ts</code></td></tr>
+      <tr class="mine"><td>Renderers</td><td>The lighting designers. Bars is one, your particles is another.</td><td><code>render/modes/</code></td></tr>
+      <tr class="mine"><td>The contract</td><td>The job description every lighting designer signs.</td><td><code>render/renderer.ts</code></td></tr>
+      <tr><td>Settings</td><td>The knobs on the desk: volume boost, frequency range, colors.</td><td><code>settings/</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>How sound travels through it</h2>
+  <div class="flow" aria-label="Signal chain">
+    <div class="step"><b>Source</b><span>tab, mic or file</span></div>
+    <div class="arrow" aria-hidden="true">›</div>
+    <div class="step"><b>Engine</b><span>splits sound into pitches</span></div>
+    <div class="arrow" aria-hidden="true">›</div>
+    <div class="step"><b>1024 numbers</b><span>called <code>bins</code></span></div>
+    <div class="arrow" aria-hidden="true">›</div>
+    <div class="step"><b>Loop</b><span>60 times a second</span></div>
+    <div class="arrow" aria-hidden="true">›</div>
+    <div class="step mine"><b>Renderer</b><span>your particles</span></div>
+    <div class="arrow" aria-hidden="true">›</div>
+    <div class="step"><b>Canvas</b><span>pixels on screen</span></div>
+  </div>
+
+  <p>Orange means you built it. Tabs 5, 6 and 7 are yours, so those are the ones to know best.</p>
+
+  <div class="yours">
+    <p><strong>What you built so far:</strong> the particle renderer (LOS-24), the fixes from Juan's review on it, and the tab capture spike (LOS-17) that decided how tab audio will work. All of it is in your pull request #5.</p>
+  </div>
+
+</section>
+
+<!-- ================================================================== 2 -->
+<section class="panel" id="t2" role="tabpanel">
+
+  <p class="lead">Every part of the project, who owns it, and where it stands as of October 7. Orange rows are yours.</p>
+
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Part</th><th>File</th><th>Ticket</th><th>Status</th><th>Built by</th></tr></thead>
+    <tbody>
+      <tr><td>Open panel on icon click</td><td><code>background.ts</code></td><td>LOS-7</td><td><span class="pill main">on main</span></td><td>Juan</td></tr>
+      <tr><td>The stage and canvas</td><td><code>sidepanel/</code>, <code>utils/canvas.ts</code></td><td>LOS-7</td><td><span class="pill main">on main</span></td><td>Juan</td></tr>
+      <tr><td>Empty, loading and error states</td><td><code>sidepanel/</code></td><td>LOS-19</td><td><span class="pill pr">open PR #6</span></td><td>Juan</td></tr>
+      <tr><td>Audio engine</td><td><code>audio/engine.ts</code></td><td>LOS-8</td><td><span class="pill branch">Alex's branch</span></td><td>Alex</td></tr>
+      <tr><td>Microphone source</td><td><code>sources/mic.ts</code></td><td>LOS-11</td><td><span class="pill branch">Alex's branch</span></td><td>Alex</td></tr>
+      <tr><td>Render loop and bars</td><td><code>render/loop.ts</code>, <code>bars.ts</code></td><td>LOS-12</td><td><span class="pill branch">Alex's branch</span></td><td>Alex, though the ticket is assigned to you</td></tr>
+      <tr><td>Saving settings</td><td><code>settings/store.ts</code></td><td>LOS-15</td><td><span class="pill branch">Alex's branch</span></td><td>Alex</td></tr>
+      <tr><td>File source</td><td><code>sources/file.ts</code></td><td>LOS-9</td><td><span class="pill stub">stub</span></td><td>not started, assigned to Alex</td></tr>
+      <tr><td>Tab source</td><td><code>sources/tab.ts</code></td><td>LOS-10</td><td><span class="pill stub">stub</span></td><td>not started</td></tr>
+      <tr class="mine"><td>Particle renderer</td><td><code>render/modes/particles.ts</code></td><td>LOS-24</td><td><span class="pill pr">open PR #5</span></td><td>you</td></tr>
+      <tr class="mine"><td>Shared panel color</td><td><code>render/theme.ts</code></td><td>LOS-24</td><td><span class="pill pr">open PR #5</span></td><td>you</td></tr>
+      <tr class="mine"><td><code>reset()</code> on the contract</td><td><code>render/renderer.ts</code></td><td>LOS-24</td><td><span class="pill pr">open PR #5</span></td><td>you</td></tr>
+      <tr class="mine"><td>Tab capture spike result</td><td><code>sources/tab.ts</code> notes</td><td>LOS-17</td><td><span class="pill pr">open PR #5</span></td><td>you</td></tr>
+      <tr class="mine"><td>Tests for particles</td><td><code>tests/particles.test.ts</code></td><td>LOS-24</td><td><span class="pill pr">open PR #5</span></td><td>you</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>What the statuses mean</h3>
+  <ul>
+    <li><span class="pill main">on main</span> merged into the shared version everyone builds on.</li>
+    <li><span class="pill branch">Alex's branch</span> written and working, but on Alex's own copy. Not merged yet.</li>
+    <li><span class="pill pr">open PR</span> waiting for a teammate to approve it.</li>
+    <li><span class="pill stub">stub</span> a placeholder. The function exists but only throws an error that says <code>TODO</code>.</li>
+  </ul>
+
+  <h2>The surprising part</h2>
+  <p>Right now, <code>main</code> can open the panel, but it <strong>cannot draw anything</strong>. The engine, the microphone, the loop and the bars all live on Alex's branch, which is not merged.</p>
+  <p>That is why you tested particles on top of Alex's branch. Your file was ready, but on <code>main</code> nothing would call it.</p>
+
+  <div class="think">
+    <p><strong>Think of it like this:</strong> the stage is built and the lighting designer is hired, but the mixing desk and the stage manager are still in another truck on the highway. Once Alex's work is merged, everything connects.</p>
+  </div>
+
+  <h2>How the folders are organized</h2>
+<pre>src/
+  entrypoints/
+    background.ts        <span class="c">box office: opens the panel</span>
+    sidepanel/           <span class="c">the stage: html, css, startup code</span>
+  audio/
+    engine.ts            <span class="c">mixing desk: AudioContext + AnalyserNode</span>
+    sources/             <span class="c">tab.ts, mic.ts, file.ts: the cables</span>
+  render/
+    loop.ts              <span class="c">stage manager: 60 times a second</span>
+    renderer.ts          <span class="c">the contract every renderer follows</span>
+    theme.ts             <span class="c">shared colors (yours)</span>
+    modes/
+      bars.ts            <span class="c">one lighting designer</span>
+      particles.ts       <span class="c">another lighting designer (yours)</span>
+  settings/              <span class="c">the knobs and their defaults</span>
+tests/                   <span class="c">automatic checks</span></pre>
+
+</section>
+
+<!-- ================================================================== 3 -->
+<section class="panel" id="t3" role="tabpanel">
+
+  <p class="lead">Before anything can be drawn, the sound has to become numbers. The browser does that part for you.</p>
+
+  <h2>The 1024 numbers</h2>
+  <p>The audio engine uses a browser tool called an <code>AnalyserNode</code>. Sixty times a second it hands back a list of <strong>1024 numbers</strong>, called <code>bins</code>.</p>
+  <ul>
+    <li><strong>Position</strong> in the list means pitch. Number 0 is the deepest bass. Number 1023 is the highest hiss.</li>
+    <li><strong>Value</strong> means loudness, from 0 for silent to 255 for very loud.</li>
+  </ul>
+
+  <div class="think">
+    <p><strong>Think of it like this:</strong> a piano with 1024 keys. The deepest key is on the left, the highest on the right. Each number says how hard that key is being pressed right now. Sixty times a second, you get a new photo of the whole keyboard.</p>
+  </div>
+
+  <div class="stage-box">
+    <canvas class="stage" id="specStage" style="height:200px" aria-label="Live chart of all 1024 bins"></canvas>
+    <div class="controls">
+      <button class="btn" id="specPause" type="button" aria-pressed="false">Pause</button>
+    </div>
+    <div class="readout">
+      <span>bin 2, about 47 Hz <b id="r2">0</b></span>
+      <span>bin 20, about 470 Hz <b id="r20">0</b></span>
+      <span>bin 100, about 2.3 kHz <b id="r100">0</b></span>
+      <span>bin 600, about 14 kHz <b id="r600">0</b></span>
+    </div>
+  </div>
+
+  <p>Look at where the color is. <strong>Almost all of it is on the far left.</strong> Bass, voices and most instruments live in the first few hundred Hz to a few thousand. The right half is nearly empty. Keep that in mind, because it is the whole story of the bands fix in tab 6.</p>
+
+  <h2>What each frame carries</h2>
+  <p>The loop packs the numbers into a small object called <code>frame</code> and passes it to the renderer:</p>
+<pre>frame.bins        <span class="c">// the 1024 numbers, 0 to 255</span>
+frame.sampleRate  <span class="c">// 48000: how many sound samples per second</span>
+frame.fftSize     <span class="c">// 2048: how detailed the split is (bins = fftSize / 2)</span>
+frame.pulse       <span class="c">// beat detector, always 0 until LOS-20 is built</span></pre>
+
+  <p>With these settings each bin covers about <strong>23 Hz</strong>, so bin 1 is around 23 Hz and bin 1023 is around 24,000 Hz, the top of what the computer records.</p>
+
+  <div class="ok">
+    <p><strong>Nobody on the team writes math for this.</strong> Splitting sound into pitches is called an FFT, and the browser's AnalyserNode does it. Your code only reads the numbers.</p>
+  </div>
+
+</section>
+
+<!-- ================================================================== 4 -->
+<section class="panel" id="t4" role="tabpanel">
+
+  <p class="lead">Pictures on a screen don't move. The loop makes them look like they move by drawing a new one again and again.</p>
+
+  <h2>A flipbook, 60 pages a second</h2>
+  <p>The render loop asks the browser to call it before every screen refresh. That is <code>requestAnimationFrame</code>. Each time, it gets fresh numbers and tells the renderer to draw one picture.</p>
+  <ul>
+    <li>60 pictures a second means each one has about <strong>16 milliseconds</strong> to finish.</li>
+    <li>Go slower than that and the animation stutters.</li>
+    <li>The loop <strong>never draws anything itself</strong>. It calls the renderer's <code>draw()</code>.</li>
+  </ul>
+
+  <div class="think">
+    <p><strong>Think of it like this:</strong> the stage manager has a metronome. Every click, they shout "next picture" at whichever lighting designer is working tonight. The stage manager never touches the lights.</p>
+  </div>
+
+  <div class="stage-box">
+    <canvas class="stage" id="beatStage" style="height:130px" aria-label="Frame counter for the render loop"></canvas>
+    <div class="controls">
+      <button class="btn" id="beatHide" type="button" aria-pressed="false">Hide the panel</button>
+    </div>
+    <div class="readout">
+      <span>pictures drawn <b id="beatFrames">0</b></span>
+      <span>per second <b id="beatFps">0</b></span>
+      <span>ms each <b id="beatMs">0</b></span>
+      <span>state <b id="beatState">running</b></span>
+    </div>
+  </div>
+
+  <p>Click <strong>Hide the panel</strong> and the counter stops. The real loop does this when the panel is hidden, so it doesn't drain the laptop battery drawing pictures nobody sees.</p>
+
+  <h2>Per picture or per second? A note from Juan's review</h2>
+  <p>Your particles move a fixed distance <strong>each picture</strong>, and live for <strong>60 pictures</strong>. On most screens that is 60 pictures a second. But some laptops, like newer Macs, refresh 120 times a second.</p>
+
+  <div class="think">
+    <p><strong>Think of it like this:</strong> you take one step every time the metronome clicks. If someone doubles the metronome speed, you walk twice as fast, without deciding to.</p>
+  </div>
+
+  <div class="stage-box">
+    <canvas class="stage" id="dtStage" style="height:150px" aria-label="Two dots moving, one on a 60 Hz screen and one on a 120 Hz screen"></canvas>
+    <div class="controls">
+      <button class="btn" id="dtToggle" type="button" aria-pressed="false">Move per second instead</button>
+    </div>
+  </div>
+
+  <p>With the default setting, the 120 Hz dot runs twice as fast. Press the button and both move at the same speed, because each step is scaled by the time since the last picture. That time is usually called <code>dt</code>.</p>
+
+  <div class="yours">
+    <p><strong>What you did about it:</strong> nothing in code, on purpose. Juan said it is fine until the loop is finished, so you flagged it on LOS-12: the frame should carry a <code>dt</code> value so every mode can move per second.</p>
+  </div>
+
+</section>
+
+<!-- ================================================================== 5 -->
+<section class="panel" id="t5" role="tabpanel">
+
+  <div class="yours">
+    <p><strong>You built this:</strong> <code>src/render/modes/particles.ts</code>, ticket LOS-24.</p>
+  </div>
+
+  <h2>The contract every renderer signs</h2>
+  <p>The loop doesn't know or care whether it is talking to bars or particles. It only knows the contract in <code>renderer.ts</code>:</p>
+<pre>export interface Renderer {
+  readonly id: ShapeMode;                  <span class="c">// 'bars', 'particles', ...</span>
+  draw(ctx, frame, settings): void;        <span class="c">// draw one picture</span>
+  reset?(): void;                          <span class="c">// optional: forget old state (you added this)</span>
+}</pre>
+
+  <div class="think">
+    <p><strong>Think of it like this:</strong> a job description. "Must be able to draw one picture when asked." Anyone who meets it can work the show, so the user can switch between bars and particles and the stage manager doesn't change at all.</p>
+  </div>
+
+  <h2>Watch it work</h2>
+  <div class="stage-box">
+    <canvas class="stage" id="partStage" style="height:280px" aria-label="Particle renderer demo"></canvas>
+    <div class="lanes" id="partLanes"></div>
+    <div class="controls">
+      <button class="btn" id="partTrails" type="button" aria-pressed="true">Trails on</button>
+      <label>Volume boost <input type="range" id="partGain" min="0.3" max="2.5" step="0.1" value="1"><b class="mono" id="partGainV">1.0</b></label>
+    </div>
+    <div class="controls">
+      <button class="btn" id="leaveNoReset" type="button">Switch away and back, old way</button>
+      <button class="btn" id="leaveReset" type="button">Switch away and back, with reset()</button>
+    </div>
+    <div class="readout">
+      <span>alive <b id="pAlive">0</b> of 240</span>
+      <span>spawned this picture <b id="pSpawn">0</b></span>
+      <span>objects created since load <b id="pCreated">0</b></span>
+    </div>
+    <div class="pool" id="poolGrid" aria-label="The 240 slots of the particle pool. Filled squares are alive."></div>
+  </div>
+
+  <h2>The pool: 240 parking spots</h2>
+  <p>Look at <strong>objects created since load</strong>. It says 240 and it never goes up, no matter how many dots appear.</p>
+  <p>Your file makes 240 dot objects <strong>once</strong>, when it loads. After that it never makes or deletes one. The grid above shows all 240: filled means a dot is alive in that slot, empty means the slot is free.</p>
+
+  <div class="think">
+    <p><strong>Think of it like this:</strong> a parking lot with 240 painted spots. Cars arrive and leave all night, but nobody builds new spots or tears old ones down. "Spawning" a dot means parking in a free spot. A dot "dying" means the car drove away and the spot is free again.</p>
+  </div>
+
+  <p><strong>Why not just create a new dot each time?</strong> Because the browser has a cleaning crew, the garbage collector, that removes objects nobody uses. When it works, the show pauses for a moment. Hundreds of new objects a second means the crew stops the show constantly, and the animation stutters. A fixed pool gives the crew nothing to clean.</p>
+
+<pre>function spawn(band, energy, width, height) {
+  for (let i = 0; i &lt; MAX_PARTICLES; i++) {
+    const p = pool[i];
+    if (!p || p.age &lt; p.life) continue;   <span class="c">// spot taken, try the next one</span>
+    p.x = ((band + 0.5) / BANDS) * width;   <span class="c">// this band's column</span>
+    p.y = height;                           <span class="c">// start at the bottom</span>
+    p.vx = (Math.random() - 0.5) * energy * 0.012;
+    p.vy = -energy * 0.02;                  <span class="c">// louder = faster upward</span>
+    p.age = 0;
+    p.life = 60;                            <span class="c">// lives 60 pictures</span>
+    p.band = band;
+    return;                                 <span class="c">// parked one car, done</span>
+  }
+}</pre>
+
+  <h2>What draw() does, every picture</h2>
+  <ol class="seq">
+    <li><strong>Wash the stage.</strong> Paint the whole canvas with the background color at 22% strength. Old dots fade a bit each time instead of vanishing, which leaves short trails. Turn trails off above to see the difference.</li>
+    <li><strong>Measure the four bands.</strong> Turn the 1024 numbers into 4 loudness values, one per column. Tab 6 explains how.</li>
+    <li><strong>Spawn.</strong> For each band louder than the threshold, park 1 to 3 new dots in its column. Louder means more dots, launched faster.</li>
+    <li><strong>Move, fade, draw.</strong> Every live dot moves a step, gets one picture older, and is drawn more transparent as it ages: <code>1 - age / life</code>. At age 60 it is invisible and its spot is free.</li>
+  </ol>
+
+  <h2>Juan's note on the trail color</h2>
+  <p>The wash used <code>rgb(12, 12, 16)</code>. The panel behind the canvas is <code>#0e0f12</code>, which is <code>rgb(14, 15, 18)</code>. Almost the same, but not quite, so a faint line showed where the canvas ends.</p>
+
+  <div class="think">
+    <p><strong>Think of it like this:</strong> painting the stage floor with a slightly different black than the walls. You can barely see it, but there is a seam at the edge. The fix is one paint can that everyone uses.</p>
+  </div>
+
+  <div class="paint">
+    <div class="wall" id="wallOld"><div class="floor" id="floorOld"></div><p>Before: floor painted rgb(12, 12, 16)</p></div>
+    <div class="wall"><div class="floor" style="background: rgb(14, 15, 18)"></div><p>After: floor painted from the shared color</p></div>
+  </div>
+  <div class="controls"><button class="btn" id="exaggerate" type="button" aria-pressed="false">Exaggerate the difference</button></div>
+
+  <p>The paint can is the new file <code>render/theme.ts</code>:</p>
+<pre><span class="c">// theme.ts: one place for the panel color, matching --bg in the CSS</span>
+export const PANEL_BG_RGB = '14, 15, 18';
+
+<span class="c">// particles.ts: built once when the file loads, not every picture</span>
+const TRAIL_FILL = `rgba(${PANEL_BG_RGB}, 0.22)`;</pre>
+  <p>Building the color text <strong>once</strong> matters for the same reason as the pool: a new piece of text every picture would be new garbage every picture.</p>
+
+  <h2>Juan's note on switching modes: reset()</h2>
+  <p>The pool lives as long as the page does. So if the user switches to bars and later back to particles, the old half-faded dots pick up exactly where they stopped, flying mid-air.</p>
+  <p>Try the two buttons under the demo. <strong>Old way</strong> freezes, then the same dots continue. <strong>With reset()</strong> starts clean.</p>
+
+  <div class="think">
+    <p><strong>Think of it like this:</strong> between two songs, the crew sweeps up the confetti from the last one. <code>reset()</code> is the broom.</p>
+  </div>
+
+<pre>reset() {
+  for (let i = 0; i &lt; MAX_PARTICLES; i++) {
+    const p = pool[i];
+    if (p) p.age = p.life;   <span class="c">// every car leaves: every spot is free</span>
+  }
+},</pre>
+
+  <p>It doesn't delete anything. It just marks every spot as free, the same way a dot dies naturally. You added <code>reset?()</code> to the contract as <strong>optional</strong>, with a question mark, so bars doesn't have to have one. Calling it when the mode changes is the loop's job, which is why you noted it on LOS-12.</p>
+
+</section>
+
+<!-- ================================================================== 6 -->
+<section class="panel" id="t6" role="tabpanel">
+
+  <div class="yours">
+    <p><strong>You fixed this:</strong> the band split in <code>particles.ts</code>, after Juan's main review comment on PR #5.</p>
+  </div>
+
+  <h2>The problem in plain words</h2>
+  <p>Your particles have 4 columns, one per band. The first version split the 1024 numbers into 4 <strong>equal</strong> groups of 256. That sounds fair, but it isn't, because of how pitch works.</p>
+
+  <div class="think">
+    <p><strong>Think of it like this:</strong> on a piano, every octave doubles the pitch. The lowest A is 27.5 Hz, then 55, 110, 220, 440, 880, 1760, 3520, 7040. Seven of the piano's octaves fit below 3,520 Hz. Split 0 to 24,000 Hz into four equal parts and the first part, 0 to 6,000 Hz, holds almost the entire piano. The last two parts, 12,000 to 24,000 Hz, hold almost nothing a song plays.</p>
+  </div>
+
+  <p>So with music, columns 3 and 4 almost never got loud enough to spawn dots. Juan put it as: <em>most frames spawn from 2 of 4 columns.</em> Watch it happen with the same pretend song:</p>
+
+  <div class="stage-box">
+    <div class="twoup">
+      <figure>
+        <canvas class="stage" id="bandsEven" style="height:210px" aria-label="Band loudness with an even split"></canvas>
+        <figcaption>Before: even split over 0 to 24,000 Hz</figcaption>
+      </figure>
+      <figure>
+        <canvas class="stage" id="bandsLog" style="height:210px" aria-label="Band loudness with a log-spaced split"></canvas>
+        <figcaption>After: log-spaced inside 20 to 16,000 Hz</figcaption>
+      </figure>
+    </div>
+    <p style="font-size:0.86rem;color:var(--ink-3);margin-top:0.7rem">The dashed line is the threshold, 0.18. A column only spawns dots when its bar is above it. The percentage is how often that column spawned over the last few seconds.</p>
+  </div>
+
+  <h2>The fix: log-spaced bands inside the user's range</h2>
+  <p>Two changes, both from Juan's comment:</p>
+  <ol>
+    <li><strong>Use <code>settings.range</code>.</strong> The user can choose which frequencies to show, 20 to 16,000 Hz by default. The old code ignored it and used everything up to 24,000 Hz.</li>
+    <li><strong>Space the bands like a piano, not like a ruler.</strong> Each band covers about the same number of octaves, so each one gets real music.</li>
+  </ol>
+
+  <p>Here are the real band edges your code computes, at 48,000 samples per second and fftSize 2048:</p>
+  <div class="tablewrap">
+  <table id="edgesTable">
+    <thead><tr><th>Band</th><th>Bins</th><th>Frequencies</th><th>What lives there</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  </div>
+
+  <p>The first band is only 4 bins wide and the last is 550. That looks unfair, until you remember the piano: each band covers roughly the same number of octaves, so each gets a fair share of the music.</p>
+
+<pre><span class="c">// bandEdges: where each band starts and ends, as bin numbers</span>
+for (let edge = 0; edge &lt;= count; edge++) {
+  out[edge] = Math.floor(low * Math.pow(ratio, edge / count));
+}</pre>
+  <p><code>Math.pow</code> with a fraction is what makes the steps grow instead of staying equal. <code>low</code> and <code>ratio</code> come from <code>settings.range</code>, turned into bin numbers with the shared helper <code>hzToBin</code>.</p>
+
+  <h2>Measure once, not every picture</h2>
+  <p>Juan's second request: compute the edges <strong>only when they can change</strong>. They depend on just five things: the number of bins, the sample rate, the fftSize, and the low and high ends of the range. Those almost never change during a song.</p>
+
+  <div class="think">
+    <p><strong>Think of it like this:</strong> painting the lane lines on a running track. You paint them once, and repaint only if the track is rebuilt. You don't repaint them before every race.</p>
+  </div>
+
+<pre><span class="c">// inside draw(): recompute only if something they depend on changed</span>
+if (
+  binCount !== edgesFor.binCount ||
+  frame.sampleRate !== edgesFor.sampleRate ||
+  frame.fftSize !== edgesFor.fftSize ||
+  settings.range.low !== edgesFor.low ||
+  settings.range.high !== edgesFor.high
+) {
+  bandEdges(binCount, frame.sampleRate, frame.fftSize, settings.range, edges);
+  <span class="c">// ...then remember what they were computed for</span>
+}
+bandEnergies(frame.bins, edges, settings.gain, energies);   <span class="c">// every picture: just averaging</span></pre>
+
+  <h2>Why it became two functions</h2>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Function</th><th>Runs</th><th>Job</th></tr></thead>
+    <tbody>
+      <tr class="mine"><td><code>bandEdges</code></td><td>rarely</td><td>Works out where each band starts and ends.</td></tr>
+      <tr class="mine"><td><code>bandEnergies</code></td><td>every picture</td><td>Averages the numbers between the edges into a loudness from 0 to 1.</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Both are <strong>pure functions</strong>: numbers in, numbers out, no canvas, no screen. That made Juan's other request easy, because pure functions are simple to test. Tab 8 shows the tests.</p>
+
+</section>
+
+<!-- ================================================================== 7 -->
+<section class="panel" id="t7" role="tabpanel">
+
+  <div class="yours">
+    <p><strong>You did this:</strong> the LOS-17 spike. Its answer decides how LOS-10, tab audio, gets built.</p>
+  </div>
+
+  <h2>What a spike is</h2>
+  <p>A spike is a <strong>short experiment</strong> with a time limit, two hours here, to answer one question before anyone builds the real thing. The code is thrown away. The answer is what matters.</p>
+
+  <h2>The question</h2>
+  <p>To show visuals for a YouTube video, the extension needs that tab's sound. Chrome hands it out as a <strong>stream id</strong>. The question was: <em>can the side panel itself use a stream id, or does it need a hidden helper page?</em></p>
+
+  <div class="think">
+    <p><strong>Think of it like this:</strong> a backstage pass. The box office, the background worker, prints one <strong>only while you are standing at the window</strong>, which means during your click on the icon. The pass works <strong>once</strong> and expires in seconds. The question was whether the stage, the side panel, is allowed to use a pass at all.</p>
+  </div>
+
+  <h2>The three runs</h2>
+
+  <div class="run" data-run="1">
+    <div class="run-head"><h3>Run 1</h3><button class="btn play" type="button">Play</button></div>
+    <ol>
+      <li>Click the icon. The setting <code>openPanelOnActionClick</code> opens the panel.</li>
+      <li>Click a button inside the panel. The panel asks Chrome for a pass.</li>
+      <li>Chrome says: <em>"Extension has not been invoked for the current page."</em></li>
+    </ol>
+    <p class="result fail">Failed at step 1. Opening the panel this way never counts as a real click.</p>
+  </div>
+
+  <div class="run" data-run="2">
+    <div class="run-head"><h3>Run 2</h3><button class="btn play" type="button">Play</button></div>
+    <ol>
+      <li>Click the icon. The background worker hears the click and opens the panel itself.</li>
+      <li>Click a button inside the panel. The panel asks Chrome for a pass.</li>
+      <li>Chrome gives the same refusal.</li>
+    </ol>
+    <p class="result fail">Failed at step 1. The pass has to be asked for during the icon click, and a button in the panel is too late.</p>
+  </div>
+
+  <div class="run" data-run="3">
+    <div class="run-head"><h3>Run 3</h3><button class="btn play" type="button">Play</button></div>
+    <ol>
+      <li>Click the icon. During that same click, the background worker asks Chrome for the pass.</li>
+      <li>Chrome hands it over.</li>
+      <li>The background worker passes it straight to the side panel.</li>
+      <li>The side panel uses it and gets the tab's sound: 1 audio track.</li>
+    </ol>
+    <p class="result pass">Worked. The side panel can use the pass, as long as the box office prints it during the click.</p>
+  </div>
+
+  <h2>What this changes for LOS-10</h2>
+  <ul>
+    <li><strong>No hidden helper page is needed.</strong> Sound can live in the side panel, which keeps the design simple.</li>
+    <li><strong><code>openPanelOnActionClick</code> has to go.</strong> With it on, tab capture can never work. It gets replaced by a click handler, <code>action.onClicked</code>, that opens the panel with <code>sidePanel.open</code> and asks for the pass in the same moment.</li>
+    <li><strong>A "This tab" button inside the panel can't start capture by itself.</strong> Capture has to start from the icon click.</li>
+  </ul>
+
+  <h2>Where the answer lives now</h2>
+  <p>Juan asked to move it out of the separate spike file. It is now in two places:</p>
+  <ul>
+    <li>The note at the top of <code>audio/sources/tab.ts</code>, where whoever builds LOS-10 will read it.</li>
+    <li>The full write-up in your comment on LOS-17 in Linear.</li>
+  </ul>
+
+</section>
+
+<!-- ================================================================== 8 -->
+<section class="panel" id="t8" role="tabpanel">
+
+  <h2>Four checks on every pull request</h2>
+  <p>When you open or update a pull request, GitHub runs four checks automatically. All four must pass.</p>
+  <ol class="seq">
+    <li><strong>Lint.</strong> Reads the code for sloppy mistakes, like a variable you created and never used.</li>
+    <li><strong>Typecheck.</strong> Makes sure types match, like never passing text where a number belongs.</li>
+    <li><strong>Test.</strong> Runs every test file. If any test fails, the check fails.</li>
+    <li><strong>Build.</strong> Builds the real extension, to prove it still packages.</li>
+  </ol>
+
+  <div class="think">
+    <p><strong>Think of it like this:</strong> the sound check before the show. Nobody goes on stage until the mics work, the cables are plugged in, and the speakers are on.</p>
+  </div>
+
+  <h2>Your tests</h2>
+  <p><code>tests/particles.test.ts</code> checks that your logic does what you claim. Each test runs a small example and compares the answer with what it should be.</p>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Test</th><th>What it proves</th></tr></thead>
+    <tbody>
+      <tr class="mine"><td>spans exactly settings.range</td><td>The first edge is at 20 Hz and the last at 16,000 Hz, and edges only go up.</td></tr>
+      <tr class="mine"><td>all zero for silence</td><td>No sound means no loudness in any band.</td></tr>
+      <tr class="mine"><td>spreads common pitches across every band</td><td>Tones at 60 Hz, 300 Hz, 1,500 Hz and 8,000 Hz land in bands 1, 2, 3 and 4. This is the test for Juan's main point.</td></tr>
+      <tr class="mine"><td>ignores energy above settings.range</td><td>A 20,000 Hz tone, above the range, doesn't count.</td></tr>
+      <tr class="mine"><td>clamps to 1</td><td>A huge volume boost still stops at 1.0, never above.</td></tr>
+      <tr class="mine"><td>reset clears live particles</td><td>After <code>reset()</code>, a silent picture draws zero dots.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>The last test has a neat trick. Tests run without a real screen, so it uses a <strong>pretend canvas</strong> that draws nothing and only counts how many times a dot was drawn. Draw a loud picture, check dots were drawn, call <code>reset()</code>, draw a silent picture, check the count is zero.</p>
+
+  <h2>How your work got to the team</h2>
+  <ol class="seq">
+    <li><strong>Branch.</strong> Your own copy, <code>julio/los-24-mode-particles</code>. The name contains the ticket, so Linear links them.</li>
+    <li><strong>Commit and push.</strong> Save your changes and upload them to GitHub.</li>
+    <li><strong>Pull request.</strong> "Please add my changes to <code>main</code>." First line: <code>Closes LOS-24</code>.</li>
+    <li><strong>Checks run.</strong> The four checks above.</li>
+    <li><strong>Review.</strong> Juan read it and left five notes.</li>
+    <li><strong>Fix and push again.</strong> The pull request updates by itself.</li>
+    <li><strong>Reply, resolve, re-request review.</strong> Answer each note, then ask Juan to look again.</li>
+    <li><strong>Approve and squash merge.</strong> All your commits become one clean commit on <code>main</code>, and Linear marks the ticket done.</li>
+  </ol>
+
+  <div class="think">
+    <p><strong>Think of it like this:</strong> a shared document. Your branch is your private copy. A pull request is "suggest these edits." The review is your editor's comments. Squash merge is "accept all suggestions as one change."</p>
+  </div>
+
+  <h2>What the review taught</h2>
+  <ul>
+    <li><strong>One ticket per pull request.</strong> PR #5 mixed LOS-24 and LOS-17. Juan accepted it this time, but next time, split them.</li>
+    <li><strong>Pure functions are easy to test.</strong> Pulling <code>bandEnergies</code> out of <code>draw()</code> is what made the tests possible.</li>
+    <li><strong>Shared values live in one place.</strong> One paint can, <code>theme.ts</code>, instead of the same color typed into many files.</li>
+  </ul>
+
+</section>
+
+<!-- ================================================================== 9 -->
+<section class="panel" id="t9" role="tabpanel">
+
+  <h2>Say it back</h2>
+  <p>If you can explain these six without looking, you understand your part of the project, no matter what tools helped you write it.</p>
+  <ol class="say">
+    <li>The extension turns sound into 1024 numbers 60 times a second, and a renderer turns those numbers into a picture.</li>
+    <li>A renderer is anything with a <code>draw()</code> function. Bars and particles follow the same contract, so the loop can swap them.</li>
+    <li>My particles are never created or deleted while running. Spawning reuses a free spot in a fixed pool of 240, so the garbage collector never interrupts the show.</li>
+    <li>Bands are spaced like a piano, inside the user's range, because pitch doubles every octave. An even split wastes the top bands on sounds music barely has.</li>
+    <li>The band edges are computed once and reused, so each picture only averages numbers.</li>
+    <li>The spike showed the side panel can use a tab's stream id, but only if the background worker asks for it during the icon click.</li>
+  </ol>
+
+  <h2>Words to know</h2>
+  <div class="tablewrap">
+  <table>
+    <thead><tr><th>Word</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td>Bin</td><td>One of the 1024 numbers: how loud one small slice of pitch is right now.</td></tr>
+      <tr><td>Band</td><td>A group of bins averaged into one loudness. Particles uses 4.</td></tr>
+      <tr><td>Frame</td><td>One picture, and the bundle of data used to draw it.</td></tr>
+      <tr><td>Render loop</td><td>The code that asks for a new picture about 60 times a second.</td></tr>
+      <tr><td>Renderer</td><td>Anything with a <code>draw()</code> function: bars, particles.</td></tr>
+      <tr><td>Pool</td><td>A fixed set of objects reused forever instead of created and thrown away.</td></tr>
+      <tr><td>Garbage collector</td><td>The browser's cleaner. When it runs, animations can stutter.</td></tr>
+      <tr><td>Pure function</td><td>Gives the same output for the same input and touches nothing else. Easy to test.</td></tr>
+      <tr><td>Spike</td><td>A short, time-boxed experiment that answers one question.</td></tr>
+      <tr><td>Stream id</td><td>Chrome's single-use pass for capturing a tab's sound.</td></tr>
+      <tr><td>Background worker</td><td>The extension's always-there helper. It hears icon clicks.</td></tr>
+      <tr><td>Stub</td><td>A placeholder function that only throws a TODO error.</td></tr>
+      <tr><td>Squash merge</td><td>Merging a pull request as one single commit.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2>Check yourself</h2>
+  <div id="quiz"></div>
+  <p class="score" id="score"></p>
+
+</section>
+
+<footer>Every demo on this page runs the same logic as the project's real files, fed by a simulated song instead of live audio. Status of each part is as of October 7.</footer>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  var REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------------- tabs ---------------- */
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('nav.chain button'));
+  var panels = document.querySelectorAll('.panel');
+  var activeTab = 't1';
+  function openTab(btn, focus) {
+    tabs.forEach(function (b) { b.setAttribute('aria-selected', 'false'); b.tabIndex = -1; });
+    panels.forEach(function (p) { p.classList.remove('active'); });
+    btn.setAttribute('aria-selected', 'true');
+    btn.tabIndex = 0;
+    activeTab = btn.dataset.tab;
+    document.getElementById(activeTab).classList.add('active');
+    if (focus) btn.focus();
+    btn.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    window.scrollTo({ top: 0, behavior: REDUCED ? 'auto' : 'smooth' });
+  }
+  tabs.forEach(function (b, i) {
+    b.tabIndex = i === 0 ? 0 : -1;
+    b.addEventListener('click', function () { openTab(b, false); });
+    b.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowRight') { e.preventDefault(); openTab(tabs[(i + 1) % tabs.length], true); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); openTab(tabs[(i - 1 + tabs.length) % tabs.length], true); }
+    });
+  });
+
+  /* ---------------- theme ---------------- */
+  var root = document.documentElement;
+  function currentTheme() {
+    return root.getAttribute('data-theme') ||
+      (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  }
+  document.getElementById('themeBtn').addEventListener('click', function () {
+    var next = currentTheme() === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    try { localStorage.setItem('gt-theme', next); } catch (e) {}
+  });
+  try { var saved = localStorage.getItem('gt-theme'); if (saved) root.setAttribute('data-theme', saved); } catch (e) {}
+
+  /* ---------------- constants: the same values as the real code ---------------- */
+  var SAMPLE_RATE = 48000, FFT_SIZE = 2048, BIN_COUNT = FFT_SIZE / 2, HZ_PER_BIN = SAMPLE_RATE / FFT_SIZE;
+  var PALETTE = ['#f2994a', '#f2c94c', '#6fcf97', '#56ccf2', '#bb6bd9'];
+  var STAGE_BG = '#0e0f12';
+  var PANEL_BG_RGB = '14, 15, 18';
+  var TRAIL_FILL = 'rgba(' + PANEL_BG_RGB + ', 0.22)';
+  var RANGE = { low: 20, high: 16000 };
+  var BANDS = 4, THRESHOLD = 0.18, MAX_SPAWN = 3, MAX_PARTICLES = 240, TAU = Math.PI * 2;
+
+  function hzToBin(hz, sampleRate, fftSize) {
+    return Math.round((hz / (sampleRate / 2)) * (fftSize / 2));
+  }
+
+  /* bandEdges and bandEnergies: line for line the logic in particles.ts */
+  function bandEdges(binCount, sampleRate, fftSize, range, out) {
+    out.fill(0);
+    var count = out.length - 1;
+    if (count < 1 || binCount < 2) return;
+    var low = Math.min(Math.max(hzToBin(range.low, sampleRate, fftSize), 1), binCount - 1);
+    var high = Math.min(Math.max(hzToBin(range.high, sampleRate, fftSize), low + count), binCount);
+    var ratio = high / low;
+    for (var edge = 0; edge <= count; edge++) out[edge] = Math.floor(low * Math.pow(ratio, edge / count));
+  }
+  function bandEnergies(bins, boundaries, gain, out) {
+    var binCount = bins.length;
+    for (var band = 0; band < out.length; band++) {
+      var start = boundaries[band];
+      var end = boundaries[band + 1];
+      var last = Math.max(start + 1, Math.min(end, binCount));
+      var total = 0;
+      for (var i = start; i < last; i++) total += bins[i];
+      out[band] = Math.min((total / (last - start) / 255) * gain, 1);
+    }
+  }
+
+  /* ---------------- the pretend song ---------------- */
+  var bins = new Uint8Array(BIN_COUNT);
+  var songTime = 0;
+  function bell(x, mu, sigma) { var z = (x - mu) / sigma; return Math.exp(-z * z); }
+  function fillBins(dt) {
+    songTime += dt;
+    var beat = songTime * 2;                                  // 120 beats a minute
+    var kick = Math.exp(-(beat - Math.floor(beat)) * 9);      // thump on each beat
+    var eighth = songTime * 4;
+    var hat = Math.exp(-(eighth - Math.floor(eighth)) * 2.5); // hi-hat on every half beat
+    var voice = 0.55 + 0.25 * Math.sin(songTime * 1.3) + 0.15 * Math.sin(songTime * 3.7);
+    var bass = 0.6 + 0.4 * Math.sin(songTime * 2.1);
+    for (var i = 0; i < BIN_COUNT; i++) {
+      var hz = i * HZ_PER_BIN;
+      var v = 0;
+      v += 255 * kick * bell(hz, 60, 38);
+      v += 210 * bass * bell(hz, 160, 75);
+      if (hz > 0) v += 185 * voice * bell(Math.log2(hz), 10.2, 1.05);
+      if (hz > 3200 && hz < 12500) v += (50 + 230 * hat) * (1 - (hz - 3200) / 9300);  // cymbal wash + hats
+      v += 16 * Math.exp(-hz / 5000);
+      bins[i] = v > 255 ? 255 : v < 0 ? 0 : v;
+    }
+  }
+
+  /* ---------------- canvas sizing: from CSS, never from its own output ---------------- */
+  function fit(cv) {
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var w = Math.round(cv.clientWidth * dpr);
+    var h = Math.round(cv.clientHeight * dpr);
+    if (!w || !h) return false;
+    if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+    return true;
+  }
+
+  /* ---------------- one clock; only the open tab's demos run ---------------- */
+  var widgets = [];
+  function widget(tab, fn) { widgets.push({ tab: tab, fn: fn }); }
+  var lastTime = performance.now();
+  var fpsAvg = 60, msAvg = 16.7;
+  function tick(now) {
+    var dt = Math.min((now - lastTime) / 1000, 0.1);
+    lastTime = now;
+    if (dt > 0) { fpsAvg = fpsAvg * 0.92 + (1 / dt) * 0.08; msAvg = msAvg * 0.92 + dt * 1000 * 0.08; }
+    fillBins(dt);
+    for (var i = 0; i < widgets.length; i++) if (widgets[i].tab === activeTab) widgets[i].fn(dt);
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  /* ---------------- the particle system, same logic as particles.ts ---------------- */
+  function makeParticles() {
+    var created = 0;
+    var pool = Array.from({ length: MAX_PARTICLES }, function () {
+      created++;
+      return { x: 0, y: 0, vx: 0, vy: 0, age: 0, life: 0, band: 0 };
+    });
+    var energies = new Float32Array(BANDS);
+    var edges = new Int32Array(BANDS + 1);
+    var edgesFor = { binCount: -1, sampleRate: -1, fftSize: -1, low: -1, high: -1 };
+    var spawned = 0;
+
+    function spawn(band, energy, width, height) {
+      for (var i = 0; i < MAX_PARTICLES; i++) {
+        var p = pool[i];
+        if (p.age < p.life) continue;
+        p.x = ((band + 0.5) / BANDS) * width;
+        p.y = height;
+        p.vx = (Math.random() - 0.5) * energy * 0.012;
+        p.vy = -energy * 0.02;
+        p.age = 0;
+        p.life = 60;
+        p.band = band;
+        spawned++;
+        return;
+      }
+    }
+
+    function reset() {
+      for (var i = 0; i < MAX_PARTICLES; i++) pool[i].age = pool[i].life;
+    }
+
+    function draw(ctx, width, height, opts) {
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = opts.trails ? TRAIL_FILL : STAGE_BG;
+      ctx.fillRect(0, 0, width, height);
+
+      if (BIN_COUNT !== edgesFor.binCount || SAMPLE_RATE !== edgesFor.sampleRate ||
+          FFT_SIZE !== edgesFor.fftSize || RANGE.low !== edgesFor.low || RANGE.high !== edgesFor.high) {
+        bandEdges(BIN_COUNT, SAMPLE_RATE, FFT_SIZE, RANGE, edges);
+        edgesFor.binCount = BIN_COUNT; edgesFor.sampleRate = SAMPLE_RATE; edgesFor.fftSize = FFT_SIZE;
+        edgesFor.low = RANGE.low; edgesFor.high = RANGE.high;
+      }
+      bandEnergies(bins, edges, opts.gain, energies);
+
+      spawned = 0;
+      for (var band = 0; band < BANDS; band++) {
+        var energy = energies[band];
+        if (energy < THRESHOLD) continue;
+        for (var n = 0; n < Math.round(energy * MAX_SPAWN); n++) spawn(band, energy, width, height);
+      }
+
+      var radius = Math.max(2, height * 0.008);
+      for (var i = 0; i < MAX_PARTICLES; i++) {
+        var p = pool[i];
+        if (p.age >= p.life) continue;
+        p.x += p.vx * width;
+        p.y += p.vy * height;
+        p.age += 1;
+        ctx.globalAlpha = 1 - p.age / p.life;
+        ctx.fillStyle = PALETTE[p.band % PALETTE.length];
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, radius, 0, TAU);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function alive() {
+      var n = 0;
+      for (var i = 0; i < MAX_PARTICLES; i++) if (pool[i].age < pool[i].life) n++;
+      return n;
+    }
+
+    return {
+      pool: pool, draw: draw, reset: reset, alive: alive,
+      created: function () { return created; }, spawned: function () { return spawned; }
+    };
+  }
+
+  /* lane labels under particle demos, built from the real edges */
+  var LANE_NAMES = ['Bass', 'Low mids', 'Mids', 'Treble'];
+  var LANE_WHAT = ['kick drum, deep bass', 'bass guitar, low voices', 'voices, most instruments', 'cymbals, hi-hats, air'];
+  var realEdges = new Int32Array(BANDS + 1);
+  bandEdges(BIN_COUNT, SAMPLE_RATE, FFT_SIZE, RANGE, realEdges);
+  function fmtHz(hz) { return hz >= 1000 ? (Math.round(hz / 100) / 10) + ' kHz' : Math.round(hz) + ' Hz'; }
+  function laneLabels(el) {
+    for (var b = 0; b < BANDS; b++) {
+      var d = document.createElement('div');
+      d.className = 'lane';
+      d.innerHTML = '<i style="background:' + PALETTE[b] + '"></i>' + LANE_NAMES[b] +
+        '<small>' + fmtHz(realEdges[b] * HZ_PER_BIN) + ' to ' + fmtHz(realEdges[b + 1] * HZ_PER_BIN) + '</small>';
+      el.appendChild(d);
+    }
+  }
+
+  /* ---------------- tab 1: hero ---------------- */
+  var hero = makeParticles();
+  var heroCv = document.getElementById('heroStage');
+  var heroCtx = heroCv.getContext('2d');
+  laneLabels(document.getElementById('heroLanes'));
+  var heroRun = !REDUCED;
+  if (REDUCED) heroCv.addEventListener('click', function () { heroRun = !heroRun; });
+  widget('t1', function () {
+    if (!heroRun || !fit(heroCv)) return;
+    hero.draw(heroCtx, heroCv.width, heroCv.height, { trails: true, gain: 1 });
+  });
+
+  /* ---------------- tab 3: the spectrum ---------------- */
+  var specCv = document.getElementById('specStage');
+  var specCtx = specCv.getContext('2d');
+  var specRun = !REDUCED;
+  var specBtn = document.getElementById('specPause');
+  specBtn.textContent = specRun ? 'Pause' : 'Play';
+  specBtn.addEventListener('click', function () {
+    specRun = !specRun;
+    specBtn.textContent = specRun ? 'Pause' : 'Play';
+    specBtn.setAttribute('aria-pressed', String(!specRun));
+  });
+  var rEls = { 2: document.getElementById('r2'), 20: document.getElementById('r20'), 100: document.getElementById('r100'), 600: document.getElementById('r600') };
+  var specTextTimer = 0;
+  function bandOfBin(i) {
+    for (var b = 0; b < BANDS; b++) if (i < realEdges[b + 1]) return b;
+    return BANDS;
+  }
+  widget('t3', function (dt) {
+    if (!fit(specCv)) return;
+    if (!specRun && specCv.dataset.drawn) return;
+    specCv.dataset.drawn = '1';
+    var w = specCv.width, h = specCv.height, dpr = w / specCv.clientWidth;
+    var labelH = 22 * dpr, plotH = h - labelH;
+    specCtx.fillStyle = STAGE_BG;
+    specCtx.fillRect(0, 0, w, h);
+    var cols = Math.max(64, Math.floor(specCv.clientWidth / 3));
+    var per = BIN_COUNT / cols, colW = w / cols;
+    for (var c = 0; c < cols; c++) {
+      var s = Math.floor(c * per), e = Math.floor((c + 1) * per), m = 0;
+      for (var i = s; i < e; i++) if (bins[i] > m) m = bins[i];
+      var bh = (m / 255) * plotH;
+      var b = bandOfBin(s);
+      specCtx.fillStyle = b < BANDS ? PALETTE[b] : '#3a3f4a';
+      specCtx.fillRect(c * colW, plotH - bh, Math.max(1, colW - dpr), bh);
+    }
+    specCtx.fillStyle = '#9aa2b1';
+    specCtx.font = (11 * dpr) + 'px ui-sans-serif, system-ui, sans-serif';
+    specCtx.textBaseline = 'middle';
+    [[1000, '1k'], [5000, '5k'], [10000, '10k'], [15000, '15k'], [20000, '20k Hz']].forEach(function (t) {
+      var x = (t[0] / (SAMPLE_RATE / 2)) * w;
+      specCtx.fillRect(x, plotH, dpr, 4 * dpr);
+      specCtx.fillText(t[1], Math.min(x + 3 * dpr, w - 46 * dpr), plotH + labelH / 2 + dpr);
+    });
+    specTextTimer += dt;
+    if (specTextTimer > 0.12) {
+      specTextTimer = 0;
+      for (var k in rEls) rEls[k].textContent = bins[k];
+    }
+  });
+
+  /* ---------------- tab 4: heartbeat ---------------- */
+  var beatCv = document.getElementById('beatStage');
+  var beatCtx = beatCv.getContext('2d');
+  var beatRunning = true, beatFrames = 0, beatTextTimer = 0;
+  var beatBtn = document.getElementById('beatHide');
+  beatBtn.addEventListener('click', function () {
+    beatRunning = !beatRunning;
+    beatBtn.textContent = beatRunning ? 'Hide the panel' : 'Show the panel again';
+    beatBtn.setAttribute('aria-pressed', String(!beatRunning));
+    document.getElementById('beatState').textContent = beatRunning ? 'running' : 'paused, panel hidden';
+  });
+  widget('t4', function (dt) {
+    if (!fit(beatCv)) return;
+    var w = beatCv.width, h = beatCv.height, dpr = w / beatCv.clientWidth;
+    if (beatRunning) beatFrames++;
+    beatCtx.fillStyle = STAGE_BG;
+    beatCtx.fillRect(0, 0, w, h);
+    var cx = w / 2, cy = h / 2, r = Math.min(w, h) * 0.34;
+    beatCtx.lineWidth = 4 * dpr;
+    beatCtx.strokeStyle = 'rgba(255,255,255,0.12)';
+    beatCtx.beginPath(); beatCtx.arc(cx, cy, r, 0, TAU); beatCtx.stroke();
+    var a = ((beatFrames % 60) / 60) * TAU - Math.PI / 2;
+    beatCtx.strokeStyle = beatRunning ? PALETTE[3] : '#5b6170';
+    beatCtx.beginPath(); beatCtx.arc(cx, cy, r, -Math.PI / 2, a); beatCtx.stroke();
+    beatCtx.fillStyle = '#e8eaee';
+    beatCtx.font = '600 ' + Math.round(r * 0.62) + 'px ui-sans-serif, system-ui, sans-serif';
+    beatCtx.textAlign = 'center';
+    beatCtx.textBaseline = 'middle';
+    beatCtx.fillText(String(beatFrames % 60), cx, cy + dpr);
+    beatCtx.textAlign = 'start';
+    beatTextTimer += dt;
+    if (beatTextTimer > 0.2) {
+      beatTextTimer = 0;
+      document.getElementById('beatFrames').textContent = beatFrames;
+      document.getElementById('beatFps').textContent = beatRunning ? Math.round(fpsAvg) : 0;
+      document.getElementById('beatMs').textContent = beatRunning ? msAvg.toFixed(1) : 'none';
+    }
+  });
+
+  /* per picture vs per second */
+  var dtCv = document.getElementById('dtStage');
+  var dtCtx = dtCv.getContext('2d');
+  var perSecond = false;
+  var lane = [{ hz: 60, x: 0, acc: 0 }, { hz: 120, x: 0, acc: 0 }];
+  var STEP = 0.004;                        // fraction of the width per picture
+  var SPEED = STEP * 60;                   // the same speed, per second, at 60 Hz
+  var dtBtn = document.getElementById('dtToggle');
+  dtBtn.addEventListener('click', function () {
+    perSecond = !perSecond;
+    dtBtn.textContent = perSecond ? 'Move per picture again' : 'Move per second instead';
+    dtBtn.setAttribute('aria-pressed', String(perSecond));
+    lane[0].x = 0; lane[1].x = 0;
+  });
+  widget('t4', function (dt) {
+    if (!fit(dtCv)) return;
+    var w = dtCv.width, h = dtCv.height, dpr = w / dtCv.clientWidth;
+    lane.forEach(function (L) {
+      if (perSecond) {
+        L.x += SPEED * dt;
+      } else {
+        L.acc += dt;
+        var tickLen = 1 / L.hz;
+        while (L.acc >= tickLen) { L.acc -= tickLen; L.x += STEP; }
+      }
+      if (L.x > 1) L.x -= 1;
+    });
+    dtCtx.fillStyle = STAGE_BG;
+    dtCtx.fillRect(0, 0, w, h);
+    dtCtx.font = (12 * dpr) + 'px ui-sans-serif, system-ui, sans-serif';
+    dtCtx.textBaseline = 'middle';
+    var pad = 16 * dpr, labelW = 118 * dpr, trackW = w - labelW - pad * 2;
+    lane.forEach(function (L, i) {
+      var y = h * (i === 0 ? 0.33 : 0.7);
+      dtCtx.fillStyle = '#9aa2b1';
+      dtCtx.fillText(L.hz + ' Hz screen', pad, y);
+      dtCtx.strokeStyle = 'rgba(255,255,255,0.1)';
+      dtCtx.lineWidth = 2 * dpr;
+      dtCtx.beginPath(); dtCtx.moveTo(labelW, y); dtCtx.lineTo(labelW + trackW, y); dtCtx.stroke();
+      dtCtx.fillStyle = PALETTE[i === 0 ? 2 : 0];
+      dtCtx.beginPath(); dtCtx.arc(labelW + L.x * trackW, y, 7 * dpr, 0, TAU); dtCtx.fill();
+    });
+  });
+
+  /* ---------------- tab 5: particles ---------------- */
+  var part = makeParticles();
+  var partCv = document.getElementById('partStage');
+  var partCtx = partCv.getContext('2d');
+  laneLabels(document.getElementById('partLanes'));
+  var partOpts = { trails: true, gain: 1 };
+  var away = false;
+  var trailsBtn = document.getElementById('partTrails');
+  trailsBtn.addEventListener('click', function () {
+    partOpts.trails = !partOpts.trails;
+    trailsBtn.textContent = partOpts.trails ? 'Trails on' : 'Trails off';
+    trailsBtn.setAttribute('aria-pressed', String(partOpts.trails));
+  });
+  var gainIn = document.getElementById('partGain'), gainV = document.getElementById('partGainV');
+  gainIn.addEventListener('input', function () { partOpts.gain = +gainIn.value; gainV.textContent = partOpts.gain.toFixed(1); });
+
+  function leave(withReset) {
+    if (away) return;
+    away = true;
+    if (fit(partCv)) {
+      var w = partCv.width, h = partCv.height, dpr = w / partCv.clientWidth;
+      partCtx.globalAlpha = 1;
+      partCtx.fillStyle = STAGE_BG;
+      partCtx.fillRect(0, 0, w, h);
+      partCtx.fillStyle = '#9aa2b1';
+      partCtx.font = (15 * dpr) + 'px ui-sans-serif, system-ui, sans-serif';
+      partCtx.textAlign = 'center';
+      partCtx.textBaseline = 'middle';
+      partCtx.fillText('Another mode is on screen now', w / 2, h / 2);
+      partCtx.textAlign = 'start';
+    }
+    setTimeout(function () {
+      if (withReset) part.reset();
+      away = false;
+    }, 1300);
+  }
+  document.getElementById('leaveNoReset').addEventListener('click', function () { leave(false); });
+  document.getElementById('leaveReset').addEventListener('click', function () { leave(true); });
+
+  var poolEl = document.getElementById('poolGrid');
+  var cells = [];
+  for (var c = 0; c < MAX_PARTICLES; c++) { var cell = document.createElement('i'); poolEl.appendChild(cell); cells.push(cell); }
+  var pAlive = document.getElementById('pAlive'), pSpawn = document.getElementById('pSpawn'), pCreated = document.getElementById('pCreated');
+  var partTextTimer = 0;
+  var partRun = !REDUCED;
+  if (REDUCED) partCv.addEventListener('click', function () { partRun = !partRun; });
+  widget('t5', function (dt) {
+    if (away || !partRun || !fit(partCv)) return;
+    part.draw(partCtx, partCv.width, partCv.height, partOpts);
+    for (var i = 0; i < MAX_PARTICLES; i++) {
+      var on = part.pool[i].age < part.pool[i].life;
+      if (cells[i].classList.contains('on') !== on) cells[i].classList.toggle('on', on);
+    }
+    partTextTimer += dt;
+    if (partTextTimer > 0.1) {
+      partTextTimer = 0;
+      pAlive.textContent = part.alive();
+      pSpawn.textContent = part.spawned();
+      pCreated.textContent = part.created();
+    }
+  });
+
+  /* the paint seam */
+  var exBtn = document.getElementById('exaggerate');
+  var floorOld = document.getElementById('floorOld');
+  var exaggerated = false;
+  function paintOld() {
+    floorOld.style.background = exaggerated ? 'rgb(0, 0, 2)' : 'rgb(12, 12, 16)';
+  }
+  exBtn.addEventListener('click', function () {
+    exaggerated = !exaggerated;
+    exBtn.setAttribute('aria-pressed', String(exaggerated));
+    exBtn.textContent = exaggerated ? 'Show the real difference' : 'Exaggerate the difference';
+    paintOld();
+  });
+  paintOld();
+
+  /* ---------------- tab 6: even vs log bands ---------------- */
+  var evenEdges = new Int32Array([0, 256, 512, 768, 1024]);
+  var logEdges = realEdges;
+  function makeMeter(id, edgesArr) {
+    var cv = document.getElementById(id);
+    return {
+      cv: cv, ctx: cv.getContext('2d'), edges: edgesArr,
+      energies: new Float32Array(BANDS),
+      history: [new Uint8Array(240), new Uint8Array(240), new Uint8Array(240), new Uint8Array(240)],
+      head: 0, filled: 0
+    };
+  }
+  var meters = [makeMeter('bandsEven', evenEdges), makeMeter('bandsLog', logEdges)];
+  function drawMeter(M) {
+    if (!fit(M.cv)) return;
+    bandEnergies(bins, M.edges, 1, M.energies);
+    for (var b = 0; b < BANDS; b++) M.history[b][M.head] = M.energies[b] >= THRESHOLD ? 1 : 0;
+    M.head = (M.head + 1) % 240;
+    if (M.filled < 240) M.filled++;
+    var ctx = M.ctx, w = M.cv.width, h = M.cv.height, dpr = w / M.cv.clientWidth;
+    var top = 26 * dpr, bottom = 30 * dpr, plotH = h - top - bottom;
+    ctx.fillStyle = STAGE_BG;
+    ctx.fillRect(0, 0, w, h);
+    var colW = w / BANDS;
+    ctx.font = (11 * dpr) + 'px ui-sans-serif, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for (b = 0; b < BANDS; b++) {
+      var e = M.energies[b];
+      var bw = colW * 0.5, x = b * colW + (colW - bw) / 2, bh = e * plotH;
+      ctx.fillStyle = PALETTE[b];
+      ctx.globalAlpha = e >= THRESHOLD ? 1 : 0.28;
+      ctx.fillRect(x, top + plotH - bh, bw, bh);
+      ctx.globalAlpha = 1;
+      var sum = 0;
+      for (var k = 0; k < M.filled; k++) sum += M.history[b][k];
+      var pct = M.filled ? Math.round((sum / M.filled) * 100) : 0;
+      ctx.fillStyle = pct > 10 ? '#e8eaee' : '#7d8493';
+      ctx.fillText(pct + '%', b * colW + colW / 2, top / 2 + dpr);
+      ctx.fillStyle = '#7d8493';
+      var lo = M.edges[b] * HZ_PER_BIN, hi = M.edges[b + 1] * HZ_PER_BIN;
+      ctx.fillText(fmtHz(lo).replace(' Hz', '').replace(' kHz', 'k') + ' to ' + fmtHz(hi).replace(' Hz', '').replace(' kHz', 'k'),
+        b * colW + colW / 2, h - bottom / 2);
+    }
+    var ty = top + plotH - THRESHOLD * plotH;
+    ctx.strokeStyle = 'rgba(232,234,238,0.55)';
+    ctx.lineWidth = dpr;
+    ctx.setLineDash([5 * dpr, 4 * dpr]);
+    ctx.beginPath(); ctx.moveTo(0, ty); ctx.lineTo(w, ty); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.textAlign = 'start';
+  }
+  widget('t6', function () { meters.forEach(drawMeter); });
+
+  /* edges table, computed by the same function as the code */
+  var edgeBody = document.querySelector('#edgesTable tbody');
+  for (var eb = 0; eb < BANDS; eb++) {
+    var tr = document.createElement('tr');
+    tr.className = 'mine';
+    tr.innerHTML = '<td>' + (eb + 1) + ', ' + LANE_NAMES[eb].toLowerCase() + '</td>' +
+      '<td>' + realEdges[eb] + ' to ' + realEdges[eb + 1] + '</td>' +
+      '<td>' + fmtHz(realEdges[eb] * HZ_PER_BIN) + ' to ' + fmtHz(realEdges[eb + 1] * HZ_PER_BIN) + '</td>' +
+      '<td>' + LANE_WHAT[eb] + '</td>';
+    edgeBody.appendChild(tr);
+  }
+
+  /* ---------------- tab 7: replay the runs ---------------- */
+  Array.prototype.forEach.call(document.querySelectorAll('.run'), function (run) {
+    var steps = run.querySelectorAll('li');
+    var btn = run.querySelector('.play');
+    var timers = [];
+    btn.addEventListener('click', function () {
+      timers.forEach(clearTimeout);
+      timers = [];
+      Array.prototype.forEach.call(steps, function (s) { s.classList.remove('lit'); });
+      if (REDUCED) { Array.prototype.forEach.call(steps, function (s) { s.classList.add('lit'); }); return; }
+      Array.prototype.forEach.call(steps, function (s, i) {
+        timers.push(setTimeout(function () {
+          Array.prototype.forEach.call(steps, function (x) { x.classList.remove('lit'); });
+          s.classList.add('lit');
+        }, i * 900));
+      });
+      timers.push(setTimeout(function () {
+        Array.prototype.forEach.call(steps, function (x) { x.classList.remove('lit'); });
+      }, steps.length * 900 + 600));
+    });
+  });
+
+  /* ---------------- tab 9: quiz ---------------- */
+  var QS = [
+    { q: 'Which part opens the side panel when you click the icon?',
+      o: ['The background worker', 'The render loop', 'The audio engine', 'The particles file'], a: 0,
+      ok: 'Right.', no: 'Think of the box office.',
+      e: 'The background worker hears the icon click. It is the box office at the door: it lets you in and opens the stage.' },
+    { q: 'What is frame.bins?',
+      o: ['Saved user settings', 'Loudness per pitch', 'Particle positions', 'Pixel colors'], a: 1,
+      ok: 'Correct.', no: 'It comes from the sound.',
+      e: '1024 numbers from 0 to 255. The position is the pitch, from deep bass to high hiss, and the value is how loud it is right now.' },
+    { q: 'About how often does the loop ask for a new picture?',
+      o: ['Once per song', 'Once per second', 'Every click', '60 times a second'], a: 3,
+      ok: 'Yes.', no: 'Think of the flipbook.',
+      e: 'About 60 times a second, which leaves roughly 16 milliseconds to draw each picture.' },
+    { q: 'What does spawning a particle actually do?',
+      o: ['Creates a new object', 'Reuses a free slot', 'Deletes an old dot', 'Grows the pool'], a: 1,
+      ok: 'Exactly.', no: 'Think of the parking lot.',
+      e: 'It finds a slot whose dot has died and resets its numbers. Nothing is created, so the garbage collector never interrupts the show.' },
+    { q: 'Why were the right two columns nearly empty before the fix?',
+      o: ['The pool was too small', 'The palette was short', 'The bands were split evenly', 'The loop was paused'], a: 2,
+      ok: 'Right.', no: 'Think of the piano octaves.',
+      e: 'An even split gave columns 3 and 4 the range from 12,000 to 24,000 Hz, where music has almost no sound. Pitch doubles every octave, so the bands need to grow.' },
+    { q: 'Why are the band edges computed only when something changes?',
+      o: ['They rarely change', 'Chrome requires it', 'The tests need it', 'It changes the colors'], a: 0,
+      ok: 'Correct.', no: 'Think of the running track.',
+      e: 'The edges depend only on the range, the sample rate and the fftSize, which almost never change during a song. Each picture then only averages.' },
+    { q: 'What problem does reset() fix?',
+      o: ['Wrong colors at the edge', 'Old dots after a mode switch', 'Missing tab permission', 'Slow loading of audio'], a: 1,
+      ok: 'Yes.', no: 'Think of the confetti.',
+      e: 'Switching away and back used to resume half-faded dots mid-flight. reset() marks every slot free, so the mode starts clean.' },
+    { q: 'Why did the trail color need one shared constant?',
+      o: ['To match the panel', 'To make dots faster', 'Because tests read it', 'Because Chrome asks'], a: 0,
+      ok: 'Right.', no: 'Think of the paint can.',
+      e: 'The wash was rgb(12, 12, 16) and the panel is rgb(14, 15, 18), which left a faint seam. One shared value in theme.ts keeps every mode matching.' },
+    { q: 'In the spike, who has to ask Chrome for the stream id?',
+      o: ['The side panel', 'The audio engine', 'The background worker', 'The particles file'], a: 2,
+      ok: 'Correct.', no: 'Think of the box office.',
+      e: 'The background worker, because it is the one that hears the icon click. Asking from the side panel failed in runs 1 and 2.' },
+    { q: 'When does it have to ask?',
+      o: ['When the panel loads', 'During the icon click', 'After music starts', 'Once every minute'], a: 1,
+      ok: 'Yes.', no: 'Think of the window at the box office.',
+      e: 'Chrome only hands out the pass during the user\'s click on the icon. Run 3 asked at that moment and it worked.' },
+    { q: 'On a 120 Hz screen today, how do your particles behave?',
+      o: ['They stop moving', 'They change color', 'They move twice as fast', 'Nothing is different'], a: 2,
+      ok: 'Right.', no: 'Think of the faster metronome.',
+      e: 'They move per picture, not per second, so twice the pictures means twice the speed. You flagged a dt value on LOS-12 to fix it later.' },
+    { q: 'What does "Closes LOS-24" at the top of a pull request do?',
+      o: ['Runs all the tests', 'Deletes the branch', 'Asks for a review', 'Marks the ticket done'], a: 3,
+      ok: 'Correct.', no: 'It talks to Linear.',
+      e: 'When the pull request merges, Linear sees those words and moves LOS-24 to Done automatically.' }
+  ];
+  var host = document.getElementById('quiz'), answered = 0, right = 0;
+  QS.forEach(function (item, qi) {
+    var d = document.createElement('div');
+    d.className = 'quiz';
+    d.innerHTML = '<p class="q"><span class="qn">Question ' + (qi + 1) + '</span>' + item.q + '</p><div class="opts">' +
+      item.o.map(function (t, j) { return '<button class="opt" type="button" data-i="' + j + '">' + t + '</button>'; }).join('') +
+      '</div><div class="fb" role="status"></div>';
+    host.appendChild(d);
+    var fb = d.querySelector('.fb');
+    Array.prototype.forEach.call(d.querySelectorAll('.opt'), function (b) {
+      b.addEventListener('click', function () {
+        var good = +b.dataset.i === item.a;
+        Array.prototype.forEach.call(d.querySelectorAll('.opt'), function (x) {
+          x.disabled = true;
+          if (+x.dataset.i === item.a) x.classList.add('correct');
+        });
+        if (!good) b.classList.add('wrong');
+        fb.className = 'fb show ' + (good ? 'good' : 'badfb');
+        fb.innerHTML = '<b>' + (good ? item.ok : item.no) + '</b>' + item.e;
+        answered++; if (good) right++;
+        document.getElementById('score').textContent = right + ' of ' + answered + ' correct, ' + QS.length + ' questions.';
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>
