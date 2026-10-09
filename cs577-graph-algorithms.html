@@ -1,0 +1,2036 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CS 577 Graph Algorithms</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600;700&display=swap">
+<style>
+/* Layout: graph-paper notebook. Sticky tab bar, one tab visible at a time, each tab = short text + big visuals + step-through players. */
+:root {
+  --bg: #F5F7FB;
+  --grid: rgba(47, 85, 212, .07);
+  --surface: #FFFFFF;
+  --surface-2: #EEF2F9;
+  --ink: #132036;
+  --ink-2: #3A4A66;
+  --muted: #66758F;
+  --line: #D8DFEB;
+  --line-strong: #97A5BE;
+  --accent: #2F55D4;
+  --accent-deep: #1C3AA3;
+  --accent-soft: #E2E9FF;
+  --on-accent: #FFFFFF;
+  --amber: #C98400;
+  --amber-soft: #FFE8AE;
+  --good: #1F9254;
+  --good-soft: #D3F2E0;
+  --bad: #D03838;
+  --bad-soft: #FBE1E1;
+  --path: #E8590C;
+  --edge: #A2AFC5;
+  --red-v: #E03131;
+  --red-v-soft: #FFE1E1;
+  --blue-v: #1971C2;
+  --blue-v-soft: #DCEBFF;
+  --plant: #B87A00;
+  --plant-soft: #FFF0BF;
+  --c1: rgba(47, 85, 212, .10);
+  --c2: rgba(31, 146, 84, .12);
+  --c3: rgba(102, 117, 143, .12);
+  --shadow: 0 1px 2px rgba(19, 32, 54, .06), 0 6px 20px rgba(19, 32, 54, .06);
+  --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --r: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1320; --grid: rgba(124, 155, 255, .06); --surface: #151D2D; --surface-2: #1C2638;
+    --ink: #E7EDF8; --ink-2: #B9C5DA; --muted: #8391AB; --line: #29354D; --line-strong: #4C5C7B;
+    --accent: #7D9BFF; --accent-deep: #5C7DF2; --accent-soft: #1E2B50; --on-accent: #0A1020;
+    --amber: #F0B23C; --amber-soft: #3B3016; --good: #4CC38A; --good-soft: #15352A; --bad: #FF7A7A; --bad-soft: #3C1A1F;
+    --path: #FF922B; --edge: #586985; --red-v: #FF6B6B; --red-v-soft: #3A1C24; --blue-v: #5CA8FF; --blue-v-soft: #15294A;
+    --plant: #F2C14E; --plant-soft: #3A3115; --c1: rgba(125, 155, 255, .12); --c2: rgba(76, 195, 138, .12); --c3: rgba(131, 145, 171, .12);
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 6px 20px rgba(0, 0, 0, .25);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1320; --grid: rgba(124, 155, 255, .06); --surface: #151D2D; --surface-2: #1C2638;
+  --ink: #E7EDF8; --ink-2: #B9C5DA; --muted: #8391AB; --line: #29354D; --line-strong: #4C5C7B;
+  --accent: #7D9BFF; --accent-deep: #5C7DF2; --accent-soft: #1E2B50; --on-accent: #0A1020;
+  --amber: #F0B23C; --amber-soft: #3B3016; --good: #4CC38A; --good-soft: #15352A; --bad: #FF7A7A; --bad-soft: #3C1A1F;
+  --path: #FF922B; --edge: #586985; --red-v: #FF6B6B; --red-v-soft: #3A1C24; --blue-v: #5CA8FF; --blue-v-soft: #15294A;
+  --plant: #F2C14E; --plant-soft: #3A3115; --c1: rgba(125, 155, 255, .12); --c2: rgba(76, 195, 138, .12); --c3: rgba(131, 145, 171, .12);
+  --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 6px 20px rgba(0, 0, 0, .25);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  background: var(--bg);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 28px 28px;
+  color: var(--ink);
+  font: 16px/1.6 var(--f-body);
+  margin: 0;
+}
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 20px; }
+h1, h2, h3, h4 { font-family: var(--f-display); text-wrap: balance; margin: 0; line-height: 1.15; letter-spacing: -.01em; }
+p { margin: 0; }
+b, strong { font-weight: 700; }
+code, .mono { font-family: var(--f-mono); font-size: .9em; }
+.k { font-family: var(--f-mono); font-size: .88em; background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; padding: .05em .4em; white-space: nowrap; }
+
+/* header */
+.top { padding-block: 34px 18px; display: grid; gap: 8px; }
+.eyebrow { font: 700 12px/1 var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+.top h1 { font-size: clamp(30px, 5vw, 46px); font-weight: 800; }
+.top p { color: var(--ink-2); max-width: 64ch; font-size: 17px; }
+
+/* tabs */
+.tabbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.tabbar .wrap { display: flex; gap: 18px; overflow-x: auto; padding-block: 10px; scrollbar-width: thin; }
+.tgroup { display: flex; align-items: center; gap: 6px; flex: none; }
+.tgroup > span { font: 700 11px/1 var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-right: 2px; }
+.tab { font: 600 14px/1 var(--f-body); color: var(--ink-2); background: transparent; border: 1px solid transparent; border-radius: 999px; padding: 8px 12px; cursor: pointer; white-space: nowrap; }
+.tab:hover { background: var(--surface-2); color: var(--ink); }
+.tab[aria-selected="true"] { background: var(--ink); color: var(--bg); }
+.tab:focus-visible, button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* panels */
+main { padding-block: 28px 80px; }
+.panel { display: grid; gap: 34px; }
+.phead { display: grid; gap: 10px; }
+.phead h2 { font-size: clamp(28px, 4vw, 40px); font-weight: 800; }
+.lead { font-size: 18px; color: var(--ink-2); max-width: 66ch; }
+section.s { display: grid; gap: 14px; scroll-margin-top: 80px; }
+section.s > h3 { font-size: 22px; font-weight: 700; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+section.s > p, .note { max-width: 70ch; color: var(--ink-2); }
+.step-tag { font: 700 12px/1 var(--f-mono); color: var(--on-accent); background: var(--accent); border-radius: 999px; padding: 5px 9px; letter-spacing: .04em; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px 18px; box-shadow: var(--shadow); min-width: 0; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 14px; }
+.grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 14px; }
+.grid3f { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 760px) { .grid3f { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 480px) { .grid3f { grid-template-columns: minmax(0, 1fr); } }
+.mini h4 { font-size: 16px; margin-bottom: 4px; }
+.mini p { font-size: 14.5px; color: var(--ink-2); }
+.mini .gv { margin-bottom: 8px; }
+
+.key { border-radius: var(--r); padding: 16px 18px; background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); display: grid; gap: 6px; max-width: 820px; }
+.key .lbl { font: 700 11px/1 var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--accent-deep); }
+:root[data-theme="dark"] .key .lbl { color: var(--accent); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .key .lbl { color: var(--accent); } }
+.key p { color: var(--ink); font-size: 17px; }
+.warn { background: var(--amber-soft); border-color: color-mix(in srgb, var(--amber) 45%, transparent); }
+.warn .lbl { color: var(--amber) !important; }
+.bad { background: var(--bad-soft); border-color: color-mix(in srgb, var(--bad) 40%, transparent); }
+.bad .lbl { color: var(--bad) !important; }
+
+ul.ticks { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+ul.ticks li { padding-left: 26px; position: relative; color: var(--ink-2); }
+ul.ticks li::before { content: ""; position: absolute; left: 4px; top: .55em; width: 9px; height: 9px; border-radius: 3px; background: var(--accent); }
+
+/* tables */
+.tw { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); box-shadow: var(--shadow); }
+table.t { border-collapse: collapse; width: 100%; font-size: 15px; }
+table.t th, table.t td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.t th { font: 700 12px/1.2 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); background: var(--surface-2); }
+table.t tr:last-child td { border-bottom: 0; }
+table.t td.m { font-family: var(--f-mono); font-size: 14px; white-space: nowrap; }
+
+/* pseudocode */
+pre.code { margin: 0; background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 0; overflow-x: auto; font: 13.5px/1.55 var(--f-mono); color: var(--ink); }
+pre.code .ln { display: block; padding: 0 14px; white-space: pre; border-left: 3px solid transparent; transition: background .25s, border-color .25s; }
+pre.code .ln.on { background: var(--accent-soft); border-left-color: var(--accent); }
+pre.code .cm { color: var(--muted); }
+
+/* graph views */
+.gv svg { display: block; width: 100%; height: auto; overflow: visible; }
+.gv text { font-family: var(--f-mono); }
+.node .body { fill: var(--n-fill); stroke: var(--n-stroke); stroke-width: 2; transition: fill .35s, stroke .35s; }
+.node .ring { fill: none; stroke: transparent; stroke-width: 3; transition: stroke .35s; }
+.node .lbl { fill: var(--n-text); font-weight: 700; font-size: 14px; text-anchor: middle; dominant-baseline: central; transition: fill .35s; pointer-events: none; }
+.node .sub { fill: var(--ink); font-weight: 700; font-size: 13px; text-anchor: middle; dominant-baseline: central; paint-order: stroke; stroke: var(--surface); stroke-width: 5px; stroke-linejoin: round; }
+.node { --n-fill: var(--surface); --n-stroke: var(--line-strong); --n-text: var(--ink); transition: opacity .35s; }
+.node.n-frontier { --n-fill: var(--amber-soft); --n-stroke: var(--amber); }
+.node.n-current { --n-fill: var(--accent); --n-stroke: var(--accent-deep); --n-text: var(--on-accent); }
+.node.n-done { --n-fill: var(--good-soft); --n-stroke: var(--good); }
+.node.n-bad { --n-fill: var(--bad-soft); --n-stroke: var(--bad); }
+.node.n-dim { opacity: .25; }
+.node.k-red { --n-fill: var(--red-v-soft); --n-stroke: var(--red-v); --n-text: var(--ink); }
+.node.k-blue { --n-fill: var(--blue-v-soft); --n-stroke: var(--blue-v); --n-text: var(--ink); }
+.node.k-plant { --n-fill: var(--plant-soft); --n-stroke: var(--plant); --n-text: var(--ink); }
+.node.k-super { --n-fill: var(--surface-2); --n-stroke: var(--ink-2); --n-text: var(--ink); }
+.node.k-super .body { stroke-dasharray: 4 3; }
+.node.n-current .ring { stroke: var(--accent); animation: pulse 1.3s ease-in-out infinite; }
+.node.n-frontier[class*="k-"] .ring { stroke: var(--amber); }
+.node.n-done[class*="k-"] .ring { stroke: var(--good); }
+.node.n-bad .ring { stroke: var(--bad); }
+.node.flash .sub { animation: flash .9s ease-out; }
+.node.n-hl .ring { stroke: var(--accent); }
+
+.edge .ln { fill: none; stroke: var(--edge); stroke-width: 2.2; transition: stroke .3s, stroke-width .3s, opacity .3s; }
+.edge .ah { fill: var(--edge); transition: fill .3s, opacity .3s; }
+.edge.e-active .ln { stroke: var(--accent); stroke-width: 4; stroke-dasharray: 9 6; animation: march .7s linear infinite; }
+.edge.e-active .ah { fill: var(--accent); }
+.edge.e-check .ln { stroke: var(--muted); stroke-width: 3; stroke-dasharray: 4 5; }
+.edge.e-check .ah { fill: var(--muted); }
+.edge.e-tree .ln { stroke: var(--good); stroke-width: 4; }
+.edge.e-tree .ah { fill: var(--good); }
+.edge.e-back .ln { stroke: var(--bad); stroke-width: 4; stroke-dasharray: 8 5; }
+.edge.e-back .ah { fill: var(--bad); }
+.edge.e-cross .ln { stroke-dasharray: 3 5; }
+.edge.e-path .ln { stroke: var(--path); stroke-width: 5; }
+.edge.e-path .ah { fill: var(--path); }
+.edge.e-bad .ln { stroke: var(--bad); stroke-width: 4.5; }
+.edge.e-bad .ah { fill: var(--bad); }
+.edge.e-dim { opacity: .14; }
+.edge.e-ghost .ln { stroke-dasharray: 2 5; }
+.edge.e-hl .ln { stroke: var(--accent); stroke-width: 4; }
+.edge.e-hl .ah { fill: var(--accent); }
+.wt rect { fill: var(--surface); stroke: var(--line); stroke-width: 1; }
+.wt text { fill: var(--ink-2); font-size: 12.5px; font-weight: 700; text-anchor: middle; dominant-baseline: central; }
+.wt.neg text { fill: var(--bad); }
+.edge.e-dim .wt { opacity: .6; }
+.decor .band { fill: var(--surface-2); stroke: var(--line); }
+.decor .blob { stroke: none; }
+.decor .blob.c1 { fill: var(--c1); } .decor .blob.c2 { fill: var(--c2); } .decor .blob.c3 { fill: var(--c3); }
+.decor text { fill: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: .02em; }
+.decor .hide { opacity: 0; }
+.decor > * { transition: opacity .4s; }
+
+@keyframes pulse { 0%, 100% { stroke-opacity: .9; stroke-width: 3; } 50% { stroke-opacity: .25; stroke-width: 9; } }
+@keyframes march { to { stroke-dashoffset: -30; } }
+@keyframes flash { 0% { fill: var(--accent); font-size: 17px; } 100% { fill: var(--ink); font-size: 13px; } }
+@keyframes popin { from { transform: scale(.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+/* stage for diagrams */
+.stage { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--shadow); padding: 14px; min-width: 0; }
+.stage.flat { box-shadow: none; }
+
+/* player */
+.player { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+.pl-main { display: grid; gap: 10px; min-width: 0; }
+.pl-svg { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 10px; box-shadow: var(--shadow); }
+.pl-cap { min-height: 4.4em; background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 10px; padding: 10px 14px; font-size: 16px; color: var(--ink); }
+.pl-cap .stepn { font: 700 11px/1 var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 5px; }
+.pl-ctrl { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.btn { font: 700 14px/1 var(--f-body); border-radius: 10px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); padding: 9px 13px; cursor: pointer; }
+.btn:hover { background: var(--surface-2); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); min-width: 84px; }
+.btn.primary:hover { background: var(--accent-deep); }
+.btn[disabled] { opacity: .4; cursor: default; }
+.pl-ctrl input[type=range] { flex: 1 1 140px; accent-color: var(--accent); min-width: 120px; }
+.pl-ctrl select { font: 600 13px var(--f-body); background: var(--surface); color: var(--ink); border: 1px solid var(--line-strong); border-radius: 8px; padding: 7px 6px; }
+.pl-count { font: 600 12px/1 var(--f-mono); color: var(--muted); min-width: 64px; text-align: right; }
+.pl-side { display: grid; gap: 10px; min-width: 0; }
+.pl-panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; display: grid; gap: 12px; box-shadow: var(--shadow); min-width: 0; }
+@media (max-width: 860px) { .player { grid-template-columns: minmax(0, 1fr); } }
+
+/* data-structure widgets */
+.ds { display: grid; gap: 6px; min-width: 0; }
+.ds-h { font: 700 11px/1.2 var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.ds-row { display: flex; flex-wrap: wrap; gap: 6px; min-height: 34px; align-items: center; }
+.ds-col { display: flex; flex-direction: column; gap: 5px; }
+.chip { font: 700 14px/1 var(--f-mono); padding: 8px 10px; border-radius: 8px; background: var(--surface-2); border: 1px solid var(--line-strong); color: var(--ink); }
+.chip.q { background: var(--amber-soft); border-color: var(--amber); }
+.chip.cur { background: var(--accent); border-color: var(--accent-deep); color: var(--on-accent); }
+.chip.ok { background: var(--good-soft); border-color: var(--good); }
+.chip.badc { background: var(--bad-soft); border-color: var(--bad); }
+.chip.new { animation: popin .4s ease-out; }
+.chip small { font-weight: 600; opacity: .75; margin-left: 4px; }
+.empty { font: 600 13px var(--f-mono); color: var(--muted); }
+table.dt { border-collapse: collapse; font: 600 13px/1.2 var(--f-mono); width: 100%; }
+table.dt th, table.dt td { border: 1px solid var(--line); padding: 6px 7px; text-align: center; }
+table.dt th { color: var(--muted); background: var(--surface-2); font-weight: 700; }
+table.dt td.chg { background: var(--good-soft); color: var(--ink); }
+table.dt td.badc { background: var(--bad-soft); }
+table.dt tr.live td { outline: 0; }
+table.dt tr.live th { color: var(--accent); }
+.eq { font: 700 19px/1.4 var(--f-mono); text-align: center; padding: 8px; border-radius: 10px; background: var(--surface-2); }
+.eq .good { color: var(--good); } .eq .badt { color: var(--bad); }
+.elist { display: flex; flex-wrap: wrap; gap: 5px; }
+.elist span { font: 600 12.5px/1 var(--f-mono); padding: 6px 7px; border-radius: 6px; border: 1px solid var(--line); color: var(--ink-2); }
+.elist span.on { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.counter { display: flex; gap: 10px; flex-wrap: wrap; }
+.counter div { border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; background: var(--surface-2); font: 700 14px var(--f-mono); }
+.counter div.win { background: var(--good-soft); border-color: var(--good); }
+.counter b { font-size: 20px; margin-left: 6px; }
+
+/* legend */
+.legend { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 13.5px; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 7px; }
+.dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid; display: inline-block; flex: none; }
+.dot.idle { background: var(--surface); border-color: var(--line-strong); }
+.dot.front { background: var(--amber-soft); border-color: var(--amber); }
+.dot.cur { background: var(--accent); border-color: var(--accent-deep); }
+.dot.done { background: var(--good-soft); border-color: var(--good); }
+.dot.red { background: var(--red-v-soft); border-color: var(--red-v); }
+.dot.blue { background: var(--blue-v-soft); border-color: var(--blue-v); }
+.dot.plant { background: var(--plant-soft); border-color: var(--plant); border-radius: 4px; }
+.bar { width: 22px; height: 4px; border-radius: 2px; display: inline-block; flex: none; }
+.bar.tree { background: var(--good); } .bar.back { background: repeating-linear-gradient(90deg, var(--bad) 0 6px, transparent 6px 9px); }
+.bar.act { background: var(--accent); } .bar.path { background: var(--path); }
+
+/* problem pieces */
+.prob { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 18px 20px; display: grid; gap: 10px; box-shadow: var(--shadow); max-width: 860px; }
+.prob .lbl { font: 700 11px/1 var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.prob p { color: var(--ink); }
+.target { justify-self: start; font: 700 14px/1 var(--f-mono); background: var(--ink); color: var(--bg); border-radius: 999px; padding: 8px 12px; }
+.rail { display: flex; flex-wrap: wrap; gap: 6px; }
+.rail a { font: 600 13px/1 var(--f-body); color: var(--ink-2); text-decoration: none; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 7px 11px; }
+.rail a:hover { border-color: var(--accent); color: var(--accent); }
+.rail a b { font-family: var(--f-mono); color: var(--accent); margin-right: 4px; }
+.map { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 8px 12px; align-items: center; max-width: 760px; }
+.map .from { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; font-size: 15px; }
+.map .arrow { font: 700 18px var(--f-mono); color: var(--accent); text-align: center; }
+.map .to { background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); border-radius: 10px; padding: 9px 12px; font-size: 15px; font-weight: 700; }
+.hlw { background: var(--amber-soft); border-radius: 4px; padding: 0 3px; }
+.answer { background: var(--surface); border: 2px solid var(--ink); border-radius: var(--r); overflow: hidden; max-width: 860px; }
+.answer .ah-title { background: var(--ink); color: var(--bg); font: 700 13px/1 var(--f-mono); letter-spacing: .1em; text-transform: uppercase; padding: 11px 16px; }
+.answer dl { margin: 0; display: grid; grid-template-columns: 96px minmax(0, 1fr); }
+.answer dt, .answer dd { margin: 0; padding: 11px 16px; border-bottom: 1px solid var(--line); }
+.answer dt { font: 700 13px/1.5 var(--f-mono); color: var(--accent); text-transform: uppercase; letter-spacing: .06em; background: var(--surface-2); }
+.answer dd { color: var(--ink); }
+.answer dl > :nth-last-child(-n+2) { border-bottom: 0; }
+@media (max-width: 560px) { .answer dl { grid-template-columns: minmax(0, 1fr); } .answer dt { border-bottom: 0; padding-bottom: 2px; } }
+.math { font: 600 15px/1.8 var(--f-mono); background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; overflow-x: auto; max-width: 760px; }
+.math .hl { color: var(--accent); }
+.rounds { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.rounds .rb { width: 34px; height: 30px; border-radius: 6px; display: grid; place-items: center; font: 700 12px var(--f-mono); border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink-2); }
+.rounds .rb.on { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.rounds .rb.off { background: repeating-linear-gradient(45deg, var(--surface-2) 0 5px, var(--surface) 5px 10px); color: var(--muted); text-decoration: line-through; }
+.rounds .rl { font: 700 13px var(--f-mono); color: var(--ink-2); min-width: 150px; }
+.seg { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 10px; overflow: hidden; }
+.seg button { font: 700 14px var(--f-mono); background: var(--surface); color: var(--ink); border: 0; padding: 9px 14px; cursor: pointer; border-right: 1px solid var(--line); }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+.res { font: 700 16px var(--f-mono); }
+
+/* recipe */
+.recipe { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 12px; counter-reset: rs; }
+.rstep { display: grid; grid-template-columns: 46px minmax(0, 1fr); gap: 4px 12px; align-items: start; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; box-shadow: var(--shadow); }
+.rstep .num { grid-row: span 2; width: 46px; height: 46px; border-radius: 12px; background: var(--ink); color: var(--bg); display: grid; place-items: center; font: 800 22px var(--f-display); }
+.rstep h4 { font-size: 17px; }
+.rstep p { font-size: 14.5px; color: var(--ink-2); }
+.flow { display: grid; gap: 10px; max-width: 900px; }
+.flow .q { background: var(--ink); color: var(--bg); border-radius: 12px; padding: 12px 16px; font-weight: 700; justify-self: start; }
+.flow .branches { display: grid; gap: 8px; padding-left: 22px; border-left: 3px solid var(--line-strong); margin-left: 18px; }
+.flow .br { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 10px; align-items: center; position: relative; }
+.flow .br::before { content: ""; position: absolute; left: -22px; top: 50%; width: 18px; border-top: 3px solid var(--line-strong); }
+.flow .ask { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; font-size: 15px; }
+.flow .go { font: 700 18px var(--f-mono); color: var(--accent); }
+.flow .tool { background: var(--good-soft); border: 1px solid color-mix(in srgb, var(--good) 40%, transparent); border-radius: 10px; padding: 9px 12px; font-weight: 700; }
+.flow .tool small { display: block; font: 600 12.5px var(--f-mono); color: var(--ink-2); margin-top: 2px; }
+.flow .sub { grid-column: 1 / -1; display: grid; gap: 8px; padding-left: 22px; border-left: 3px dashed var(--line-strong); margin-left: 14px; }
+.flow .sub .br::before { border-top-style: dashed; }
+@media (max-width: 640px) { .flow .br { grid-template-columns: minmax(0, 1fr); } .flow .go { transform: rotate(90deg); justify-self: start; } .map { grid-template-columns: minmax(0, 1fr); } .map .arrow { transform: rotate(90deg); justify-self: start; } }
+
+.navfoot { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; border-top: 1px solid var(--line); padding-top: 18px; }
+.navfoot button { font: 700 15px var(--f-body); background: var(--surface); color: var(--ink); border: 1px solid var(--line-strong); border-radius: 12px; padding: 12px 16px; cursor: pointer; }
+.navfoot button:hover { border-color: var(--accent); color: var(--accent); }
+.navfoot .next { margin-left: auto; }
+
+/* misc visuals */
+.ripple svg { display: block; width: 100%; height: auto; }
+.rs-ring { fill: none; stroke: var(--line-strong); stroke-dasharray: 3 6; stroke-width: 1.5; }
+.rs-lab text { font: 700 12px var(--f-mono); fill: var(--muted); }
+.rs-edge line { stroke: var(--edge); stroke-width: 2.2; }
+.rs-node circle { fill: var(--surface); stroke: var(--line-strong); stroke-width: 2; }
+.rs-node .src { fill: var(--accent); stroke: var(--accent-deep); }
+.rs-txt text { font: 700 14px var(--f-mono); text-anchor: middle; dominant-baseline: central; fill: var(--ink); }
+.rs-txt .srct { fill: var(--on-accent); }
+.ripple .rp { fill: none; stroke: var(--accent); stroke-width: 2.5; opacity: 0; transform-box: fill-box; transform-origin: center; animation: ring 4.5s linear infinite; vector-effect: non-scaling-stroke; }
+@keyframes ring { 0% { transform: scale(.04); opacity: .9; } 92% { opacity: .5; } 100% { transform: scale(1); opacity: 0; } }
+.rs-node .lay { animation: lit 4.5s linear infinite; }
+.rs-node .l1 { animation-delay: 1.35s; } .rs-node .l2 { animation-delay: 2.9s; } .rs-node .l3 { animation-delay: 4.3s; }
+@keyframes lit { 0% { fill: var(--amber-soft); stroke: var(--amber); } 45% { fill: var(--amber-soft); stroke: var(--amber); } 60%, 100% { fill: var(--surface); stroke: var(--line-strong); } }
+.qvis { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font: 700 14px var(--f-mono); color: var(--ink-2); }
+.qvis .slot { width: 40px; height: 40px; border-radius: 9px; border: 2px solid var(--amber); background: var(--amber-soft); display: grid; place-items: center; color: var(--ink); }
+.svis { display: grid; gap: 4px; justify-items: center; font: 700 14px var(--f-mono); color: var(--ink-2); }
+.svis .plate { width: 90px; height: 30px; border-radius: 8px; border: 2px solid var(--amber); background: var(--amber-soft); display: grid; place-items: center; color: var(--ink); }
+.svis .plate.top { background: var(--accent); border-color: var(--accent-deep); color: var(--on-accent); }
+.adj { font: 600 15px/1 var(--f-mono); display: grid; gap: 6px; }
+.adj div { padding: 9px 12px; border-radius: 9px; border: 1px solid var(--line); background: var(--surface); transition: background .2s, border-color .2s; }
+.adj div.on { background: var(--accent-soft); border-color: var(--accent); }
+.adj b { color: var(--accent); }
+.split { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 14px; align-items: center; }
+@media (max-width: 760px) { .split { grid-template-columns: minmax(0, 1fr); } }
+.sumtag { font: 700 14px var(--f-mono); text-align: center; padding: 6px; border-radius: 8px; }
+.sumtag.ok { background: var(--good-soft); color: var(--good); } .sumtag.no { background: var(--bad-soft); color: var(--bad); }
+.numline { display: grid; grid-template-columns: 1fr 120px 1fr; text-align: center; font-weight: 700; border-radius: 12px; overflow: hidden; max-width: 760px; border: 1px solid var(--line); }
+.numline div { padding: 14px 10px; display: grid; gap: 4px; }
+.numline small { font-weight: 400; font-size: 13.5px; color: var(--ink-2); }
+.numline .neg { background: var(--bad-soft); } .numline .zero { background: var(--good-soft); } .numline .pos { background: var(--amber-soft); }
+@media (max-width: 560px) { .numline { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head><body>
+
+<header class="wrap top">
+  <span class="eyebrow">CS 577 · Session 1 · Graphs</span>
+  <h1>Graph algorithms, from zero to HW3</h1>
+  <p>First learn the five tools. Then learn a recipe for picking the right one. Then use that recipe on every HW3 problem.</p>
+</header>
+
+<nav class="tabbar" aria-label="Lesson sections">
+  <div class="wrap" role="tablist">
+    <div class="tgroup"><span>Learn</span>
+      <button class="tab" role="tab" data-tab="graphs">Graphs 101</button>
+      <button class="tab" role="tab" data-tab="bfs">BFS</button>
+      <button class="tab" role="tab" data-tab="dfs">DFS</button>
+      <button class="tab" role="tab" data-tab="topo">Topological sort</button>
+      <button class="tab" role="tab" data-tab="sp">Shortest paths 101</button>
+      <button class="tab" role="tab" data-tab="bf">Bellman-Ford</button>
+      <button class="tab" role="tab" data-tab="dij">Dijkstra</button>
+    </div>
+    <div class="tgroup"><span>Method</span>
+      <button class="tab" role="tab" data-tab="recipe">The recipe</button>
+    </div>
+    <div class="tgroup"><span>HW3</span>
+      <button class="tab" role="tab" data-tab="p1">P1 Power plants</button>
+      <button class="tab" role="tab" data-tab="p2">P2 Limited improvement</button>
+      <button class="tab" role="tab" data-tab="p3">P3 Conservative cycles</button>
+      <button class="tab" role="tab" data-tab="p4">P4 Color limit</button>
+    </div>
+  </div>
+</nav>
+
+<main class="wrap">
+
+<!-- ============ GRAPHS 101 ============ -->
+<section class="panel" id="graphs" role="tabpanel">
+  <div class="phead">
+    <span class="eyebrow">Learn · 1 of 7</span>
+    <h2>Graphs 101</h2>
+    <p class="lead">A graph is dots and lines. Dots are things. Lines are connections between things. Almost every problem in this unit is a graph in disguise.</p>
+  </div>
+
+  <section class="s">
+    <h3>Graphs hide everywhere</h3>
+    <div class="grid3f">
+      <div class="card mini"><div class="gv" data-static="ex-roads"></div><h4>Road map</h4><p>Cities are dots. Roads are lines. The numbers are miles.</p></div>
+      <div class="card mini"><div class="gv" data-static="ex-friends"></div><h4>Friends</h4><p>People are dots. A friendship is a line.</p></div>
+      <div class="card mini"><div class="gv" data-static="ex-prereq"></div><h4>Prerequisites</h4><p>Courses are dots. An arrow means "take this one first".</p></div>
+    </div>
+  </section>
+
+  <section class="s">
+    <h3>The vocabulary</h3>
+    <div class="grid3f">
+      <div class="card mini"><div class="gv" data-static="v-vertex"></div><h4>Vertex (node)</h4><p>A dot. All of them together are called <span class="k">V</span>.</p></div>
+      <div class="card mini"><div class="gv" data-static="v-edge"></div><h4>Edge</h4><p>A line between two vertices. All of them together are called <span class="k">E</span>.</p></div>
+      <div class="card mini"><div class="gv" data-static="v-undir"></div><h4>Undirected</h4><p>A two-way street. A-B means you can go A to B and B to A.</p></div>
+      <div class="card mini"><div class="gv" data-static="v-dir"></div><h4>Directed</h4><p>A one-way street. A → B does not let you go back from B to A.</p></div>
+      <div class="card mini"><div class="gv" data-static="v-weight"></div><h4>Weighted</h4><p>Each edge has a number: a cost, a distance, or a time. It can even be negative.</p></div>
+      <div class="card mini"><div class="gv" data-static="v-path"></div><h4>Path</h4><p>A route that follows edges one after another. Here: A → B → D.</p></div>
+      <div class="card mini"><div class="gv" data-static="v-cycle"></div><h4>Cycle</h4><p>A path that comes back to where it started. Here: A → B → C → A.</p></div>
+      <div class="card mini"><div class="gv" data-static="v-comp"></div><h4>Connected component</h4><p>A group that can all reach each other. No edges between different groups.</p></div>
+      <div class="card mini"><div class="gv" data-static="v-dag"></div><h4>DAG</h4><p><b>D</b>irected <b>A</b>cyclic <b>G</b>raph: one-way edges and no cycles at all.</p></div>
+    </div>
+  </section>
+
+  <section class="s">
+    <h3>How the computer stores a graph</h3>
+    <p>Each vertex keeps a list of its neighbors. This is called an <b>adjacency list</b>. Every algorithm today walks these lists. Hover over or tap a vertex.</p>
+    <div class="split stage" id="adj-demo">
+      <div class="gv" data-static="adj"></div>
+      <div class="adj" id="adj-list"></div>
+    </div>
+  </section>
+
+  <section class="s">
+    <h3>Counting the work</h3>
+    <div class="grid2">
+      <div class="card mini">
+        <h4>V and E</h4>
+        <p>We measure graph size with two numbers: <span class="k">V</span> = number of vertices, <span class="k">E</span> = number of edges. Some problems call them <span class="k">n</span> and <span class="k">m</span>.</p>
+      </div>
+      <div class="card mini">
+        <h4>O(V + E) is "look at everything once"</h4>
+        <p>Touch every vertex a few times and every edge a few times. You can't do better, because you have to at least read the graph.</p>
+      </div>
+    </div>
+    <div class="split stage">
+      <div class="gv" data-static="v-k5"></div>
+      <div class="key" style="max-width:none">
+        <span class="lbl">Useful fact</span>
+        <p>With V vertices, there are at most V·(V−1)/2 possible edges, one per pair. So <b>E = O(V²)</b>.</p>
+        <p class="note">This graph has 5 vertices and all 10 possible edges. You'll need this fact in P1.</p>
+      </div>
+    </div>
+  </section>
+  <div class="navfoot"></div>
+</section>
+
+<!-- ============ BFS ============ -->
+<section class="panel" id="bfs" role="tabpanel" hidden>
+  <div class="phead">
+    <span class="eyebrow">Learn · 2 of 7</span>
+    <h2>Breadth-first search (BFS)</h2>
+    <p class="lead">Explore in rings. First visit everything 1 step away, then everything 2 steps away, then 3, and so on. Like a ripple in a pond.</p>
+  </div>
+
+  <section class="s">
+    <h3>The idea</h3>
+    <div class="stage ripple">
+      <svg viewBox="0 0 520 320" role="img" aria-label="A ripple spreading out from S, lighting up vertices 1, 2, and 3 steps away">
+        <g class="rs-ring"><circle cx="60" cy="160" r="100"/><circle cx="60" cy="160" r="200"/><circle cx="60" cy="160" r="300"/></g>
+        <g class="rs-lab"><text x="112" y="300">1 step</text><text x="215" y="314">2 steps</text><text x="372" y="300">3 steps</text></g>
+        <circle class="rp" cx="60" cy="160" r="300"/>
+        <g class="rs-edge">
+          <line x1="60" y1="160" x2="142" y2="103"/><line x1="60" y1="160" x2="147" y2="210"/>
+          <line x1="142" y1="103" x2="213" y2="31"/><line x1="142" y1="103" x2="260" y2="160"/><line x1="147" y1="210" x2="260" y2="160"/><line x1="147" y1="210" x2="224" y2="275"/>
+          <line x1="213" y1="31" x2="350" y2="82"/><line x1="260" y1="160" x2="350" y2="82"/><line x1="224" y1="275" x2="342" y2="263"/>
+        </g>
+        <g class="rs-node">
+          <circle class="src" cx="60" cy="160" r="19"/>
+          <circle class="lay l1" cx="142" cy="103" r="19"/><circle class="lay l1" cx="147" cy="210" r="19"/>
+          <circle class="lay l2" cx="213" cy="31" r="19"/><circle class="lay l2" cx="260" cy="160" r="19"/><circle class="lay l2" cx="224" cy="275" r="19"/>
+          <circle class="lay l3" cx="350" cy="82" r="19"/><circle class="lay l3" cx="342" cy="263" r="19"/>
+        </g>
+        <g class="rs-txt">
+          <text class="srct" x="60" y="160">S</text>
+          <text x="142" y="103">1</text><text x="147" y="210">1</text><text x="213" y="31">2</text><text x="260" y="160">2</text><text x="224" y="275">2</text><text x="350" y="82">3</text><text x="342" y="263">3</text>
+        </g>
+      </svg>
+    </div>
+    <div class="grid3">
+      <div class="card mini">
+        <h4>Uses a queue</h4>
+        <p>First in, first out. Like a line at a coffee shop: new people join at the back, the front person gets served next.</p>
+        <div class="qvis" style="margin-top:10px"><span>out ←</span><span class="slot">A</span><span class="slot">B</span><span class="slot">C</span><span>← in</span></div>
+      </div>
+      <div class="card mini">
+        <h4>Visit each vertex once</h4>
+        <p>The first time you see a vertex, mark it. Never add a marked vertex to the queue again.</p>
+      </div>
+      <div class="card mini">
+        <h4>Distances come free</h4>
+        <p>When u discovers a new neighbor v: <span class="k">dist[v] = dist[u] + 1</span>. That's the fewest edges from the start.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="s">
+    <h3>Watch it run</h3>
+    <p>Press <b>Play</b>, or step through with <b>Next</b>. The number under each vertex is its distance from S.</p>
+    <div data-player="bfs"></div>
+    <div class="legend">
+      <span><i class="dot idle"></i>not seen yet</span><span><i class="dot front"></i>waiting in the queue</span><span><i class="dot cur"></i>being processed</span><span><i class="dot done"></i>done</span><span><i class="bar tree"></i>edge that discovered a vertex (BFS tree)</span>
+    </div>
+  </section>
+
+  <section class="s">
+    <h3>What BFS gives you</h3>
+    <ul class="ticks">
+      <li><b>Fewest edges</b> from the start to every vertex. That's the shortest path when edges have no weights.</li>
+      <li><b>The path itself.</b> Each vertex remembers who discovered it (its parent). Follow parents back to the start.</li>
+      <li><b>Everything reachable</b> from the start. Anything never marked can't be reached.</li>
+    </ul>
+    <div class="key"><span class="lbl">Running time</span><p><b>O(V + E).</b> Each vertex goes into the queue once. Each edge gets looked at once from each end.</p></div>
+  </section>
+
+  <section class="s">
+    <h3>Bonus: counting connected components</h3>
+    <div class="split stage">
+      <div class="gv" data-static="bfs-comps"></div>
+      <div style="display:grid;gap:10px">
+        <p>Go through the vertices. When you find one that isn't marked yet, start a new BFS from it. That BFS marks its whole group.</p>
+        <p><b>Each BFS = one component.</b> Total time is still O(V + E), because every vertex and edge belongs to exactly one BFS.</p>
+      </div>
+    </div>
+  </section>
+  <div class="navfoot"></div>
+</section>
+
+<!-- ============ DFS ============ -->
+<section class="panel" id="dfs" role="tabpanel" hidden>
+  <div class="phead">
+    <span class="eyebrow">Learn · 3 of 7</span>
+    <h2>Depth-first search (DFS)</h2>
+    <p class="lead">Explore like you're in a maze. Keep walking forward until you hit a dead end. Then back up one step and try the next way.</p>
+  </div>
+
+  <section class="s">
+    <h3>The idea</h3>
+    <div class="grid3">
+      <div class="card mini">
+        <h4>Uses a stack</h4>
+        <p>Last in, first out, like a stack of plates. In code this is just recursion: the call stack does the work.</p>
+        <div class="svis" style="margin-top:10px"><span class="plate top">C ← top</span><span class="plate">B</span><span class="plate">A</span></div>
+      </div>
+      <div class="card mini">
+        <h4>Three states</h4>
+        <p><i class="dot idle"></i> unvisited, <i class="dot front"></i> in progress (on the stack), <i class="dot done"></i> finished (all its edges checked).</p>
+      </div>
+      <div class="card mini">
+        <h4>Two timestamps</h4>
+        <p>A clock ticks at every event. Write <b>start time</b> when you enter a vertex and <b>finish time</b> when you leave it. Shown as <span class="k">start/finish</span>.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="s">
+    <h3>Watch it run</h3>
+    <p>This graph is directed (one-way arrows). Watch the stack grow and shrink, and watch for the red edge.</p>
+    <div data-player="dfs"></div>
+    <div class="legend">
+      <span><i class="dot idle"></i>unvisited</span><span><i class="dot front"></i>in progress</span><span><i class="dot cur"></i>top of the stack</span><span><i class="dot done"></i>finished</span><span><i class="bar tree"></i>tree edge</span><span><i class="bar back"></i>back edge (cycle!)</span>
+    </div>
+  </section>
+
+  <section class="s">
+    <h3>DFS is a cycle detector</h3>
+    <div class="grid2">
+      <div class="card mini"><div class="gv" data-static="dfs-back"></div><h4>Edge to an in-progress vertex</h4><p>You walked in a circle back to something you haven't finished. That's a <b>back edge</b>, and it means there's a <b>cycle</b>.</p></div>
+      <div class="card mini"><div class="gv" data-static="dfs-cross"></div><h4>Edge to a finished vertex</h4><p>That vertex is completely done and can't lead back to you. No cycle. Skip it.</p></div>
+    </div>
+    <div class="key"><span class="lbl">Rule</span><p>A directed graph has a cycle <b>exactly when</b> DFS finds a back edge.</p></div>
+  </section>
+
+  <section class="s">
+    <h3>BFS vs DFS</h3>
+    <div class="tw"><table class="t">
+      <tr><th></th><th>BFS</th><th>DFS</th></tr>
+      <tr><td><b>Data structure</b></td><td>Queue (first in, first out)</td><td>Stack / recursion (last in, first out)</td></tr>
+      <tr><td><b>Explores</b></td><td>In rings, nearest first</td><td>Deep first, then backs up</td></tr>
+      <tr><td><b>Fewest-edge paths</b></td><td>Yes</td><td>No</td></tr>
+      <tr><td><b>Cycles, topological sort</b></td><td>Not its job</td><td>Yes (back edges, finish times)</td></tr>
+      <tr><td><b>Reachability, components</b></td><td>Yes</td><td>Yes</td></tr>
+      <tr><td><b>Running time</b></td><td class="m">O(V + E)</td><td class="m">O(V + E)</td></tr>
+    </table></div>
+  </section>
+  <div class="navfoot"></div>
+</section>
+
+<!-- ============ TOPO SORT ============ -->
+<section class="panel" id="topo" role="tabpanel" hidden>
+  <div class="phead">
+    <span class="eyebrow">Learn · 4 of 7</span>
+    <h2>Topological sort</h2>
+    <p class="lead">Put tasks in a line so that every arrow points forward. An arrow <span class="k">u → v</span> means "u has to happen before v".</p>
+  </div>
+
+  <section class="s">
+    <h3>The idea: getting dressed</h3>
+    <p>Underwear before pants. Pants before shoes. Socks before shoes. You need an order that respects every arrow.</p>
+    <div class="grid2">
+      <div class="card mini">
+        <h4>Only works on a DAG</h4>
+        <p>A cycle says "A before B before C before A". That's impossible, so a graph with a cycle has no topological order.</p>
+        <div class="gv" data-static="topo-cycle" style="margin-top:8px"></div>
+      </div>
+      <div class="card mini">
+        <h4>Many right answers</h4>
+        <p>Socks first or underwear first? Both work. Any order where every arrow points forward is correct.</p>
+        <p style="margin-top:8px">There are two classic ways to find one. Both take <b>O(V + E)</b>.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="s">
+    <h3>Method 1: peel off what's ready</h3>
+    <p>The small number on each item counts its incoming arrows (how many things must come first). Zero means it's ready.</p>
+    <div data-player="kahn"></div>
+    <div class="legend"><span><i class="dot front"></i>ready (0 incoming arrows)</span><span><i class="dot cur"></i>taken next</span><span><i class="dot done"></i>placed in the order</span></div>
+  </section>
+
+  <section class="s">
+    <h3>Method 2: DFS finish times</h3>
+    <p>Run DFS. Each time a vertex <b>finishes</b>, put it at the <b>front</b> of the list. A vertex only finishes after everything it points to has finished, so it lands in front of all of them.</p>
+    <div data-player="topodfs"></div>
+  </section>
+
+  <section class="s">
+    <h3>Check: line them up</h3>
+    <p>Here is the order from Method 1, laid out left to right. Every arrow points right. That's what "topological order" means.</p>
+    <div class="stage" style="overflow-x:auto"><div class="gv" data-static="topo-line" style="min-width:620px"></div></div>
+  </section>
+
+  <section class="s">
+    <h3>Bonus: shortest paths in a DAG</h3>
+    <div class="key"><span class="lbl">Fastest shortest paths</span><p>Go through the vertices in topological order. For each one, relax its outgoing edges once. Done in <b>O(V + E)</b>, and negative weights are fine. (Relaxing is explained in the next tab.)</p></div>
+  </section>
+  <div class="navfoot"></div>
+</section>
+
+<!-- ============ SHORTEST PATHS 101 ============ -->
+<section class="panel" id="sp" role="tabpanel" hidden>
+  <div class="phead">
+    <span class="eyebrow">Learn · 5 of 7</span>
+    <h2>Shortest paths 101</h2>
+    <p class="lead">Now edges have weights. The shortest path is the one with the <b>smallest total weight</b>, not the fewest edges.</p>
+  </div>
+
+  <section class="s">
+    <h3>Fewest edges is not the same as cheapest</h3>
+    <div class="grid2">
+      <div class="card mini"><div class="gv" data-static="sp-fail-a"></div><h4>What BFS picks</h4><p>S → A uses 1 edge. Total cost <b>10</b>.</p></div>
+      <div class="card mini"><div class="gv" data-static="sp-fail-b"></div><h4>The real shortest path</h4><p>S → B → A uses 2 edges. Total cost <b>2 + 3 = 5</b>.</p></div>
+    </div>
+    <p>So BFS is out once weights show up. We need new tools.</p>
+  </section>
+
+  <section class="s">
+    <h3>Distance estimates</h3>
+    <div class="grid3">
+      <div class="card mini"><h4><span class="k">d[v]</span></h4><p>The cheapest way to reach v that we've found <b>so far</b>. It's a guess that keeps improving.</p></div>
+      <div class="card mini"><h4>Start</h4><p><span class="k">d[s] = 0</span> for the start. Everyone else is <span class="k">∞</span>, meaning "no way found yet".</p></div>
+      <div class="card mini"><h4>Only goes down</h4><p>Guesses only get better (smaller). When no guess can improve, every <span class="k">d[v]</span> is the true distance.</p></div>
+    </div>
+  </section>
+
+  <section class="s">
+    <h3>Relaxation: the one move</h3>
+    <p>Look at one edge u → v and ask: is going through u a cheaper way to reach v?</p>
+    <div data-player="relax"></div>
+    <div class="key"><span class="lbl">Big idea</span><p>Bellman-Ford and Dijkstra both do nothing but relax edges. The only difference is <b>which order</b> they relax them in.</p></div>
+  </section>
+
+  <section class="s">
+    <h3>Negative weights and negative cycles</h3>
+    <p>Negative weights are allowed (think: a road that pays you a toll). But a <b>cycle with a negative total</b> breaks everything: each lap makes the path cheaper, forever.</p>
+    <div data-player="negloop"></div>
+    <div class="key bad"><span class="lbl">Negative cycle</span><p>If a negative cycle can be reached from the start, shortest paths don't exist (they go to −∞). Algorithms must detect this.</p></div>
+  </section>
+
+  <section class="s">
+    <h3>Which algorithm?</h3>
+    <div class="tw"><table class="t">
+      <tr><th>Your graph</th><th>Use</th><th>Time</th></tr>
+      <tr><td>No weights (or all weights equal)</td><td><b>BFS</b></td><td class="m">O(V + E)</td></tr>
+      <tr><td>DAG, any weights</td><td><b>Topological order + relax</b></td><td class="m">O(V + E)</td></tr>
+      <tr><td>No negative weights</td><td><b>Dijkstra</b></td><td class="m">O((V + E) log V)</td></tr>
+      <tr><td>Negative weights possible</td><td><b>Bellman-Ford</b></td><td class="m">O(V · E)</td></tr>
+    </table></div>
+  </section>
+  <div class="navfoot"></div>
+</section>
+
+<!-- ============ BELLMAN-FORD ============ -->
+<section class="panel" id="bf" role="tabpanel" hidden>
+  <div class="phead">
+    <span class="eyebrow">Learn · 6 of 7</span>
+    <h2>Bellman-Ford</h2>
+    <p class="lead">The brute-force one. Relax every edge. Then do it again. Repeat V − 1 times. It's slow, but it handles negative weights and it can catch negative cycles.</p>
+  </div>
+
+  <section class="s">
+    <h3>Watch it run</h3>
+    <p>One <b>round</b> = relax every edge once, in a fixed order. We picked a bad order on purpose, so you can see why several rounds are needed. The table records <span class="k">d[ ]</span> after each round.</p>
+    <div data-player="bf"></div>
+    <div class="legend"><span><i class="bar act"></i>edge being relaxed</span><span><i class="bar tree"></i>edge that gave a vertex its current best value</span><span><i class="dot done"></i>just improved</span></div>
+  </section>
+
+  <section class="s">
+    <h3>The round rule</h3>
+    <div class="stage"><div class="gv" data-static="bf-chain"></div></div>
+    <div class="key"><span class="lbl">Round rule</span><p>After round <b>i</b>, every vertex whose best path uses <b>at most i edges</b> has its correct distance.</p></div>
+    <ul class="ticks">
+      <li>Round 1 is guaranteed to fix the first edge of a best path, round 2 the second edge, and so on.</li>
+      <li>A best path never repeats a vertex, so it has at most <b>V − 1</b> edges. That's why <b>V − 1 rounds</b> are always enough.</li>
+    </ul>
+  </section>
+
+  <section class="s">
+    <h3>Catching a negative cycle</h3>
+    <p>After V − 1 rounds everything should be final. So run <b>one extra round</b>. If anything still improves, there's a negative cycle.</p>
+    <div data-player="bfneg"></div>
+  </section>
+
+  <section class="s">
+    <h3>Cost and two HW hints</h3>
+    <div class="key"><span class="lbl">Running time</span><p>(V − 1) rounds × E edges per round = <b>O(V · E)</b>.</p></div>
+    <div class="grid2">
+      <div class="card mini"><h4>Hint for P2</h4><p>If you know every best path is short (at most k edges), you can stop after k rounds.</p></div>
+      <div class="card mini"><h4>Hint for P3</h4><p>Bellman-Ford only catches negative cycles it can <b>reach</b> from the start. To catch all of them, add a new start that reaches everything.</p></div>
+    </div>
+  </section>
+  <div class="navfoot"></div>
+</section>
+
+<!-- ============ DIJKSTRA ============ -->
+<section class="panel" id="dij" role="tabpanel" hidden>
+  <div class="phead">
+    <span class="eyebrow">Learn · 7 of 7</span>
+    <h2>Dijkstra's algorithm</h2>
+    <p class="lead">The smart one. Always handle the <b>closest</b> unfinished vertex next. It's fast, but it only works when no weight is negative.</p>
+  </div>
+
+  <section class="s">
+    <h3>The idea</h3>
+    <div class="grid3">
+      <div class="card mini"><h4>Water in pipes</h4><p>Pour water in at s. It spreads through the pipes at a steady speed. Vertices get wet in order of distance. Once a vertex is wet, its distance is final.</p></div>
+      <div class="card mini"><h4>Priority queue</h4><p>A container that always hands you the vertex with the <b>smallest</b> <span class="k">d</span>. Think of a "closest first" line.</p></div>
+      <div class="card mini"><h4>Settle, then relax</h4><p>Take the closest unsettled vertex. Lock its distance (settle it). Relax its outgoing edges. Repeat.</p></div>
+    </div>
+  </section>
+
+  <section class="s">
+    <h3>Watch it run</h3>
+    <div data-player="dij"></div>
+    <div class="legend"><span><i class="dot idle"></i>not reached</span><span><i class="dot front"></i>in the priority queue</span><span><i class="dot cur"></i>closest, being settled</span><span><i class="dot done"></i>settled (final)</span><span><i class="bar tree"></i>best way in (parent edge)</span></div>
+  </section>
+
+  <section class="s">
+    <h3>Why negative edges break it</h3>
+    <p>Dijkstra locks a vertex as soon as it's the closest. A negative edge found later could have made it cheaper, but it's too late.</p>
+    <div data-player="dijneg"></div>
+  </section>
+
+  <section class="s">
+    <h3>Cost, and how it compares</h3>
+    <div class="key"><span class="lbl">Running time</span><p>With a binary heap: each vertex leaves the queue once, each edge can lower a key once, and each of those costs log V. Total <b>O((V + E) log V)</b>.</p></div>
+    <div class="tw"><table class="t">
+      <tr><th></th><th>Bellman-Ford</th><th>Dijkstra</th></tr>
+      <tr><td><b>Negative weights</b></td><td>Fine</td><td>Not allowed</td></tr>
+      <tr><td><b>Finds negative cycles</b></td><td>Yes (extra round)</td><td>No</td></tr>
+      <tr><td><b>Order of relaxing</b></td><td>Every edge, every round</td><td>Edges of the closest vertex</td></tr>
+      <tr><td><b>Time</b></td><td class="m">O(V · E)</td><td class="m">O((V + E) log V)</td></tr>
+    </table></div>
+  </section>
+  <div class="navfoot"></div>
+</section>
+
+<!-- ============ RECIPE ============ -->
+<section class="panel" id="recipe" role="tabpanel" hidden>
+  <div class="phead">
+    <span class="eyebrow">Method</span>
+    <h2>How to solve any graph problem</h2>
+    <p class="lead">Lectures give you the tools. This is how you decide which tool to use. Do the same 6 steps every time, on homework and on exams.</p>
+  </div>
+
+  <div class="recipe">
+    <div class="rstep"><span class="num">1</span><h4>Translate the story</h4><p>Find the vertices, the edges, the direction, and the weights hiding in the words.</p></div>
+    <div class="rstep"><span class="num">2</span><h4>Draw a tiny example</h4><p>3 to 6 vertices. Solve it by hand so you know what the right answer looks like.</p></div>
+    <div class="rstep"><span class="num">3</span><h4>Name the question</h4><p>Reach? Fewest steps? Cheapest path? A cycle? An order? Say it in graph words.</p></div>
+    <div class="rstep"><span class="num">4</span><h4>Pick the algorithm</h4><p>Use the flowchart. Use the target running time as a hint.</p></div>
+    <div class="rstep"><span class="num">5</span><h4>Tweak the graph</h4><p>If the tool doesn't fit as is, change the graph: add a vertex, copy it, flip weights, or stop early.</p></div>
+    <div class="rstep"><span class="num">6</span><h4>Check it, then write it up</h4><p>Run your plan on the tiny example. Then write: build, run, return, why, time.</p></div>
+  </div>
+
+  <section class="s">
+    <h3><span class="step-tag">Step 1</span> Translate the story</h3>
+    <p>Problems never say "vertex". They say plants, locations, people, tasks. Use this dictionary:</p>
+    <div class="map">
+      <div class="from">Things: places, people, items, tasks, states</div><div class="arrow">→</div><div class="to">Vertices</div>
+      <div class="from">Connections: roads, wires, links, transitions, "must come before"</div><div class="arrow">→</div><div class="to">Edges</div>
+      <div class="from">"One-way", "from x to y"</div><div class="arrow">→</div><div class="to">Directed edges</div>
+      <div class="from">"Two-way", "bidirectional", "between"</div><div class="arrow">→</div><div class="to">Undirected edges</div>
+      <div class="from">Cost, distance, time, work, weight</div><div class="arrow">→</div><div class="to">Edge weights</div>
+      <div class="from">"Starting from s"</div><div class="arrow">→</div><div class="to">Source vertex</div>
+    </div>
+    <p>Then write down the size: <b>how many vertices, how many edges</b>. You'll need it for the running time.</p>
+  </section>
+
+  <section class="s">
+    <h3><span class="step-tag">Step 2</span> Draw a tiny example</h3>
+    <ul class="ticks">
+      <li>Keep it small: 3 to 6 vertices. Include the tricky part (a negative edge, a cycle, a red vertex).</li>
+      <li>Find the answer by eye. Now you know what your algorithm must output.</li>
+      <li>On an exam, this drawing is also the fastest way to spot a wrong idea.</li>
+    </ul>
+  </section>
+
+  <section class="s">
+    <h3><span class="step-tag">Step 3</span> Name the question</h3>
+    <div class="tw"><table class="t">
+      <tr><th>The problem says</th><th>In graph words</th><th>Tool</th></tr>
+      <tr><td>"Can x reach y?", "which ones are connected?", "powered by"</td><td>Reachability, components</td><td><b>BFS or DFS</b></td></tr>
+      <tr><td>"Fewest steps", "fewest hops"</td><td>Unweighted shortest path</td><td><b>BFS</b></td></tr>
+      <tr><td>"In what order?", "prerequisites", "schedule"</td><td>Order a DAG</td><td><b>Topological sort</b></td></tr>
+      <tr><td>"Is there a loop?"</td><td>Cycle detection</td><td><b>DFS</b> (any cycle), <b>Bellman-Ford</b> (negative cycle)</td></tr>
+      <tr><td>"Cheapest", "minimum total", "least work"</td><td>Weighted shortest path</td><td><b>Dijkstra or Bellman-Ford</b></td></tr>
+    </table></div>
+  </section>
+
+  <section class="s">
+    <h3><span class="step-tag">Step 4</span> Pick the algorithm</h3>
+    <div class="flow">
+      <div class="q">What does the question want?</div>
+      <div class="branches">
+        <div class="br"><div class="ask">Reach, connected, fewest hops</div><div class="go">→</div><div class="tool">BFS (DFS also works for reach)<small>O(V + E)</small></div></div>
+        <div class="br"><div class="ask">An order that respects arrows</div><div class="go">→</div><div class="tool">Topological sort<small>O(V + E)</small></div></div>
+        <div class="br"><div class="ask">Is there a cycle?</div><div class="go">→</div><div class="tool">DFS, look for a back edge<small>O(V + E)</small></div></div>
+        <div class="br"><div class="ask">Cheapest total weight</div><div class="go">→</div><div class="ask" style="font-weight:700">Look at the weights ↓</div>
+          <div class="sub">
+            <div class="br"><div class="ask">Graph is a DAG</div><div class="go">→</div><div class="tool">Topological order + relax<small>O(V + E)</small></div></div>
+            <div class="br"><div class="ask">Some weights are negative</div><div class="go">→</div><div class="tool">Bellman-Ford<small>O(V · E)</small></div></div>
+            <div class="br"><div class="ask">No negative weights</div><div class="go">→</div><div class="tool">Dijkstra<small>O((V + E) log V)</small></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <h3 style="font-size:18px;margin-top:8px">The target running time is a hint</h3>
+    <div class="tw"><table class="t">
+      <tr><th>If they ask for</th><th>Think</th></tr>
+      <tr><td class="m">O(V + E)</td><td>One pass: BFS, DFS, or topological sort</td></tr>
+      <tr><td class="m">O(V · E)</td><td>Bellman-Ford</td></tr>
+      <tr><td class="m">O((V + E) log V)</td><td>Dijkstra with a heap</td></tr>
+      <tr><td class="m">O(V + k · E)</td><td>Bellman-Ford with only k rounds</td></tr>
+      <tr><td>"efficient" + positive weights</td><td>Dijkstra</td></tr>
+      <tr><td>A k appears next to everything</td><td>k copies of the graph (layers)</td></tr>
+    </table></div>
+    <div class="key warn"><span class="lbl">Watch out</span><p>Rewrite the target using the V and E of <b>your</b> graph. P3 asks for O(n²) with n vertices and O(n) edges. V · E = n · n = n², so that's Bellman-Ford.</p></div>
+  </section>
+
+  <section class="s">
+    <h3><span class="step-tag">Step 5</span> Tweak the graph: the toolbox</h3>
+    <p>Don't change the algorithm. Change the graph so a normal algorithm answers your question.</p>
+    <div class="grid2">
+      <div class="card mini"><div class="gv" data-static="tk-super"></div><h4>Super source</h4><p>Add a new vertex with a 0-weight edge to every vertex. One run from it reaches everything. <b>Used in P3.</b></p></div>
+      <div class="card mini"><div class="gv" data-static="tk-layers"></div><h4>Copies (layers)</h4><p>Make k + 1 copies of the graph. Copy i means "state i", like "used i red vertices". Edges move you between copies. <b>Used in P4.</b></p></div>
+      <div class="card mini"><div class="gv" data-static="tk-flip"></div><h4>Flip the signs</h4><p>Multiply every weight by −1. Positive cycles become negative cycles, which Bellman-Ford can find. <b>Used in P3.</b></p></div>
+      <div class="card mini">
+        <div class="rounds" style="margin:6px 0 12px"><span class="rb on">1</span><span class="rb on">2</span><span class="rb off">3</span><span class="rb off">4</span><span class="rb off">5</span><span class="rb off">6</span></div>
+        <h4>Stop early</h4><p>If you know the answer is ready after k rounds, don't run the rest. <b>Used in P2.</b></p>
+      </div>
+      <div class="card mini"><div class="gv" data-static="tk-reverse"></div><h4>Reverse the arrows</h4><p>Need the distance <b>to</b> t from every vertex? Flip every edge and run once <b>from</b> t.</p></div>
+    </div>
+  </section>
+
+  <section class="s">
+    <h3><span class="step-tag">Step 6</span> Check it, then write it up</h3>
+    <p>Trace your plan on the tiny example from Step 2. If it gets the right answer, write it up with these five parts:</p>
+    <div class="answer">
+      <div class="ah-title">Answer template</div>
+      <dl>
+        <dt>Build</dt><dd>Vertices are … Edges are … Weights are … So V′ = … and E′ = …</dd>
+        <dt>Run</dt><dd>Run (algorithm) from (vertex).</dd>
+        <dt>Return</dt><dd>What you read off the result, and what to output if there's no answer.</dd>
+        <dt>Why</dt><dd>One or two sentences: why a path in your graph is the same as an answer to the problem.</dd>
+        <dt>Time</dt><dd>The algorithm's running time with V′ and E′ plugged in, simplified.</dd>
+      </dl>
+    </div>
+    <ul class="ticks">
+      <li>You don't need to re-prove that BFS or Dijkstra works. Prove that <b>your graph</b> is right.</li>
+      <li>If you added vertices or edges, say why they don't create fake answers.</li>
+      <li>Always state the size of the graph you built before you state the time.</li>
+    </ul>
+  </section>
+  <div class="navfoot"></div>
+</section>
+
+<!-- ============ P1 ============ -->
+<section class="panel" id="p1" role="tabpanel" hidden>
+  <div class="phead">
+    <span class="eyebrow">HW3 · Problem 1</span>
+    <h2>Power plants</h2>
+  </div>
+  <div class="prob">
+    <span class="lbl">The problem</span>
+    <p>Madison has <b>n power plants</b> and <b>n² buildings</b>. Some pairs are connected by <b>two-way wires</b>. A building has power if it's wired to a plant, or wired to a building that has power. No building can get power from two different plants. Given the list of wires <b>W</b>, find the plant that powers the most buildings.</p>
+    <span class="target">Target: O(n⁴)</span>
+  </div>
+  <div class="rail"><a href="#p1-s1"><b>1</b>Translate</a><a href="#p1-s2"><b>2</b>Tiny example</a><a href="#p1-s3"><b>3</b>Name it</a><a href="#p1-s4"><b>4</b>Pick</a><a href="#p1-s5"><b>5</b>Tweak</a><a href="#p1-s6"><b>6</b>Check and write up</a></div>
+
+  <section class="s" id="p1-s1">
+    <h3><span class="step-tag">Step 1</span> Translate the story</h3>
+    <div class="map">
+      <div class="from"><span class="hlw">n power plants</span></div><div class="arrow">→</div><div class="to">n vertices (squares)</div>
+      <div class="from"><span class="hlw">n² buildings</span></div><div class="arrow">→</div><div class="to">n² vertices (circles)</div>
+      <div class="from"><span class="hlw">bidirectional wires</span></div><div class="arrow">→</div><div class="to">Undirected edges</div>
+      <div class="from">No costs mentioned</div><div class="arrow">→</div><div class="to">No weights</div>
+    </div>
+    <div class="math">V = n + n² = <span class="hl">O(n²)</span><br>E = number of wires ≤ number of pairs ≤ V² = (n + n²)² = <span class="hl">O(n⁴)</span></div>
+  </section>
+
+  <section class="s" id="p1-s2">
+    <h3><span class="step-tag">Step 2</span> Draw a tiny example</h3>
+    <p>2 plants and 9 buildings. By eye: P1 powers 3 buildings (b1, b2, b3), P2 powers 4 (b4 to b7). Buildings b8 and b9 aren't wired to any plant, so they have no power.</p>
+    <div class="stage"><div class="gv" data-static="p1-small"></div></div>
+  </section>
+
+  <section class="s" id="p1-s3">
+    <h3><span class="step-tag">Step 3</span> Name the question</h3>
+    <p>"Building b is powered by plant P" just means "you can walk from P to b along wires". In graph words: <b>b is in P's connected component</b>.</p>
+    <div class="stage"><div class="gv" data-static="p1-comps"></div></div>
+    <div class="key"><span class="lbl">The question, in graph words</span><p>Which plant's connected component contains the most buildings?</p></div>
+    <div class="key warn"><span class="lbl">Use every sentence</span><p>"No building can be powered by two plants" means <b>each component has at most one plant</b>. That's what makes the count clean.</p></div>
+  </section>
+
+  <section class="s" id="p1-s4">
+    <h3><span class="step-tag">Step 4</span> Pick the algorithm</h3>
+    <ul class="ticks">
+      <li>No weights, only "who is connected to whom". That's <b>BFS</b> (DFS works just as well).</li>
+      <li>Check the target: BFS costs O(V + E) = O(n² + n⁴) = <b>O(n⁴)</b>. It matches exactly.</li>
+    </ul>
+  </section>
+
+  <section class="s" id="p1-s5">
+    <h3><span class="step-tag">Step 5</span> Tweak the graph</h3>
+    <p>Nothing to tweak. BFS answers the question on the graph as it is. Only add a counter: how many building vertices each BFS reaches.</p>
+  </section>
+
+  <section class="s" id="p1-s6">
+    <h3><span class="step-tag">Step 6</span> Check it on the example</h3>
+    <div data-player="p1run"></div>
+    <div class="answer">
+      <div class="ah-title">Write-up</div>
+      <dl>
+        <dt>Build</dt><dd>One vertex per plant and per building, one undirected edge per wire in W, stored as an adjacency list. V = n + n², E = |W| = O(n⁴).</dd>
+        <dt>Run</dt><dd>For each plant p, run BFS from p and count the building vertices it reaches.</dd>
+        <dt>Return</dt><dd>The plant with the largest count.</dd>
+        <dt>Why</dt><dd>A building is powered by p exactly when there's a path of wires from p to it, and BFS from p finds exactly the vertices with a path from p.</dd>
+        <dt>Time</dt><dd>Each component has at most one plant, so no two BFS runs explore the same vertices. All runs together touch each vertex once and each wire twice: O(V + E) = O(n² + n⁴) = <b>O(n⁴)</b>.</dd>
+      </dl>
+    </div>
+    <div class="key warn"><span class="lbl">Common trap</span><p>"I run BFS n times, so it's n · O(n⁴) = O(n⁵)." Not true here. Each BFS stays inside its own component, and the components don't overlap, so the total work is one pass over the graph.</p></div>
+  </section>
+  <div class="navfoot"></div>
+</section>
+
+<!-- ============ P2 ============ -->
+<section class="panel" id="p2" role="tabpanel" hidden>
+  <div class="phead">
+    <span class="eyebrow">HW3 · Problem 2</span>
+    <h2>Limited improvement</h2>
+  </div>
+  <div class="prob">
+    <span class="lbl">The problem</span>
+    <p>A weighted directed graph is <b>k-limited</b> from s if every vertex v has a minimum-weight path from s that uses <b>at most k edges</b>. Given a graph that is k-limited from s, find the shortest-path distance from s to every vertex.</p>
+    <span class="target">Target: O(|V| + k·|E|)</span>
+  </div>
+  <div class="rail"><a href="#p2-s1"><b>1</b>Translate</a><a href="#p2-s2"><b>2</b>Tiny example</a><a href="#p2-s3"><b>3</b>Name it</a><a href="#p2-s4"><b>4</b>Pick</a><a href="#p2-s5"><b>5</b>Tweak</a><a href="#p2-s6"><b>6</b>Check and write up</a></div>
+
+  <section class="s" id="p2-s1">
+    <h3><span class="step-tag">Step 1</span> Translate the story</h3>
+    <p>It's already a graph, so this step is about reading carefully.</p>
+    <div class="map">
+      <div class="from">"weighted directed graph"</div><div class="arrow">→</div><div class="to">One-way edges with numbers</div>
+      <div class="from">Nothing says weights are positive</div><div class="arrow">→</div><div class="to">Assume negative weights can appear</div>
+      <div class="from">"k-limited from s"</div><div class="arrow">→</div><div class="to">Every vertex has a best path with ≤ k edges</div>
+    </div>
+  </section>
+
+  <section class="s" id="p2-s2">
+    <h3><span class="step-tag">Step 2</span> Draw a tiny example</h3>
+    <p>Here k = 2. Each vertex's best path is highlighted. None of them needs more than 2 edges, even though the graph has 5 vertices.</p>
+    <div class="split stage">
+      <div class="gv" data-static="p2-graph"></div>
+      <div class="tw" style="box-shadow:none"><table class="t">
+        <tr><th>Vertex</th><th>Best path</th><th>Edges</th><th>Cost</th></tr>
+        <tr><td><b>B</b></td><td class="m">S → B</td><td class="m">1</td><td class="m">1</td></tr>
+        <tr><td><b>C</b></td><td class="m">S → C</td><td class="m">1</td><td class="m">2</td></tr>
+        <tr><td><b>A</b></td><td class="m">S → B → A</td><td class="m">2</td><td class="m">3</td></tr>
+        <tr><td><b>D</b></td><td class="m">S → C → D</td><td class="m">2</td><td class="m">1</td></tr>
+      </table></div>
+    </div>
+  </section>
+
+  <section class="s" id="p2-s3">
+    <h3><span class="step-tag">Step 3</span> Name the question</h3>
+    <div class="key"><span class="lbl">In graph words</span><p>Single-source shortest paths from s, where weights might be negative.</p></div>
+  </section>
+
+  <section class="s" id="p2-s4">
+    <h3><span class="step-tag">Step 4</span> Pick the algorithm</h3>
+    <ul class="ticks">
+      <li>Negative weights are possible, so <b>Dijkstra is out</b>. That leaves <b>Bellman-Ford</b>.</li>
+      <li>But Bellman-Ford costs O(V · E), and the target is O(V + k · E). Compare them piece by piece:</li>
+    </ul>
+    <div class="card" style="display:grid;gap:10px;max-width:760px">
+      <div class="rounds"><span class="rl">Bellman-Ford: V − 1 rounds</span><span class="rb on">1</span><span class="rb on">2</span><span class="rb on">3</span><span class="rb on">4</span><span class="rb on">…</span><span class="rb on">V−1</span></div>
+      <div class="rounds"><span class="rl">Target: only k rounds</span><span class="rb on">1</span><span class="rb on">…</span><span class="rb on">k</span><span class="rb off">k+1</span><span class="rb off">…</span><span class="rb off">V−1</span></div>
+      <p class="note">Each round costs O(E). Setting up <span class="k">d[ ]</span> costs O(V). So O(V + k · E) reads as "set up, then k rounds".</p>
+    </div>
+  </section>
+
+  <section class="s" id="p2-s5">
+    <h3><span class="step-tag">Step 5</span> Tweak: stop early</h3>
+    <p>Run Bellman-Ford for <b>k rounds</b> instead of V − 1. The round rule from the Bellman-Ford tab says why that's enough:</p>
+    <div class="stage"><div class="gv" data-static="p2-chain"></div></div>
+    <div class="key"><span class="lbl">Why k rounds are enough</span><p>After round i, every vertex whose best path uses ≤ i edges is correct. In a k-limited graph, every vertex has a best path with ≤ k edges. So after round k, every vertex is correct.</p></div>
+  </section>
+
+  <section class="s" id="p2-s6">
+    <h3><span class="step-tag">Step 6</span> Check it on the example</h3>
+    <p>The edges are relaxed in a bad order on purpose. Even so, everything is final after round 2.</p>
+    <div data-player="p2run"></div>
+    <div class="answer">
+      <div class="ah-title">Write-up</div>
+      <dl>
+        <dt>Build</dt><dd>Nothing new. Use the graph as given.</dd>
+        <dt>Run</dt><dd>Set d[s] = 0 and every other d[v] = ∞. Then do <b>k rounds</b>; in each round, relax every edge once.</dd>
+        <dt>Return</dt><dd>d[v] for every vertex v.</dd>
+        <dt>Why</dt><dd>After round i, d[v] is at most the weight of the best path to v that uses ≤ i edges (round rule). Every v has a best path with ≤ k edges, so after k rounds d[v] ≤ δ(s, v). Every d[v] is always the weight of some real path, so it can't go below δ(s, v). So d[v] = δ(s, v).</dd>
+        <dt>Time</dt><dd>Setup O(V), plus k rounds of O(E) each: <b>O(V + k · E)</b>.</dd>
+      </dl>
+    </div>
+  </section>
+  <div class="navfoot"></div>
+</section>
+
+<!-- ============ P3 ============ -->
+<section class="panel" id="p3" role="tabpanel" hidden>
+  <div class="phead">
+    <span class="eyebrow">HW3 · Problem 3</span>
+    <h2>Conservative cycles</h2>
+  </div>
+  <div class="prob">
+    <span class="lbl">The problem</span>
+    <p>There are <b>n particle locations</b> and <b>O(n) transitions</b>. A transition (ℓi, ℓj, wij) moves a particle from ℓi to ℓj and takes wij work, which can be a positive or negative integer. Transitions are one-way. The force field is <b>conservative</b> if the total work around <b>every closed loop is zero</b>. Decide if the field is conservative.</p>
+    <span class="target">Target: O(n²)</span>
+  </div>
+  <div class="rail"><a href="#p3-s1"><b>1</b>Translate</a><a href="#p3-s2"><b>2</b>Tiny example</a><a href="#p3-s3"><b>3</b>Name it</a><a href="#p3-s4"><b>4</b>Pick</a><a href="#p3-s5"><b>5</b>Tweak</a><a href="#p3-s6"><b>6</b>Check and write up</a></div>
+
+  <section class="s" id="p3-s1">
+    <h3><span class="step-tag">Step 1</span> Translate the story</h3>
+    <p>Ignore the physics words. Translate them:</p>
+    <div class="map">
+      <div class="from"><span class="hlw">n locations</span></div><div class="arrow">→</div><div class="to">n vertices</div>
+      <div class="from"><span class="hlw">O(n) transitions</span>, one-way</div><div class="arrow">→</div><div class="to">O(n) directed edges</div>
+      <div class="from"><span class="hlw">work wij</span>, positive or negative</div><div class="arrow">→</div><div class="to">Edge weights (can be negative)</div>
+      <div class="from"><span class="hlw">closed loop</span></div><div class="arrow">→</div><div class="to">Cycle</div>
+      <div class="from"><span class="hlw">conservative</span></div><div class="arrow">→</div><div class="to">Every cycle adds up to exactly 0</div>
+    </div>
+    <div class="math">V = <span class="hl">n</span>, E = <span class="hl">O(n)</span></div>
+  </section>
+
+  <section class="s" id="p3-s2">
+    <h3><span class="step-tag">Step 2</span> Draw a tiny example</h3>
+    <div class="grid3">
+      <div class="card mini"><div class="gv" data-static="p3-t1"></div><div class="sumtag ok">3 − 1 − 2 = 0 ✓</div></div>
+      <div class="card mini"><div class="gv" data-static="p3-t2"></div><div class="sumtag no">3 − 1 − 1 = +1 ✗</div></div>
+      <div class="card mini"><div class="gv" data-static="p3-t3"></div><div class="sumtag no">1 − 2 − 1 = −2 ✗</div></div>
+    </div>
+    <p>Only the first one is conservative. One bad cycle anywhere is enough to say "not conservative".</p>
+  </section>
+
+  <section class="s" id="p3-s3">
+    <h3><span class="step-tag">Step 3</span> Name the question</h3>
+    <div class="key"><span class="lbl">In graph words</span><p>Is there <b>any</b> cycle whose total is not 0? If yes, not conservative. If no, conservative.</p></div>
+    <p>"Not 0" means one of two things:</p>
+    <div class="numline">
+      <div class="neg">Total &lt; 0<small>a negative cycle</small></div>
+      <div class="zero">Total = 0<small>fine</small></div>
+      <div class="pos">Total &gt; 0<small>a positive cycle</small></div>
+    </div>
+  </section>
+
+  <section class="s" id="p3-s4">
+    <h3><span class="step-tag">Step 4</span> Pick the algorithm</h3>
+    <ul class="ticks">
+      <li>Finding a <b>negative cycle</b> is exactly what Bellman-Ford's extra round does.</li>
+      <li>Check the target: Bellman-Ford costs O(V · E) = O(n · n) = <b>O(n²)</b>. It matches.</li>
+      <li>Two gaps remain: Bellman-Ford doesn't find <b>positive</b> cycles, and it only sees cycles it can <b>reach</b> from its start. Step 5 fixes both.</li>
+    </ul>
+  </section>
+
+  <section class="s" id="p3-s5">
+    <h3><span class="step-tag">Step 5</span> Tweak the graph (two tricks)</h3>
+    <h3 style="font-size:18px">Trick A: flip the signs</h3>
+    <div class="grid2">
+      <div class="card mini"><div class="gv" data-static="p3-flipA"></div><h4>Original</h4><p>The cycle adds up to 3 − 1 = <b>+2</b>. Bellman-Ford can't see positive cycles.</p></div>
+      <div class="card mini"><div class="gv" data-static="p3-flipB"></div><h4>Every weight × (−1)</h4><p>Now it adds up to −3 + 1 = <b>−2</b>. Bellman-Ford catches it.</p></div>
+    </div>
+    <p>So run Bellman-Ford twice: on the original graph (finds negative cycles) and on the flipped graph (finds positive cycles).</p>
+    <h3 style="font-size:18px">Trick B: a super source</h3>
+    <div class="grid2">
+      <div class="card mini"><div class="gv" data-static="p3-islands"></div><h4>Problem</h4><p>Starting from a, Bellman-Ford never reaches d or e, so it never sees their cycle.</p></div>
+      <div class="card mini"><div class="gv" data-static="p3-super"></div><h4>Fix</h4><p>Add a new vertex s* with a 0-weight edge to every vertex. Now every cycle is reachable.</p></div>
+    </div>
+    <div class="key warn"><span class="lbl">Does s* create fake cycles?</span><p>No. s* has only outgoing edges, so no cycle can pass through it. The cycles are exactly the original ones.</p></div>
+  </section>
+
+  <section class="s" id="p3-s6">
+    <h3><span class="step-tag">Step 6</span> Check it on the example</h3>
+    <p>Two islands: the triangle a, b, c adds up to 0, and the pair d, e adds up to +2. Each step below is one full round.</p>
+    <div data-player="p3run"></div>
+    <div class="answer">
+      <div class="ah-title">Write-up</div>
+      <dl>
+        <dt>Build</dt><dd>One vertex per location, one directed edge per transition with weight wij. Add s* with a 0-weight edge to every vertex. V′ = n + 1, E′ = O(n) + n = O(n). Also build a copy with every weight multiplied by −1.</dd>
+        <dt>Run</dt><dd>Bellman-Ford from s* on both graphs, including the extra cycle-check round.</dd>
+        <dt>Return</dt><dd>"Conservative" if neither run finds a negative cycle. Otherwise "not conservative".</dd>
+        <dt>Why</dt><dd>A cycle with a nonzero total is negative in the original graph or negative in the flipped graph. s* reaches every vertex and adds no new cycles, so Bellman-Ford sees every cycle.</dd>
+        <dt>Time</dt><dd>Each run is O(V′ · E′) = O(n · n) = O(n²). Two runs: <b>O(n²)</b>.</dd>
+      </dl>
+    </div>
+  </section>
+  <div class="navfoot"></div>
+</section>
+
+<!-- ============ P4 ============ -->
+<section class="panel" id="p4" role="tabpanel" hidden>
+  <div class="phead">
+    <span class="eyebrow">HW3 · Problem 4</span>
+    <h2>Color limit</h2>
+  </div>
+  <div class="prob">
+    <span class="lbl">The problem</span>
+    <p>Every vertex is colored <b>red</b> or <b>blue</b>. All edge weights are <b>positive</b>. Given k, find the minimum-weight path from blue vertex s to blue vertex t that passes through red vertices <b>at most k times</b>, or report that no such path exists.</p>
+    <span class="target">Target: efficient</span>
+  </div>
+  <div class="rail"><a href="#p4-s1"><b>1</b>Translate</a><a href="#p4-s2"><b>2</b>Tiny example</a><a href="#p4-s3"><b>3</b>Name it</a><a href="#p4-s4"><b>4</b>Pick</a><a href="#p4-s5"><b>5</b>Tweak</a><a href="#p4-s6"><b>6</b>Check and write up</a></div>
+
+  <section class="s" id="p4-s1">
+    <h3><span class="step-tag">Step 1</span> Translate the story</h3>
+    <div class="map">
+      <div class="from">"weighted directed graph", "positive weights"</div><div class="arrow">→</div><div class="to">One-way edges, all weights &gt; 0</div>
+      <div class="from">"red or blue"</div><div class="arrow">→</div><div class="to">A label on each vertex</div>
+      <div class="from">"at most k red vertices"</div><div class="arrow">→</div><div class="to">A budget the path must stay under</div>
+    </div>
+  </section>
+
+  <section class="s" id="p4-s2">
+    <h3><span class="step-tag">Step 2</span> Draw a tiny example</h3>
+    <p>Change k to see how the best allowed path changes. The cheapest path overall uses 2 red vertices, so it's only allowed when k ≥ 2.</p>
+    <div class="stage" style="display:grid;gap:12px">
+      <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+        <div class="seg" id="p4k" role="group" aria-label="Choose k"><button data-k="0">k = 0</button><button data-k="1" aria-pressed="true">k = 1</button><button data-k="2">k = 2</button></div>
+        <span class="res" id="p4res"></span>
+      </div>
+      <div class="gv" data-static="p4-graph"></div>
+      <div class="legend"><span><i class="dot blue"></i>blue vertex</span><span><i class="dot red"></i>red vertex</span><span><i class="bar path"></i>best path allowed for this k</span></div>
+    </div>
+  </section>
+
+  <section class="s" id="p4-s3">
+    <h3><span class="step-tag">Step 3</span> Name the question</h3>
+    <div class="key"><span class="lbl">In graph words</span><p>Shortest path from s to t, but the path can use at most k red vertices.</p></div>
+    <p>Plain Dijkstra would return s → a → b → t (cost 3). With k = 1 that's not allowed, because it uses 2 reds. The algorithm has to <b>remember how many reds it has used</b>.</p>
+  </section>
+
+  <section class="s" id="p4-s4">
+    <h3><span class="step-tag">Step 4</span> Pick the algorithm</h3>
+    <ul class="ticks">
+      <li>All weights are positive, so <b>Dijkstra</b> is the tool. "Efficient" with positive weights almost always means Dijkstra.</li>
+      <li>Dijkstra only knows "where am I". We need "where am I <b>and</b> how many reds have I used". The hint says: make copies.</li>
+    </ul>
+  </section>
+
+  <section class="s" id="p4-s5">
+    <h3><span class="step-tag">Step 5</span> Tweak: build floors</h3>
+    <p>Make <b>k + 1 copies</b> of the graph, stacked like floors of a building. <b>Floor i means "I've used i reds so far."</b> Here k = 1, so there are 2 floors.</p>
+    <div class="tw"><table class="t">
+      <tr><th>Original edge u → v (weight w)</th><th>In the floor graph, for each floor i</th></tr>
+      <tr><td>v is <b>blue</b></td><td><span class="k">uᵢ → vᵢ</span> (same floor, weight w)</td></tr>
+      <tr><td>v is <b>red</b></td><td><span class="k">uᵢ → vᵢ₊₁</span> (one floor up, weight w), only if i &lt; k</td></tr>
+    </table></div>
+    <div class="stage"><div class="gv" data-static="p4-layers"></div></div>
+    <ul class="ticks">
+      <li>Entering a red vertex costs one floor. There's no floor above k, so <b>no path can use more than k reds</b>.</li>
+      <li>Weights don't change, so a path's cost is the same on the floors as in the original graph.</li>
+      <li>Red copies on floor 0 can never be entered (entering a red always goes up), so they stay faded.</li>
+    </ul>
+  </section>
+
+  <section class="s" id="p4-s6">
+    <h3><span class="step-tag">Step 6</span> Check it on the example</h3>
+    <p>Run normal Dijkstra from <b>s₀</b> on the floor graph. Then the answer is the smallest of <span class="k">d(t₀), d(t₁), …, d(tₖ)</span>.</p>
+    <div data-player="p4run"></div>
+    <div class="answer">
+      <div class="ah-title">Write-up</div>
+      <dl>
+        <dt>Build</dt><dd>For every vertex v, make copies v₀, v₁, …, vₖ. For every edge (u, v, w) and every floor i: if v is blue, add uᵢ → vᵢ with weight w; if v is red and i &lt; k, add uᵢ → vᵢ₊₁ with weight w. V′ = (k + 1)·V, E′ ≤ (k + 1)·E.</dd>
+        <dt>Run</dt><dd>Dijkstra from s₀ (all weights are positive).</dd>
+        <dt>Return</dt><dd>The smallest d(tᵢ) for i = 0 … k. Follow parent pointers to get the path, and drop the floor numbers. If every d(tᵢ) is ∞, report that no path exists.</dd>
+        <dt>Why</dt><dd>A path from s₀ to tᵢ in the floor graph matches a path from s to t in G that passes through exactly i red vertices, with the same weight. Floors stop at k, so only paths with ≤ k reds exist.</dd>
+        <dt>Time</dt><dd>Dijkstra on V′ and E′: O((V′ + E′) log V′) = <b>O(k · (V + E) · log(k · V))</b>.</dd>
+      </dl>
+    </div>
+    <div class="key"><span class="lbl">Pattern to remember</span><p>When a problem says "at most k times", make k + 1 copies of the graph and let the copy number count.</p></div>
+  </section>
+  <div class="navfoot"></div>
+</section>
+
+</main>
+<script>
+/* ===== Graph engine: SVG renderer + step-through player ===== */
+const NS = 'http://www.w3.org/2000/svg';
+function S(tag, attrs, parent) {
+  const e = document.createElementNS(NS, tag);
+  if (attrs) for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function fmt(v) {
+  if (v === Infinity) return '∞';
+  if (v === -Infinity) return '−∞';
+  if (typeof v === 'number' && v < 0) return '−' + Math.abs(v);
+  return String(v);
+}
+const STATIC = {}, PLAYERS = {}, CUSTOM = [], ALLPLAYERS = [];
+
+function nodeExt(n, ux, uy) {
+  if (n.shape === 'circle') return n.rad;
+  const ax = Math.abs(ux), ay = Math.abs(uy);
+  const tx = ax > 1e-6 ? n.hw / ax : 1e9, ty = ay > 1e-6 ? n.hh / ay : 1e9;
+  return Math.min(tx, ty) + 1;
+}
+
+class GraphView {
+  constructor(host, g) {
+    this.g = g;
+    const R = g.r || 19;
+    const svg = S('svg', { viewBox: `0 0 ${g.w} ${g.h}`, role: 'img', 'aria-label': g.label || 'Graph diagram' });
+    svg.style.maxWidth = (g.maxw || Math.round(g.w * 1.3)) + 'px';
+    svg.style.marginInline = 'auto';
+    host.appendChild(svg);
+    this.svg = svg;
+    this.N = {}; this.E = {}; this.D = {};
+    const byId = {};
+    g.nodes.forEach(n => {
+      n.shape = n.shape || 'circle';
+      if (n.shape === 'pill') { n.hw = Math.max(24, String(n.label).length * 4.7 + 14); n.hh = 16; }
+      else if (n.shape === 'square') { n.hw = n.hh = R - 1; }
+      else n.rad = n.r || R;
+      byId[n.id] = n;
+    });
+    this.byId = byId;
+    // decor
+    const dg = S('g', { class: 'decor' }, svg);
+    (g.decor || []).forEach(d => {
+      let el;
+      if (d.type === 'band') {
+        el = S('g', {}, dg);
+        S('rect', { class: 'band', x: d.x, y: d.y, width: d.w, height: d.h, rx: 12 }, el);
+        if (d.text) { const t = d.corner ? S('text', { x: d.x + d.w - 12, y: d.y + d.h - 10, 'text-anchor': 'end' }, el) : S('text', { x: d.x + 12, y: d.y + 18 }, el); t.textContent = d.text; }
+      } else if (d.type === 'blob') {
+        el = S('g', {}, dg);
+        S('rect', { class: 'blob ' + (d.cls || 'c1'), x: d.x, y: d.y, width: d.w, height: d.h, rx: d.rx || 26 }, el);
+        if (d.text) { const t = S('text', { x: d.tx != null ? d.tx : d.x + 12, y: d.ty != null ? d.ty : d.y + 18 }, el); t.textContent = d.text; }
+      } else if (d.type === 'text') {
+        el = S('text', { x: d.x, y: d.y, 'text-anchor': d.anchor || 'start' }, dg); el.textContent = d.text;
+        if (d.style) el.setAttribute('style', d.style);
+      }
+      if (el && d.id) this.D[d.id] = el;
+      if (el && d.hidden) el.classList.add('hide');
+    });
+    const eg = S('g', {}, svg), wg = S('g', {}, svg), ng = S('g', {}, svg);
+    // edges
+    g.edges.forEach(e => {
+      const a = byId[e.from], b = byId[e.to];
+      const id = e.id || `${e.from}>${e.to}`;
+      e.id = id;
+      const directed = e.directed != null ? e.directed : !!g.directed;
+      const dx = b.x - a.x, dy = b.y - a.y, L = Math.hypot(dx, dy) || 1;
+      const nx = -dy / L, ny = dx / L, bend = e.bend || 0;
+      const cx = (a.x + b.x) / 2 + nx * bend, cy = (a.y + b.y) / 2 + ny * bend;
+      let u1x, u1y, u2x, u2y;
+      if (bend) {
+        const l1 = Math.hypot(cx - a.x, cy - a.y), l2 = Math.hypot(b.x - cx, b.y - cy);
+        u1x = (cx - a.x) / l1; u1y = (cy - a.y) / l1; u2x = (b.x - cx) / l2; u2y = (b.y - cy) / l2;
+      } else { u1x = u2x = dx / L; u1y = u2y = dy / L; }
+      const e1 = nodeExt(a, u1x, u1y), e2 = nodeExt(b, u2x, u2y);
+      const p0x = a.x + u1x * e1, p0y = a.y + u1y * e1;
+      const p2x = b.x - u2x * (e2 + (directed ? 1 : 0)), p2y = b.y - u2y * (e2 + (directed ? 1 : 0));
+      const AL = 11, AW = 6.5;
+      const lex = directed ? p2x - u2x * AL * 0.8 : p2x, ley = directed ? p2y - u2y * AL * 0.8 : p2y;
+      const grp = S('g', { class: 'edge e-idle' }, eg);
+      const d = bend ? `M${p0x.toFixed(1)},${p0y.toFixed(1)} Q${cx.toFixed(1)},${cy.toFixed(1)} ${lex.toFixed(1)},${ley.toFixed(1)}`
+                     : `M${p0x.toFixed(1)},${p0y.toFixed(1)} L${lex.toFixed(1)},${ley.toFixed(1)}`;
+      S('path', { class: 'ln', d }, grp);
+      if (directed) {
+        const bx = p2x - u2x * AL, by = p2y - u2y * AL, px = -u2y, py = u2x;
+        S('polygon', { class: 'ah', points: `${p2x.toFixed(1)},${p2y.toFixed(1)} ${(bx + px * AW).toFixed(1)},${(by + py * AW).toFixed(1)} ${(bx - px * AW).toFixed(1)},${(by - py * AW).toFixed(1)}` }, grp);
+      }
+      let wl = null;
+      if (e.w != null || e.label != null) {
+        const t = e.lt != null ? e.lt : 0.5;
+        let lx, ly;
+        if (bend) { const it = 1 - t; lx = it * it * p0x + 2 * it * t * cx + t * t * p2x; ly = it * it * p0y + 2 * it * t * cy + t * t * p2y; }
+        else { lx = p0x + (p2x - p0x) * t; ly = p0y + (p2y - p0y) * t; }
+        if (e.lo) { lx += e.lo[0]; ly += e.lo[1]; }
+        wl = S('g', { class: 'wt' }, wg);
+        const rect = S('rect', { height: 19, rx: 5 }, wl);
+        const txt = S('text', { x: lx.toFixed(1), y: ly.toFixed(1) }, wl);
+        wl._rect = rect; wl._x = lx; wl._y = ly; wl._txt = txt;
+        this.setLabel(wl, e.label != null ? e.label : e.w);
+        grp._wl = wl;
+      }
+      this.E[id] = { el: grp, e, wl };
+      if (e.cls) grp.dataset.base = e.cls;
+    });
+    // nodes
+    g.nodes.forEach(n => {
+      const grp = S('g', { class: 'node n-idle' }, ng);
+      if (n.kind) grp.dataset.kind = n.kind;
+      if (n.shape === 'circle') {
+        S('circle', { class: 'ring', cx: n.x, cy: n.y, r: n.rad + 5 }, grp);
+        S('circle', { class: 'body', cx: n.x, cy: n.y, r: n.rad }, grp);
+      } else {
+        const rx = n.shape === 'pill' ? n.hh : 7;
+        S('rect', { class: 'ring', x: n.x - n.hw - 5, y: n.y - n.hh - 5, width: 2 * n.hw + 10, height: 2 * n.hh + 10, rx: rx + 5 }, grp);
+        S('rect', { class: 'body', x: n.x - n.hw, y: n.y - n.hh, width: 2 * n.hw, height: 2 * n.hh, rx }, grp);
+      }
+      const lbl = S('text', { class: 'lbl', x: n.x, y: n.y + 0.5 }, grp);
+      lbl.textContent = n.label != null ? n.label : n.id;
+      if (n.shape === 'pill') lbl.style.fontSize = '13px';
+      if (n.fs) lbl.style.fontSize = n.fs + 'px';
+      const ext = n.shape === 'circle' ? n.rad : n.hh;
+      const lp = n.lp || 'b';
+      let sx = n.x, sy = n.y + ext + 15, anchor = 'middle';
+      if (lp === 't') sy = n.y - ext - 14;
+      if (lp === 'l') { sx = n.x - (n.shape === 'circle' ? n.rad : n.hw) - 8; sy = n.y; anchor = 'end'; }
+      if (lp === 'r') { sx = n.x + (n.shape === 'circle' ? n.rad : n.hw) + 8; sy = n.y; anchor = 'start'; }
+      const sub = S('text', { class: 'sub', x: sx, y: sy }, grp);
+      sub.style.textAnchor = anchor;
+      this.N[n.id] = { el: grp, sub, n };
+    });
+  }
+  setLabel(wl, val) {
+    const s = typeof val === 'number' ? fmt(val) : String(val);
+    wl._txt.textContent = s;
+    const w = s.length * 7.6 + 10;
+    wl._rect.setAttribute('x', (wl._x - w / 2).toFixed(1));
+    wl._rect.setAttribute('y', (wl._y - 9.5).toFixed(1));
+    wl._rect.setAttribute('width', w.toFixed(1));
+    wl.classList.toggle('neg', (typeof val === 'number' && val < 0) || /^[−-]/.test(s));
+  }
+  apply(f) {
+    f = f || {};
+    for (const id in this.N) {
+      const o = this.N[id], st = (f.ns && f.ns[id]) || 'idle';
+      const kind = o.el.dataset.kind ? ' k-' + o.el.dataset.kind : '';
+      const keepFlash = o.el.classList.contains('flash') && !(f.flash && f.flash.includes(id));
+      o.el.setAttribute('class', `node n-${st}${kind}${keepFlash ? ' flash' : ''}`);
+      const s = f.sub ? f.sub[id] : undefined;
+      o.sub.textContent = s == null ? '' : (typeof s === 'number' ? fmt(s) : s);
+    }
+    if (f.flash) f.flash.forEach(id => {
+      const o = this.N[id]; if (!o) return;
+      o.el.classList.remove('flash');
+      requestAnimationFrame(() => requestAnimationFrame(() => o.el.classList.add('flash')));
+    });
+    for (const id in this.E) {
+      const o = this.E[id], st = (f.es && f.es[id]) || 'idle';
+      const base = o.el.dataset.base ? ' e-' + o.el.dataset.base : '';
+      o.el.setAttribute('class', `edge${base} e-${st}`);
+      if (o.wl) {
+        o.wl.setAttribute('class', `wt${st === 'dim' ? ' dimw' : ''}`);
+        const v = f.wl && f.wl[id] != null ? f.wl[id] : (o.e.label != null ? o.e.label : o.e.w);
+        this.setLabel(o.wl, v);
+        o.wl.style.opacity = st === 'dim' ? '.35' : '';
+      }
+    }
+    if (f.dc) for (const id in f.dc) { const el = this.D[id]; if (el) el.classList.toggle('hide', !f.dc[id]); }
+  }
+}
+
+/* panel helpers */
+const chip = (t, cls, isNew, small) => `<span class="chip ${cls || ''}${isNew ? ' new' : ''}">${t}${small != null ? `<small>${small}</small>` : ''}</span>`;
+const ds = (title, right, body) => `<div class="ds"><div class="ds-h"><span>${title}</span><span>${right || ''}</span></div>${body}</div>`;
+const rowOf = items => `<div class="ds-row">${items.length ? items.join('') : '<span class="empty">empty</span>'}</div>`;
+const colOf = items => `<div class="ds-col">${items.length ? items.join('') : '<span class="empty">empty</span>'}</div>`;
+function listText(arr) {
+  const b = arr.map(x => `<b>${x}</b>`);
+  if (b.length < 2) return b.join('');
+  return b.slice(0, -1).join(', ') + ' and ' + b[b.length - 1];
+}
+
+class Player {
+  constructor(host, name, spec) {
+    this.spec = spec; this.frames = spec.frames; this.i = 0; this.timer = null;
+    const N = this.frames.length;
+    host.classList.add('player');
+    const code = spec.code ? `<pre class="code" aria-label="Pseudocode">${spec.code.map(l => `<span class="ln">${l.replace(/(\/\/.*)$/, '<span class="cm">$1</span>')}</span>`).join('')}</pre>` : '';
+    host.innerHTML = `<div class="pl-main"><div class="pl-svg gv"></div><div class="pl-cap" aria-live="polite"></div>
+      <div class="pl-ctrl"><button class="btn" data-a="reset">Reset</button><button class="btn" data-a="back">◀ Back</button><button class="btn primary" data-a="play">▶ Play</button><button class="btn" data-a="next">Next ▶</button>
+      <input type="range" id="rng-${name}" min="0" max="${N - 1}" value="0" aria-label="Jump to step">
+      <select id="spd-${name}" aria-label="Speed"><option value="1900">Slow</option><option value="1200" selected>Normal</option><option value="650">Fast</option></select>
+      <span class="pl-count"></span></div></div>
+      <div class="pl-side"><div class="pl-panel"></div>${code}</div>`;
+    this.view = new GraphView(host.querySelector('.pl-svg'), spec.graph);
+    this.cap = host.querySelector('.pl-cap'); this.panel = host.querySelector('.pl-panel');
+    this.lines = [...host.querySelectorAll('pre.code .ln')];
+    this.rng = host.querySelector('input[type=range]'); this.spd = host.querySelector('select');
+    this.cnt = host.querySelector('.pl-count');
+    this.btn = {}; host.querySelectorAll('button[data-a]').forEach(b => this.btn[b.dataset.a] = b);
+    this.btn.reset.onclick = () => { this.stop(); this.go(0); };
+    this.btn.back.onclick = () => { this.stop(); this.go(this.i - 1); };
+    this.btn.next.onclick = () => { this.stop(); this.go(this.i + 1); };
+    this.btn.play.onclick = () => this.timer ? this.stop() : this.play();
+    this.rng.oninput = () => { this.stop(); this.go(+this.rng.value); };
+    this.spd.onchange = () => { if (this.timer) { this.stop(); this.play(); } };
+    if (!spec.panel && !spec.code) host.querySelector('.pl-side').hidden = true;
+    ALLPLAYERS.push(this);
+    this.go(0);
+  }
+  go(i) {
+    const N = this.frames.length;
+    i = Math.max(0, Math.min(N - 1, i)); this.i = i;
+    const f = this.frames[i];
+    this.view.apply(f);
+    this.cap.innerHTML = `<span class="stepn">Step ${i + 1} of ${N}</span>${f.cap || ''}`;
+    this.panel.innerHTML = f.panel || '';
+    this.panel.hidden = !f.panel;
+    const on = f.line == null ? [] : [].concat(f.line);
+    this.lines.forEach((l, k) => l.classList.toggle('on', on.includes(k)));
+    this.rng.value = i;
+    this.cnt.textContent = `${i + 1} / ${N}`;
+    this.btn.back.disabled = i === 0;
+    this.btn.next.disabled = i === N - 1;
+  }
+  play() {
+    if (this.i >= this.frames.length - 1) this.go(0);
+    this.btn.play.textContent = '❚❚ Pause';
+    this.timer = setInterval(() => {
+      if (this.i >= this.frames.length - 1) this.stop(); else this.go(this.i + 1);
+    }, +this.spd.value);
+  }
+  stop() {
+    if (this.timer) clearInterval(this.timer);
+    this.timer = null;
+    this.btn.play.textContent = '▶ Play';
+  }
+}
+
+/* frame recorder used by all generators */
+function recorder(g) {
+  const st = { ns: {}, es: {}, sub: {} };
+  const frames = [];
+  return {
+    st, frames,
+    snap(extra) {
+      frames.push(Object.assign({ ns: { ...st.ns }, es: { ...st.es }, sub: { ...st.sub } }, extra || {}));
+    }
+  };
+}
+function adjOf(g, undirected) {
+  const adj = {};
+  g.nodes.forEach(n => adj[n.id] = []);
+  g.edges.forEach(e => {
+    const id = e.id || `${e.from}>${e.to}`;
+    adj[e.from].push({ v: e.to, id, w: e.w });
+    if (undirected) adj[e.to].push({ v: e.from, id, w: e.w });
+  });
+  return adj;
+}
+/* ===== Frame generators: each one really runs the algorithm and records snapshots ===== */
+function labelOf(g, id) { const n = g.nodes.find(x => x.id === id); return n && n.label != null ? n.label : id; }
+
+const CODE = {
+  bfs: ['BFS(G, s):', '  dist[s] = 0, all others = ∞', '  queue = [s]', '  while queue is not empty:', '    u = queue.pop_front()', '    for each neighbor v of u:', '      if dist[v] == ∞:      // never seen', '        dist[v] = dist[u] + 1', '        parent[v] = u', '        queue.push_back(v)'],
+  dfs: ['DFS(u):', '  mark u in progress; start[u] = ++time', '  for each edge u → v:', '    if v is unvisited: DFS(v)     // tree edge', '    else if v is in progress:', '      found a cycle!              // back edge', '    else: skip                    // v is finished', '  mark u finished; finish[u] = ++time'],
+  topodfs: ['TopoSort(G):', '  for each vertex u: if unvisited, DFS(u)', 'DFS(u):', '  mark u in progress', '  for each edge u → v:', '    if v is unvisited: DFS(v)', '  mark u finished', '  put u at the FRONT of the list'],
+  kahn: ['TopoSort(G):', '  ready = vertices with 0 incoming edges', '  while ready is not empty:', '    take u from ready; add u to the order', '    for each edge u → v:', '      remove it: in[v] = in[v] − 1', '      if in[v] == 0: add v to ready'],
+  relax: ['relax(u, v):', '  if d[u] + w(u,v) < d[v]:', '    d[v] = d[u] + w(u,v)', '    parent[v] = u'],
+  bf: ['BellmanFord(G, s):', '  d[s] = 0, all others = ∞', '  repeat V − 1 times:          // one round', '    for each edge u → v:', '      if d[u] + w < d[v]:       // relax', '        d[v] = d[u] + w', '  for each edge u → v:          // extra round', '    if d[u] + w < d[v]:', '      report "negative cycle"'],
+  dij: ['Dijkstra(G, s):', '  d[s] = 0, all others = ∞', '  PQ = all vertices, keyed by d', '  while PQ is not empty:', '    u = PQ.extract_min()      // closest = final', '    for each edge u → v (weight w):', '      if d[u] + w < d[v]:     // relax', '        d[v] = d[u] + w', '        parent[v] = u']
+};
+
+function genBFS(g, s) {
+  const adj = adjOf(g, true);
+  for (const k in adj) adj[k].sort((x, y) => String(x.v).localeCompare(String(y.v)));
+  const R = recorder(g), st = R.st, dist = {}, Q = [], done = [];
+  g.nodes.forEach(n => dist[n.id] = Infinity);
+  const panel = (nw = []) => ds('Queue', 'front → back', rowOf(Q.map(x => chip(x, 'q', nw.includes(x))))) + ds('Done, in order', '', rowOf(done.map(x => chip(x, 'ok'))));
+  dist[s] = 0; st.sub[s] = 0; st.ns[s] = 'frontier'; Q.push(s);
+  R.snap({ cap: `Start at <b>${s}</b>. Its distance is 0. Put it in the queue.`, line: [1, 2], panel: panel([s]) });
+  while (Q.length) {
+    const u = Q.shift(); st.ns[u] = 'current';
+    R.snap({ cap: `Take <b>${u}</b> from the front of the queue and look at its neighbors.`, line: [3, 4], panel: panel() });
+    const seen = [];
+    for (const { v, id } of adj[u]) {
+      if (dist[v] === Infinity) {
+        dist[v] = dist[u] + 1; st.sub[v] = dist[v]; st.ns[v] = 'frontier'; st.es[id] = 'tree'; Q.push(v);
+        R.snap({ cap: `<b>${v}</b> is new. Its distance is ${dist[u]} + 1 = <b>${dist[v]}</b>. Add ${v} to the back of the queue.`, line: [6, 7, 8, 9], panel: panel([v]), flash: [v] });
+      } else if (st.es[id] !== 'tree') seen.push({ v, id });
+    }
+    if (seen.length) {
+      seen.forEach(o => st.es[o.id] = 'check');
+      R.snap({ cap: `${listText(seen.map(o => o.v))} ${seen.length > 1 ? 'were' : 'was'} already seen. Skip.`, line: [5, 6], panel: panel() });
+      seen.forEach(o => delete st.es[o.id]);
+    }
+    st.ns[u] = 'done'; done.push(u);
+  }
+  R.snap({ cap: `The queue is empty, so BFS is done. Each number is the <b>fewest edges</b> from ${s}. The green edges form the BFS tree.`, panel: panel() });
+  return R.frames;
+}
+
+function genDFS(g, roots, opts = {}) {
+  const adj = adjOf(g, false);
+  if (opts.sort) for (const k in adj) adj[k].sort((x, y) => String(x.v).localeCompare(String(y.v)));
+  const R = recorder(g), st = R.st, state = {}, stack = [], fin = [], list = [];
+  let time = 0, lastNew = null;
+  const L = id => labelOf(g, id);
+  g.nodes.forEach(n => state[n.id] = 'idle');
+  const panel = (pushed) => ds('Stack', 'top first', colOf(stack.slice().reverse().map((x, k) => chip(L(x), k === 0 ? 'cur' : 'q', pushed && k === 0)))) +
+    (opts.topo ? ds('List', 'front → back', rowOf(list.map(x => chip(L(x), 'ok', x === lastNew)))) : ds('Finished, in order', '', rowOf(fin.map(x => chip(L(x), 'ok', x === lastNew)))));
+  const ln = opts.topo ? { enter: [3], tree: [4, 5], back: [4], cross: [4], fin: [6, 7] } : { enter: [1], tree: [2, 3], back: [4, 5], cross: [6], fin: [7] };
+  function visit(u) {
+    time++; state[u] = 'prog'; stack.push(u); lastNew = null;
+    stack.forEach(x => st.ns[x] = 'frontier'); st.ns[u] = 'current';
+    const d = time; st.sub[u] = `${d}/`;
+    R.snap({ cap: `Enter <b>${L(u)}</b> at time ${d}. Push it on the stack.`, line: ln.enter, panel: panel(true), flash: [u] });
+    for (const { v, id } of adj[u]) {
+      if (state[v] === 'idle') {
+        st.es[id] = 'tree';
+        R.snap({ cap: `Edge ${L(u)} → ${L(v)}: <b>${L(v)}</b> is unvisited. Go deeper.`, line: ln.tree, panel: panel() });
+        visit(v); st.ns[u] = 'current';
+      } else if (state[v] === 'prog') {
+        st.es[id] = 'back';
+        const cyc = stack.slice(stack.indexOf(v)).concat(v).map(L).join(' → ');
+        R.snap({ cap: `Edge ${L(u)} → ${L(v)}: <b>${L(v)}</b> is still in progress. That's a <b>back edge</b>, so there's a cycle: <b>${cyc}</b>.`, line: ln.back, panel: panel() });
+      } else {
+        st.es[id] = 'cross';
+        R.snap({ cap: `Edge ${L(u)} → ${L(v)}: <b>${L(v)}</b> is already finished. It can't lead back here. Skip.`, line: ln.cross, panel: panel() });
+      }
+    }
+    time++; state[u] = 'done'; stack.pop(); st.ns[u] = 'done'; st.sub[u] = `${d}/${time}`; fin.push(u); lastNew = u;
+    if (opts.topo) list.unshift(u);
+    if (stack.length) st.ns[stack[stack.length - 1]] = 'current';
+    R.snap({ cap: opts.topo ? `<b>${L(u)}</b> finishes at time ${time}. Put it at the <b>front</b> of the list.` : `<b>${L(u)}</b> has no edges left. It finishes at time ${time}. Pop it off the stack.`, line: ln.fin, panel: panel() });
+  }
+  for (const r of roots) if (state[r] === 'idle') {
+    if (fin.length) { lastNew = null; R.snap({ cap: `The stack is empty, but <b>${L(r)}</b> hasn't been visited. Start a new DFS from it.`, line: opts.topo ? [1] : [0], panel: panel() }); }
+    visit(r);
+  }
+  R.snap({ cap: opts.topo ? `Done. The list is a topological order: <b>${list.map(L).join(', ')}</b>.` : `DFS is done. Each vertex shows <b>start/finish</b>. The red dashed edge is the back edge that proves there's a cycle.`, panel: panel() });
+  return { frames: R.frames, list };
+}
+
+function genKahn(g) {
+  const adj = adjOf(g, false), indeg = {}, L = id => labelOf(g, id);
+  g.nodes.forEach(n => indeg[n.id] = 0); g.edges.forEach(e => indeg[e.to]++);
+  const R = recorder(g), st = R.st, ready = [], out = [];
+  g.nodes.forEach(n => st.sub[n.id] = `in: ${indeg[n.id]}`);
+  const panel = (nw = [], placed) => ds('Ready', '', rowOf(ready.map(x => chip(L(x), 'q', nw.includes(x))))) + ds('Order so far', '', rowOf(out.map((x, k) => chip(`${k + 1}. ${L(x)}`, 'ok', x === placed))));
+  R.snap({ cap: `The small number under each item counts the arrows coming <b>into</b> it: how many things must happen first.`, panel: panel() });
+  g.nodes.forEach(n => { if (indeg[n.id] === 0) { ready.push(n.id); st.ns[n.id] = 'frontier'; } });
+  R.snap({ cap: `${listText(ready.map(L))} have 0 incoming arrows. Nothing has to come before them, so they're <b>ready</b>.`, panel: panel(ready), line: [1] });
+  while (ready.length) {
+    const u = ready.shift(); st.ns[u] = 'current';
+    R.snap({ cap: `Take <b>${L(u)}</b> from the ready list. It goes next in the order.`, panel: panel(), line: [2, 3] });
+    out.push(u); st.ns[u] = 'done'; st.sub[u] = `#${out.length}`;
+    const nw = [];
+    for (const { v, id } of adj[u]) {
+      st.es[id] = 'dim'; indeg[v]--; st.sub[v] = `in: ${indeg[v]}`;
+      if (indeg[v] === 0) { ready.push(v); st.ns[v] = 'frontier'; nw.push(v); }
+    }
+    let cap = adj[u].length ? `Cross out ${L(u)}'s arrows and lower the counts. ` : `${L(u)} has no outgoing arrows. `;
+    if (nw.length) cap += `${listText(nw.map(L))} now ${nw.length > 1 ? 'have' : 'has'} 0 incoming arrows, so ${nw.length > 1 ? 'they are' : 'it is'} ready.`;
+    else if (adj[u].length) cap += 'Nothing new becomes ready.';
+    R.snap({ cap, panel: panel(nw, u), line: [4, 5, 6], flash: adj[u].map(o => o.v) });
+  }
+  R.snap({ cap: `Everything is placed. Every arrow goes from an earlier item to a later one, so this is a topological order.`, panel: panel() });
+  return { frames: R.frames, order: out };
+}
+
+/* Bellman-Ford. opts: rounds, perEdge, check, ghost, weights (id->w override), wl (labels for frames), title */
+function genBF(g, s, order, opts = {}) {
+  const E = {}; g.edges.forEach(e => { e.id = e.id || `${e.from}>${e.to}`; E[e.id] = e; });
+  const W = id => (opts.weights && opts.weights[id] != null) ? opts.weights[id] : E[id].w;
+  const L = id => labelOf(g, id);
+  const V = g.nodes.length, rounds = opts.rounds || V - 1, cols = opts.cols || g.nodes.map(n => n.id);
+  const R = recorder(g), st = R.st, d = {}, par = {};
+  g.nodes.forEach(n => { d[n.id] = Infinity; st.sub[n.id] = Infinity; });
+  d[s] = 0; st.sub[s] = 0;
+  const rows = [{ h: 'start', vals: cols.map(c => d[c]), chg: [] }];
+  const tableHTML = (live) => {
+    let h = `<div class="tw" style="box-shadow:none"><table class="dt"><tr><th></th>${cols.map(c => `<th>${L(c)}</th>`).join('')}</tr>`;
+    const all = live ? rows.concat([live]) : rows;
+    all.forEach((r, k) => {
+      h += `<tr class="${live && k === all.length - 1 ? 'live' : ''}"><th>${r.h}</th>${r.vals.map((v, j) => `<td class="${r.chg.includes(cols[j]) ? (r.bad ? 'badc' : 'chg') : ''}">${r.skip ? '·' : fmt(v)}</td>`).join('')}</tr>`;
+    });
+    return h + '</table></div>';
+  };
+  const elist = on => `<div class="elist">${order.map(id => `<span class="${id === on ? 'on' : ''}">${L(E[id].from)} → ${L(E[id].to)} (${fmt(W(id))})</span>`).join('')}</div>`;
+  const pre = opts.title ? `<b>${opts.title}</b> ` : '';
+  const panel = (on, live) => (opts.perEdge ? ds('Edge order, used every round', '', elist(on)) : '') + ds('d[ ] after each round', '', tableHTML(live));
+  const snap = (x) => R.snap(Object.assign({ wl: opts.wl }, x));
+  snap({ cap: `${pre}Start: d[${L(s)}] = 0, everything else is ∞.`, panel: panel(null), line: [1] });
+  const setPar = (v, id) => { if (par[v]) delete st.es[par[v]]; par[v] = id; st.es[id] = 'tree'; };
+  for (let r = 1; r <= rounds; r++) {
+    const chg = [];
+    for (const id of order) {
+      const u = E[id].from, v = E[id].to, w = W(id);
+      if (!opts.perEdge) { if (d[u] !== Infinity && d[u] + w < d[v]) { d[v] = d[u] + w; st.sub[v] = d[v]; setPar(v, id); if (!chg.includes(v)) chg.push(v); } continue; }
+      const keep = st.es[id]; st.es[id] = 'active'; st.ns[u] = 'current';
+      let cap, flash, line = [3, 4];
+      if (d[u] === Infinity) cap = `Round ${r}, edge ${L(u)} → ${L(v)}: d[${L(u)}] is still ∞, so there's nothing to try yet.`;
+      else {
+        const c = d[u] + w;
+        if (c < d[v]) {
+          const old = d[v]; d[v] = c; st.sub[v] = c; st.ns[v] = 'done'; flash = [v]; line = [3, 4, 5];
+          if (par[v] && par[v] !== id) { delete st.es[par[v]]; par[v] = null; }
+          if (!chg.includes(v)) chg.push(v);
+          cap = `Round ${r}, edge ${L(u)} → ${L(v)}: ${fmt(d[u])} + ${w < 0 ? '(' + fmt(w) + ')' : w} = <b>${fmt(c)}</b>, better than ${fmt(old)}. Update ${L(v)}.`;
+          snap({ cap, line, flash, panel: panel(id, { h: `round ${r}`, vals: cols.map(x => d[x]), chg: chg.slice() }) });
+          delete st.ns[v]; delete st.ns[u]; setPar(v, id);
+          continue;
+        }
+        cap = `Round ${r}, edge ${L(u)} → ${L(v)}: ${fmt(d[u])} + ${w < 0 ? '(' + fmt(w) + ')' : w} = ${fmt(c)}, not better than ${fmt(d[v])}. Keep it.`;
+      }
+      snap({ cap, line, panel: panel(id, { h: `round ${r}`, vals: cols.map(x => d[x]), chg: chg.slice() }) });
+      if (keep) st.es[id] = keep; else delete st.es[id];
+      delete st.ns[u];
+    }
+    rows.push({ h: `round ${r}`, vals: cols.map(c => d[c]), chg });
+    chg.forEach(v => st.ns[v] = 'done');
+    snap({ cap: `${pre}End of round ${r}. ${chg.length ? 'Improved: ' + listText(chg.map(L)) + '.' : 'Nothing changed.'}`, panel: panel(null), line: [2], flash: opts.perEdge ? undefined : chg });
+    chg.forEach(v => delete st.ns[v]);
+  }
+  if (opts.ghost) {
+    const skipped = [];
+    for (let r = rounds + 1; r <= V - 1; r++) {
+      let any = false;
+      for (const id of order) { const u = E[id].from, v = E[id].to; if (d[u] !== Infinity && d[u] + W(id) < d[v]) any = true; }
+      skipped.push(r); rows.push({ h: `round ${r}`, vals: cols.map(c => d[c]), chg: [], skip: true });
+      if (any) console.warn('ghost round would change something');
+    }
+    snap({ cap: `Normal Bellman-Ford would keep going for rounds ${skipped.join(' and ')}. They would change <b>nothing</b>, because every vertex already has its true distance. So we stop after round ${rounds}.`, panel: panel(null) });
+  }
+  let found = null;
+  if (opts.check) {
+    for (const id of order) { const u = E[id].from, v = E[id].to; if (d[u] !== Infinity && d[u] + W(id) < d[v]) { found = { id, u, v, c: d[u] + W(id) }; break; } }
+    if (found) {
+      st.es[found.id] = 'bad'; st.ns[found.v] = 'bad'; st.ns[found.u] = 'bad';
+      rows.push({ h: 'extra', vals: cols.map(c => c === found.v ? found.c : d[c]), chg: [found.v], bad: true });
+      snap({ cap: `${pre}Extra round: edge ${L(found.u)} → ${L(found.v)} still improves (${fmt(found.c)} &lt; ${fmt(d[found.v])}). After V − 1 rounds that's impossible unless there's a <b>negative cycle</b>.`, panel: panel(null), line: [6, 7, 8] });
+    } else {
+      rows.push({ h: 'extra', vals: cols.map(c => d[c]), chg: [] });
+      snap({ cap: `${pre}Extra round: nothing improves. So there's <b>no negative cycle</b> and every number is a true shortest distance.`, panel: panel(null), line: [6, 7] });
+    }
+  }
+  return { frames: R.frames, d, found };
+}
+
+function genDij(g, s, opts = {}) {
+  const adj = adjOf(g, false), L = id => labelOf(g, id);
+  const R = recorder(g), st = R.st, d = {}, par = {}, settled = {}, order = [];
+  const hide = opts.hide || [];
+  g.nodes.forEach(n => { d[n.id] = Infinity; st.sub[n.id] = hide.includes(n.id) ? '' : Infinity; if (hide.includes(n.id)) st.ns[n.id] = 'dim'; });
+  (opts.hideEdges || []).forEach(id => st.es[id] = 'dim');
+  d[s] = 0; st.sub[s] = 0; st.ns[s] = 'frontier';
+  const pq = () => g.nodes.filter(n => !settled[n.id] && d[n.id] < Infinity).sort((a, b) => d[a.id] - d[b.id]).map(n => n.id);
+  const panel = (cur, nw = []) => ds('Priority queue', 'smallest first', rowOf(pq().map(x => chip(L(x), x === cur ? 'cur' : 'q', nw.includes(x), fmt(d[x]))))) +
+    ds('Settled (final)', '', rowOf(order.map(x => chip(L(x), 'ok', false, fmt(d[x])))));
+  R.snap({ cap: `Start: d[${L(s)}] = 0, everything else is ∞. Only ${L(s)} is in the queue with a real distance.`, line: [1, 2], panel: panel() });
+  while (pq().length) {
+    const u = pq()[0]; st.ns[u] = 'current';
+    R.snap({ cap: `The closest unsettled vertex is <b>${L(u)}</b> (d = ${fmt(d[u])}). Settle it: this distance is now final.`, line: [3, 4], panel: panel(u) });
+    settled[u] = true; order.push(u);
+    for (const { v, id, w } of adj[u]) {
+      if (settled[v]) { const k = st.es[id]; st.es[id] = 'check'; R.snap({ cap: `Edge ${L(u)} → ${L(v)}: ${L(v)} is already settled. Skip.`, line: [5], panel: panel(u) }); if (k) st.es[id] = k; else delete st.es[id]; continue; }
+      const keep = st.es[id]; st.es[id] = 'active';
+      const c = d[u] + w;
+      if (c < d[v]) {
+        const old = d[v]; d[v] = c; st.sub[v] = c; st.ns[v] = 'frontier';
+        R.snap({ cap: `Edge ${L(u)} → ${L(v)}: ${fmt(d[u])} + ${w} = <b>${fmt(c)}</b>, better than ${fmt(old)}. Update ${L(v)}.`, line: [5, 6, 7, 8], panel: panel(u, [v]), flash: [v] });
+        if (par[v]) delete st.es[par[v]]; par[v] = id; st.es[id] = 'tree';
+      } else {
+        R.snap({ cap: `Edge ${L(u)} → ${L(v)}: ${fmt(d[u])} + ${w} = ${fmt(c)}, not better than ${fmt(d[v])}. Keep ${fmt(d[v])}.`, line: [5, 6], panel: panel(u) });
+        if (keep) st.es[id] = keep; else delete st.es[id];
+      }
+    }
+    st.ns[u] = 'done';
+  }
+  if (opts.finish) opts.finish(R, st, d, par, panel);
+  else R.snap({ cap: `The queue is empty. Every number is final. The green edges show the best way into each vertex.`, panel: panel() });
+  return { frames: R.frames, d, par };
+}
+/* ===== Learn tab graphs and demos ===== */
+const nd = (id, x, y, o) => Object.assign({ id, x, y }, o || {});
+const ed = (from, to, w, o) => Object.assign({ from, to, w }, o || {});
+const MINI = (nodes, edges, o) => Object.assign({ w: 220, h: 110, r: 16, nodes, edges }, o || {});
+
+/* Graphs 101 */
+STATIC['ex-roads'] = () => ({ graph: { w: 260, h: 150, r: 22, label: 'Madison, Milwaukee and Chicago connected by roads', nodes: [nd('MSN', 45, 62), nd('MKE', 215, 40), nd('CHI', 205, 120)], edges: [ed('MSN', 'MKE', 79), ed('MKE', 'CHI', 92), ed('MSN', 'CHI', 147)] } });
+STATIC['ex-friends'] = () => ({ graph: { w: 260, h: 150, r: 22, label: 'Four friends', nodes: [nd('Ana', 45, 45), nd('Ben', 160, 32), nd('Cal', 105, 118), nd('Dee', 220, 112)], edges: [ed('Ana', 'Ben'), ed('Ana', 'Cal'), ed('Ben', 'Cal'), ed('Cal', 'Dee'), ed('Ben', 'Dee')] } });
+STATIC['ex-prereq'] = () => ({ graph: { w: 340, h: 150, directed: true, label: 'Course prerequisites', nodes: [nd('200', 48, 35, { label: 'CS 200', shape: 'pill' }), nd('300', 170, 35, { label: 'CS 300', shape: 'pill' }), nd('400', 292, 35, { label: 'CS 400', shape: 'pill' }), nd('240', 130, 120, { label: 'CS 240', shape: 'pill' }), nd('577', 292, 120, { label: 'CS 577', shape: 'pill' })], edges: [ed('200', '300'), ed('300', '400'), ed('400', '577'), ed('240', '577')] }, frame: { ns: { '577': 'current' } } });
+
+STATIC['v-vertex'] = () => ({ graph: MINI([nd('A', 50, 55), nd('B', 110, 35), nd('C', 170, 70)], []), frame: { ns: { B: 'current' } } });
+STATIC['v-edge'] = () => ({ graph: MINI([nd('A', 55, 55), nd('B', 165, 55)], [ed('A', 'B')]), frame: { es: { 'A>B': 'hl' } } });
+STATIC['v-undir'] = () => ({ graph: MINI([nd('A', 55, 55), nd('B', 165, 55)], [ed('A', 'B')]) });
+STATIC['v-dir'] = () => ({ graph: MINI([nd('A', 55, 55), nd('B', 165, 55)], [ed('A', 'B')], { directed: true }) });
+STATIC['v-weight'] = () => ({ graph: MINI([nd('A', 35, 55), nd('B', 110, 55), nd('C', 185, 55)], [ed('A', 'B', 7), ed('B', 'C', -2)], { directed: true }) });
+STATIC['v-path'] = () => ({ graph: MINI([nd('A', 30, 55), nd('B', 110, 22), nd('C', 110, 90), nd('D', 190, 55)], [ed('A', 'B'), ed('A', 'C'), ed('B', 'D'), ed('C', 'D')], { directed: true }), frame: { es: { 'A>B': 'path', 'B>D': 'path' }, ns: { A: 'done', B: 'done', D: 'done' } } });
+STATIC['v-cycle'] = () => ({ graph: MINI([nd('A', 50, 80), nd('B', 110, 22), nd('C', 170, 80)], [ed('A', 'B'), ed('B', 'C'), ed('C', 'A')], { directed: true }), frame: { es: { 'A>B': 'path', 'B>C': 'path', 'C>A': 'path' } } });
+STATIC['v-comp'] = () => ({ graph: MINI([nd('A', 30, 35), nd('B', 85, 30), nd('C', 55, 85), nd('D', 150, 45), nd('E', 195, 85)], [ed('A', 'B'), ed('B', 'C'), ed('A', 'C'), ed('D', 'E')], { decor: [{ type: 'blob', cls: 'c1', x: 6, y: 8, w: 104, h: 98 }, { type: 'blob', cls: 'c2', x: 124, y: 20, w: 92, h: 88 }] }) });
+STATIC['v-dag'] = () => ({ graph: MINI([nd('A', 30, 55), nd('B', 110, 22), nd('C', 110, 90), nd('D', 190, 55)], [ed('A', 'B'), ed('A', 'C'), ed('B', 'D'), ed('C', 'D'), ed('B', 'C')], { directed: true }) });
+STATIC['v-k5'] = () => {
+  const ids = ['A', 'B', 'C', 'D', 'E'], nodes = ids.map((id, k) => nd(id, 130 + 85 * Math.cos(-Math.PI / 2 + k * 2 * Math.PI / 5), 105 + 85 * Math.sin(-Math.PI / 2 + k * 2 * Math.PI / 5)));
+  const edges = []; for (let i = 0; i < 5; i++) for (let j = i + 1; j < 5; j++) edges.push(ed(ids[i], ids[j]));
+  return { graph: { w: 260, h: 205, nodes, edges, label: 'Complete graph on 5 vertices with 10 edges' } };
+};
+STATIC['adj'] = () => ({ graph: { w: 440, h: 245, label: 'Graph for the adjacency list', nodes: [nd('A', 60, 60), nd('B', 190, 40), nd('C', 130, 160), nd('D', 300, 110), nd('E', 250, 210), nd('F', 400, 180)], edges: [ed('A', 'B'), ed('A', 'C'), ed('B', 'C'), ed('B', 'D'), ed('C', 'E'), ed('D', 'E'), ed('D', 'F')] } });
+CUSTOM.push(() => {
+  const host = document.querySelector('#adj-demo .gv'), list = document.getElementById('adj-list');
+  const view = host._view, g = view.g, adj = adjOf(g, true);
+  const rows = {};
+  g.nodes.forEach(n => {
+    const nb = adj[n.id].map(o => o.v).sort();
+    const div = document.createElement('div'); div.innerHTML = `<b>${n.id}</b> : ${nb.join(', ')}`;
+    div.tabIndex = 0; list.appendChild(div); rows[n.id] = div;
+    const on = () => {
+      const ns = { [n.id]: 'current' }, es = {};
+      adj[n.id].forEach(o => { ns[o.v] = 'frontier'; es[o.id] = 'hl'; });
+      view.apply({ ns, es });
+      Object.values(rows).forEach(r => r.classList.remove('on')); div.classList.add('on');
+    };
+    view.N[n.id].el.style.cursor = 'pointer';
+    view.N[n.id].el.addEventListener('mouseenter', on);
+    view.N[n.id].el.addEventListener('click', on);
+    div.addEventListener('mouseenter', on); div.addEventListener('focus', on);
+  });
+});
+
+/* BFS */
+const G_BFS = () => ({ w: 490, h: 345, label: 'Undirected graph for BFS', nodes: [nd('S', 60, 170), nd('A', 180, 90), nd('B', 180, 250), nd('D', 300, 40, { lp: 'r' }), nd('C', 300, 170), nd('E', 300, 300, { lp: 'r' }), nd('F', 430, 110), nd('G', 430, 260)], edges: [ed('S', 'A'), ed('S', 'B'), ed('A', 'D'), ed('A', 'C'), ed('B', 'C'), ed('B', 'E'), ed('D', 'F'), ed('C', 'F'), ed('E', 'G'), ed('F', 'G')] });
+PLAYERS['bfs'] = () => { const g = G_BFS(); return { graph: g, frames: genBFS(g, 'S'), code: CODE.bfs, panel: true }; };
+STATIC['bfs-comps'] = () => ({ graph: { w: 440, h: 200, label: 'Three connected components', nodes: [nd('a', 50, 70), nd('b', 120, 45), nd('c', 95, 140), nd('d', 205, 60), nd('e', 270, 105), nd('f', 215, 160), nd('g', 355, 70), nd('h', 395, 150)], edges: [ed('a', 'b'), ed('b', 'c'), ed('a', 'c'), ed('d', 'e'), ed('e', 'f'), ed('g', 'h')], decor: [{ type: 'blob', cls: 'c1', x: 18, y: 16, w: 136, h: 170, text: 'BFS #1', tx: 30, ty: 182 }, { type: 'blob', cls: 'c2', x: 172, y: 16, w: 132, h: 170, text: 'BFS #2', tx: 184, ty: 182 }, { type: 'blob', cls: 'c3', x: 322, y: 16, w: 106, h: 170, text: 'BFS #3', tx: 334, ty: 182 }] } });
+
+/* DFS */
+const G_DFS = () => ({ w: 520, h: 340, directed: true, label: 'Directed graph for DFS', nodes: [nd('A', 70, 170), nd('B', 200, 80, { lp: 't' }), nd('C', 340, 80, { lp: 't' }), nd('F', 470, 80, { lp: 't' }), nd('E', 300, 220), nd('D', 150, 290)], edges: [ed('A', 'B'), ed('A', 'D'), ed('B', 'C'), ed('B', 'E'), ed('C', 'F'), ed('E', 'A'), ed('D', 'E')] });
+PLAYERS['dfs'] = () => { const g = G_DFS(); return { graph: g, frames: genDFS(g, ['A', 'B', 'C', 'D', 'E', 'F'], { sort: true }).frames, code: CODE.dfs, panel: true }; };
+STATIC['dfs-back'] = () => ({ graph: { w: 260, h: 130, directed: true, nodes: [nd('A', 40, 95), nd('B', 130, 30, { lp: 'r' }), nd('C', 220, 95)], edges: [ed('A', 'B'), ed('B', 'C'), ed('C', 'A')] }, frame: { ns: { A: 'frontier', B: 'frontier', C: 'current' }, es: { 'A>B': 'tree', 'B>C': 'tree', 'C>A': 'back' } } });
+STATIC['dfs-cross'] = () => ({ graph: { w: 260, h: 130, directed: true, nodes: [nd('A', 40, 95), nd('B', 130, 30, { lp: 'r' }), nd('C', 220, 95)], edges: [ed('A', 'B'), ed('A', 'C'), ed('C', 'B')] }, frame: { ns: { A: 'frontier', B: 'done', C: 'current' }, es: { 'A>B': 'tree', 'A>C': 'tree', 'C>B': 'cross' } } });
+
+/* Topological sort */
+const DRESS_NODES = [['socks', 80, 40], ['shoes', 430, 40], ['underwear', 80, 135], ['pants', 250, 135], ['belt', 430, 180], ['shirt', 80, 255], ['tie', 250, 305], ['jacket', 560, 240], ['watch', 560, 335]];
+const DRESS_EDGES = [['socks', 'shoes'], ['underwear', 'pants'], ['pants', 'shoes'], ['pants', 'belt'], ['shirt', 'belt'], ['shirt', 'tie'], ['tie', 'jacket'], ['belt', 'jacket']];
+const G_DRESS = () => ({ w: 620, h: 375, directed: true, label: 'Getting dressed: which clothes must go on first', nodes: DRESS_NODES.map(([id, x, y]) => nd(id, x, y, { shape: 'pill' })), edges: DRESS_EDGES.map(([a, b]) => ed(a, b)) });
+PLAYERS['kahn'] = () => { const g = G_DRESS(); const r = genKahn(g); return { graph: g, frames: r.frames, code: CODE.kahn, panel: true }; };
+PLAYERS['topodfs'] = () => { const g = G_DRESS(); return { graph: g, frames: genDFS(g, DRESS_NODES.map(n => n[0]), { topo: true }).frames, code: CODE.topodfs, panel: true }; };
+STATIC['topo-cycle'] = () => ({ graph: { w: 260, h: 120, directed: true, nodes: [nd('A', 45, 85), nd('B', 130, 28, { lp: 'r' }), nd('C', 215, 85)], edges: [ed('A', 'B'), ed('B', 'C'), ed('C', 'A')] }, frame: { es: { 'A>B': 'bad', 'B>C': 'bad', 'C>A': 'bad' }, ns: { A: 'bad', B: 'bad', C: 'bad' } } });
+STATIC['topo-line'] = () => {
+  const order = genKahn(G_DRESS()).order;
+  const pos = {}; order.forEach((id, k) => pos[id] = k);
+  const nodes = order.map((id, k) => nd(id, 65 + k * 126, 150, { shape: 'pill', lp: 'b' }));
+  const edges = DRESS_EDGES.map(([a, b]) => ed(a, b, null, { bend: -(Math.abs(pos[b] - pos[a]) * 126 * 0.3 + 6) }));
+  const sub = {}; order.forEach((id, k) => sub[id] = `#${k + 1}`);
+  return { graph: { w: 1140, h: 210, directed: true, nodes, edges, label: 'Clothes in topological order, all arrows point right' }, frame: { sub, ns: Object.fromEntries(order.map(id => [id, 'done'])) } };
+};
+
+/* Shortest paths 101 */
+const G_FAIL = () => ({ w: 280, h: 115, directed: true, nodes: [nd('S', 35, 80), nd('B', 140, 25, { lp: 'r' }), nd('A', 245, 80)], edges: [ed('S', 'A', 10), ed('S', 'B', 2), ed('B', 'A', 3)] });
+STATIC['sp-fail-a'] = () => ({ graph: G_FAIL(), frame: { es: { 'S>A': 'path' } } });
+STATIC['sp-fail-b'] = () => ({ graph: G_FAIL(), frame: { es: { 'S>B': 'path', 'B>A': 'path' } } });
+PLAYERS['relax'] = () => {
+  const g = { w: 420, h: 150, directed: true, nodes: [nd('u', 90, 70), nd('v', 330, 70)], edges: [ed('u', 'v', 4)] };
+  const eq = (s) => ds('The check', '', `<div class="eq">${s}</div>`);
+  const F = [
+    { sub: { u: 3, v: 10 }, cap: 'We already know a way to reach <b>u</b> with cost 3, and a way to reach <b>v</b> with cost 10.', panel: eq('d[u] = 3 &nbsp; d[v] = 10'), line: [0] },
+    { sub: { u: 3, v: 10 }, es: { 'u>v': 'active' }, ns: { u: 'current' }, cap: 'Try the edge u → v, which costs 4. Going through u would cost 3 + 4.', panel: eq('3 + 4 = 7'), line: [1] },
+    { sub: { u: 3, v: 7 }, es: { 'u>v': 'tree' }, ns: { v: 'done' }, flash: ['v'], cap: '7 is less than 10, so going through u is cheaper. <b>Update d[v] to 7</b> and remember u as v\'s parent.', panel: eq('7 <span class="good">&lt;</span> 10 ✓ update'), line: [2, 3] },
+    { sub: { u: 8, v: 7 }, cap: 'A different moment: now d[u] = 8 and d[v] = 7.', panel: eq('d[u] = 8 &nbsp; d[v] = 7'), line: [0] },
+    { sub: { u: 8, v: 7 }, es: { 'u>v': 'check' }, ns: { u: 'current' }, cap: 'Going through u would cost 8 + 4 = 12. That\'s worse than 7, so <b>keep 7</b>. Nothing changes.', panel: eq('8 + 4 = 12 <span class="badt">≥</span> 7 ✗ keep'), line: [1] }
+  ];
+  return { graph: g, frames: F, code: CODE.relax, panel: true };
+};
+PLAYERS['negloop'] = () => {
+  const g = { w: 380, h: 200, directed: true, nodes: [nd('S', 45, 100), nd('A', 160, 100), nd('B', 300, 35, { lp: 'r' }), nd('C', 300, 165, { lp: 'r' })], edges: [ed('S', 'A', 1), ed('A', 'B', 2), ed('B', 'C', -4), ed('C', 'A', 1)] };
+  const cyc = { 'A>B': 'bad', 'B>C': 'bad', 'C>A': 'bad' };
+  const laps = [1, 0, -1, -2];
+  const tbl = (k) => ds('Cost to reach A', '', `<table class="dt"><tr><th>laps</th>${laps.map((_, i) => `<th>${i}</th>`).join('')}<th>…</th></tr><tr><th>d[A]</th>${laps.map((v, i) => `<td class="${i === k ? 'badc' : ''}">${i <= k ? fmt(v) : ''}</td>`).join('')}<td>${k >= 4 ? '−∞' : ''}</td></tr></table>`);
+  const F = [
+    { sub: { S: 0, A: 1 }, es: { 'S>A': 'tree' }, cap: 'The cycle A → B → C → A adds up to 2 − 4 + 1 = <b>−1</b>. First, reach A directly: cost 1.', panel: tbl(0) },
+    { sub: { S: 0, A: 0 }, es: Object.assign({ 'S>A': 'tree' }, cyc), ns: { A: 'bad' }, flash: ['A'], cap: 'Go around the loop once: 1 − 1 = <b>0</b>. Cheaper!', panel: tbl(1) },
+    { sub: { S: 0, A: -1 }, es: Object.assign({ 'S>A': 'tree' }, cyc), ns: { A: 'bad' }, flash: ['A'], cap: 'Twice: <b>−1</b>. Even cheaper.', panel: tbl(2) },
+    { sub: { S: 0, A: -2 }, es: Object.assign({ 'S>A': 'tree' }, cyc), ns: { A: 'bad' }, flash: ['A'], cap: 'Three times: <b>−2</b>. It never stops.', panel: tbl(3) },
+    { sub: { S: 0, A: '−∞' }, es: Object.assign({ 'S>A': 'tree' }, cyc), ns: { A: 'bad', B: 'bad', C: 'bad' }, cap: 'You can always do one more lap. There is <b>no</b> shortest path to A, B, or C.', panel: tbl(4) }
+  ];
+  return { graph: g, frames: F, panel: true };
+};
+
+/* Bellman-Ford */
+const G_BF = () => ({ w: 600, h: 310, directed: true, label: 'Directed graph with a negative edge', nodes: [nd('S', 60, 160), nd('A', 200, 60, { lp: 't' }), nd('B', 380, 60, { lp: 't' }), nd('C', 380, 250), nd('D', 540, 160)], edges: [ed('S', 'A', 2), ed('A', 'B', 3), ed('B', 'C', -4), ed('S', 'C', 5), ed('C', 'D', 1), ed('B', 'D', 4)] });
+PLAYERS['bf'] = () => { const g = G_BF(); return { graph: g, frames: genBF(g, 'S', ['C>D', 'B>C', 'B>D', 'A>B', 'S>A', 'S>C'], { perEdge: true, check: true }).frames, code: CODE.bf, panel: true }; };
+STATIC['bf-chain'] = () => ({ graph: { w: 620, h: 110, directed: true, label: 'Best path to D and the round that fixes each vertex', nodes: [nd('S', 50, 40), nd('A', 170, 40), nd('B', 290, 40), nd('C', 410, 40), nd('D', 530, 40)], edges: [ed('S', 'A', 2), ed('A', 'B', 3), ed('B', 'C', -4), ed('C', 'D', 1)] }, frame: { ns: { S: 'done', A: 'done', B: 'done', C: 'done', D: 'done' }, es: { 'S>A': 'tree', 'A>B': 'tree', 'B>C': 'tree', 'C>D': 'tree' }, sub: { S: 'start', A: 'round 1', B: 'round 2', C: 'round 3', D: 'round 4' } } });
+PLAYERS['bfneg'] = () => {
+  const g = { w: 380, h: 220, directed: true, nodes: [nd('S', 45, 110), nd('A', 165, 110), nd('B', 305, 40, { lp: 'r' }), nd('C', 305, 180, { lp: 'r' })], edges: [ed('S', 'A', 1), ed('A', 'B', 1), ed('B', 'C', 1), ed('C', 'A', -4)] };
+  const r = genBF(g, 'S', ['S>A', 'A>B', 'B>C', 'C>A'], { perEdge: false, check: true });
+  const last = r.frames[r.frames.length - 1];
+  r.frames.push(Object.assign({}, last, { es: Object.assign({}, last.es, { 'A>B': 'bad', 'B>C': 'bad', 'C>A': 'bad' }), cap: 'Here it is: A → B → C → A adds up to 1 + 1 − 4 = <b>−2</b>. Bellman-Ford reports "negative cycle" instead of distances.' }));
+  return { graph: g, frames: r.frames, code: CODE.bf, panel: true };
+};
+
+/* Dijkstra */
+const G_DIJ = () => ({ w: 590, h: 330, directed: true, label: 'Directed graph with non-negative weights', nodes: [nd('S', 60, 170, { lp: 'l' }), nd('A', 210, 70, { lp: 't' }), nd('B', 210, 270), nd('C', 380, 70, { lp: 't' }), nd('D', 380, 270), nd('E', 530, 170, { lp: 'r' })], edges: [ed('S', 'A', 4), ed('S', 'B', 1), ed('B', 'A', 2), ed('A', 'C', 1), ed('B', 'D', 6), ed('C', 'D', 2), ed('C', 'E', 5), ed('D', 'E', 1)] });
+PLAYERS['dij'] = () => { const g = G_DIJ(); return { graph: g, frames: genDij(g, 'S').frames, code: CODE.dij, panel: true }; };
+PLAYERS['dijneg'] = () => {
+  const g = { w: 320, h: 230, directed: true, nodes: [nd('S', 45, 115, { lp: 'l' }), nd('A', 240, 45, { lp: 'r' }), nd('B', 240, 185, { lp: 'r' })], edges: [ed('S', 'A', 2), ed('S', 'B', 5), ed('B', 'A', -4)] };
+  const pq = (items) => ds('Priority queue', 'smallest first', rowOf(items));
+  const F = [
+    { sub: { S: 0, A: '∞', B: '∞' }, ns: { S: 'current' }, cap: 'Settle S (d = 0). Relax its edges: A gets 2, B gets 5.', panel: pq([chip('A', 'q', true, 2), chip('B', 'q', true, 5)]), es: { 'S>A': 'active', 'S>B': 'active' } },
+    { sub: { S: 0, A: 2, B: 5 }, ns: { S: 'done', A: 'current', B: 'frontier' }, es: { 'S>A': 'tree', 'S>B': 'tree' }, cap: 'A is the closest (2). Dijkstra settles it: <b>d[A] = 2 is now locked</b>.', panel: pq([chip('A', 'cur', false, 2), chip('B', 'q', false, 5)]) },
+    { sub: { S: 0, A: 2, B: 5 }, ns: { S: 'done', A: 'done', B: 'current' }, es: { 'S>A': 'tree', 'S>B': 'tree', 'B>A': 'active' }, cap: 'Settle B (5). Its edge B → A gives 5 + (−4) = <b>1</b>, which beats 2. But A is already settled, so Dijkstra never looks at it again.', panel: pq([chip('B', 'cur', false, 5)]) },
+    { sub: { S: 0, A: '2 ✗', B: 5 }, ns: { S: 'done', A: 'bad', B: 'done' }, es: { 'S>B': 'path', 'B>A': 'path', 'S>A': 'idle' }, cap: 'Dijkstra answers d[A] = 2. The truth is S → B → A = <b>1</b>. Wrong answer, caused by one negative edge.', panel: pq([]) }
+  ];
+  return { graph: g, frames: F, panel: true };
+};
+/* ===== HW3 graphs and demos ===== */
+
+/* P1 Power plants */
+const G_P1 = () => ({ w: 650, h: 300, label: 'Two power plants, nine buildings, and the wires between them', nodes: [
+  nd('P1', 60, 150, { kind: 'plant', shape: 'square' }), nd('b1', 150, 70), nd('b2', 215, 150), nd('b3', 140, 235),
+  nd('P2', 320, 150, { kind: 'plant', shape: 'square' }), nd('b4', 400, 65), nd('b5', 480, 130), nd('b6', 450, 240), nd('b7', 350, 250),
+  nd('b8', 580, 60), nd('b9', 600, 200)
+], edges: [ed('P1', 'b1'), ed('b1', 'b2'), ed('P1', 'b3'), ed('b2', 'b3'), ed('P2', 'b4'), ed('b4', 'b5'), ed('b5', 'b6'), ed('P2', 'b7'), ed('b6', 'b7'), ed('b8', 'b9')] });
+STATIC['p1-small'] = () => ({ graph: G_P1() });
+STATIC['p1-comps'] = () => {
+  const g = G_P1();
+  g.decor = [{ type: 'blob', cls: 'c1', x: 25, y: 28, w: 222, h: 262, text: 'P1: 3 buildings', tx: 120, ty: 282 }, { type: 'blob', cls: 'c2', x: 288, y: 28, w: 228, h: 262, text: 'P2: 4 buildings', tx: 405, ty: 282 }, { type: 'blob', cls: 'c3', x: 544, y: 22, w: 96, h: 268, text: 'no plant', tx: 556, ty: 282 }];
+  return { graph: g };
+};
+PLAYERS['p1run'] = () => {
+  const g = G_P1(), adj = adjOf(g, true);
+  for (const k in adj) adj[k].sort((x, y) => x.v.localeCompare(y.v));
+  const R = recorder(g), st = R.st, seen = {}, count = { P1: 0, P2: 0 };
+  let Q = [], win = null;
+  const panel = (nw = []) => ds('Queue', 'front → back', rowOf(Q.map(x => chip(x, 'q', nw.includes(x))))) +
+    ds('Buildings reached', '', `<div class="counter">${['P1', 'P2'].map(p => `<div class="${win === p ? 'win' : ''}">${p}<b>${count[p]}</b></div>`).join('')}</div>`);
+  R.snap({ cap: 'Plan: run BFS from each plant and count the buildings it reaches.', panel: panel() });
+  for (const p of ['P1', 'P2']) {
+    seen[p] = true; Q = [p]; st.ns[p] = 'frontier';
+    R.snap({ cap: `Start a BFS from plant <b>${p}</b>. Its count starts at 0.`, panel: panel([p]) });
+    while (Q.length) {
+      const u = Q.shift(); st.ns[u] = 'current';
+      for (const { v, id } of adj[u]) {
+        if (seen[v]) continue;
+        seen[v] = true; Q.push(v); st.ns[v] = 'frontier'; st.es[id] = 'tree';
+        if (v[0] === 'b') { count[p]++; st.sub[v] = p; }
+        R.snap({ cap: `From ${u}, reach building <b>${v}</b>. ${p}'s count is now <b>${count[p]}</b>.`, panel: panel([v]), flash: [v] });
+      }
+      st.ns[u] = 'done';
+    }
+    R.snap({ cap: `${p}'s BFS is done: it powers <b>${count[p]}</b> building${count[p] === 1 ? '' : 's'}. It never left its own component.`, panel: panel() });
+  }
+  win = count.P1 >= count.P2 ? 'P1' : 'P2';
+  st.ns.b8 = 'dim'; st.ns.b9 = 'dim'; st.es['b8>b9'] = 'dim';
+  R.snap({ cap: `Compare the counts: <b>${win} wins</b> with ${count[win]} buildings. b8 and b9 were never touched, because no plant reaches them. Every wire was used by at most one BFS.`, panel: panel() });
+  return { graph: g, frames: R.frames, panel: true };
+};
+
+/* P2 Limited improvement */
+const G_P2 = () => ({ w: 500, h: 335, directed: true, label: 'A 2-limited graph', nodes: [nd('S', 60, 170, { lp: 'l' }), nd('A', 240, 60, { lp: 't' }), nd('B', 240, 170), nd('C', 240, 290), nd('D', 430, 190, { lp: 'r' })], edges: [ed('S', 'A', 4), ed('S', 'B', 1), ed('B', 'A', 2), ed('S', 'C', 2), ed('C', 'D', -1), ed('A', 'D', 5), ed('B', 'D', 3)] });
+STATIC['p2-graph'] = () => ({ graph: G_P2(), frame: { es: { 'S>B': 'tree', 'B>A': 'tree', 'S>C': 'tree', 'C>D': 'tree' }, sub: { S: 0, A: 3, B: 1, C: 2, D: 1 } } });
+STATIC['p2-chain'] = () => ({ graph: { w: 460, h: 100, directed: true, label: 'Best path to A uses 2 edges', nodes: [nd('S', 50, 40), nd('B', 225, 40), nd('A', 400, 40)], edges: [ed('S', 'B', 1), ed('B', 'A', 2)] }, frame: { ns: { S: 'done', B: 'done', A: 'done' }, es: { 'S>B': 'tree', 'B>A': 'tree' }, sub: { S: 'start', B: 'right after round 1', A: 'right after round 2' } } });
+PLAYERS['p2run'] = () => { const g = G_P2(); return { graph: g, frames: genBF(g, 'S', ['B>A', 'C>D', 'A>D', 'B>D', 'S>A', 'S>B', 'S>C'], { rounds: 2, perEdge: true, ghost: true }).frames, code: CODE.bf.slice(0, 6).map((l, i) => i === 2 ? '  repeat k times:              // k rounds only' : l), panel: true }; };
+
+/* P3 Conservative cycles */
+const TRI = (w1, w2, w3) => ({ w: 240, h: 125, directed: true, nodes: [nd('a', 40, 95), nd('b', 120, 28, { lp: 'r' }), nd('c', 200, 95)], edges: [ed('a', 'b', w1), ed('b', 'c', w2), ed('c', 'a', w3)] });
+STATIC['p3-t1'] = () => ({ graph: TRI(3, -1, -2), frame: { es: { 'a>b': 'tree', 'b>c': 'tree', 'c>a': 'tree' } } });
+STATIC['p3-t2'] = () => ({ graph: TRI(3, -1, -1), frame: { es: { 'a>b': 'bad', 'b>c': 'bad', 'c>a': 'bad' } } });
+STATIC['p3-t3'] = () => ({ graph: TRI(1, -2, -1), frame: { es: { 'a>b': 'bad', 'b>c': 'bad', 'c>a': 'bad' } } });
+const PAIR = (w1, w2) => ({ w: 260, h: 110, directed: true, nodes: [nd('d', 50, 55), nd('e', 210, 55)], edges: [ed('d', 'e', w1, { bend: 26 }), ed('e', 'd', w2, { bend: 26 })] });
+STATIC['p3-flipA'] = () => ({ graph: PAIR(3, -1), frame: { es: { 'd>e': 'path', 'e>d': 'path' } } });
+STATIC['p3-flipB'] = () => ({ graph: PAIR(-3, 1), frame: { es: { 'd>e': 'bad', 'e>d': 'bad' } } });
+const ISL = (withSuper) => {
+  const nodes = [nd('a', 40, 40), nd('b', 130, 40), nd('c', 85, 110), nd('d', 205, 40), nd('e', 265, 110)];
+  const edges = [ed('a', 'b', 2), ed('b', 'c', -3), ed('c', 'a', 1), ed('d', 'e', 3, { bend: 14 }), ed('e', 'd', -1, { bend: 14 })];
+  const decor = [];
+  if (withSuper) { nodes.push(nd('X', 155, 178, { label: 's*', kind: 'super' })); ['a', 'b', 'c', 'd', 'e'].forEach(v => edges.push(ed('X', v, undefined, { cls: 'ghost' }))); decor.push({ type: 'text', x: 185, y: 196, text: 'all new edges weigh 0' }); }
+  else decor.push({ type: 'text', x: 196, y: 150, text: 'never reached' });
+  return { w: 310, h: withSuper ? 205 : 160, directed: true, nodes, edges, decor };
+};
+STATIC['p3-islands'] = () => ({ graph: ISL(false), frame: { ns: { a: 'current', b: 'done', c: 'done' } } });
+STATIC['p3-super'] = () => ({ graph: ISL(true), frame: { ns: { X: 'current', a: 'done', b: 'done', c: 'done', d: 'done', e: 'done' } } });
+const G_P3 = () => ({ w: 460, h: 345, directed: true, label: 'Two islands plus a super source', nodes: [nd('X', 50, 175, { label: 's*', kind: 'super', lp: 'l' }), nd('a', 190, 60, { lp: 't' }), nd('b', 330, 60, { lp: 't' }), nd('c', 260, 170), nd('d', 190, 290), nd('e', 370, 290)],
+  edges: [ed('X', 'a', 0, { cls: 'ghost' }), ed('X', 'b', 0, { cls: 'ghost', lt: 0.3 }), ed('X', 'c', 0, { cls: 'ghost', lt: 0.55 }), ed('X', 'd', 0, { cls: 'ghost' }), ed('X', 'e', 0, { cls: 'ghost', lt: 0.35 }), ed('a', 'b', 2), ed('b', 'c', -3), ed('c', 'a', 1), ed('d', 'e', 3, { bend: 20 }), ed('e', 'd', -1, { bend: 20 })] });
+PLAYERS['p3run'] = () => {
+  const g = G_P3();
+  const order = ['X>a', 'X>b', 'X>c', 'X>d', 'X>e', 'a>b', 'b>c', 'c>a', 'd>e', 'e>d'];
+  const r1 = genBF(G_P3(), 'X', order, { perEdge: false, check: true, title: 'Run 1, original weights.' });
+  const flipW = {}; g.edges.forEach(e => { const id = `${e.from}>${e.to}`; flipW[id] = e.w === 0 ? 0 : -e.w; });
+  const r2 = genBF(G_P3(), 'X', order, { perEdge: false, check: true, weights: flipW, wl: flipW, title: 'Run 2, flipped weights.' });
+  const mid = { ns: {}, es: {}, sub: {}, wl: flipW, cap: 'Run 1 found no negative cycle. Now multiply every weight by −1 (look at the labels) and run Bellman-Ford again.', panel: ds('Why', '', '<p class="note">A positive cycle in the original graph is a negative cycle in this one.</p>') };
+  const last = r2.frames[r2.frames.length - 1];
+  const verdict = Object.assign({}, last, { es: Object.assign({}, last.es, { 'd>e': 'bad', 'e>d': 'bad' }), ns: Object.assign({}, last.ns, { d: 'bad', e: 'bad' }), cap: `Run 2 found a negative cycle: d → e → d. In the original graph that cycle adds up to 3 − 1 = <b>+2</b>, not 0. So the field is <b>not conservative</b>.` });
+  return { graph: g, frames: r1.frames.concat([mid], r2.frames, [verdict]), code: CODE.bf, panel: true };
+};
+
+/* P4 Color limit */
+const G_P4 = () => ({ w: 510, h: 280, directed: true, label: 'Red and blue vertices', nodes: [nd('s', 60, 150, { kind: 'blue' }), nd('a', 190, 70, { kind: 'red' }), nd('b', 330, 70, { kind: 'red' }), nd('c', 260, 230, { kind: 'blue' }), nd('t', 450, 150, { kind: 'blue' })], edges: [ed('s', 'a', 1), ed('a', 'b', 1), ed('b', 't', 1), ed('a', 'c', 2), ed('c', 't', 2), ed('s', 'c', 6)] });
+const P4PATHS = { 0: { es: ['s>c', 'c>t'], txt: 'k = 0: s → c → t, cost 6 + 2 = 8 (no reds)' }, 1: { es: ['s>a', 'a>c', 'c>t'], txt: 'k = 1: s → a → c → t, cost 1 + 2 + 2 = 5 (1 red)' }, 2: { es: ['s>a', 'a>b', 'b>t'], txt: 'k = 2: s → a → b → t, cost 1 + 1 + 1 = 3 (2 reds)' } };
+STATIC['p4-graph'] = () => ({ graph: G_P4(), frame: { es: Object.fromEntries(P4PATHS[1].es.map(id => [id, 'path'])) } });
+CUSTOM.push(() => {
+  const host = document.querySelector('[data-static="p4-graph"]'), view = host._view, res = document.getElementById('p4res');
+  const set = k => {
+    view.apply({ es: Object.fromEntries(P4PATHS[k].es.map(id => [id, 'path'])) });
+    res.textContent = P4PATHS[k].txt;
+    document.querySelectorAll('#p4k button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.k === k)));
+  };
+  document.querySelectorAll('#p4k button').forEach(b => b.addEventListener('click', () => set(+b.dataset.k)));
+  set(1);
+});
+const SUBN = ['₀', '₁', '₂'];
+const G_P4L = () => {
+  const base = { s: [60, 0], a: [185, -35], b: [335, -35], c: [230, 40], t: [450, 0] }, kind = { s: 'blue', a: 'red', b: 'red', c: 'blue', t: 'blue' };
+  const cy = { 1: 97, 0: 267 }, nodes = [], edges = [];
+  [1, 0].forEach(f => Object.keys(base).forEach(v => nodes.push(nd(v + f, base[v][0], cy[f] + base[v][1], { kind: kind[v], label: v + SUBN[f], lp: v === 't' || v === 'a' ? 'r' : (v === 's' ? 'l' : 'b') }))));
+  [0, 1].forEach(f => { edges.push(ed('s' + f, 'c' + f, 6), ed('a' + f, 'c' + f, 2), ed('c' + f, 't' + f, 2), ed('b' + f, 't' + f, 1)); });
+  edges.push(ed('s0', 'a1', 1, { lt: 0.62 }), ed('a0', 'b1', 1, { lt: 0.7 }));
+  return { w: 520, h: 345, directed: true, label: 'Two floors: floor 0 means no reds used, floor 1 means one red used', nodes, edges,
+    decor: [{ type: 'band', x: 6, y: 16, w: 508, h: 150, text: 'Floor 1: used 1 red', corner: true }, { type: 'band', x: 6, y: 186, w: 508, h: 150, text: 'Floor 0: used 0 reds', corner: true }] };
+};
+const P4_HIDE = ['s1', 'a0', 'b0', 'b1'], P4_HIDE_E = ['s1>c1', 'a0>c0', 'b0>t0', 'b1>t1', 'a0>b1'];
+STATIC['p4-layers'] = () => ({ graph: G_P4L(), frame: { ns: Object.fromEntries(P4_HIDE.map(id => [id, 'dim'])), es: Object.assign(Object.fromEntries(P4_HIDE_E.map(id => [id, 'dim'])), { 's0>a1': 'path', 'a1>c1': 'path', 'c1>t1': 'path' }) } });
+PLAYERS['p4run'] = () => {
+  const g = G_P4L();
+  const r = genDij(g, 's0', { hide: P4_HIDE, hideEdges: P4_HIDE_E, finish: (R, st, d, par, panel) => {
+    R.snap({ cap: `Dijkstra is done. Now read the answer off the copies of t: d(t₀) = ${fmt(d.t0)} and d(t₁) = ${fmt(d.t1)}.`, panel: panel() });
+    const best = d.t1 <= d.t0 ? 't1' : 't0', path = [];
+    let v = best; while (par[v]) { path.push(par[v]); v = par[v].split('>')[0]; }
+    path.forEach(id => st.es[id] = 'path');
+    R.snap({ cap: `The smallest is <b>${fmt(d[best])}</b>, reached on floor ${best.slice(1)}. Follow the parents back: s₀ → a₁ → c₁ → t₁. Drop the floor numbers: <b>s → a → c → t</b>, cost 5, using 1 red.`, panel: panel() });
+  } });
+  return { graph: g, frames: r.frames, code: CODE.dij, panel: true };
+};
+
+/* Recipe toolbox minis */
+STATIC['tk-super'] = () => ({ graph: { w: 260, h: 125, directed: true, nodes: [nd('a', 50, 35), nd('b', 130, 35), nd('c', 210, 35), nd('X', 130, 100, { label: 's*', kind: 'super' })], edges: [ed('X', 'a', 0, { cls: 'ghost' }), ed('X', 'b', 0, { cls: 'ghost' }), ed('X', 'c', 0, { cls: 'ghost' })] } });
+STATIC['tk-layers'] = () => ({ graph: { w: 260, h: 135, directed: true, r: 16, nodes: [nd('x1', 95, 38, { label: 'x₁' }), nd('y1', 215, 38, { label: 'y₁' }), nd('x0', 95, 102, { label: 'x₀' }), nd('y0', 215, 102, { label: 'y₀' })], edges: [ed('x0', 'y1', undefined, { label: 'up' }), ed('x1', 'y1', undefined, { label: 'stay' }), ed('x0', 'y0', undefined, { label: 'stay', lt: 0.35 })],
+  decor: [{ type: 'band', x: 4, y: 8, w: 252, h: 58, text: 'copy 1' }, { type: 'band', x: 4, y: 72, w: 252, h: 58, text: 'copy 0' }] }, frame: { es: { 'x0>y1': 'path' } } });
+STATIC['tk-flip'] = () => ({ graph: { w: 260, h: 100, directed: true, nodes: [nd('a', 30, 55, { label: 'A' }), nd('b', 105, 55, { label: 'B' }), nd('c', 155, 55, { label: 'A' }), nd('d', 230, 55, { label: 'B' })], edges: [ed('a', 'b', 5), ed('c', 'd', -5)], decor: [{ type: 'text', x: 130, y: 22, text: '× (−1)', anchor: 'middle' }] }, frame: { es: { 'c>d': 'hl' } } });
+STATIC['tk-reverse'] = () => ({ graph: { w: 260, h: 125, directed: true, r: 16, nodes: [nd('a1', 45, 32, { label: 'A' }), nd('b1', 130, 32, { label: 'B' }), nd('t1', 215, 32, { label: 't' }), nd('a2', 45, 98, { label: 'A' }), nd('b2', 130, 98, { label: 'B' }), nd('t2', 215, 98, { label: 't' })], edges: [ed('a1', 'b1'), ed('b1', 't1'), ed('b2', 'a2'), ed('t2', 'b2')] }, frame: { es: { 'b2>a2': 'hl', 't2>b2': 'hl' }, ns: { t2: 'current' } } });
+/* ===== Mount everything + tabs ===== */
+(function init() {
+  document.querySelectorAll('[data-static]').forEach(host => {
+    const make = STATIC[host.dataset.static];
+    if (!make) { console.warn('missing static', host.dataset.static); return; }
+    const spec = make();
+    host.classList.add('gv');
+    const view = new GraphView(host, spec.graph);
+    view.apply(spec.frame || {});
+    host._view = view;
+  });
+  document.querySelectorAll('[data-player]').forEach(host => {
+    const name = host.dataset.player, make = PLAYERS[name];
+    if (!make) { console.warn('missing player', name); return; }
+    new Player(host, name, make());
+  });
+  CUSTOM.forEach(fn => { try { fn(); } catch (e) { console.error(e); } });
+
+  const tabs = [...document.querySelectorAll('.tab')];
+  const panels = [...document.querySelectorAll('.panel')];
+  const ids = panels.map(p => p.id);
+  const nameOf = id => (tabs.find(t => t.dataset.tab === id) || {}).textContent || id;
+  function show(id, scroll) {
+    if (!ids.includes(id)) id = ids[0];
+    panels.forEach(p => p.hidden = p.id !== id);
+    tabs.forEach(t => { const on = t.dataset.tab === id; t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1; if (on) t.scrollIntoView({ block: 'nearest', inline: 'nearest' }); });
+    ALLPLAYERS.forEach(p => p.stop());
+    try { localStorage.setItem('cs577-graphs-tab', id); } catch (e) { }
+    try { history.replaceState(null, '', '#' + id); } catch (e) { }
+    if (scroll) window.scrollTo({ top: 0 });
+  }
+  tabs.forEach(t => t.addEventListener('click', () => show(t.dataset.tab, true)));
+  document.querySelector('[role=tablist]').addEventListener('keydown', e => {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    const i = tabs.indexOf(document.activeElement); if (i < 0) return;
+    const j = (i + (e.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+    tabs[j].focus(); show(tabs[j].dataset.tab, false);
+  });
+  panels.forEach((p, i) => {
+    const foot = p.querySelector('.navfoot'); if (!foot) return;
+    if (i > 0) { const b = document.createElement('button'); b.textContent = '← ' + nameOf(ids[i - 1]); b.onclick = () => show(ids[i - 1], true); foot.appendChild(b); }
+    if (i < ids.length - 1) { const b = document.createElement('button'); b.className = 'next'; b.textContent = nameOf(ids[i + 1]) + ' →'; b.onclick = () => show(ids[i + 1], true); foot.appendChild(b); }
+  });
+  document.querySelectorAll('.rail a').forEach(a => a.addEventListener('click', e => {
+    e.preventDefault();
+    const el = document.getElementById(a.getAttribute('href').slice(1));
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }));
+  let start = (location.hash || '').slice(1);
+  if (!ids.includes(start)) { try { start = localStorage.getItem('cs577-graphs-tab') || ''; } catch (e) { start = ''; } }
+  show(ids.includes(start) ? start : ids[0], false);
+})();
+</script></body></html>
