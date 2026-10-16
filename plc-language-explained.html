@@ -1,0 +1,1883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How your language works: from text to running program</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Recursive:slnt,wght,CASL,CRSV,MONO@-15..0,300..900,0..1,0..1,0..1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f3f5f8; --panel: #ffffff; --ink: #1b2230; --ink-2: #485266; --ink-3: #768095;
+    --rule: #d8dde5; --code-bg: #edf0f4; --accent: #23688f; --accent-soft: #e2eef6;
+    --good: #2f7d57; --good-soft: #e2f3e9; --bad: #b23b3b; --bad-soft: #fbe8e8;
+    --lexer: #9a6512; --lexer-soft: #fbf0d9;
+    --parser: #2a7a4f; --parser-soft: #e1f2e8;
+    --analyzer: #6b46c1; --analyzer-soft: #eee8fb;
+    --interp: #23688f; --interp-soft: #e2eef6;
+    --gen: #6b7280; --gen-soft: #eceef1;
+    --radius-s: 6px; --radius-m: 10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #121419; --panel: #191c22; --ink: #e8eaee; --ink-2: #b4bbc8; --ink-3: #8790a0;
+      --rule: #2b3039; --code-bg: #1e2229; --accent: #6cc6ee; --accent-soft: #15303d;
+      --good: #6fcf97; --good-soft: #15291f; --bad: #ec8b8b; --bad-soft: #301b1b;
+      --lexer: #f2c94c; --lexer-soft: #2e2713; --parser: #6fcf97; --parser-soft: #14281d;
+      --analyzer: #b69cf6; --analyzer-soft: #241c38; --interp: #6cc6ee; --interp-soft: #15303d;
+      --gen: #9aa2b1; --gen-soft: #23262d;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #121419; --panel: #191c22; --ink: #e8eaee; --ink-2: #b4bbc8; --ink-3: #8790a0;
+    --rule: #2b3039; --code-bg: #1e2229; --accent: #6cc6ee; --accent-soft: #15303d;
+    --good: #6fcf97; --good-soft: #15291f; --bad: #ec8b8b; --bad-soft: #301b1b;
+    --lexer: #f2c94c; --lexer-soft: #2e2713; --parser: #6fcf97; --parser-soft: #14281d;
+    --analyzer: #b69cf6; --analyzer-soft: #241c38; --interp: #6cc6ee; --interp-soft: #15303d;
+    --gen: #9aa2b1; --gen-soft: #23262d;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--paper); color: var(--ink);
+    font-family: "Recursive", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-variation-settings: "CASL" 0, "MONO" 0; font-size: 17px; line-height: 1.62; }
+  code, pre, .mono, textarea.code, input.code {
+    font-family: "Recursive", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-variation-settings: "MONO" 1, "CASL" 0; }
+  h1, h2, h3 { font-variation-settings: "CASL" 1, "MONO" 0; line-height: 1.2; letter-spacing: -0.01em; }
+  h1 { font-size: 2.05rem; font-weight: 800; margin: 0 0 0.5rem; }
+  h2 { font-size: 1.38rem; font-weight: 750; margin: 2.6rem 0 0.7rem; }
+  h3 { font-size: 1.08rem; font-weight: 700; margin: 1.8rem 0 0.5rem; }
+  p { margin: 0.6rem 0; max-width: 72ch; }
+  ul, ol { max-width: 72ch; padding-left: 1.3rem; margin: 0.6rem 0; }
+  li { margin: 0.32rem 0; }
+  a { color: var(--accent); }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 0 1.2rem 5rem; }
+  .lead { font-size: 1.08rem; color: var(--ink-2); }
+
+  header.top { background: var(--panel); border-bottom: 1px solid var(--rule); }
+  .top-inner { max-width: 920px; margin: 0 auto; padding: 1.4rem 1.2rem 0; }
+  .titlebar { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+  .sub { margin: 0 0 1rem; color: var(--ink-3); font-size: 0.92rem; }
+  .theme-btn { background: none; border: 1px solid var(--rule); color: var(--ink-2); border-radius: 999px;
+    padding: 0.3rem 0.85rem; font: inherit; font-size: 0.82rem; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+  .theme-btn:hover { color: var(--ink); border-color: var(--ink-3); }
+  nav.chain { display: flex; overflow-x: auto; scrollbar-width: none; }
+  nav.chain::-webkit-scrollbar { display: none; }
+  nav.chain button { background: none; border: none; border-bottom: 3px solid transparent; color: var(--ink-3);
+    font: inherit; font-size: 0.9rem; padding: 0.6rem 0.8rem 0.55rem; cursor: pointer; white-space: nowrap; }
+  nav.chain button:hover { color: var(--ink); }
+  nav.chain button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); font-weight: 650; }
+  nav.chain button .n { margin-right: 0.35rem; font-size: 0.8rem; font-variation-settings: "MONO" 1; color: var(--ink-3); }
+  nav.chain button[data-stage] .n { font-weight: 800; }
+  nav.chain button[data-stage="lexer"] .n { color: var(--lexer); }
+  nav.chain button[data-stage="parser"] .n { color: var(--parser); }
+  nav.chain button[data-stage="interp"] .n { color: var(--interp); }
+  nav.chain button[data-stage="analyzer"] .n { color: var(--analyzer); }
+  .panel { display: none; padding-top: 1.8rem; }
+  .panel.active { display: block; }
+
+  pre { background: var(--code-bg); border-radius: var(--radius-s); padding: 0.85rem 1rem; overflow-x: auto;
+    font-size: 0.84rem; line-height: 1.55; margin: 0.9rem 0; }
+  p code, li code, td code, th code { background: var(--code-bg); border-radius: 4px; padding: 0.06em 0.34em; font-size: 0.88em; }
+  .c { color: var(--ink-3); }
+
+  .think { background: var(--accent-soft); border-radius: var(--radius-m); padding: 0.9rem 1.1rem; margin: 1.1rem 0; }
+  .think p:first-child { margin-top: 0; } .think p:last-child { margin-bottom: 0; }
+  .think strong:first-child { color: var(--accent); }
+  .ok { border-left: 4px solid var(--good); background: var(--good-soft); border-radius: 0 var(--radius-m) var(--radius-m) 0; padding: 0.7rem 1rem; margin: 1rem 0; }
+  .no { border-left: 4px solid var(--bad); background: var(--bad-soft); border-radius: 0 var(--radius-m) var(--radius-m) 0; padding: 0.7rem 1rem; margin: 1rem 0; }
+  .ok p, .no p { margin: 0.3rem 0; }
+  .stagebar { border-left: 4px solid var(--s); background: var(--s-soft); border-radius: 0 var(--radius-m) var(--radius-m) 0; padding: 0.7rem 1rem; margin: 0 0 1.2rem; }
+  .stagebar p { margin: 0.2rem 0; }
+  .s-lexer { --s: var(--lexer); --s-soft: var(--lexer-soft); }
+  .s-parser { --s: var(--parser); --s-soft: var(--parser-soft); }
+  .s-analyzer { --s: var(--analyzer); --s-soft: var(--analyzer-soft); }
+  .s-interp { --s: var(--interp); --s-soft: var(--interp-soft); }
+  .s-gen { --s: var(--gen); --s-soft: var(--gen-soft); }
+
+  .tablewrap { overflow-x: auto; margin: 1rem 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9rem; min-width: 520px; }
+  th, td { text-align: left; padding: 0.55rem 0.65rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { font-weight: 650; color: var(--ink-2); font-size: 0.85rem; }
+  td.st { font-weight: 650; color: var(--s); white-space: nowrap; }
+
+  .box { background: var(--panel); border: 1px solid var(--rule); border-radius: var(--radius-m); padding: 1rem; margin: 1.2rem 0; }
+  .controls { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-top: 0.7rem; }
+  .btn { background: var(--panel); color: var(--ink); border: 1px solid var(--rule); border-radius: var(--radius-s);
+    padding: 0.42rem 0.85rem; font: inherit; font-size: 0.87rem; cursor: pointer; }
+  .btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .btn:disabled { opacity: 0.45; cursor: default; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--panel); font-weight: 650; }
+  .btn.primary:hover { color: var(--panel); filter: brightness(1.08); }
+  .btn.ex { font-size: 0.8rem; padding: 0.25rem 0.6rem; font-variation-settings: "MONO" 1; }
+  input.code { width: 100%; font-size: 0.95rem; padding: 0.55rem 0.7rem; border: 1px solid var(--rule); border-radius: var(--radius-s);
+    background: var(--paper); color: var(--ink); }
+  textarea.code { width: 100%; min-height: 240px; font-size: 0.88rem; line-height: 1.5; padding: 0.7rem 0.8rem; resize: vertical;
+    border: 1px solid var(--rule); border-radius: var(--radius-s); background: var(--paper); color: var(--ink); tab-size: 2; }
+  select { font: inherit; font-size: 0.87rem; padding: 0.38rem 0.5rem; border: 1px solid var(--rule); border-radius: var(--radius-s); background: var(--panel); color: var(--ink); }
+  label.inline { font-size: 0.86rem; color: var(--ink-2); display: inline-flex; gap: 0.4rem; align-items: center; }
+
+  /* pipeline diagram */
+  .pipe { display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: stretch; margin: 1.2rem 0; }
+  .pipe .st { flex: 1 1 130px; border: 1px solid var(--rule); border-top: 4px solid var(--s); background: var(--panel);
+    border-radius: var(--radius-s); padding: 0.55rem 0.7rem; font-size: 0.84rem; line-height: 1.35; }
+  .pipe .st b { display: block; font-size: 0.95rem; color: var(--s); }
+  .pipe .st i { font-style: normal; color: var(--ink-3); display: block; }
+  .pipe .st.data { border-top-color: var(--rule); background: transparent; border-style: dashed; flex-basis: 90px; }
+  .pipe .st.data b { color: var(--ink-2); }
+
+  /* hero stepper */
+  .steps { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.8rem; }
+  .steps button { font: inherit; font-size: 0.82rem; padding: 0.3rem 0.7rem; border-radius: 999px; border: 1px solid var(--rule);
+    background: var(--panel); color: var(--ink-3); cursor: pointer; }
+  .steps button.on { background: var(--s-soft); border-color: var(--s); color: var(--s); font-weight: 700; }
+  .steps button.done { color: var(--ink-2); }
+  .stageview { min-height: 230px; }
+  .stagecap { font-size: 0.9rem; color: var(--ink-2); margin: 0.6rem 0 0; }
+  .chars { display: flex; flex-wrap: wrap; gap: 3px; }
+  .chars span { display: inline-flex; flex-direction: column; align-items: center; min-width: 1.7rem; padding: 0.25rem 0.2rem;
+    background: var(--code-bg); border-radius: 4px; font-variation-settings: "MONO" 1; font-size: 0.95rem; }
+  .chars span small { color: var(--ink-3); font-size: 0.65rem; }
+
+  /* tokens */
+  .toks { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+  .tok { display: inline-flex; flex-direction: column; align-items: center; padding: 0.25rem 0.5rem 0.2rem; border-radius: 6px;
+    background: var(--lexer-soft); border: 1px solid transparent; }
+  .tok b { font-variation-settings: "MONO" 1; font-weight: 600; font-size: 0.92rem; white-space: pre; }
+  .tok small { font-size: 0.62rem; color: var(--ink-3); letter-spacing: 0.02em; }
+  .tok.IDENTIFIER { border-color: var(--lexer); }
+  .tok.INTEGER, .tok.DECIMAL { background: var(--interp-soft); }
+  .tok.STRING, .tok.CHARACTER { background: var(--parser-soft); }
+  .tok.OPERATOR { background: var(--code-bg); }
+
+  /* trees */
+  .treewrap { overflow-x: auto; }
+  .treewrap svg { display: block; margin: 0 auto; height: auto; }
+  pre.outline { font-size: 0.82rem; line-height: 1.5; max-height: 420px; overflow: auto; margin: 0; }
+  pre.outline .ty { color: var(--analyzer); }
+  pre.outline .kw { color: var(--parser); font-weight: 650; }
+  pre.outline .g { color: var(--ink-3); }
+
+  /* ladder */
+  .ladder { display: grid; gap: 0.3rem; margin: 1rem 0; }
+  .rung { display: grid; grid-template-columns: 9rem 1fr; gap: 0.8rem; align-items: center; background: var(--panel);
+    border: 1px solid var(--rule); border-radius: var(--radius-s); padding: 0.45rem 0.8rem; font-size: 0.88rem; }
+  .rung b { font-variation-settings: "MONO" 1; color: var(--parser); }
+  .rung span { color: var(--ink-2); }
+
+  /* type family */
+  .fam { overflow-x: auto; }
+
+  /* playground */
+  .pg-top { display: grid; gap: 0.6rem; }
+  .status { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0.8rem 0 0.4rem; }
+  .status span { font-size: 0.8rem; padding: 0.2rem 0.65rem; border-radius: 999px; border: 1px solid var(--rule); color: var(--ink-3); }
+  .status span.pass { border-color: var(--s); color: var(--s); background: var(--s-soft); font-weight: 650; }
+  .status span.fail { border-color: var(--bad); color: var(--bad); background: var(--bad-soft); font-weight: 650; }
+  .panes { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-top: 0.6rem; }
+  .pane { border: 1px solid var(--rule); border-top: 4px solid var(--s); border-radius: var(--radius-s); background: var(--panel); padding: 0.6rem 0.75rem; min-width: 0; }
+  .pane h4 { margin: 0 0 0.45rem; font-size: 0.88rem; color: var(--s); font-variation-settings: "CASL" 1; }
+  .pane .empty { color: var(--ink-3); font-size: 0.85rem; }
+  .pane .toks { max-height: 260px; overflow: auto; }
+  .errbox { background: var(--bad-soft); color: var(--bad); border-radius: var(--radius-s); padding: 0.55rem 0.75rem; font-size: 0.86rem; }
+  .errbox pre { background: transparent; padding: 0.3rem 0 0; margin: 0; color: var(--ink); font-size: 0.82rem; }
+  .outlines { font-size: 0.86rem; margin: 0; padding: 0; list-style: none; }
+  .outlines li { margin: 0.1rem 0; }
+  .outlines li::before { content: "✓ "; color: var(--analyzer); font-weight: 700; }
+  .runout { font-size: 0.85rem; margin: 0; max-height: 260px; overflow: auto; }
+  .result { font-size: 0.86rem; color: var(--ink-2); margin-top: 0.4rem; }
+
+  /* assignable checker */
+  .assign { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; font-size: 0.92rem; }
+  .verdict { margin-top: 0.7rem; padding: 0.6rem 0.8rem; border-radius: var(--radius-s); font-size: 0.92rem; }
+  .verdict.yes { background: var(--good-soft); color: var(--good); }
+  .verdict.nope { background: var(--bad-soft); color: var(--bad); }
+
+  ol.seq { counter-reset: s; list-style: none; padding-left: 0; }
+  ol.seq > li { counter-increment: s; position: relative; padding-left: 2.3rem; margin: 0.85rem 0; }
+  ol.seq > li::before { content: counter(s); position: absolute; left: 0; top: 0.05rem; width: 1.6rem; height: 1.6rem; border-radius: 50%;
+    background: var(--accent-soft); color: var(--accent); font-size: 0.8rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; font-variation-settings: "MONO" 1; }
+
+  .quiz { background: var(--panel); border: 1px solid var(--rule); border-radius: var(--radius-m); padding: 1rem 1.1rem; margin: 0.9rem 0; }
+  .quiz .q { font-weight: 650; margin: 0 0 0.7rem; }
+  .quiz .qn { display: block; color: var(--ink-3); font-size: 0.78rem; font-weight: 600; margin-bottom: 0.2rem; }
+  .opts { display: flex; flex-direction: column; gap: 0.38rem; }
+  .opt { text-align: left; font: inherit; font-size: 0.92rem; background: var(--paper); color: var(--ink); border: 1px solid var(--rule);
+    border-radius: var(--radius-s); padding: 0.5rem 0.75rem; cursor: pointer; }
+  .opt:hover:not(:disabled) { border-color: var(--accent); }
+  .opt:disabled { cursor: default; opacity: 0.7; }
+  .opt.correct { border-color: var(--good); background: var(--good-soft); color: var(--good); font-weight: 650; opacity: 1; }
+  .opt.wrong { border-color: var(--bad); background: var(--bad-soft); color: var(--bad); opacity: 1; }
+  .fb { display: none; margin-top: 0.65rem; font-size: 0.9rem; padding: 0.55rem 0.8rem; border-radius: var(--radius-s); }
+  .fb.show { display: block; }
+  .fb.good { background: var(--good-soft); color: var(--good); }
+  .fb.badfb { background: var(--bad-soft); color: var(--bad); }
+  .fb b { display: block; margin-bottom: 0.15rem; }
+  .score { color: var(--ink-3); font-size: 0.88rem; }
+  .say { counter-reset: s; list-style: none; padding-left: 0; }
+  .say li { counter-increment: s; background: var(--panel); border: 1px solid var(--rule); border-left: 4px solid var(--s, var(--rule));
+    border-radius: var(--radius-m); padding: 0.75rem 1rem 0.75rem 3rem; position: relative; margin: 0.6rem 0; }
+  .say li::before { content: counter(s); position: absolute; left: 1rem; top: 0.72rem; font-weight: 800; color: var(--s, var(--ink-3)); font-variation-settings: "CASL" 1; }
+  footer { border-top: 1px solid var(--rule); margin-top: 3.5rem; padding-top: 1rem; color: var(--ink-3); font-size: 0.82rem; }
+
+  @media (max-width: 680px) {
+    body { font-size: 16px; } h1 { font-size: 1.6rem; }
+    .panes { grid-template-columns: 1fr; }
+    .rung { grid-template-columns: 1fr; gap: 0.1rem; }
+    .wrap { padding: 0 0.9rem 4rem; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <div class="titlebar">
+      <div>
+        <h1>How your language works</h1>
+        <p class="sub">From text to running program: the lexer, the parser, the interpreter and the analyzer, with every demo running the same rules as your Java.</p>
+      </div>
+      <button class="theme-btn" id="themeBtn" type="button">Switch theme</button>
+    </div>
+    <nav class="chain" role="tablist" aria-label="Sections">
+      <button role="tab" data-tab="t1" aria-selected="true"><span class="n">1</span>Big picture</button>
+      <button role="tab" data-tab="t2" data-stage="lexer" aria-selected="false"><span class="n">2</span>Lexer</button>
+      <button role="tab" data-tab="t3" data-stage="parser" aria-selected="false"><span class="n">3</span>Parser: expressions</button>
+      <button role="tab" data-tab="t4" data-stage="parser" aria-selected="false"><span class="n">4</span>Parser: statements</button>
+      <button role="tab" data-tab="t5" data-stage="interp" aria-selected="false"><span class="n">5</span>Interpreter</button>
+      <button role="tab" data-tab="t6" data-stage="analyzer" aria-selected="false"><span class="n">6</span>Analyzer</button>
+      <button role="tab" data-tab="t7" aria-selected="false"><span class="n">7</span>Playground</button>
+      <button role="tab" data-tab="t8" aria-selected="false"><span class="n">8</span>Tests and grading</button>
+      <button role="tab" data-tab="t9" aria-selected="false"><span class="n">9</span>Recap and quiz</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- =============================================================== 1 -->
+<section class="panel active" id="t1" role="tabpanel">
+
+  <p class="lead">All semester you are building one machine, one part per project. Here is a single line of code going through all of it. Click through the stages, or type your own expression.</p>
+
+  <div class="box">
+    <input class="code" id="heroIn" value="1 + 2 * 3" aria-label="Expression to send through the machine" spellcheck="false">
+    <div class="steps" id="heroSteps" style="margin-top:0.8rem"></div>
+    <div class="stageview" id="heroView"></div>
+    <div class="controls">
+      <button class="btn" id="heroBack" type="button">Back</button>
+      <button class="btn primary" id="heroNext" type="button">Next stage</button>
+    </div>
+  </div>
+
+  <h2>The machine, in order</h2>
+  <div class="pipe" aria-label="The compiler pipeline">
+    <div class="st data"><b>Text</b><i>what you type</i></div>
+    <div class="st s-lexer"><b>Lexer</b><i>P1: cuts text into tokens</i></div>
+    <div class="st s-parser"><b>Parser</b><i>P2: builds a tree</i></div>
+    <div class="st s-analyzer"><b>Analyzer</b><i>P4: checks the meaning</i></div>
+    <div class="st s-interp"><b>Interpreter</b><i>P3: runs the tree</i></div>
+    <div class="st s-gen"><b>Generator</b><i>P5: writes Java</i></div>
+  </div>
+  <p>Notice the order. The course builds the <strong>interpreter in P3 and the analyzer in P4</strong>, but when a program actually runs, the analyzer goes first: check the program, then run it. You built the cook before the inspector, but the inspector stands at the kitchen door.</p>
+
+  <h2>Think of a restaurant kitchen</h2>
+  <p>A recipe arrives as text. Each project is one person in the kitchen.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Stage</th><th>In the kitchen</th><th>What it checks</th><th>Output</th></tr></thead>
+    <tbody>
+      <tr class="s-lexer"><td class="st">Lexer</td><td>Reads the recipe letter by letter and cuts it into words.</td><td>Spelling: is <code>"hi</code> missing its closing quote?</td><td>tokens</td></tr>
+      <tr class="s-parser"><td class="st">Parser</td><td>Understands the sentences and their order: mix first, then bake.</td><td>Grammar: is there a <code>;</code> where one must be?</td><td>a tree</td></tr>
+      <tr class="s-analyzer"><td class="st">Analyzer</td><td>The head chef reading the recipe before cooking.</td><td>Sense: "add 2 cups of Tuesday" is grammatical but nonsense.</td><td>the same tree, labeled with types</td></tr>
+      <tr class="s-interp"><td class="st">Interpreter</td><td>The cook actually cooking, step by step.</td><td>Things only visible while cooking, like dividing by zero.</td><td>results and printed text</td></tr>
+      <tr class="s-gen"><td class="st">Generator</td><td>Translates the recipe for a kitchen in another country.</td><td>Nothing new. It trusts the analyzer.</td><td>Java source code</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="think">
+    <p><strong>The key idea:</strong> every stage only understands the output of the stage before it. The parser never sees characters, only tokens. The interpreter never sees tokens, only the tree. That is why each project could be tested on its own: the tests hand each stage exactly what the previous stage would have produced.</p>
+  </div>
+
+  <h2>One file per stage</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Project</th><th>You write</th><th>Its input</th><th>Its output</th><th>Uses</th></tr></thead>
+    <tbody>
+      <tr class="s-lexer"><td class="st">P1</td><td><code>Lexer.java</code></td><td>a String</td><td><code>List&lt;Token&gt;</code></td><td><code>Token.java</code></td></tr>
+      <tr class="s-parser"><td class="st">P2</td><td><code>Parser.java</code></td><td><code>List&lt;Token&gt;</code></td><td>an <code>Ast</code> tree</td><td><code>Ast.java</code></td></tr>
+      <tr class="s-interp"><td class="st">P3</td><td><code>Interpreter.java</code></td><td>an <code>Ast</code> tree</td><td>a <code>PlcObject</code> value</td><td><code>Environment</code>, <code>Scope</code></td></tr>
+      <tr class="s-analyzer"><td class="st">P4</td><td><code>Analyzer.java</code></td><td>an <code>Ast</code> tree</td><td>the tree, with types attached</td><td>new <code>Environment</code>, <code>Scope</code>, <code>Ast</code></td></tr>
+    </tbody>
+  </table></div>
+
+</section>
+
+<!-- =============================================================== 2 -->
+<section class="panel" id="t2" role="tabpanel">
+
+  <div class="stagebar s-lexer"><p><strong>P1, the lexer.</strong> Input: a String. Output: a list of tokens. Your file: <code>Lexer.java</code>.</p></div>
+
+  <h2>What it does</h2>
+  <p>The lexer reads the text one character at a time and groups characters into <strong>tokens</strong>, the words of the language. It throws away spaces and newlines. Every token remembers three things: its <strong>type</strong>, its exact <strong>text</strong>, and the <strong>index</strong> where it started.</p>
+
+  <div class="think">
+    <p><strong>Think of it like this:</strong> a person reading out loud. They don't see "i-f-x-&gt;-1", they see the words "if", "x", "&gt;", "1". The lexer does that grouping, and nothing more. It has no idea what the words mean.</p>
+  </div>
+
+  <div class="box">
+    <input class="code" id="lexIn" value="LET total: Integer = price * 2;" aria-label="Text to lex" spellcheck="false">
+    <div class="controls" id="lexEx"></div>
+    <div id="lexOut" style="margin-top:0.9rem"></div>
+  </div>
+
+  <h2>The six token types</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Type</th><th>Rule, in words</th><th>Examples</th></tr></thead>
+    <tbody>
+      <tr><td><code>IDENTIFIER</code></td><td>a letter or <code>_</code>, then letters, digits, <code>_</code> or <code>-</code></td><td><code>x</code>, <code>LET</code>, <code>print</code>, <code>my-var</code></td></tr>
+      <tr><td><code>INTEGER</code></td><td>optional sign, then <code>0</code> or a number not starting with 0</td><td><code>0</code>, <code>42</code>, <code>-7</code>, <code>+3</code></td></tr>
+      <tr><td><code>DECIMAL</code></td><td>an integer, a dot, at least one digit</td><td><code>1.5</code>, <code>-0.25</code></td></tr>
+      <tr><td><code>CHARACTER</code></td><td>one character or one escape between single quotes</td><td><code>'a'</code>, <code>'\n'</code></td></tr>
+      <tr><td><code>STRING</code></td><td>any characters or escapes between double quotes, on one line</td><td><code>"hi"</code>, <code>"a\tb"</code></td></tr>
+      <tr><td><code>OPERATOR</code></td><td><code>&lt; &gt; ! =</code> with an optional <code>=</code>, or any other single character</td><td><code>&lt;=</code>, <code>+</code>, <code>;</code>, <code>(</code></td></tr>
+    </tbody>
+  </table></div>
+  <p><strong>Keywords are not special here.</strong> <code>LET</code>, <code>IF</code> and <code>TRUE</code> come out as plain <code>IDENTIFIER</code> tokens. Deciding that <code>IF</code> means "if" is the parser's job.</p>
+
+  <h2>Four surprises worth knowing</h2>
+  <p>Click each one to run it above.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Text</th><th>Tokens</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td><code>x-1</code></td><td>one identifier, <code>x-1</code></td><td>Identifiers may contain <code>-</code>. Write <code>x - 1</code> with spaces.</td></tr>
+      <tr><td><code>x+10</code></td><td><code>x</code>, then the number <code>+10</code></td><td>A sign touching a digit belongs to the number. No <code>+</code> operator is left.</td></tr>
+      <tr><td><code>a &amp;&amp; b</code></td><td><code>a</code>, <code>&amp;</code>, <code>&amp;</code>, <code>b</code></td><td>Only <code>&lt;= &gt;= == !=</code> are two-character operators. In real code, write <code>AND</code>.</td></tr>
+      <tr><td><code>007</code></td><td>three numbers: <code>0</code>, <code>0</code>, <code>7</code></td><td>A number can't start with 0, so each 0 stands alone.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>How the code works: peek and match</h2>
+  <p>The whole lexer is built on two small helpers:</p>
+  <ul>
+    <li><strong><code>peek(patterns)</code></strong> asks "are the next characters like this?" without moving.</li>
+    <li><strong><code>match(patterns)</code></strong> asks the same, and if yes, steps past them.</li>
+  </ul>
+  <p>Then each token type is one method: <code>lexIdentifier</code>, <code>lexNumber</code>, <code>lexCharacter</code>, <code>lexString</code>, <code>lexOperator</code>. <code>lexToken</code> peeks at the first character and calls the right one. The parser reuses this exact <code>peek</code> and <code>match</code> idea, one level up: tokens instead of characters.</p>
+
+</section>
+
+<!-- =============================================================== 3 -->
+<section class="panel" id="t3" role="tabpanel">
+
+  <div class="stagebar s-parser"><p><strong>P2A, the parser, expressions.</strong> Input: tokens. Output: a tree. Your file: <code>Parser.java</code>.</p></div>
+
+  <h2>Why a tree?</h2>
+  <p>Tokens are a flat list, but meaning has structure. In <code>1 + 2 * 3</code> the multiplication happens first. The tree makes that visible: <strong>lower in the tree means done first.</strong></p>
+
+  <div class="box">
+    <input class="code" id="treeIn" value="1 + 2 * 3" aria-label="Expression to parse" spellcheck="false">
+    <div class="controls" id="treeEx"></div>
+    <div class="treewrap" id="treeOut" style="margin-top:0.9rem"></div>
+  </div>
+
+  <h2>One grammar rule, one method</h2>
+  <p>The grammar is a list of rules. The parser has <strong>one method per rule</strong>, and a rule that mentions another rule simply calls that method. This style is called <strong>recursive descent</strong>.</p>
+<pre>additive_expression ::= multiplicative_expression (('+' | '-') multiplicative_expression)*
+
+<span class="c">// becomes:</span>
+Ast.Expression left = parseMultiplicativeExpression();
+while (peek("+") || peek("-")) {
+    String operator = tokens.get(0).getLiteral();
+    tokens.advance();
+    Ast.Expression right = parseMultiplicativeExpression();
+    left = new Ast.Expression.Binary(operator, left, right);
+}
+return left;</pre>
+
+  <h2>The ladder: why * happens before +</h2>
+  <p>The expression methods form a ladder. Each one calls the rung below it before looking for its own operators. So the <strong>lower</strong> rungs grab their operators <strong>first</strong>, and end up deeper in the tree.</p>
+  <div class="ladder">
+    <div class="rung"><b>AND OR</b><span>parseLogicalExpression: top rung, binds loosest</span></div>
+    <div class="rung"><b>&lt; &lt;= &gt; &gt;= == !=</b><span>parseEqualityExpression (comparisons)</span></div>
+    <div class="rung"><b>+ -</b><span>parseAdditiveExpression</span></div>
+    <div class="rung"><b>* /</b><span>parseMultiplicativeExpression</span></div>
+    <div class="rung"><b>. name</b><span>parseSecondaryExpression: fields and methods</span></div>
+    <div class="rung"><b>1 "hi" x f() (…)</b><span>parsePrimaryExpression: bottom rung, the actual values</span></div>
+  </div>
+
+  <div class="think">
+    <p><strong>Think of it like this:</strong> a company where each manager first asks their team for an answer before adding their own step. The intern at the bottom (primary) does the most basic work first. The CEO at the top (logical) acts last.</p>
+  </div>
+
+  <h2>Three shapes to remember</h2>
+  <ul>
+    <li><strong>Same rung, left to right.</strong> <code>1 - 2 - 3</code> is <code>(1 - 2) - 3</code>, because of the <code>while</code> loop.</li>
+    <li><strong>AND and OR share a rung.</strong> So <code>a OR b AND c</code> is <code>(a OR b) AND c</code>. Different from Java, where <code>&amp;&amp;</code> binds tighter.</li>
+    <li><strong>Parentheses make a Group node.</strong> <code>(1 + 2) * 3</code> keeps the group in the tree, so later stages know it was there.</li>
+  </ul>
+
+  <div class="no">
+    <p><strong>The operator lesson, from the graders.</strong> Store the operator exactly as written. In 2A, code that turned <code>AND</code> into <code>&amp;&amp;</code> lost 9 points. In 2B, code that turned <code>&amp;&amp;</code> into <code>AND</code> lost 10 points on the same tests. Keeping <code>tokens.get(0).getLiteral()</code> unchanged passes both.</p>
+  </div>
+
+</section>
+
+<!-- =============================================================== 4 -->
+<section class="panel" id="t4" role="tabpanel">
+
+  <div class="stagebar s-parser"><p><strong>P2B, the parser, statements and programs.</strong> Same file, more methods.</p></div>
+
+  <h2>From expressions to programs</h2>
+  <p>A program is a list of <strong>fields</strong> (global variables), then a list of <strong>methods</strong>. Each method has a list of <strong>statements</strong>. Statements contain expressions, which you already parse.</p>
+<pre>source    ::= field* method*
+field     ::= 'LET' 'CONST'? identifier ':' identifier ('=' expression)? ';'
+method    ::= 'DEF' identifier '(' parameters ')' (':' identifier)? 'DO' statement* 'END'
+statement ::= 'LET' ... | 'IF' ... | 'FOR' ... | 'WHILE' ... | 'RETURN' ... | expression ('=' expression)? ';'</pre>
+  <p>The <code>: identifier</code> parts are the <strong>types</strong> added for P4, shown in the Analyzer tab.</p>
+
+  <h2>The traffic cop: parseStatement</h2>
+  <p><code>parseStatement</code> looks at the first token and sends it to the right method. Anything that doesn't start with a keyword is an expression or an assignment.</p>
+<pre>public Ast.Statement parseStatement() throws ParseException {
+    if (peek("LET"))    return parseDeclarationStatement();
+    if (peek("IF"))     return parseIfStatement();
+    if (peek("FOR"))    return parseForStatement();
+    if (peek("WHILE"))  return parseWhileStatement();
+    if (peek("RETURN")) return parseReturnStatement();
+    Ast.Expression expression = parseExpression();      <span class="c">// x = 1;  or  print(x);</span>
+    ...
+}</pre>
+  <div class="no">
+    <p><strong>The trap you hit:</strong> forget one of those lines and the method is never called. <code>WHILE</code> then gets treated as a variable name, and the error says "Expected a semicolon", which points nowhere near the real problem.</p>
+  </div>
+
+  <h2>What the tree looks like</h2>
+  <p>Generated live by the same parser as the playground:</p>
+  <div class="box"><pre class="outline" id="stmtOutline"></pre></div>
+
+  <h2>Blocks and where they end</h2>
+  <ul>
+    <li>A method body, WHILE body and FOR body run until <code>END</code>.</li>
+    <li>An IF's first block runs until <code>ELSE</code> or <code>END</code>, whichever comes first.</li>
+    <li>One shared helper, <code>parseBlock</code>, handles all of them.</li>
+  </ul>
+
+  <h2>Errors point at a token</h2>
+  <p>A <code>ParseException</code> carries an <strong>index</strong>: where the problem is. If a token is there, it's that token's start. If the input ran out, it's just past the last token. The playground shows a caret at that spot.</p>
+
+  <div class="think">
+    <p><strong>An open question:</strong> no spec or test shows how a FOR loop's start and step are stored in the tree. Your parser stores them as Assignment statements, or nothing when missing. It is the most sensible reading of the grammar, but it's still worth asking on the course forum before the final.</p>
+  </div>
+
+</section>
+
+<!-- =============================================================== 5 -->
+<section class="panel" id="t5" role="tabpanel">
+
+  <div class="stagebar s-interp"><p><strong>P3, the interpreter.</strong> Input: the tree. Output: values and printed text. Your file: <code>Interpreter.java</code>.</p></div>
+
+  <h2>Walking the tree</h2>
+  <p>The interpreter has <strong>one <code>visit</code> method per kind of node</strong>. That is the Visitor pattern. Each visit asks its children for their values first, then does its own job. So evaluation goes <strong>bottom-up</strong>: the parser built the tree from the top, the interpreter answers from the leaves.</p>
+
+  <div class="box">
+    <input class="code" id="evalIn" value="(1 + 2) * (10 - 4)" aria-label="Expression to evaluate" spellcheck="false">
+    <div class="treewrap" id="evalOut" style="margin-top:0.9rem"></div>
+    <div class="controls">
+      <button class="btn primary" id="evalStep" type="button">Evaluate one node</button>
+      <button class="btn" id="evalAll" type="button">Evaluate all</button>
+      <button class="btn" id="evalReset" type="button">Start over</button>
+    </div>
+    <p class="stagecap" id="evalCap"></p>
+  </div>
+
+  <h2>The four helpers</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Helper</th><th>Think of it as</th><th>Job</th></tr></thead>
+    <tbody>
+      <tr><td><code>PlcObject</code></td><td>a labeled box</td><td>Every value travels in one. <code>Environment.NIL</code> is the empty box. Statements return it.</td></tr>
+      <tr><td><code>Scope</code></td><td>a stack of notebook pages</td><td>IF, WHILE, FOR and methods open a new page. Code reads older pages too. The page is torn off on the way out.</td></tr>
+      <tr><td><code>Return</code></td><td>a fire alarm</td><td>RETURN throws it. It flies out of every loop until the method catches it.</td></tr>
+      <tr><td><code>requireType</code></td><td>a bouncer</td><td>"This must be a Boolean." If not, the program stops with an error.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>The five mistakes that cost the most</h2>
+  <ol class="seq">
+    <li><strong>Not restoring the scope.</strong> Use <code>try { ... } finally { scope = ... }</code> so the old scope comes back even when a RETURN or an error flies out.</li>
+    <li><strong>A function's scope comes from where it was written,</strong> not from where it's called. Save it in a variable, <code>definingScope</code>, before making the lambda.</li>
+    <li><strong>Each loop pass gets a fresh scope.</strong> Otherwise <code>LET t = 1;</code> inside a loop crashes on the second pass: "already defined".</li>
+    <li><strong>AND and OR stop early.</strong> <code>FALSE AND anything</code> is false without looking at the right side.</li>
+    <li><strong>Every branch must return.</strong> Your AND block once fell through to "Unknown operator" because its last <code>return</code> line was missing.</li>
+  </ol>
+
+  <h2>Number rules that surprise people</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Expression</th><th>Result</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td><code>7 / 2</code></td><td><code>3</code></td><td>Integer division drops the remainder.</td></tr>
+      <tr><td><code>1.2 / 3.4</code></td><td><code>0.4</code></td><td>Decimal division keeps the left number's decimal places.</td></tr>
+      <tr><td><code>0.5 / 2.0</code></td><td><code>0.2</code></td><td>0.25 rounds to the even digit: HALF_EVEN.</td></tr>
+      <tr><td><code>1 + 1.0</code></td><td>error</td><td>Both sides must be the same kind of number.</td></tr>
+      <tr><td><code>"a" + 1</code></td><td><code>"a1"</code></td><td>If either side is a String, + joins text.</td></tr>
+      <tr><td><code>1 == 1.0</code></td><td><code>false</code></td><td>Different types are never equal.</td></tr>
+    </tbody>
+  </table></div>
+
+</section>
+
+<!-- =============================================================== 6 -->
+<section class="panel" id="t6" role="tabpanel">
+
+  <div class="stagebar s-analyzer"><p><strong>P4, the analyzer.</strong> Input: the tree. Output: the same tree, with a type on every expression, or an error. Your file: <code>Analyzer.java</code>. Plus small changes to <code>Parser.java</code>.</p></div>
+
+  <h2>What it is for</h2>
+  <p>The interpreter only finds a mistake when it reaches that line while running. The analyzer reads the whole program <strong>before anything runs</strong> and rejects anything that can't make sense.</p>
+
+  <div class="think">
+    <p><strong>Think of it like this:</strong> "The table ate the soup" has perfect grammar, so the parser accepts it. But a table can't eat. The analyzer is the reader who says "that sentence doesn't make sense." In code: <code>count = "five";</code> is grammatical, but if <code>count</code> holds numbers, it is nonsense.</p>
+  </div>
+
+  <h2>Step 1: the parser learns types</h2>
+  <p>To check types, the program must say them. Three rules in the grammar change. Your lexer needs nothing new: a type is just an identifier, and <code>:</code> is already an operator.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th></th><th>Before, P2</th><th>After, P4</th></tr></thead>
+    <tbody>
+      <tr><td>Field</td><td><code>LET total = 0;</code></td><td><code>LET total: Integer = 0;</code> type <strong>required</strong></td></tr>
+      <tr><td>Method</td><td><code>DEF f(n) DO</code></td><td><code>DEF f(n: Integer): Integer DO</code> parameter types required, return type optional</td></tr>
+      <tr><td>Declaration</td><td><code>LET x = 1;</code></td><td><code>LET x = 1;</code> or <code>LET x: Integer;</code> or both. Type optional.</td></tr>
+    </tbody>
+  </table></div>
+  <p>The parser only <strong>records</strong> the type names as text. Checking them is the analyzer's job. <code>ParserModifiedTests.java</code> shows the expected trees, and the modified parser is part of the December 5 final.</p>
+
+  <h2>Step 2: the types and their family</h2>
+  <div class="box fam" id="family"></div>
+  <p>Each line connects a type to its parent above it. <code>Any</code> is like Java's <code>Object</code>: everything fits in it. <code>Comparable</code> holds the four types that can be compared with <code>&lt;</code>. Notice <code>Boolean</code> is <strong>not</strong> Comparable here, so even <code>TRUE == FALSE</code> is rejected.</p>
+
+  <h2>Step 3: requireAssignable, the one rule behind everything</h2>
+  <p><code>requireAssignable(target, type)</code> answers: can a value of <code>type</code> go into a box labeled <code>target</code>? Exactly three cases say yes:</p>
+  <ol>
+    <li>They are the <strong>same</strong> type.</li>
+    <li>The target is <strong>Any</strong>.</li>
+    <li>The target is <strong>Comparable</strong> and the value is Integer, Decimal, Character or String.</li>
+  </ol>
+  <p>Everything else throws. Try it:</p>
+  <div class="box">
+    <div class="assign">
+      <span>Put a</span>
+      <select id="asType" aria-label="Value type"></select>
+      <span>value into a</span>
+      <select id="asTarget" aria-label="Target type"></select>
+      <span>box</span>
+    </div>
+    <div class="verdict" id="asVerdict" role="status"></div>
+  </div>
+  <p>The same rule checks assignments, LET values, function arguments, RETURN values against the method's return type, and IF or WHILE conditions against Boolean.</p>
+
+  <h2>Step 4: labeling the tree</h2>
+  <p>As it checks, the analyzer <strong>writes the answers into the tree</strong>. Every expression gets <code>setType</code>. Every Access gets <code>setVariable</code>. Every function call and method gets <code>setFunction</code>. P5, the generator, reads those labels to write Java.</p>
+
+  <div class="think">
+    <p><strong>Think of it like this:</strong> the interpreter opened every box to see what was inside. The analyzer never opens a box. It only reads and writes the <strong>labels</strong>. That is why its <code>visit</code> methods return <code>Void</code>, not values.</p>
+  </div>
+
+  <h2>The rules, node by node</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Node</th><th>Throws if</th><th>Sets</th></tr></thead>
+    <tbody>
+      <tr><td>Source</td><td>no <code>main()</code> with zero parameters, or it doesn't return Integer</td><td></td></tr>
+      <tr><td>Field</td><td>unknown type, value not assignable, CONST without a value</td><td>variable</td></tr>
+      <tr><td>Method</td><td>unknown parameter or return type</td><td>function. Missing return type means Nil</td></tr>
+      <tr><td>Expression statement</td><td>it's not a function call, since <code>1;</code> does nothing</td><td></td></tr>
+      <tr><td>Declaration</td><td>no type and no value, unknown type, value not assignable</td><td>variable</td></tr>
+      <tr><td>Assignment</td><td>left side isn't a variable or field, value not assignable, target is CONST</td><td></td></tr>
+      <tr><td>If</td><td>condition not Boolean, or no statements after DO</td><td></td></tr>
+      <tr><td>While</td><td>condition not Boolean</td><td></td></tr>
+      <tr><td>Return</td><td>value not assignable to the method's return type</td><td></td></tr>
+      <tr><td>Literal</td><td>integer beyond a Java <code>int</code>, decimal beyond a <code>double</code></td><td>type</td></tr>
+      <tr><td>Group</td><td>what's inside isn't a binary expression: <code>(1)</code> is useless</td><td>type</td></tr>
+      <tr><td>Binary</td><td>operands don't fit the operator (see below)</td><td>type</td></tr>
+      <tr><td>Access</td><td>the variable doesn't exist</td><td>variable, and so its type</td></tr>
+      <tr><td>Function</td><td>doesn't exist, or an argument isn't assignable to its parameter</td><td>function, and so its type</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Binary operators</h3>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Operator</th><th>Both sides must be</th><th>Result</th></tr></thead>
+    <tbody>
+      <tr><td><code>AND OR</code></td><td>Boolean</td><td>Boolean</td></tr>
+      <tr><td><code>&lt; &lt;= &gt; &gt;= == !=</code></td><td>Comparable, and the same type</td><td>Boolean</td></tr>
+      <tr><td><code>+</code></td><td>if either is String: anything. Otherwise Integer or Decimal, the same on both sides</td><td>String, or the left type</td></tr>
+      <tr><td><code>- * /</code></td><td>Integer or Decimal, the same on both sides</td><td>the left type</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Two tricky spots</h2>
+  <ul>
+    <li><strong>Visit the value before defining the variable.</strong> In <code>LET x = 1;</code> you need the value's type to know x's type. For fields, it also stops a field from using itself.</li>
+    <li><strong>Define the method before visiting its body,</strong> so recursive methods can call themselves. Save the method's return type in a variable, so <code>visit(Return)</code> can check against it.</li>
+  </ul>
+
+  <h2>Analyzer and interpreter catch different things</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Program does</th><th>Interpreter, P3 alone</th><th>Analyzer, P4</th></tr></thead>
+    <tbody>
+      <tr><td><code>count = "five";</code> with <code>count: Integer</code></td><td>runs fine, no complaint</td><td><strong>rejects it</strong>, before running</td></tr>
+      <tr><td><code>print(1 / 0);</code></td><td><strong>crashes</strong> when it gets there</td><td>accepts it: both sides are Integer</td></tr>
+    </tbody>
+  </table></div>
+  <p>Types are known before running. Values aren't. Both samples are in the playground.</p>
+
+  <div class="think">
+    <p><strong>Heads-up on FOR:</strong> the spec's FOR section was written for an older <code>FOR x IN list</code> grammar. The playground applies its rules to your <code>FOR (...; ...; ...)</code> loop as: the loop variable must be Comparable, the condition Boolean, the step the same type as the variable, and the body not empty. Worth confirming on the forum.</p>
+  </div>
+
+  <h2>Dates</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th></th><th>Due</th></tr></thead>
+    <tbody>
+      <tr><td>Test submission 1</td><td>October 26</td></tr>
+      <tr><td>Test submission 2</td><td>October 28</td></tr>
+      <tr><td>Test submission 3</td><td>October 31</td></tr>
+      <tr><td>Final</td><td>see Canvas</td></tr>
+    </tbody>
+  </table></div>
+
+</section>
+
+<!-- =============================================================== 7 -->
+<section class="panel" id="t7" role="tabpanel">
+
+  <p class="lead">Write a program in your language and watch every stage handle it. Uses the P4 syntax with types. Try the samples that fail, too: each one breaks a different stage.</p>
+
+  <div class="box">
+    <div class="pg-top">
+      <div class="controls" style="margin-top:0">
+        <label class="inline">Sample <select id="pgSample" aria-label="Choose a sample program"></select></label>
+        <button class="btn primary" id="pgRun" type="button">Run all stages</button>
+        <label class="inline"><input type="checkbox" id="pgSkip"> Skip the analyzer, like P3 alone</label>
+      </div>
+      <textarea class="code" id="pgCode" spellcheck="false" aria-label="Program source"></textarea>
+    </div>
+    <div class="status" id="pgStatus"></div>
+    <div class="panes">
+      <div class="pane s-lexer"><h4>Lexer: tokens</h4><div id="pgTokens"></div></div>
+      <div class="pane s-parser"><h4>Parser: tree</h4><div id="pgTree"></div></div>
+      <div class="pane s-analyzer"><h4>Analyzer: types</h4><div id="pgTypes"></div></div>
+      <div class="pane s-interp"><h4>Interpreter: output</h4><div id="pgRunOut"></div></div>
+    </div>
+  </div>
+  <p style="font-size:0.88rem;color:var(--ink-3)">Ctrl + Enter also runs it. Loops are stopped after 200,000 steps, so an endless WHILE can't freeze the page.</p>
+
+</section>
+
+<!-- =============================================================== 8 -->
+<section class="panel" id="t8" role="tabpanel">
+
+  <h2>How each project is tested</h2>
+  <p>Every test feeds one stage exactly what the stage before it would have made, and compares the answer.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Project</th><th>A test gives</th><th>And expects</th></tr></thead>
+    <tbody>
+      <tr class="s-lexer"><td class="st">Lexer</td><td>a String</td><td>a list of Tokens, or a ParseException at the right index</td></tr>
+      <tr class="s-parser"><td class="st">Parser</td><td>a list of Tokens, written by hand</td><td>an Ast tree, compared node by node with <code>equals</code></td></tr>
+      <tr class="s-interp"><td class="st">Interpreter</td><td>an Ast tree, built by hand</td><td>a value, printed text, or a RuntimeException</td></tr>
+      <tr class="s-analyzer"><td class="st">Analyzer</td><td>an Ast tree, built by hand</td><td>the same tree with types set, or a RuntimeException</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>The hidden tests are bigger</h2>
+  <p>The test file you get is a sample. The grader runs many more:</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th></th><th>Provided tests</th><th>Graded tests</th></tr></thead>
+    <tbody>
+      <tr><td>Parser</td><td>47</td><td>102</td></tr>
+      <tr><td>Interpreter</td><td>36</td><td>more, unknown</td></tr>
+    </tbody>
+  </table></div>
+  <p>So passing the provided file is not the finish line. Two habits help most:</p>
+  <ol>
+    <li><strong>Use every test submission.</strong> They are free feedback from the real grader. The AND problem was found that way, twice.</li>
+    <li><strong>Test what the spec says, not just what the file checks.</strong> For P3, four realistic bugs passed all 36 provided tests and were only caught by extra tests written from the spec.</li>
+  </ol>
+
+  <h2>Before the December 5 final</h2>
+  <p>The final re-grades every project and is worth half the course grade. A checklist:</p>
+  <ul>
+    <li><strong>Lexer:</strong> the old <code>firstToken</code> block that rejected <code>+0</code> and <code>-0</code> is gone.</li>
+    <li><strong>Parser:</strong> operators are stored exactly as written, every keyword has its line in <code>parseStatement</code>, and the P4 type changes pass <code>ParserModifiedTests</code>.</li>
+    <li><strong>Interpreter:</strong> all 36 provided tests pass, plus the extra spec tests.</li>
+    <li><strong>Analyzer:</strong> done, and its test submissions used.</li>
+  </ul>
+
+</section>
+
+<!-- =============================================================== 9 -->
+<section class="panel" id="t9" role="tabpanel">
+
+  <h2>Say it back</h2>
+  <p>If you can explain these without looking, you understand the whole machine, no matter what tools helped you write it.</p>
+  <ol class="say">
+    <li class="s-lexer">The lexer cuts text into tokens. Each token has a type, its exact text and where it started. It doesn't know what words mean.</li>
+    <li class="s-parser">The parser turns tokens into a tree, one method per grammar rule. Lower in the tree means done first, which is how <code>*</code> beats <code>+</code>.</li>
+    <li class="s-parser"><code>parseStatement</code> picks a method by the first token. If no keyword matches, it's an expression or an assignment.</li>
+    <li class="s-interp">The interpreter visits the tree bottom-up and returns a value for every node. Statements return NIL. RETURN throws an exception that the method catches.</li>
+    <li class="s-interp">New scopes are opened for blocks and methods, and always restored in <code>finally</code>. A function remembers the scope where it was written.</li>
+    <li class="s-analyzer">The analyzer checks types before running. It never computes values. It labels every expression with its type, using <code>requireAssignable</code>: same type, Any, or Comparable.</li>
+  </ol>
+
+  <h2>Words to know</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Word</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td>Token</td><td>One word of the program: a type, its text, its index.</td></tr>
+      <tr><td>Grammar</td><td>The rules for which token orders are allowed.</td></tr>
+      <tr><td>AST</td><td>Abstract Syntax Tree: the parser's output.</td></tr>
+      <tr><td>Recursive descent</td><td>Parsing with one method per grammar rule.</td></tr>
+      <tr><td>Precedence</td><td>Which operator happens first. Lower rung, deeper in the tree.</td></tr>
+      <tr><td>Visitor</td><td>One <code>visit</code> method per kind of node.</td></tr>
+      <tr><td>Scope</td><td>Where names live. A chain of pages, each with a parent.</td></tr>
+      <tr><td>Arity</td><td>How many parameters a function takes. <code>print</code> has arity 1.</td></tr>
+      <tr><td>Short-circuit</td><td>Stopping early, like <code>FALSE AND x</code> never looking at x.</td></tr>
+      <tr><td>Semantic analysis</td><td>Checking that a program makes sense, not just that it's grammatical.</td></tr>
+      <tr><td>Assignable</td><td>A value fits a target type: same, Any, or Comparable.</td></tr>
+      <tr><td>Decorate</td><td>Attaching types and variables to the tree, for the generator.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Check yourself</h2>
+  <div id="quiz"></div>
+  <p class="score" id="score"></p>
+
+</section>
+
+<footer>The demos and playground use a JavaScript copy of the language, checked against your Java lexer, parser and interpreter on the same inputs, and against every example in the P4 spec.</footer>
+</main>
+
+<script>
+/* A JavaScript copy of the course language, following the same rules as the
+   Java projects: Lexer (P1), Parser with P4 types (P2), Analyzer (P4) and
+   Interpreter (P3). Used by the guide's demos and playground. */
+var PLC = (function () {
+  'use strict';
+
+  function StageError(stage, message, index) {
+    this.stage = stage; this.message = message; this.index = index;
+  }
+
+  /* ============================== LEXER (P1) ============================== */
+  function lex(input) {
+    var i = 0, start = 0, tokens = [];
+    function has(o) { return i + o < input.length; }
+    function peek() {
+      for (var k = 0; k < arguments.length; k++) {
+        if (!has(k) || !arguments[k].test(input[i + k])) return false;
+      }
+      return true;
+    }
+    function match() {
+      var ok = peek.apply(null, arguments);
+      if (ok) i += arguments.length;
+      return ok;
+    }
+    function emit(type) {
+      var t = { type: type, literal: input.slice(start, i), index: start };
+      tokens.push(t);
+      return t;
+    }
+    function fail(msg) { throw new StageError('lexer', msg, i); }
+    var WS = /[ \b\n\r\t]/, ALPHA = /[A-Za-z_]/, IDCH = /[A-Za-z0-9_-]/,
+        DIGIT = /[0-9]/, NZ = /[1-9]/, SIGN = /[+-]/, DOT = /[.]/, ZERO = /0/;
+
+    function escape() {
+      match(/\\/);
+      if (!match(/[bnrt'"\\]/)) fail('Invalid escape sequence.');
+    }
+    while (i < input.length) {
+      if (peek(WS)) { i++; continue; }
+      start = i;
+      if (peek(ALPHA)) {
+        match(ALPHA); while (match(IDCH)) {}
+        emit('IDENTIFIER');
+      } else if (peek(DIGIT) || peek(SIGN, NZ) || peek(SIGN, DIGIT, DOT, DIGIT)) {
+        match(SIGN);
+        if (!match(ZERO)) { if (!match(NZ)) fail('Invalid number.'); while (match(DIGIT)) {} }
+        if (match(DOT, DIGIT)) { while (match(DIGIT)) {} emit('DECIMAL'); }
+        else emit('INTEGER');
+      } else if (peek(/'/)) {
+        match(/'/);
+        if (peek(/\\/)) escape();
+        else if (!match(/[^'\\\n\r]/)) fail('Expected a single character.');
+        if (!match(/'/)) fail('Expected a closing quote.');
+        emit('CHARACTER');
+      } else if (peek(/"/)) {
+        match(/"/);
+        while (!peek(/"/)) {
+          if (peek(/\\/)) escape();
+          else if (!match(/[^"\\\n\r]/)) fail('Missing closing quote.');
+        }
+        match(/"/);
+        emit('STRING');
+      } else {
+        if (!match(/[<>!=]/, /=/)) {
+          if (!match(/[^ \b\t\n\r]/)) fail('Invalid operator.');
+        }
+        emit('OPERATOR');
+      }
+    }
+    return tokens;
+  }
+
+  /* ========================== BIG DECIMAL (lite) ========================== */
+  function pow10(n) { var r = 1n; for (var k = 0; k < n; k++) r *= 10n; return r; }
+  function Dec(u, s) { this.u = u; this.s = s; }
+  Dec.parse = function (str) {
+    var neg = str[0] === '-'; if (str[0] === '-' || str[0] === '+') str = str.slice(1);
+    var parts = str.split('.'), frac = parts[1] || '';
+    var u = BigInt(parts[0] + frac);
+    return new Dec(neg ? -u : u, frac.length);
+  };
+  Dec.prototype.toString = function () {
+    var neg = this.u < 0n, digits = (neg ? -this.u : this.u).toString();
+    if (this.s === 0) return (neg ? '-' : '') + digits;
+    while (digits.length <= this.s) digits = '0' + digits;
+    return (neg ? '-' : '') + digits.slice(0, digits.length - this.s) + '.' + digits.slice(digits.length - this.s);
+  };
+  function align(a, b) { var s = Math.max(a.s, b.s); return [a.u * pow10(s - a.s), b.u * pow10(s - b.s), s]; }
+  Dec.prototype.add = function (b) { var x = align(this, b); return new Dec(x[0] + x[1], x[2]); };
+  Dec.prototype.sub = function (b) { var x = align(this, b); return new Dec(x[0] - x[1], x[2]); };
+  Dec.prototype.mul = function (b) { return new Dec(this.u * b.u, this.s + b.s); };
+  Dec.prototype.cmp = function (b) { var x = align(this, b); return x[0] < x[1] ? -1 : x[0] > x[1] ? 1 : 0; };
+  Dec.prototype.div = function (b) {
+    // Java: this.divide(b, RoundingMode.HALF_EVEN) keeps this.scale()
+    var n = this.u * pow10(b.s), d = b.u;
+    var q = n / d, r = n % d;
+    var absR2 = (r < 0n ? -r : r) * 2n, absD = d < 0n ? -d : d;
+    var away = absR2 > absD || (absR2 === absD && (q % 2n !== 0n));
+    if (away) q += ((n < 0n) !== (d < 0n)) ? -1n : 1n;
+    return new Dec(q, this.s);
+  };
+
+  /* ===================== values the programs work with ===================== */
+  function Char(c) { this.c = c; }
+  Char.prototype.toString = function () { return this.c; };
+  var NIL = { toString: function () { return 'nil'; } };
+  function show(v) {
+    if (v === null || v === NIL) return 'nil';
+    if (typeof v === 'bigint') return v.toString();
+    if (typeof v === 'boolean') return String(v);
+    return String(v);
+  }
+  function javaClass(v) {
+    if (v === NIL) return 'Nil';
+    if (typeof v === 'boolean') return 'Boolean';
+    if (typeof v === 'bigint') return 'BigInteger';
+    if (v instanceof Dec) return 'BigDecimal';
+    if (v instanceof Char) return 'Character';
+    if (typeof v === 'string') return 'String';
+    return 'Object';
+  }
+  function unescape(s) {
+    return s.replace(/\\([bnrt'"\\])/g, function (_, c) {
+      return { b: '\b', n: '\n', r: '\r', t: '\t', "'": "'", '"': '"', '\\': '\\' }[c];
+    });
+  }
+
+  /* ========================= PARSER (P2, with P4 types) ========================= */
+  function parse(tokens, mode) {
+    var p = 0;
+    function tok(o) { return tokens[p + (o || 0)]; }
+    function errIndex() {
+      if (p < tokens.length) return tokens[p].index;
+      if (!tokens.length) return 0;
+      var last = tokens[tokens.length - 1];
+      return last.index + last.literal.length;
+    }
+    function fail(msg) { throw new StageError('parser', msg, errIndex()); }
+    function peekOne(pat, t) {
+      if (!t) return false;
+      if (pat === 'IDENTIFIER' || pat === 'INTEGER' || pat === 'DECIMAL' || pat === 'CHARACTER' || pat === 'STRING' || pat === 'OPERATOR') return t.type === pat;
+      return t.literal === pat;
+    }
+    function peek() { for (var k = 0; k < arguments.length; k++) if (!peekOne(arguments[k], tok(k))) return false; return true; }
+    function match() { var ok = peek.apply(null, arguments); if (ok) p += arguments.length; return ok; }
+    function expect(lit, what) { if (!match(lit)) fail('Expected ' + (what || "'" + lit + "'") + '.'); }
+    function ident(what) { if (!peek('IDENTIFIER')) fail('Expected ' + (what || 'an identifier') + '.'); return tokens[p++].literal; }
+
+    function source() {
+      var fields = [], methods = [];
+      while (peek('LET')) fields.push(field());
+      while (peek('DEF')) methods.push(method());
+      if (p < tokens.length) fail('Expected LET or DEF.');
+      return { kind: 'Source', fields: fields, methods: methods };
+    }
+    function field() {
+      expect('LET');
+      var constant = match('CONST');
+      var name = ident('a field name');
+      expect(':', "':' and a type (fields need a type)");
+      var typeName = ident('a type name');
+      var value = null;
+      if (match('=')) value = expression();
+      expect(';');
+      return { kind: 'Field', name: name, typeName: typeName, constant: constant, value: value };
+    }
+    function method() {
+      expect('DEF');
+      var name = ident('a method name');
+      expect('(');
+      var params = [];
+      if (!peek(')')) {
+        do {
+          var pn = ident('a parameter name');
+          expect(':', "':' and a type (parameters need a type)");
+          params.push({ name: pn, typeName: ident('a type name') });
+        } while (match(','));
+      }
+      expect(')');
+      var returnTypeName = null;
+      if (match(':')) returnTypeName = ident('a return type');
+      expect('DO');
+      var body = block(['END']);
+      expect('END');
+      return { kind: 'Method', name: name, params: params, returnTypeName: returnTypeName, statements: body };
+    }
+    function block(enders) {
+      var list = [];
+      while (p < tokens.length && !enders.some(function (e) { return peek(e); })) list.push(statement());
+      return list;
+    }
+    function statement() {
+      if (peek('LET')) {
+        match('LET');
+        var name = ident('a variable name');
+        var typeName = null, value = null;
+        if (match(':')) typeName = ident('a type name');
+        if (match('=')) value = expression();
+        expect(';');
+        return { kind: 'Declaration', name: name, typeName: typeName, value: value };
+      }
+      if (peek('IF')) {
+        match('IF');
+        var cond = expression();
+        expect('DO');
+        var thenS = block(['ELSE', 'END']), elseS = [];
+        if (match('ELSE')) elseS = block(['END']);
+        expect('END');
+        return { kind: 'If', condition: cond, then: thenS, else: elseS };
+      }
+      if (peek('FOR')) {
+        match('FOR'); expect('(');
+        var init = null, incr = null;
+        if (!peek(';')) init = forAssign();
+        expect(';');
+        var c = expression();
+        expect(';');
+        if (!peek(')')) incr = forAssign();
+        expect(')');
+        var body = block(['END']);
+        expect('END');
+        return { kind: 'For', init: init, condition: c, increment: incr, statements: body };
+      }
+      if (peek('WHILE')) {
+        match('WHILE');
+        var wc = expression();
+        expect('DO');
+        var wb = block(['END']);
+        expect('END');
+        return { kind: 'While', condition: wc, statements: wb };
+      }
+      if (peek('RETURN')) {
+        match('RETURN');
+        var rv = expression();
+        expect(';');
+        return { kind: 'Return', value: rv };
+      }
+      var e = expression();
+      if (match('=')) {
+        var v = expression();
+        expect(';');
+        return { kind: 'Assignment', receiver: e, value: v };
+      }
+      expect(';');
+      return { kind: 'ExpressionStmt', expression: e };
+    }
+    function forAssign() {
+      var name = ident('a variable name');
+      expect('=');
+      return { kind: 'Assignment', receiver: { kind: 'Access', receiver: null, name: name }, value: expression() };
+    }
+    function expression() { return logical(); }
+    function binaryLevel(next, ops) {
+      return function () {
+        var left = next();
+        for (;;) {
+          var hit = null;
+          for (var k = 0; k < ops.length; k++) if (peek(ops[k])) { hit = ops[k]; break; }
+          if (!hit) return left;
+          p++;
+          left = { kind: 'Binary', operator: hit, left: left, right: next() };
+        }
+      };
+    }
+    function args() {
+      var list = [];
+      if (!peek(')')) { do { list.push(expression()); } while (match(',')); }
+      expect(')');
+      return list;
+    }
+    function primary() {
+      if (match('NIL')) return { kind: 'Literal', value: NIL };
+      if (match('TRUE')) return { kind: 'Literal', value: true };
+      if (match('FALSE')) return { kind: 'Literal', value: false };
+      if (peek('INTEGER')) return { kind: 'Literal', value: BigInt(tokens[p++].literal) };
+      if (peek('DECIMAL')) return { kind: 'Literal', value: Dec.parse(tokens[p++].literal) };
+      if (peek('CHARACTER')) { var cl = tokens[p++].literal; return { kind: 'Literal', value: new Char(unescape(cl.slice(1, -1))) }; }
+      if (peek('STRING')) { var sl = tokens[p++].literal; return { kind: 'Literal', value: unescape(sl.slice(1, -1)) }; }
+      if (match('(')) { var inner = expression(); expect(')', "')'"); return { kind: 'Group', expression: inner }; }
+      if (peek('IDENTIFIER')) {
+        var name = tokens[p++].literal;
+        if (match('(')) return { kind: 'Function', receiver: null, name: name, args: args() };
+        return { kind: 'Access', receiver: null, name: name };
+      }
+      fail('Expected an expression.');
+    }
+    function secondary() {
+      var e = primary();
+      while (match('.')) {
+        var name = ident('a name after the dot');
+        if (match('(')) e = { kind: 'Function', receiver: e, name: name, args: args() };
+        else e = { kind: 'Access', receiver: e, name: name };
+      }
+      return e;
+    }
+    var multiplicative = binaryLevel(secondary, ['*', '/']);
+    var additive = binaryLevel(multiplicative, ['+', '-']);
+    var comparison = binaryLevel(additive, ['<=', '>=', '<', '>', '==', '!=']);
+    var logical = binaryLevel(comparison, ['AND', 'OR']);
+
+    if (mode === 'expression') {
+      var only = expression();
+      if (p < tokens.length) fail('Unexpected extra input.');
+      return only;
+    }
+    return source();
+  }
+
+  /* ============================ ANALYZER (P4) ============================ */
+  var TYPES = ['Any', 'Nil', 'Comparable', 'Boolean', 'Integer', 'Decimal', 'Character', 'String'];
+  var PARENT = { Any: null, Nil: 'Any', Comparable: 'Any', Boolean: 'Any', Integer: 'Comparable', Decimal: 'Comparable', Character: 'Comparable', String: 'Comparable' };
+  // Built-in members, as in Environment.java (methods count the object as parameter 1).
+  var MEMBERS = {
+    Any: { fields: {}, methods: { 'stringify/1': { params: ['Any'], ret: 'String' } } },
+    Comparable: { fields: {}, methods: { 'compare/2': { params: ['Any', 'Comparable'], ret: 'Comparable' } } },
+    Integer: { fields: {}, methods: { 'compare/2': { params: ['Any', 'Integer'], ret: 'Integer' } } },
+    Decimal: { fields: {}, methods: { 'compare/2': { params: ['Any', 'Decimal'], ret: 'Decimal' } } },
+    Character: { fields: {}, methods: { 'compare/2': { params: ['Any', 'Character'], ret: 'Character' } } },
+    String: { fields: { length: 'Integer' }, methods: { 'slice/3': { params: ['Any', 'Integer', 'Integer'], ret: 'String' }, 'compare/2': { params: ['Any', 'String'], ret: 'String' } } },
+    Boolean: { fields: {}, methods: {} }, Nil: { fields: {}, methods: {} }
+  };
+
+  function getType(name) {
+    if (TYPES.indexOf(name) < 0) throw new StageError('analyzer', 'Unknown type ' + name + '.');
+    return name;
+  }
+  function requireAssignable(target, type, what) {
+    if (target === type) return;
+    if (target === 'Any') return;
+    if (target === 'Comparable' && ['Integer', 'Decimal', 'Character', 'String'].indexOf(type) >= 0) return;
+    throw new StageError('analyzer', (what || 'Value') + ' has type ' + type + ', which is not assignable to ' + target + '.');
+  }
+
+  function analyze(ast) {
+    var notes = [];
+    function Scope(parent) { this.parent = parent; this.vars = {}; this.funcs = {}; }
+    Scope.prototype.defineVar = function (name, type, constant) {
+      if (this.vars[name]) throw new StageError('analyzer', 'The variable ' + name + ' is already defined in this scope.');
+      this.vars[name] = { type: type, constant: constant };
+    };
+    Scope.prototype.lookupVar = function (name) {
+      for (var s = this; s; s = s.parent) if (s.vars[name]) return s.vars[name];
+      throw new StageError('analyzer', 'The variable ' + name + ' is not defined.');
+    };
+    Scope.prototype.lookupFunc = function (name, arity) {
+      for (var s = this; s; s = s.parent) if (s.funcs[name + '/' + arity]) return s.funcs[name + '/' + arity];
+      throw new StageError('analyzer', 'The function ' + name + '/' + arity + ' is not defined.');
+    };
+    var scope = new Scope(null);
+    scope.funcs['print/1'] = { params: ['Any'], ret: 'Nil' };
+    scope = new Scope(scope);
+    var returnType = null;
+
+    function inNewScope(fn) { var saved = scope; scope = new Scope(scope); try { fn(); } finally { scope = saved; } }
+    function memberField(type, name) {
+      for (var t = type; t; t = PARENT[t]) if (MEMBERS[t] && MEMBERS[t].fields[name]) return MEMBERS[t].fields[name];
+      throw new StageError('analyzer', 'Type ' + type + ' has no field ' + name + '.');
+    }
+    function memberMethod(type, key) {
+      for (var t = type; t; t = PARENT[t]) if (MEMBERS[t] && MEMBERS[t].methods[key]) return MEMBERS[t].methods[key];
+      throw new StageError('analyzer', 'Type ' + type + ' has no method ' + key.split('/')[0] + '.');
+    }
+
+    function visit(n) {
+      switch (n.kind) {
+        case 'Source': {
+          n.fields.forEach(visit);
+          n.methods.forEach(visit);
+          var main;
+          try { main = scope.lookupFunc('main', 0); }
+          catch (e) { throw new StageError('analyzer', 'There is no main() with zero parameters.'); }
+          if (main.ret !== 'Integer') throw new StageError('analyzer', 'main() must return Integer, but it returns ' + main.ret + '.');
+          notes.push('main() exists and returns Integer');
+          return;
+        }
+        case 'Field': {
+          if (n.value) visit(n.value);
+          var ft = getType(n.typeName);
+          if (n.constant && !n.value) throw new StageError('analyzer', 'Constant field ' + n.name + ' needs a value.');
+          if (n.value) requireAssignable(ft, n.value.type, 'The value of ' + n.name);
+          scope.defineVar(n.name, ft, n.constant);
+          n.type = ft;
+          notes.push('field ' + n.name + ': ' + ft);
+          return;
+        }
+        case 'Method': {
+          var pts = n.params.map(function (pp) { return getType(pp.typeName); });
+          var rt = n.returnTypeName ? getType(n.returnTypeName) : 'Nil';
+          scope.funcs[n.name + '/' + pts.length] = { params: pts, ret: rt };
+          n.type = rt;
+          notes.push(n.name + '(' + pts.join(', ') + '): ' + rt);
+          var savedRet = returnType;
+          returnType = rt;
+          try {
+            inNewScope(function () {
+              n.params.forEach(function (pp, k) { scope.defineVar(pp.name, pts[k], false); });
+              n.statements.forEach(visit);
+            });
+          } finally { returnType = savedRet; }
+          return;
+        }
+        case 'ExpressionStmt':
+          visit(n.expression);
+          if (n.expression.kind !== 'Function') throw new StageError('analyzer', 'A statement on its own must be a function call. This one does nothing.');
+          return;
+        case 'Declaration': {
+          if (n.value) visit(n.value);
+          var dt;
+          if (n.typeName) dt = getType(n.typeName);
+          else if (n.value) dt = n.value.type;
+          else throw new StageError('analyzer', 'LET ' + n.name + ' needs a type or a value, so its type can be known.');
+          if (n.value) requireAssignable(dt, n.value.type, 'The value of ' + n.name);
+          scope.defineVar(n.name, dt, false);
+          n.type = dt;
+          notes.push('variable ' + n.name + ': ' + dt);
+          return;
+        }
+        case 'Assignment': {
+          if (n.receiver.kind !== 'Access') throw new StageError('analyzer', 'Only a variable or a field can be assigned to.');
+          visit(n.receiver);
+          visit(n.value);
+          if (n.receiver.variable && n.receiver.variable.constant) throw new StageError('analyzer', n.receiver.name + ' is a constant and cannot be changed.');
+          requireAssignable(n.receiver.type, n.value.type, 'The new value of ' + n.receiver.name);
+          return;
+        }
+        case 'If':
+          visit(n.condition);
+          requireAssignable('Boolean', n.condition.type, 'The IF condition');
+          if (!n.then.length) throw new StageError('analyzer', 'An IF needs at least one statement after DO.');
+          inNewScope(function () { n.then.forEach(visit); });
+          inNewScope(function () { n.else.forEach(visit); });
+          return;
+        case 'For': {
+          var loopVar = null;
+          if (n.init) {
+            visit(n.init);
+            loopVar = n.init.receiver.type;
+            requireAssignable('Comparable', loopVar, 'The FOR loop variable');
+          }
+          visit(n.condition);
+          requireAssignable('Boolean', n.condition.type, 'The FOR condition');
+          if (n.increment) {
+            visit(n.increment);
+            if (loopVar && n.increment.value.type !== loopVar) throw new StageError('analyzer', 'The FOR increment has type ' + n.increment.value.type + ' but the loop variable is ' + loopVar + '.');
+          }
+          if (!n.statements.length) throw new StageError('analyzer', 'A FOR needs at least one statement in its body.');
+          inNewScope(function () { n.statements.forEach(visit); });
+          return;
+        }
+        case 'While':
+          visit(n.condition);
+          requireAssignable('Boolean', n.condition.type, 'The WHILE condition');
+          inNewScope(function () { n.statements.forEach(visit); });
+          return;
+        case 'Return':
+          visit(n.value);
+          requireAssignable(returnType || 'Nil', n.value.type, 'The returned value');
+          return;
+        case 'Literal': {
+          var v = n.value;
+          if (v === NIL) n.type = 'Nil';
+          else if (typeof v === 'boolean') n.type = 'Boolean';
+          else if (v instanceof Char) n.type = 'Character';
+          else if (typeof v === 'string') n.type = 'String';
+          else if (typeof v === 'bigint') {
+            if (v > 2147483647n || v < -2147483648n) throw new StageError('analyzer', v + ' is too big for an Integer (a Java int).');
+            n.type = 'Integer';
+          } else {
+            if (!isFinite(Number(v.toString()))) throw new StageError('analyzer', v + ' is too big for a Decimal (a Java double).');
+            n.type = 'Decimal';
+          }
+          return;
+        }
+        case 'Group':
+          visit(n.expression);
+          if (n.expression.kind !== 'Binary') throw new StageError('analyzer', 'Parentheses are only allowed around a binary expression.');
+          n.type = n.expression.type;
+          return;
+        case 'Binary': {
+          visit(n.left); visit(n.right);
+          var L = n.left.type, R = n.right.type, op = n.operator;
+          if (op === 'AND' || op === 'OR' || op === '&&' || op === '||') {
+            requireAssignable('Boolean', L, 'The left side of ' + op);
+            requireAssignable('Boolean', R, 'The right side of ' + op);
+            n.type = 'Boolean';
+          } else if (['<', '<=', '>', '>=', '==', '!='].indexOf(op) >= 0) {
+            requireAssignable('Comparable', L, 'The left side of ' + op);
+            requireAssignable('Comparable', R, 'The right side of ' + op);
+            if (L !== R) throw new StageError('analyzer', 'Cannot compare ' + L + ' with ' + R + '. Both sides must be the same type.');
+            n.type = 'Boolean';
+          } else if (op === '+' && (L === 'String' || R === 'String')) {
+            n.type = 'String';
+          } else if (['+', '-', '*', '/'].indexOf(op) >= 0) {
+            if (L !== 'Integer' && L !== 'Decimal') throw new StageError('analyzer', 'The left side of ' + op + ' must be Integer or Decimal, not ' + L + '.');
+            if (R !== L) throw new StageError('analyzer', 'Cannot use ' + op + ' on ' + L + ' and ' + R + '. Both sides must be the same type.');
+            n.type = L;
+          } else throw new StageError('analyzer', 'Unknown operator ' + op + '.');
+          return;
+        }
+        case 'Access':
+          if (n.receiver) { visit(n.receiver); n.type = memberField(n.receiver.type, n.name); n.variable = { constant: false }; }
+          else { n.variable = scope.lookupVar(n.name); n.type = n.variable.type; }
+          return;
+        case 'Function': {
+          var fn, offset = 0;
+          if (n.receiver) { visit(n.receiver); fn = memberMethod(n.receiver.type, n.name + '/' + (n.args.length + 1)); offset = 1; }
+          else fn = scope.lookupFunc(n.name, n.args.length);
+          n.args.forEach(function (a, k) {
+            visit(a);
+            requireAssignable(fn.params[k + offset], a.type, 'Argument ' + (k + 1) + ' of ' + n.name + '()');
+          });
+          n.type = fn.ret;
+          return;
+        }
+      }
+    }
+    visit(ast);
+    return notes;
+  }
+
+  /* =========================== INTERPRETER (P3) =========================== */
+  function ReturnSignal(value) { this.value = value; }
+
+  function interpret(ast, budget) {
+    var out = [], steps = 0, limit = budget || 200000;
+    function Scope(parent) { this.parent = parent; this.vars = {}; this.funcs = {}; }
+    Scope.prototype.defineVar = function (name, value) {
+      if (Object.prototype.hasOwnProperty.call(this.vars, name)) fail('The variable ' + name + ' is already defined in this scope.');
+      this.vars[name] = { value: value };
+    };
+    Scope.prototype.lookupVar = function (name) {
+      for (var s = this; s; s = s.parent) if (Object.prototype.hasOwnProperty.call(s.vars, name)) return s.vars[name];
+      fail('The variable ' + name + ' is not defined in this scope.');
+    };
+    Scope.prototype.lookupFunc = function (name, arity) {
+      for (var s = this; s; s = s.parent) if (s.funcs[name + '/' + arity]) return s.funcs[name + '/' + arity];
+      fail('The function ' + name + '/' + arity + ' is not defined in this scope.');
+    };
+    function fail(msg) { throw new StageError('interpreter', msg); }
+    var scope = new Scope(new Scope(null));
+    scope.funcs['print/1'] = function (a) { out.push(show(a[0])); return NIL; };
+
+    function requireType(cls, v) {
+      if (javaClass(v) !== cls) fail('Expected type ' + cls + ', received ' + javaClass(v) + '.');
+      return v;
+    }
+    function block(stmts) {
+      var saved = scope; scope = new Scope(scope);
+      try { stmts.forEach(visit); } finally { scope = saved; }
+    }
+    function truthy(e) { return requireType('Boolean', visit(e)); }
+    function compare(a, b) {
+      var ca = javaClass(a);
+      if (['Boolean', 'BigInteger', 'BigDecimal', 'Character', 'String'].indexOf(ca) < 0) fail('Expected a Comparable value, received ' + ca + '.');
+      if (javaClass(b) !== ca) fail('Expected type ' + ca + ', received ' + javaClass(b) + '.');
+      if (ca === 'BigDecimal') return a.cmp(b);
+      if (ca === 'Character') { a = a.c; b = b.c; }
+      if (ca === 'Boolean') { a = a ? 1 : 0; b = b ? 1 : 0; }
+      return a < b ? -1 : a > b ? 1 : 0;
+    }
+    function equals(a, b) {
+      if (javaClass(a) !== javaClass(b)) return false;
+      if (a instanceof Dec) return a.u === b.u && a.s === b.s;
+      if (a instanceof Char) return a.c === b.c;
+      return a === b;
+    }
+    function arithmetic(op, a, b) {
+      if (typeof a === 'bigint') {
+        requireType('BigInteger', b);
+        if (op === '+') return a + b; if (op === '-') return a - b; if (op === '*') return a * b;
+        if (b === 0n) fail('Division by zero.');
+        return a / b;
+      }
+      if (a instanceof Dec) {
+        requireType('BigDecimal', b);
+        if (op === '+') return a.add(b); if (op === '-') return a.sub(b); if (op === '*') return a.mul(b);
+        if (b.u === 0n) fail('Division by zero.');
+        return a.div(b);
+      }
+      fail('Operator ' + op + ' needs two numbers of the same type.');
+    }
+
+    function visit(n) {
+      if (++steps > limit) fail('Stopped after ' + limit + ' steps. Is there a loop that never ends?');
+      switch (n.kind) {
+        case 'Source':
+          n.fields.forEach(visit); n.methods.forEach(visit);
+          return scope.lookupFunc('main', 0)([]);
+        case 'Field':
+        case 'Declaration':
+          scope.defineVar(n.name, n.value ? visit(n.value) : NIL);
+          return NIL;
+        case 'Method': {
+          var defining = scope;
+          scope.funcs[n.name + '/' + n.params.length] = function (args) {
+            var previous = scope;
+            scope = new Scope(defining);
+            try {
+              n.params.forEach(function (pp, k) { scope.defineVar(pp.name, args[k]); });
+              n.statements.forEach(visit);
+              return NIL;
+            } catch (e) {
+              if (e instanceof ReturnSignal) return e.value;
+              throw e;
+            } finally { scope = previous; }
+          };
+          return NIL;
+        }
+        case 'ExpressionStmt': visit(n.expression); return NIL;
+        case 'Assignment': {
+          if (n.receiver.kind !== 'Access') fail('Only a variable or a field can be assigned to.');
+          var val = visit(n.value);
+          if (n.receiver.receiver) fail('Objects have no fields here.');
+          scope.lookupVar(n.receiver.name).value = val;
+          return NIL;
+        }
+        case 'If':
+          if (truthy(n.condition)) block(n.then); else block(n.else);
+          return NIL;
+        case 'For': {
+          var saved = scope; scope = new Scope(scope);
+          try {
+            if (n.init) visit(n.init);
+            while (truthy(n.condition)) { block(n.statements); if (n.increment) visit(n.increment); }
+          } finally { scope = saved; }
+          return NIL;
+        }
+        case 'While':
+          while (truthy(n.condition)) block(n.statements);
+          return NIL;
+        case 'Return': throw new ReturnSignal(visit(n.value));
+        case 'Literal': return n.value;
+        case 'Group': return visit(n.expression);
+        case 'Binary': {
+          var op = n.operator;
+          if (op === 'AND' || op === '&&') return truthy(n.left) ? truthy(n.right) : false;
+          if (op === 'OR' || op === '||') return truthy(n.left) ? true : truthy(n.right);
+          var a = visit(n.left), b = visit(n.right);
+          switch (op) {
+            case '<': return compare(a, b) < 0;
+            case '<=': return compare(a, b) <= 0;
+            case '>': return compare(a, b) > 0;
+            case '>=': return compare(a, b) >= 0;
+            case '==': return equals(a, b);
+            case '!=': return !equals(a, b);
+            case '+':
+              if (typeof a === 'string' || typeof b === 'string') return show(a) + show(b);
+              return arithmetic(op, a, b);
+            default: return arithmetic(op, a, b);
+          }
+        }
+        case 'Access':
+          if (n.receiver) { visit(n.receiver); fail('The variable ' + n.name + ' is not defined in this scope.'); }
+          return scope.lookupVar(n.name).value;
+        case 'Function': {
+          if (n.receiver) { visit(n.receiver); n.args.forEach(visit); fail('The function ' + n.name + '/' + (n.args.length + 1) + ' is not defined in this scope.'); }
+          var argv = n.args.map(visit);
+          return scope.lookupFunc(n.name, argv.length)(argv);
+        }
+      }
+      fail('Unknown node ' + n.kind + '.');
+    }
+    try {
+      var result = visit(ast);
+      return { output: out, result: result };
+    } catch (e) {
+      if (e instanceof RangeError) e = new StageError('interpreter', 'Too much recursion. Does a function call itself forever?');
+      e.output = out;
+      throw e;
+    }
+  }
+
+  return { lex: lex, parse: parse, analyze: analyze, interpret: interpret, show: show, StageError: StageError, NIL: NIL, Dec: Dec, Char: Char };
+})();
+if (typeof module !== 'undefined') module.exports = PLC;
+
+</script>
+<script>
+(function () {
+  'use strict';
+  var REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+  /* ---------- tabs ---------- */
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('nav.chain button'));
+  function openTab(btn, focus) {
+    tabs.forEach(function (b) { b.setAttribute('aria-selected', 'false'); b.tabIndex = -1; });
+    document.querySelectorAll('.panel').forEach(function (p) { p.classList.remove('active'); });
+    btn.setAttribute('aria-selected', 'true'); btn.tabIndex = 0;
+    $(btn.dataset.tab).classList.add('active');
+    if (focus) btn.focus();
+    btn.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    window.scrollTo({ top: 0, behavior: REDUCED ? 'auto' : 'smooth' });
+  }
+  tabs.forEach(function (b, i) {
+    b.tabIndex = i === 0 ? 0 : -1;
+    b.addEventListener('click', function () { openTab(b, false); });
+    b.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowRight') { e.preventDefault(); openTab(tabs[(i + 1) % tabs.length], true); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); openTab(tabs[(i - 1 + tabs.length) % tabs.length], true); }
+    });
+  });
+
+  /* ---------- theme ---------- */
+  var root = document.documentElement;
+  function currentTheme() { return root.getAttribute('data-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); }
+  $('themeBtn').addEventListener('click', function () {
+    var next = currentTheme() === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    try { localStorage.setItem('plc-theme', next); } catch (e) {}
+  });
+  try { var saved = localStorage.getItem('plc-theme'); if (saved) root.setAttribute('data-theme', saved); } catch (e) {}
+
+  /* ---------- shared rendering ---------- */
+  function literalText(v) {
+    if (v === PLC.NIL) return 'NIL';
+    if (v === true) return 'TRUE';
+    if (v === false) return 'FALSE';
+    if (typeof v === 'string') return '"' + v.replace(/\n/g, '\\n').replace(/\t/g, '\\t') + '"';
+    if (v instanceof PLC.Char) return "'" + (v.c === '\n' ? '\\n' : v.c === '\t' ? '\\t' : v.c) + "'";
+    return PLC.show(v);
+  }
+  function valueText(v) {
+    if (typeof v === 'string') return '"' + v + '"';
+    if (v instanceof PLC.Char) return "'" + v.c + "'";
+    return PLC.show(v);
+  }
+  function tokenChips(tokens) {
+    if (!tokens.length) return '<span class="empty">no tokens</span>';
+    return '<div class="toks">' + tokens.map(function (t) {
+      return '<span class="tok ' + t.type + '"><b>' + esc(t.literal) + '</b><small>' + t.type + ' @' + t.index + '</small></span>';
+    }).join('') + '</div>';
+  }
+  function errorBox(e, src) {
+    var html = '<div class="errbox"><strong>' + esc(e.message) + '</strong>';
+    if (typeof e.index === 'number' && src !== undefined) {
+      var before = src.slice(0, e.index), line = before.split('\n').length;
+      var lineStart = before.lastIndexOf('\n') + 1, lineEnd = src.indexOf('\n', e.index);
+      var text = src.slice(lineStart, lineEnd < 0 ? src.length : lineEnd);
+      var col = e.index - lineStart;
+      html += '<pre>line ' + line + ', index ' + e.index + '\n' + esc(text) + '\n' + ' '.repeat(Math.max(0, col)) + '^</pre>';
+    }
+    return html + '</div>';
+  }
+
+  /* ---------- expression tree as SVG ---------- */
+  function children(n) {
+    switch (n.kind) {
+      case 'Binary': return [n.left, n.right];
+      case 'Group': return [n.expression];
+      case 'Access': return n.receiver ? [n.receiver] : [];
+      case 'Function': return (n.receiver ? [n.receiver] : []).concat(n.args);
+      default: return [];
+    }
+  }
+  function label(n) {
+    switch (n.kind) {
+      case 'Literal': return literalText(n.value);
+      case 'Binary': return n.operator;
+      case 'Group': return '( )';
+      case 'Access': return (n.receiver ? '.' : '') + n.name;
+      case 'Function': return (n.receiver ? '.' : '') + n.name + '()';
+    }
+    return n.kind;
+  }
+  var KIND_NAME = { Literal: 'Literal', Binary: 'Binary', Group: 'Group', Access: 'Access', Function: 'Function' };
+  function drawTree(ast, opts) {
+    opts = opts || {};
+    var nodes = [], leaf = 0, maxDepth = 0;
+    (function lay(n, d) {
+      var kids = children(n), item = { n: n, d: d, kids: [] };
+      nodes.push(item);
+      if (d > maxDepth) maxDepth = d;
+      if (!kids.length) { item.x = leaf++; }
+      else {
+        kids.forEach(function (k) { item.kids.push(lay(k, d + 1)); });
+        item.x = item.kids.reduce(function (s, k) { return s + k.x; }, 0) / item.kids.length;
+      }
+      return item;
+    })(ast, 0);
+    var extra = (opts.types ? 16 : 0) + (opts.values ? 15 : 0);
+    var COLW = 92, ROWH = 74 + extra, PAD = 24;
+    var W = Math.max(1, leaf) * COLW + PAD * 2, H = maxDepth * ROWH + 32 + extra + PAD * 2;
+    function cx(it) { return PAD + COLW / 2 + it.x * COLW; }
+    function cy(it) { return PAD + 16 + it.d * ROWH; }
+    var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" style="max-width:100%" role="img" aria-label="' + esc(opts.aria || 'Syntax tree') + '">';
+    nodes.forEach(function (it) {
+      it.kids.forEach(function (k) {
+        s += '<line x1="' + cx(it) + '" y1="' + (cy(it) + 18 + extra) + '" x2="' + cx(k) + '" y2="' + (cy(k) - 16) + '" stroke="var(--rule)" stroke-width="2"/>';
+      });
+    });
+    nodes.forEach(function (it) {
+      var lab = label(it.n), w = Math.max(46, lab.length * 9 + 22), x = cx(it), y = cy(it);
+      var stroke = 'var(--parser)', fill = 'var(--panel)';
+      if (opts.current === it.n) { stroke = 'var(--interp)'; fill = 'var(--interp-soft)'; }
+      s += '<g><title>' + esc(KIND_NAME[it.n.kind] || it.n.kind) + '</title>' +
+        '<rect x="' + (x - w / 2) + '" y="' + (y - 16) + '" width="' + w + '" height="32" rx="7" fill="' + fill + '" stroke="' + stroke + '" stroke-width="2"/>' +
+        '<text x="' + x + '" y="' + (y + 5) + '" text-anchor="middle" font-size="15" font-family="ui-monospace, Menlo, Consolas, monospace" fill="var(--ink)">' + esc(lab) + '</text>';
+      if (opts.types && it.n.type) {
+        s += '<text x="' + x + '" y="' + (y + 33) + '" text-anchor="middle" font-size="12" fill="var(--analyzer)" font-weight="700">' + esc(it.n.type) + '</text>';
+      }
+      if (opts.values && opts.values.has(it.n)) {
+        s += '<text x="' + x + '" y="' + (y + 33 + (opts.types && it.n.type ? 14 : 0)) + '" text-anchor="middle" font-size="12.5" fill="var(--interp)" font-weight="700">= ' + esc(valueText(opts.values.get(it.n))) + '</text>';
+      }
+      s += '</g>';
+    });
+    return s + '</svg>';
+  }
+  function postOrder(n, out) { children(n).forEach(function (k) { postOrder(k, out); }); out.push(n); return out; }
+
+  /* ---------- program outline ---------- */
+  function outline(ast, withTypes) {
+    var lines = [];
+    function ty(n) { return withTypes && n.type ? ' <span class="ty">: ' + esc(n.type) + '</span>' : ''; }
+    function kw(s) { return '<span class="kw">' + s + '</span>'; }
+    function rec(n, prefix, last, name) {
+      var head = '<span class="g">' + (prefix === null ? '' : prefix + (last ? '└─ ' : '├─ ')) + '</span>' + (name ? name + ': ' : ''), kids = [], text = '';
+      switch (n.kind) {
+        case 'Source': text = kw('Source'); kids = n.fields.map(function (f) { return [f]; }).concat(n.methods.map(function (m) { return [m]; })); break;
+        case 'Field': text = kw('Field') + ' ' + esc(n.name) + ': ' + esc(n.typeName) + (n.constant ? ' CONST' : ''); if (n.value) kids = [[n.value, 'value']]; break;
+        case 'Method': text = kw('Method') + ' ' + esc(n.name) + '(' + n.params.map(function (p) { return esc(p.name) + ': ' + esc(p.typeName); }).join(', ') + ')' + (n.returnTypeName ? ': ' + esc(n.returnTypeName) : ''); kids = n.statements.map(function (s) { return [s]; }); break;
+        case 'Declaration': text = kw('Declaration') + ' ' + esc(n.name) + (n.typeName ? ': ' + esc(n.typeName) : '') + ty(n); if (n.value) kids = [[n.value, 'value']]; break;
+        case 'Assignment': text = kw('Assignment'); kids = [[n.receiver, 'target'], [n.value, 'value']]; break;
+        case 'ExpressionStmt': text = kw('Expression statement'); kids = [[n.expression]]; break;
+        case 'If': text = kw('If'); kids = [[n.condition, 'condition']].concat(n.then.map(function (s) { return [s, 'then']; }), n.else.map(function (s) { return [s, 'else']; })); break;
+        case 'For': text = kw('For'); kids = (n.init ? [[n.init, 'start']] : []).concat([[n.condition, 'condition']], n.increment ? [[n.increment, 'step']] : [], n.statements.map(function (s) { return [s, 'body']; })); break;
+        case 'While': text = kw('While'); kids = [[n.condition, 'condition']].concat(n.statements.map(function (s) { return [s, 'body']; })); break;
+        case 'Return': text = kw('Return'); kids = [[n.value]]; break;
+        case 'Literal': text = 'Literal ' + esc(literalText(n.value)) + ty(n); break;
+        case 'Group': text = 'Group' + ty(n); kids = [[n.expression]]; break;
+        case 'Binary': text = 'Binary ' + esc(n.operator) + ty(n); kids = [[n.left], [n.right]]; break;
+        case 'Access': text = 'Access ' + esc(n.name) + ty(n); if (n.receiver) kids = [[n.receiver, 'object']]; break;
+        case 'Function': text = 'Call ' + esc(n.name) + '()' + ty(n); kids = (n.receiver ? [[n.receiver, 'object']] : []).concat(n.args.map(function (a) { return [a, 'arg']; })); break;
+      }
+      lines.push(prefix === null ? text : head + text);
+      var childPrefix = prefix === null ? '' : prefix + (last ? '   ' : '│  ');
+      kids.forEach(function (k, i) { rec(k[0], childPrefix, i === kids.length - 1, k[1]); });
+    }
+    rec(ast, null, true);
+    return lines.join('\n');
+  }
+
+  /* ---------- tab 1: the hero stepper ---------- */
+  var STAGES = [
+    { id: 'chars', name: 'Text', cls: '' },
+    { id: 'lexer', name: 'Lexer', cls: 's-lexer' },
+    { id: 'parser', name: 'Parser', cls: 's-parser' },
+    { id: 'analyzer', name: 'Analyzer', cls: 's-analyzer' },
+    { id: 'interp', name: 'Interpreter', cls: 's-interp' }
+  ];
+  var hero = { stage: 0 };
+  var heroSteps = $('heroSteps');
+  STAGES.forEach(function (st, i) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = st.cls; b.textContent = (i + 1) + '. ' + st.name;
+    b.addEventListener('click', function () { hero.stage = i; renderHero(); });
+    heroSteps.appendChild(b);
+  });
+  function runHero(src) {
+    var r = { src: src };
+    try { r.tokens = PLC.lex(src); } catch (e) { r.err = e; r.failAt = 1; return r; }
+    try { r.ast = PLC.parse(r.tokens, 'expression'); } catch (e) { r.err = e; r.failAt = 2; return r; }
+    try { PLC.analyze(r.ast); } catch (e) { r.err = e; r.failAt = 3; return r; }
+    try { r.values = new Map(); postOrder(r.ast, []).forEach(function (n) { r.values.set(n, PLC.interpret(n).result); }); }
+    catch (e) { r.err = e; r.failAt = 4; return r; }
+    return r;
+  }
+  function renderHero() {
+    var src = $('heroIn').value, r = runHero(src), i = hero.stage, html = '', cap = '';
+    Array.prototype.forEach.call(heroSteps.children, function (b, k) { b.classList.toggle('on', k === i); b.classList.toggle('done', k < i); });
+    if (r.failAt !== undefined && i >= r.failAt) {
+      html = errorBox(r.err, src);
+      cap = 'The ' + STAGES[r.failAt].name.toLowerCase() + ' stopped here, so the later stages never run.';
+    } else if (i === 0) {
+      html = '<div class="chars">' + src.split('').map(function (c, k) { return '<span>' + (c === ' ' ? '&nbsp;' : esc(c)) + '<small>' + k + '</small></span>'; }).join('') + '</div>';
+      cap = 'To the computer, your code starts as nothing but characters, each with an index.';
+    } else if (i === 1) {
+      html = tokenChips(r.tokens);
+      cap = 'The lexer groups characters into ' + r.tokens.length + ' tokens and throws away the spaces.';
+    } else if (i === 2) {
+      html = '<div class="treewrap">' + drawTree(r.ast, { aria: 'Syntax tree of the expression' }) + '</div>';
+      cap = 'The parser arranges the tokens into a tree. Lower in the tree means done first.';
+    } else if (i === 3) {
+      html = '<div class="treewrap">' + drawTree(r.ast, { types: true }) + '</div>';
+      cap = 'The analyzer labels every node with its type, without computing anything. The whole thing is ' + r.ast.type + '.';
+    } else {
+      html = '<div class="treewrap">' + drawTree(r.ast, { types: true, values: r.values }) + '</div>';
+      cap = 'The interpreter computes from the leaves up. The answer is ' + valueText(r.values.get(r.ast)) + '.';
+    }
+    $('heroView').innerHTML = html + '<p class="stagecap">' + cap + '</p>';
+    $('heroBack').disabled = i === 0;
+    $('heroNext').disabled = i === STAGES.length - 1;
+  }
+  $('heroBack').addEventListener('click', function () { if (hero.stage > 0) { hero.stage--; renderHero(); } });
+  $('heroNext').addEventListener('click', function () { if (hero.stage < STAGES.length - 1) { hero.stage++; renderHero(); } });
+  $('heroIn').addEventListener('input', renderHero);
+  renderHero();
+
+  /* ---------- tab 2: lexer ---------- */
+  function renderLex() {
+    var src = $('lexIn').value;
+    try { $('lexOut').innerHTML = tokenChips(PLC.lex(src)); }
+    catch (e) { $('lexOut').innerHTML = errorBox(e, src); }
+  }
+  ['LET total: Integer = price * 2;', 'x-1', 'x+10', 'a && b', '007', 'print("hi\\n", \'c\', 2.5)', '"no closing quote'].forEach(function (ex) {
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'btn ex'; b.textContent = ex;
+    b.addEventListener('click', function () { $('lexIn').value = ex; renderLex(); });
+    $('lexEx').appendChild(b);
+  });
+  $('lexIn').addEventListener('input', renderLex);
+  renderLex();
+
+  /* ---------- tab 3: tree builder ---------- */
+  function renderTree() {
+    var src = $('treeIn').value;
+    try { $('treeOut').innerHTML = drawTree(PLC.parse(PLC.lex(src), 'expression')); }
+    catch (e) { $('treeOut').innerHTML = errorBox(e, src); }
+  }
+  ['1 + 2 * 3', '(1 + 2) * 3', '1 - 2 - 3', 'a OR b AND c', 'x < y + 1', 'f(1, g(2))', 'obj.method(x).size'].forEach(function (ex) {
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'btn ex'; b.textContent = ex;
+    b.addEventListener('click', function () { $('treeIn').value = ex; renderTree(); });
+    $('treeEx').appendChild(b);
+  });
+  $('treeIn').addEventListener('input', renderTree);
+  renderTree();
+
+  /* ---------- tab 4: statement outline ---------- */
+  (function () {
+    var sample = 'LET count: Integer = 0;\n\nDEF main(): Integer DO\n    WHILE count < 3 DO\n        print(count);\n        count = count + 1;\n    END\n    RETURN 0;\nEND';
+    $('stmtOutline').innerHTML = esc(sample) + '\n\n' + outline(PLC.parse(PLC.lex(sample)), false);
+  })();
+
+  /* ---------- tab 5: evaluation stepper ---------- */
+  var ev = { ast: null, order: [], k: 0, values: new Map(), err: null };
+  function evalReset() {
+    var src = $('evalIn').value;
+    ev = { ast: null, order: [], k: 0, values: new Map(), err: null };
+    try { ev.ast = PLC.parse(PLC.lex(src), 'expression'); ev.order = postOrder(ev.ast, []); }
+    catch (e) { ev.err = e; }
+    renderEval();
+  }
+  function evalStep() {
+    if (!ev.ast || ev.k >= ev.order.length) return;
+    var n = ev.order[ev.k];
+    try { ev.values.set(n, PLC.interpret(n).result); ev.k++; }
+    catch (e) { ev.err = e; }
+    renderEval();
+  }
+  function renderEval() {
+    var src = $('evalIn').value, cap;
+    if (!ev.ast) { $('evalOut').innerHTML = errorBox(ev.err, src); $('evalCap').textContent = ''; return; }
+    var current = ev.k > 0 ? ev.order[ev.k - 1] : null;
+    $('evalOut').innerHTML = drawTree(ev.ast, { values: ev.values, current: current }) + (ev.err ? errorBox(ev.err) : '');
+    if (ev.err) cap = 'The interpreter stopped: this is a runtime error.';
+    else if (ev.k === 0) cap = 'Nothing evaluated yet. The first node visited is the deepest one on the left.';
+    else if (ev.k === ev.order.length) cap = 'Done. The top node holds the answer: ' + valueText(ev.values.get(ev.ast)) + '.';
+    else {
+      var n = current, kids = children(n);
+      cap = kids.length
+        ? 'visit(' + n.kind + ') used its children\'s values, ' + kids.map(function (c) { return valueText(ev.values.get(c)); }).join(' and ') + ', to get ' + valueText(ev.values.get(n)) + '.'
+        : 'visit(' + n.kind + ') has no children, so it simply returns ' + valueText(ev.values.get(n)) + '.';
+    }
+    $('evalCap').textContent = cap;
+    $('evalStep').disabled = !!ev.err || ev.k >= ev.order.length;
+  }
+  $('evalStep').addEventListener('click', evalStep);
+  $('evalAll').addEventListener('click', function () { while (ev.ast && !ev.err && ev.k < ev.order.length) { var n = ev.order[ev.k]; try { ev.values.set(n, PLC.interpret(n).result); ev.k++; } catch (e) { ev.err = e; } } renderEval(); });
+  $('evalReset').addEventListener('click', evalReset);
+  $('evalIn').addEventListener('input', evalReset);
+  evalReset();
+
+  /* ---------- tab 6: type family + assignable checker ---------- */
+  (function () {
+    var pos = { Any: [300, 30], Nil: [90, 120], Boolean: [230, 120], Comparable: [430, 120], Integer: [250, 215], Decimal: [370, 215], Character: [490, 215], String: [610, 215] };
+    var parent = { Nil: 'Any', Boolean: 'Any', Comparable: 'Any', Integer: 'Comparable', Decimal: 'Comparable', Character: 'Comparable', String: 'Comparable' };
+    var s = '<svg viewBox="0 0 700 250" width="700" style="max-width:100%" role="img" aria-label="Type family tree">';
+    Object.keys(parent).forEach(function (t) {
+      var a = pos[t], b = pos[parent[t]];
+      s += '<line x1="' + a[0] + '" y1="' + (a[1] - 16) + '" x2="' + b[0] + '" y2="' + (b[1] + 16) + '" stroke="var(--rule)" stroke-width="2"/>';
+    });
+    Object.keys(pos).forEach(function (t) {
+      var p = pos[t], w = t.length * 10 + 30, special = t === 'Any' || t === 'Comparable';
+      s += '<rect x="' + (p[0] - w / 2) + '" y="' + (p[1] - 16) + '" width="' + w + '" height="32" rx="7" fill="' + (special ? 'var(--analyzer-soft)' : 'var(--panel)') + '" stroke="var(--analyzer)" stroke-width="' + (special ? 2.5 : 1.5) + '"/>' +
+        '<text x="' + p[0] + '" y="' + (p[1] + 5) + '" text-anchor="middle" font-size="15" fill="var(--ink)" font-weight="' + (special ? 700 : 500) + '">' + t + '</text>';
+    });
+    $('family').innerHTML = s + '</svg>';
+
+    var ALL = ['Integer', 'Decimal', 'Character', 'String', 'Boolean', 'Nil', 'Comparable', 'Any'];
+    ALL.forEach(function (t) {
+      $('asType').insertAdjacentHTML('beforeend', '<option>' + t + '</option>');
+      $('asTarget').insertAdjacentHTML('beforeend', '<option>' + t + '</option>');
+    });
+    $('asType').value = 'String'; $('asTarget').value = 'Comparable';
+    function verdict() {
+      var type = $('asType').value, target = $('asTarget').value, v = $('asVerdict'), why;
+      if (target === type) why = 'Rule 1: they are the same type.';
+      else if (target === 'Any') why = 'Rule 2: anything fits into Any.';
+      else if (target === 'Comparable' && ['Integer', 'Decimal', 'Character', 'String'].indexOf(type) >= 0) why = 'Rule 3: ' + type + ' is one of the four Comparable types.';
+      if (why) { v.className = 'verdict yes'; v.textContent = 'Assignable. ' + why; }
+      else { v.className = 'verdict nope'; v.textContent = 'Not assignable: requireAssignable(' + target + ', ' + type + ') throws a RuntimeException. None of the three rules apply.'; }
+    }
+    $('asType').addEventListener('change', verdict); $('asTarget').addEventListener('change', verdict);
+    verdict();
+  })();
+
+  /* ---------- tab 7: playground ---------- */
+  var SAMPLES = [
+    ['Hello, World', 'DEF main(): Integer DO\n    print("Hello, World!");\n    RETURN 0;\nEND'],
+    ['A loop and a global', 'LET total: Integer = 0;\n\nDEF main(): Integer DO\n    LET i = 1;\n    WHILE i <= 5 DO\n        total = total + i;\n        i = i + 1;\n    END\n    print("Sum is " + total);\n    RETURN 0;\nEND'],
+    ['Recursion', 'DEF fact(n: Integer): Integer DO\n    IF n <= 1 DO\n        RETURN 1;\n    END\n    RETURN n * fact(n - 1);\nEND\n\nDEF main(): Integer DO\n    print(fact(10));\n    RETURN 0;\nEND'],
+    ['FOR loop', 'DEF main(): Integer DO\n    LET sum = 0;\n    LET i = 0;\n    FOR (i = 0; i < 5; i = i + 1)\n        sum = sum + i;\n    END\n    print(sum);\n    RETURN 0;\nEND'],
+    ['Number rules', 'DEF main(): Integer DO\n    print(7 / 2);\n    print(1.2 / 3.4);\n    print(0.5 / 2.0);\n    print("a" + 1);\n    print(1 < 2 AND "b" > "a");\n    RETURN 0;\nEND'],
+    ['Breaks the analyzer: wrong type', 'LET count: Integer = 1;\n\nDEF main(): Integer DO\n    count = "five";\n    print(count);\n    RETURN 0;\nEND'],
+    ['Breaks the analyzer: main has no type', 'DEF main() DO\n    print("Hello");\nEND'],
+    ['Breaks the interpreter: divide by zero', 'DEF main(): Integer DO\n    print(10 / 0);\n    RETURN 0;\nEND'],
+    ['Breaks the parser: missing ;', 'DEF main(): Integer DO\n    print("Hello")\n    RETURN 0;\nEND'],
+    ['Breaks the lexer: no closing quote', 'DEF main(): Integer DO\n    print("Hello);\n    RETURN 0;\nEND'],
+    ['Scope: a variable that disappears', 'DEF main(): Integer DO\n    IF TRUE DO\n        LET inside = 1;\n        print(inside);\n    END\n    RETURN inside;\nEND']
+  ];
+  SAMPLES.forEach(function (s, i) { $('pgSample').insertAdjacentHTML('beforeend', '<option value="' + i + '">' + esc(s[0]) + '</option>'); });
+  $('pgSample').addEventListener('change', function () { $('pgCode').value = SAMPLES[+$('pgSample').value][1]; runPlayground(); });
+  $('pgCode').value = SAMPLES[0][1];
+
+  function runPlayground() {
+    var src = $('pgCode').value, skip = $('pgSkip').checked;
+    var st = { lexer: 'wait', parser: 'wait', analyzer: 'wait', interp: 'wait' }, tokens, ast, err, failed = null;
+    var outs = { tokens: '', tree: '', types: '', run: '' };
+    try { tokens = PLC.lex(src); st.lexer = 'pass'; outs.tokens = tokenChips(tokens); }
+    catch (e) { st.lexer = 'fail'; failed = 'lexer'; outs.tokens = errorBox(e, src); }
+    if (!failed) {
+      try { ast = PLC.parse(tokens); st.parser = 'pass'; outs.tree = '<pre class="outline">' + outline(ast, false) + '</pre>'; }
+      catch (e) { st.parser = 'fail'; failed = 'parser'; outs.tree = errorBox(e, src); }
+    }
+    if (!failed) {
+      if (skip) { st.analyzer = 'skipped'; outs.types = '<span class="empty">Skipped. This is how P3 alone would run it, with no type checking.</span>'; }
+      else {
+        try {
+          var notes = PLC.analyze(ast);
+          st.analyzer = 'pass';
+          outs.types = '<ul class="outlines">' + notes.map(function (n) { return '<li>' + esc(n) + '</li>'; }).join('') + '</ul>' +
+            '<pre class="outline" style="margin-top:0.5rem">' + outline(ast, true) + '</pre>';
+        } catch (e) { st.analyzer = 'fail'; failed = 'analyzer'; outs.types = errorBox(e); }
+      }
+    }
+    if (!failed) {
+      try {
+        var res = PLC.interpret(ast);
+        st.interp = 'pass';
+        outs.run = '<pre class="runout">' + (res.output.length ? esc(res.output.join('\n')) : '(nothing printed)') + '</pre><p class="result">main() returned ' + esc(valueText(res.result)) + '</p>';
+      } catch (e) {
+        st.interp = 'fail'; failed = 'interp';
+        outs.run = (e.output && e.output.length ? '<pre class="runout">' + esc(e.output.join('\n')) + '</pre>' : '') + errorBox(e);
+      }
+    }
+    var labels = { lexer: 'Lexer', parser: 'Parser', analyzer: 'Analyzer', interp: 'Interpreter' };
+    $('pgStatus').innerHTML = Object.keys(labels).map(function (k) {
+      var s = st[k], cls = s === 'pass' ? 'pass s-' + k : s === 'fail' ? 'fail' : '';
+      var mark = s === 'pass' ? 'passed' : s === 'fail' ? 'stopped here' : s === 'skipped' ? 'skipped' : 'not reached';
+      return '<span class="' + cls + '">' + labels[k] + ': ' + mark + '</span>';
+    }).join('');
+    function fill(id, html, stage) { $(id).innerHTML = html || '<span class="empty">' + (st[stage] === 'wait' ? 'Not reached: an earlier stage stopped.' : '') + '</span>'; }
+    fill('pgTokens', outs.tokens, 'lexer'); fill('pgTree', outs.tree, 'parser'); fill('pgTypes', outs.types, 'analyzer'); fill('pgRunOut', outs.run, 'interp');
+  }
+  $('pgRun').addEventListener('click', runPlayground);
+  $('pgSkip').addEventListener('change', runPlayground);
+  $('pgCode').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); runPlayground(); }
+    if (e.key === 'Tab') { e.preventDefault(); var t = e.target, a = t.selectionStart; t.value = t.value.slice(0, a) + '    ' + t.value.slice(t.selectionEnd); t.selectionStart = t.selectionEnd = a + 4; }
+  });
+  runPlayground();
+
+  /* ---------- tab 9: quiz ---------- */
+  var QS = [
+    { q: 'What does the lexer hand to the parser?', o: ['A list of tokens', 'A syntax tree', 'A typed tree', 'Printed output'], a: 0, ok: 'Right.', no: 'Think of who reads words first.',
+      e: 'The lexer cuts the text into tokens: type, text and index. The parser builds the tree from those.' },
+    { q: 'How does the lexer read x-1 with no spaces?', o: ['x, minus, 1', 'As one name', 'x and -1', 'As an error'], a: 1, ok: 'Correct.', no: 'Check the identifier rule.',
+      e: 'Identifiers may contain hyphens, so x-1 is a single IDENTIFIER. Write x - 1 with spaces to subtract.' },
+    { q: 'Why does 1 + 2 * 3 give 7 and not 9?', o: ['The lexer reorders it', 'Parsing goes right to left', 'Multiplication is a lower rung', 'The interpreter guesses'], a: 2, ok: 'Yes.', no: 'Think of the ladder.',
+      e: 'parseMultiplicativeExpression sits below parseAdditiveExpression, so 2 * 3 is grabbed first and ends up deeper in the tree.' },
+    { q: 'How does your parser group a OR b AND c?', o: ['a OR (b AND c)', 'It depends on values', 'It is a parse error', '(a OR b) AND c'], a: 3, ok: 'Right.', no: 'AND and OR share one rung.',
+      e: 'They are on the same line of the grammar, so they run left to right. Java would group it differently.' },
+    { q: 'You forget the WHILE line in parseStatement. What happens?', o: ['WHILE becomes a variable', 'The lexer rejects it', 'The loop runs forever', 'Nothing changes'], a: 0, ok: 'Exactly.', no: 'Think of the traffic cop.',
+      e: 'With no WHILE line, it falls through to the expression case: WHILE is parsed as a variable name, and the error complains about a missing semicolon.' },
+    { q: 'What does visit() return for a statement in the interpreter?', o: ['The last value', 'NIL', 'TRUE', 'The scope'], a: 1, ok: 'Correct.', no: 'Statements do, they don\'t produce.',
+      e: 'Statements change things and return Environment.NIL. Only expressions produce real values.' },
+    { q: 'Why does RETURN throw an exception?', o: ['To report a bug', 'To stop the lexer', 'To leave any loop', 'To end the program'], a: 2, ok: 'Yes.', no: 'Think of the fire alarm.',
+      e: 'An exception flies out of every loop and IF it is inside, until the method that called it catches it.' },
+    { q: 'A function\'s new scope is a child of which scope?', o: ['Where it was written', 'Where it is called', 'The scope of print', 'The newest block'], a: 0, ok: 'Right.', no: 'Think about definingScope.',
+      e: 'It is captured when the method is defined. Using the caller\'s scope would let functions see the caller\'s local variables.' },
+    { q: 'What does the analyzer add to the tree?', o: ['Values', 'Tokens', 'Types', 'Comments'], a: 2, ok: 'Correct.', no: 'It reads labels, not boxes.',
+      e: 'It sets a type on every expression, plus the variable or function each name refers to. It never computes values.' },
+    { q: 'Can a String value go into a Comparable variable?', o: ['Only if empty', 'Yes', 'No', 'Only if CONST'], a: 1, ok: 'Yes.', no: 'Check the three rules.',
+      e: 'Rule 3: Comparable accepts Integer, Decimal, Character and String.' },
+    { q: 'In P4 syntax, which of these must have a type written?', o: ['Every field', 'Every literal', 'Every RETURN', 'Every IF'], a: 0, ok: 'Right.', no: 'Look at the grammar changes.',
+      e: 'Fields and method parameters must state a type. Local LET variables can have a type, a value, or both.' },
+    { q: 'Who catches print(1 / 0)?', o: ['The lexer', 'The parser', 'The analyzer', 'The interpreter'], a: 3, ok: 'Correct.', no: 'Are types enough to know?',
+      e: 'Both sides are Integer, so the types are fine and the analyzer accepts it. Only running it reveals the zero.' }
+  ];
+  var host = $('quiz'), answered = 0, right = 0;
+  QS.forEach(function (item, qi) {
+    var d = document.createElement('div');
+    d.className = 'quiz';
+    d.innerHTML = '<p class="q"><span class="qn">Question ' + (qi + 1) + '</span>' + esc(item.q) + '</p><div class="opts">' +
+      item.o.map(function (t, j) { return '<button class="opt" type="button" data-i="' + j + '">' + esc(t) + '</button>'; }).join('') + '</div><div class="fb" role="status"></div>';
+    host.appendChild(d);
+    var fb = d.querySelector('.fb');
+    d.querySelectorAll('.opt').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var good = +b.dataset.i === item.a;
+        d.querySelectorAll('.opt').forEach(function (x) { x.disabled = true; if (+x.dataset.i === item.a) x.classList.add('correct'); });
+        if (!good) b.classList.add('wrong');
+        fb.className = 'fb show ' + (good ? 'good' : 'badfb');
+        fb.innerHTML = '<b>' + esc(good ? item.ok : item.no) + '</b>' + esc(item.e);
+        answered++; if (good) right++;
+        $('score').textContent = right + ' of ' + answered + ' correct, ' + QS.length + ' questions.';
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>
