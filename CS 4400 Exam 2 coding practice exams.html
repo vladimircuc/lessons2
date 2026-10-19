@@ -1,0 +1,656 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CS 4400 Exam 2 coding practice exams</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>:root{color-scheme:light;
+--bg:#F1F4F8;--surface:#FFFFFF;--ink:#17212B;--muted:#56626E;--line:#D7DDE5;
+--navy:#14365A;--gold:#B3A369;--gold-ink:#6B5C24;--hl:#FFE45C;--hl-ink:#17212B;
+--ok:#1B7346;--bad:#AE2A20;--code-bg:#EDF1F6;--code-ink:#1B2632;--k:#14365A;--s:#875700;--n:#1B7346;
+--sans:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+--mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;
+--bg:#0E1722;--surface:#152030;--ink:#E3E8EE;--muted:#9BA8B7;--line:#283646;
+--navy:#C3D7EE;--gold:#C9B97C;--gold-ink:#DCCD92;--hl:#F2D64A;--hl-ink:#121820;
+--ok:#62C28F;--bad:#F28B81;--code-bg:#1A2635;--code-ink:#DAE2EB;--k:#9EC3EC;--s:#E3C27A;--n:#8FD3AE}}
+:root[data-theme="dark"]{color-scheme:dark;
+--bg:#0E1722;--surface:#152030;--ink:#E3E8EE;--muted:#9BA8B7;--line:#283646;
+--navy:#C3D7EE;--gold:#C9B97C;--gold-ink:#DCCD92;--hl:#F2D64A;--hl-ink:#121820;
+--ok:#62C28F;--bad:#F28B81;--code-bg:#1A2635;--code-ink:#DAE2EB;--k:#9EC3EC;--s:#E3C27A;--n:#8FD3AE}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%;background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.58 var(--sans)}
+a{color:var(--navy);text-underline-offset:3px}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px;border-radius:3px}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 110px}
+.masthead{padding:4px 0 26px;border-bottom:1px solid var(--line);margin-bottom:26px}
+.course{font-size:15px;color:var(--muted);margin:0 0 8px}
+h1{font-size:clamp(2.1rem,5vw,3.3rem);line-height:1.04;letter-spacing:-.018em;margin:0 0 12px;color:var(--navy)}
+.lede{font-size:1.1rem;color:var(--muted);max-width:64ch;margin:0}
+h2{font-size:1.8rem;line-height:1.15;letter-spacing:-.01em;margin:0 0 12px;color:var(--navy)}
+h3{font-size:1.18rem;line-height:1.3;margin:2em 0 .5em;color:var(--navy)}
+h4{font-size:1rem;line-height:1.3;margin:1.3em 0 .4em}
+p,ul,ol{margin:0 0 1em}
+ul,ol{padding-left:1.35em}
+li{margin:.3em 0}
+code{font-family:var(--mono);font-size:.84em;background:var(--code-bg);padding:.1em .35em;border-radius:4px;white-space:nowrap}
+pre{font-family:var(--mono);font-size:13.5px;line-height:1.6;background:var(--code-bg);color:var(--code-ink);border:1px solid var(--line);border-radius:6px;padding:14px 16px;overflow-x:auto;margin:0 0 1.1em;tab-size:2}
+pre code{background:none;padding:0;font-size:inherit;white-space:pre}
+.k{color:var(--k);font-weight:700}.s{color:var(--s)}.n{color:var(--n)}
+.tscroll{overflow-x:auto;margin:0 0 1.2em;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:15px;line-height:1.45}
+table.wide{min-width:640px}
+th{text-align:left;vertical-align:bottom;font-weight:700;color:var(--navy);padding:8px 12px;border-bottom:2px solid var(--gold)}
+td{vertical-align:top;padding:8px 12px;border-bottom:1px solid var(--line)}
+td code{white-space:normal}
+table.data{width:auto;font-family:var(--mono);font-size:13px}
+table.data th,table.data td{padding:6px 12px;white-space:nowrap}
+table.data td.null{color:var(--muted);font-style:italic}
+mark{background:var(--hl);color:var(--hl-ink);padding:.05em .3em;border-radius:3px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.rel{font-family:var(--mono);font-size:14px;line-height:1.8;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 16px;margin:0 0 1em;overflow-x:auto}
+.rel div{white-space:nowrap}
+.rel .gap{height:.6em}
+.rel u{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px}
+.fk{color:var(--muted);font-size:.85em}
+.callout{border-left:4px solid var(--gold);background:var(--surface);padding:12px 16px;margin:0 0 1.2em;border-radius:0 6px 6px 0}
+.callout.trap{border-left-color:var(--bad)}
+.callout>:last-child{margin-bottom:0}
+.callout .label{display:block;font-weight:700;margin-bottom:4px;color:var(--gold-ink)}
+.callout.trap .label{color:var(--bad)}
+.ok{color:var(--ok);font-weight:700}.bad{color:var(--bad);font-weight:700}
+.meta{color:var(--muted);font-size:15px}
+.figure{background:#FFFFFF;border:1px solid var(--line);border-radius:6px;padding:12px;margin:0 0 1em;overflow-x:auto}
+.figure img{display:block;max-width:100%;height:auto;margin:0 auto}
+button{font:inherit}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;cursor:pointer;font-size:15px;line-height:1.3}
+.btn:hover{border-color:var(--gold)}
+.toolbar{display:flex;flex-wrap:wrap;gap:12px 22px;align-items:center;margin:0 0 6px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;padding:3px;background:var(--surface);gap:3px}
+.seg [role="tab"]{border:0;background:none;padding:8px 18px;border-radius:6px;color:var(--muted);cursor:pointer;font-size:15px;font-weight:700}
+.seg [role="tab"][aria-selected="true"]{background:var(--navy);color:var(--bg)}
+.switch{display:inline-flex;align-items:center;gap:9px;font-size:15px;cursor:pointer}
+.switch input{width:18px;height:18px;margin:0;accent-color:var(--navy)}
+/* topics layout */
+.pointmap{margin:24px 0 0;max-width:900px}
+.pm-row{display:grid;grid-template-columns:104px minmax(0,1fr);gap:12px;align-items:center;margin:0 0 8px}
+.pm-row .yr{font-size:14px;color:var(--muted);font-weight:700}
+.pm-bar{display:flex;height:42px;border-radius:6px;overflow:hidden}
+.pm-bar a{display:flex;align-items:center;justify-content:center;text-decoration:none;font-weight:700;font-size:15px;min-width:0}
+.pm-bar a+a{border-left:2px solid var(--bg)}
+.pm-bar a:hover{filter:brightness(1.08)}
+.c1{background:#14365A;color:#FFFFFF}.c2{background:#2F5F8A;color:#FFFFFF}.c3{background:#6F95BA;color:#0E1722}
+.c4{background:#B3A369;color:#17212B}.c5{background:#DCD0A3;color:#17212B}.c6{background:#8E99A6;color:#0E1722}
+.pm-legend{display:flex;flex-wrap:wrap;gap:6px 18px;margin:12px 0 0 116px;padding:0;list-style:none;font-size:14px;color:var(--muted)}
+.pm-legend li{display:flex;align-items:center;gap:7px;margin:0}
+.sw{width:12px;height:12px;border-radius:3px;display:inline-block}
+.pm-note{margin:12px 0 0 116px;font-size:14px;color:var(--muted)}
+.layout{display:grid;grid-template-columns:240px minmax(0,1fr);gap:44px;align-items:start}
+.rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px);display:flex;flex-direction:column;gap:2px;max-height:calc(100vh - 32px);overflow:auto}
+.rail [role="tab"]{display:block;text-align:left;border:0;border-left:3px solid transparent;background:none;color:var(--muted);padding:7px 12px;font-size:15px;line-height:1.3;cursor:pointer;border-radius:0 4px 4px 0}
+.rail [role="tab"]:hover{color:var(--ink)}
+.rail [role="tab"][aria-selected="true"]{color:var(--navy);font-weight:700;border-left-color:var(--gold);background:var(--surface)}
+.panel{max-width:82ch;min-width:0}
+.crib{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 30px}
+.crib h3{margin:1em 0 .4em}
+.crib ul{font-size:15px}
+@media (max-width:880px){
+.layout{grid-template-columns:minmax(0,1fr);gap:20px}
+.rail{flex-direction:row;overflow-x:auto;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);margin:0 -20px;padding:8px 20px;border-bottom:1px solid var(--line);max-height:none}
+.rail [role="tab"]{white-space:nowrap;border-left:0;border-bottom:3px solid transparent;border-radius:4px 4px 0 0}
+.rail [role="tab"][aria-selected="true"]{border-bottom-color:var(--gold)}
+.panel{scroll-margin-top:calc(env(safe-area-inset-top,0px) + 70px)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+}
+@media (max-width:640px){.pm-row{grid-template-columns:minmax(0,1fr);gap:4px}.pm-legend,.pm-note{margin-left:0}.crib{grid-template-columns:minmax(0,1fr)}h2{font-size:1.55rem}}
+/* exam pages */
+.exam{max-width:880px}
+.secthead{margin:46px 0 4px;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.secthead h2{margin:0}
+.pts{color:var(--muted);font-size:15px}
+.q{padding:22px 0 26px;border-top:1px solid var(--line)}
+.q>h3{margin:0 0 10px;display:flex;gap:10px;align-items:baseline}
+.qn{color:var(--gold-ink);font-variant-numeric:tabular-nums}
+.opts{list-style:none;padding:0;margin:0 0 1em}
+.opts li{display:flex;gap:10px;margin:7px 0}
+.opts li::before{content:"";flex:none;width:15px;height:15px;border:2px solid var(--muted);border-radius:50%;margin-top:4px}
+.opts.multi li::before{border-radius:3px}
+.optgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:0 0 1em}
+.optgrid figure{margin:0;min-width:0}
+.optgrid figcaption{font-weight:700;font-size:15px;margin:0 0 6px}
+.optgrid pre{margin:0;font-size:12.5px}
+@media (max-width:720px){.optgrid{grid-template-columns:minmax(0,1fr)}}
+.sol{margin-top:16px;padding:14px 18px 4px;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:0 6px 6px 0}
+.sol>h4:first-child{margin-top:0;color:var(--gold-ink);font-size:15px}
+.sol h4{color:var(--gold-ink);font-size:15px}
+.verdict{display:inline-block;font-weight:700;padding:2px 10px;border-radius:4px;background:var(--hl);color:var(--hl-ink)}
+.reveal{display:none;margin-top:12px}
+body.practice .sol{display:none}
+body.practice .reveal{display:inline-flex}
+body.practice .q.open .sol{display:block}
+.prompt{border-left:4px solid var(--navy);padding:2px 0 2px 16px;margin:0 0 1em;font-size:1.03rem}
+.codebox{display:grid}
+.codebox .copy{justify-self:end;margin:0 0 6px;padding:4px 12px;font-size:13px}
+details.all{margin:0 0 1.4em;border:1px solid var(--line);border-radius:6px;background:var(--surface);padding:10px 14px}
+details.all summary{cursor:pointer;font-weight:700;color:var(--navy)}
+details.all[open] summary{margin-bottom:10px}
+.fabbar{position:fixed;right:0;bottom:0;padding:0 16px calc(16px + env(safe-area-inset-bottom,0px)) 0;z-index:15}
+.fab{background:var(--navy);color:var(--bg);border-color:var(--navy);font-weight:700;box-shadow:0 3px 12px rgba(10,20,35,.25)}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(660px,100%);background:var(--surface);border-left:1px solid var(--line);z-index:30;overflow:auto;padding:calc(env(safe-area-inset-top,0px) + 18px) 20px calc(env(safe-area-inset-bottom,0px) + 28px);transform:translateX(100%);visibility:hidden;transition:transform .22s ease,visibility 0s linear .22s;box-shadow:-6px 0 24px rgba(10,20,35,.18)}
+.drawer.open{transform:none;visibility:visible;transition:transform .22s ease}
+.drawer-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.drawer-head h2{margin:0}
+.drawer h3{margin:1.5em 0 .2em}
+.drawer .meta{margin:0 0 .5em;font-size:14px}
+@media (prefers-reduced-motion:reduce){.drawer,.drawer.open{transition:none}}
+@media print{body{background:#fff;color:#000;font-size:11pt}.masthead,.rail,.fabbar,.drawer,.noprint,.toolbar{display:none!important}.layout{display:block}pre,.rel,.callout,.sol{background:#fff}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="masthead">
+<p class="course">CS 4400 Introduction to Database Systems, Exam 2 practice</p>
+<h1>Coding exams with solutions</h1>
+<p class="lede">The Fall 2025 and Spring 2026 coding practice exams on global_company. Every solution here passes the course autograder on all of its hidden test cases: 50 of 50 for Fall 2025 and 40 of 40 for Spring 2026.</p>
+</header>
+
+<section class="exam">
+<h2>Run a practice exam</h2>
+<ol>
+<li>In MySQL Workbench, open the semester’s <code>init.sql</code>, for example <code>sp26_exam2_v1_init.sql</code>, and run the whole file with the lightning bolt.</li>
+<li>Open the matching <code>student.sql</code>. Leave everything above and below the marker lines alone.</li>
+<li>Write each view under its prompt, or paste all five from the “All five views” box.</li>
+<li>Run the whole <code>student.sql</code>. The last result grid lists the points per query.</li>
+<li>If a query shows an error, read <code>magic44_log_query_errors</code>, fix the view, and run the file again.</li>
+</ol>
+<div class="callout"><span class="label">Practice first</span><p>Turn on “Hide solutions” and write each view yourself. The autograder tells you right away whether it passes.</p></div>
+</section>
+
+<div class="toolbar" style="margin-top:28px">
+<div class="seg" role="tablist" aria-label="Exam" data-hash>
+<button role="tab" id="t-cf25" aria-controls="cf25" aria-selected="true">Fall 2025</button>
+<button role="tab" id="t-cs26" aria-controls="cs26" aria-selected="false">Spring 2026</button>
+</div>
+<label class="switch"><input type="checkbox" id="practice"> Hide solutions for practice</label>
+</div>
+
+<!-- ===================== FALL 2025 ===================== -->
+<section class="exam" id="cf25" role="tabpanel" aria-labelledby="t-cf25">
+<p class="meta">Five views, 10 points each in the practice grader. Besides the original data, the grader checks four changed states: department 4 deleted, department 5 deleted, a new department 9 with new employees and projects, and random value changes.</p>
+<details class="all"><summary>All five views for student.sql</summary>
+<div class="codebox"><button class="btn copy" type="button">Copy</button><pre class="sql"><code>create or replace view practiceQuery1 as
+select e.fname, e.salary, r.user_account
+from employee e
+join remote_access r on e.ssn = r.ssn
+where e.sex = 'M'
+order by e.lname
+limit 1 offset 1;
+
+create or replace view practiceQuery2 as
+select fname, lname, salary
+from employee
+where salary &lt; (select avg(salary) from employee)
+order by salary desc, lname desc
+limit 1 offset 1;
+
+create or replace view practiceQuery3 as
+select f.fsid, f.remaining, f.usage_rate, c.cid, c.location
+from fund_source f
+left join customer c
+  on c.fsid = f.fsid
+ and c.assets is not null
+ and c.assets &gt; (select avg(assets) from customer);
+
+create or replace view practiceQuery4 as
+select concat(e.fname, ' ', e.lname) as full_name, e.superssn, e.salary
+from employee e
+where e.superssn in (select superssn from employee
+                     where superssn is not null
+                     group by superssn
+                     having count(*) &gt; 2 and min(salary) &gt; 25000)
+   or e.ssn in (select ssn from in_office
+                where room is null or room not like '%-%')
+order by full_name;
+
+create or replace view practiceQuery5 as
+select p.pname, count(f.fsid) as num_fund_sources,
+       max(b.balance) as max_balance
+from project p
+join fund_source f on f.pnumber = p.pnumber
+left join budget b on b.fsid = f.fsid
+where f.usage_rate &lt; 3000
+group by p.pnumber, p.pname
+order by num_fund_sources desc, p.pname
+limit 5;</code></pre></div>
+</details>
+
+<article class="q">
+<h3><span class="qn">1.</span> practiceQuery1</h3>
+<p class="prompt">Display the first name, salary, and user account of the second male employee who works remotely where the employees are sorted by their last names alphabetically.</p>
+<button class="btn reveal" type="button">Show solution</button>
+<div class="sol"><h4>Solution</h4>
+<div class="codebox"><button class="btn copy" type="button">Copy</button><pre class="sql"><code>create or replace view practiceQuery1 as
+select e.fname, e.salary, r.user_account
+from employee e
+join remote_access r on e.ssn = r.ssn
+where e.sex = 'M'
+order by e.lname
+limit 1 offset 1;</code></pre></div>
+<p>Joining employee to remote_access keeps only people who work remotely. Filter to men, sort by last name, and skip one row with <code>LIMIT 1 OFFSET 1</code>. On the original data the remote men are James Borg and Ramesh Narayan, so the second is Narayan.</p>
+<h4>What the hidden tests change</h4>
+<p>With department 5 deleted, Narayan disappears and Borg is the only remote man left, so the correct output is empty. A query that falls back to another row fails that state.</p>
+<h4>Output on the original data</h4>
+<div class="tscroll"><table class="data"><thead><tr><th>fname</th><th>salary</th><th>user_account</th></tr></thead><tbody><tr><td>Ramesh</td><td>38000</td><td>rnarayan3</td></tr></tbody></table></div>
+</div>
+</article>
+
+<article class="q">
+<h3><span class="qn">2.</span> practiceQuery2</h3>
+<p class="prompt">Display the first name, last name, and salary of all employees whose salary is below the company average. Only display the second employee when those employees are sorted by salary in descending order and last name in reverse alphabetical order.</p>
+<button class="btn reveal" type="button">Show solution</button>
+<div class="sol"><h4>Solution</h4>
+<div class="codebox"><button class="btn copy" type="button">Copy</button><pre class="sql"><code>create or replace view practiceQuery2 as
+select fname, lname, salary
+from employee
+where salary &lt; (select avg(salary) from employee)
+order by salary desc, lname desc
+limit 1 offset 1;</code></pre></div>
+<p>The subquery computes the company average, which is 35,000 on the original data. Sort the employees below it by salary descending, then last name descending, and take the second row. Helene Vincent (32,000) is first and John Smith (30,000) is second.</p>
+<h4>What the hidden tests change</h4>
+<p>Deleting departments and changing salaries moves the average in every state, so it has to come from a subquery. Typing 35000 fails four of the five states.</p>
+<h4>Output on the original data</h4>
+<div class="tscroll"><table class="data"><thead><tr><th>fname</th><th>lname</th><th>salary</th></tr></thead><tbody><tr><td>John</td><td>Smith</td><td>30000</td></tr></tbody></table></div>
+</div>
+</article>
+
+<article class="q">
+<h3><span class="qn">3.</span> practiceQuery3</h3>
+<p class="prompt">For every fund source, display the fund source ID, remaining funds, usage rate, customer ID, and customer location, but only display the customer information if the customer has a non-null asset value and the asset value is above the average of all customer assets (excluding null values). Otherwise, display null values for the customer information.</p>
+<button class="btn reveal" type="button">Show solution</button>
+<div class="sol"><h4>Solution</h4>
+<div class="codebox"><button class="btn copy" type="button">Copy</button><pre class="sql"><code>create or replace view practiceQuery3 as
+select f.fsid, f.remaining, f.usage_rate, c.cid, c.location
+from fund_source f
+left join customer c
+  on c.fsid = f.fsid
+ and c.assets is not null
+ and c.assets &gt; (select avg(assets) from customer);</code></pre></div>
+<p>Start from fund_source so every fund source stays. The customer conditions go in the LEFT JOIN’s ON clause: when they fail, the customer columns come back NULL instead of the row disappearing. AVG skips NULL assets, which matches “excluding null values.” The average is about 469,333, so only tech3 and bank4 show.</p>
+<div class="callout trap"><span class="label">Trap</span><p>Putting the asset conditions in WHERE drops 11 of the 13 fund sources, because their customer columns are NULL.</p></div>
+<h4>What the hidden tests change</h4>
+<p>Deleting a department removes its projects, fund sources, and customers, so the average is recomputed from the customers that remain. In the department 4 state, bank1 and bank3 qualify instead.</p>
+<h4>Output on the original data</h4>
+<div class="tscroll"><table class="data"><thead><tr><th>fsid</th><th>remaining</th><th>usage_rate</th><th>cid</th><th>location</th></tr></thead><tbody><tr><td>1</td><td>30000</td><td>500</td><td class="null">NULL</td><td class="null">NULL</td></tr><tr><td>2</td><td>10000</td><td>1000</td><td class="null">NULL</td><td class="null">NULL</td></tr><tr><td>3</td><td>27000</td><td>1000</td><td class="null">NULL</td><td class="null">NULL</td></tr><tr><td>5</td><td>31000</td><td>2000</td><td class="null">NULL</td><td class="null">NULL</td></tr><tr><td>7</td><td>16000</td><td>1000</td><td class="null">NULL</td><td class="null">NULL</td></tr><tr><td>8</td><td>3500</td><td>1500</td><td class="null">NULL</td><td class="null">NULL</td></tr><tr><td>11</td><td>6000</td><td>1000</td><td class="null">NULL</td><td class="null">NULL</td></tr><tr><td>12</td><td>55000</td><td>5000</td><td class="null">NULL</td><td class="null">NULL</td></tr><tr><td>13</td><td>9000</td><td>2000</td><td>tech3</td><td>Houston</td></tr><tr><td>16</td><td>20000</td><td>2000</td><td class="null">NULL</td><td class="null">NULL</td></tr><tr><td>17</td><td>61000</td><td>5000</td><td class="null">NULL</td><td class="null">NULL</td></tr><tr><td>23</td><td>24000</td><td>3000</td><td class="null">NULL</td><td class="null">NULL</td></tr><tr><td>29</td><td>21000</td><td>1000</td><td>bank4</td><td>Houston</td></tr></tbody></table></div>
+</div>
+</article>
+
+<article class="q">
+<h3><span class="qn">4.</span> practiceQuery4</h3>
+<p class="prompt">Display full name (first_name last_name with space in between), superssn, and salary for each employee who meets either of the following conditions: 1. Is supervised by someone who oversees more than two employees, and the lowest salary among those supervised is greater than 25,000. 2. Is in office, but their room is either unknown or is a whole room (without dash <code>'-'</code> in the room name). Finally, display all the results in alphabetical order by full name.</p>
+<button class="btn reveal" type="button">Show solution</button>
+<div class="sol"><h4>Solution</h4>
+<div class="codebox"><button class="btn copy" type="button">Copy</button><pre class="sql"><code>create or replace view practiceQuery4 as
+select concat(e.fname, ' ', e.lname) as full_name, e.superssn, e.salary
+from employee e
+where e.superssn in (select superssn from employee
+                     where superssn is not null
+                     group by superssn
+                     having count(*) &gt; 2 and min(salary) &gt; 25000)
+   or e.ssn in (select ssn from in_office
+                where room is null or room not like '%-%')
+order by full_name;</code></pre></div>
+<p>Condition 1 groups employees by supervisor and keeps supervisors with more than two people whose lowest salary is over 25,000. Condition 2 checks in_office for a NULL room or a room with no dash. OR combines them.</p>
+<ul>
+<li>James Borg supervises three people with a minimum salary of 37,000, so Emily Davis, Franklin Wong, and Jennifer Wallace qualify.</li>
+<li>Jennifer Wallace’s team has a minimum of exactly 25,000, which isn’t greater than 25,000. Ahmad Jabbar and Alicia Zelaya still appear through condition 2: room Bridge and a NULL room.</li>
+<li>Franklin Wong also meets condition 2 (room 100), but each employee appears once because the query reads employee rows.</li>
+</ul>
+<h4>What the hidden tests change</h4>
+<p>The new department 9 adds a supervisor, 235711131, with four employees who all earn more than 25,000, so they all join the result.</p>
+<h4>Output on the original data</h4>
+<div class="tscroll"><table class="data"><thead><tr><th>full_name</th><th>superssn</th><th>salary</th></tr></thead><tbody><tr><td>Ahmad Jabbar</td><td>987654321</td><td>25000</td></tr><tr><td>Alicia Zelaya</td><td>987654321</td><td>25000</td></tr><tr><td>Emily Davis</td><td>888665555</td><td>37000</td></tr><tr><td>Franklin Wong</td><td>888665555</td><td>40000</td></tr><tr><td>Jennifer Wallace</td><td>888665555</td><td>43000</td></tr></tbody></table></div>
+</div>
+</article>
+
+<article class="q">
+<h3><span class="qn">5.</span> practiceQuery5</h3>
+<p class="prompt">For each project that has at least one fund source, display the project name, the project’s number of fund sources whose usage rate is below 3,000, and the highest budget balance among those fund sources. Include projects even if their fund sources have no budget (that is, a NULL balance). Sort the results from highest number of fund sources, then by project name alphabetically, then show only the first five projects.</p>
+<button class="btn reveal" type="button">Show solution</button>
+<div class="sol"><h4>Solution</h4>
+<div class="codebox"><button class="btn copy" type="button">Copy</button><pre class="sql"><code>create or replace view practiceQuery5 as
+select p.pname, count(f.fsid) as num_fund_sources,
+       max(b.balance) as max_balance
+from project p
+join fund_source f on f.pnumber = p.pnumber
+left join budget b on b.fsid = f.fsid
+where f.usage_rate &lt; 3000
+group by p.pnumber, p.pname
+order by num_fund_sources desc, p.pname
+limit 5;</code></pre></div>
+<p>Inner-join project to fund_source, since a project needs a fund source, and keep usage_rate below 3,000 in WHERE. LEFT JOIN budget so fund sources without a budget still count. MAX(balance) is NULL when none of them has a budget, which is why Computerization shows NULL.</p>
+<h4>What the hidden tests change</h4>
+<p>In the department 5 state, only Computerization and Newbenefits qualify, so LIMIT 5 returns two rows. Reorganization still has a fund source there, but its usage rate is exactly 3,000, so it must not appear. That confirms the filter belongs in WHERE: moving it into a LEFT JOIN would list Reorganization with a count of 0.</p>
+<h4>Output on the original data</h4>
+<div class="tscroll"><table class="data"><thead><tr><th>pname</th><th>num_fund_sources</th><th>max_balance</th></tr></thead><tbody><tr><td>Computerization</td><td>2</td><td class="null">NULL</td></tr><tr><td>ProductY</td><td>2</td><td>170000</td></tr><tr><td>Business Insight</td><td>1</td><td>42000</td></tr><tr><td>Customer Relations</td><td>1</td><td>80000</td></tr><tr><td>Newbenefits</td><td>1</td><td class="null">NULL</td></tr></tbody></table></div>
+</div>
+</article>
+</section>
+
+<!-- ===================== SPRING 2026 ===================== -->
+<section class="exam" id="cs26" role="tabpanel" aria-labelledby="t-cs26" hidden>
+<p class="meta">Five views, 8 points each in the practice grader. Each view runs against five test cases: the original data and four edits that target that query. The edits are listed under each solution.</p>
+<details class="all"><summary>All five views for student.sql</summary>
+<div class="codebox"><button class="btn copy" type="button">Copy</button><pre class="sql"><code>create or replace view practiceQuery1 as
+select e.fname, e.lname, o.room
+from employee e
+left join in_office o on e.ssn = o.ssn
+where o.building = 'Computing' or o.room is null;
+
+create or replace view practiceQuery2 as
+select ssn, concat(fname, ', ', lname) as full_name, salary
+from employee
+where dno &gt;= (select max(dnum) from project
+              where plocation in ('Bellaire', 'Houston'));
+
+create or replace view practiceQuery3 as
+select e.ssn
+from employee e
+left join in_office o on e.ssn = o.ssn
+where o.building = 'Security'
+   or o.room like '%A'
+   or e.ssn in (select ssn from time_frames
+                group by ssn
+                having min(duration) &gt; 4)
+order by e.ssn desc
+limit 4 offset 1;
+
+create or replace view practiceQuery4 as
+select d.dname, count(*) as num_budgets,
+       max(b.balance) - min(b.balance) as balance_range
+from department d
+join budget b on d.dnumber = b.dnumber
+group by d.dnumber, d.dname
+having max(b.balance) - min(b.balance) &gt; 40000
+   and max(b.balance) &gt;= (select max(balance) from budget where dnumber = 6);
+
+create or replace view practiceQuery5 as
+select e.dno, round(avg(e.salary), 2) as avg_female_salary,
+       sum(w.hours) as total_hours
+from employee e
+join works_on w on e.ssn = w.essn
+where e.sex = 'F' and w.hours is not null
+group by e.dno
+having sum(w.hours) &gt; 50;</code></pre></div>
+</details>
+
+<article class="q">
+<h3><span class="qn">1.</span> practiceQuery1</h3>
+<p class="prompt">Display the employee’s first name, last name, and their room number for employees who work in the <code>'Computing'</code> building or do not have a room assignment.</p>
+<button class="btn reveal" type="button">Show solution</button>
+<div class="sol"><h4>Solution</h4>
+<div class="codebox"><button class="btn copy" type="button">Copy</button><pre class="sql"><code>create or replace view practiceQuery1 as
+select e.fname, e.lname, o.room
+from employee e
+left join in_office o on e.ssn = o.ssn
+where o.building = 'Computing' or o.room is null;</code></pre></div>
+<p>Start from employee and LEFT JOIN in_office, so people with no in_office row stay. A missing row and a NULL room both show up as <code>o.room IS NULL</code>, and the grader counts both as “no room assignment.” Compare the building with =.</p>
+<h4>What the hidden tests change</h4>
+<ul>
+<li>Michael Brown moves to Main, then every Computing employee moves to Main.</li>
+<li>Two new employees are added in Computing.</li>
+<li>The building is renamed <code>'_Computing_'</code>. <code>LIKE '%Computing%'</code> wrongly matches it, and = doesn’t.</li>
+</ul>
+<h4>Output on the original data</h4>
+<div class="tscroll"><table class="data"><thead><tr><th>fname</th><th>lname</th><th>room</th></tr></thead><tbody><tr><td>Michael</td><td>Brown</td><td>20-A</td></tr><tr><td>Kevin</td><td>Nguyen</td><td class="null">NULL</td></tr><tr><td>Priya</td><td>Patel</td><td class="null">NULL</td></tr><tr><td>Olivia</td><td>Chen</td><td class="null">NULL</td></tr><tr><td>Ramesh</td><td>Narayan</td><td class="null">NULL</td></tr><tr><td>Helene</td><td>Vincent</td><td class="null">NULL</td></tr><tr><td>James</td><td>Borg</td><td class="null">NULL</td></tr><tr><td>Jennifer</td><td>Wallace</td><td class="null">NULL</td></tr><tr><td>Ahmad</td><td>Jabbar</td><td>Bridge</td></tr><tr><td>Alicia</td><td>Zelaya</td><td class="null">NULL</td></tr></tbody></table></div>
+</div>
+</article>
+
+<article class="q">
+<h3><span class="qn">2.</span> practiceQuery2</h3>
+<p class="prompt">Display the employee SSN, full name (formatted as “First Name, Last Name”), and salary for employees whose department number is greater than or equal to the maximum department number among projects located in Bellaire or Houston.</p>
+<button class="btn reveal" type="button">Show solution</button>
+<div class="sol"><h4>Solution</h4>
+<div class="codebox"><button class="btn copy" type="button">Copy</button><pre class="sql"><code>create or replace view practiceQuery2 as
+select ssn, concat(fname, ', ', lname) as full_name, salary
+from employee
+where dno &gt;= (select max(dnum) from project
+              where plocation in ('Bellaire', 'Houston'));</code></pre></div>
+<p>The subquery finds the largest dnum among Bellaire or Houston projects, which is 6 on the original data. Compare dno against it with >=. CONCAT builds the “First, Last” format. Because the grader runs with PIPES_AS_CONCAT, <code>fname || ', ' || lname</code> works too.</p>
+<h4>What the hidden tests change</h4>
+<ul>
+<li>Projects move between cities and employees change departments, which moves the maximum.</li>
+<li>When projects 1, 3, 50, and 53 move to Sugarland, the maximum drops to 1 and every employee qualifies.</li>
+<li>When no project is in Bellaire or Houston, the subquery returns NULL, the comparison is never true, and the correct output is empty.</li>
+</ul>
+<h4>Output on the original data</h4>
+<div class="tscroll"><table class="data"><thead><tr><th>ssn</th><th>full_name</th><th>salary</th></tr></thead><tbody><tr><td>555667777</td><td>Kevin, Nguyen</td><td>46000</td></tr><tr><td>555778888</td><td>Priya, Patel</td><td>52000</td></tr></tbody></table></div>
+</div>
+</article>
+
+<article class="q">
+<h3><span class="qn">3.</span> practiceQuery3</h3>
+<p class="prompt">With SSNs arranged in decreasing order, display the 2nd to 5th employee SSNs for employees who either work in the Security building or in any office room that ends with an <code>'A'</code> (for example 1-A or 3A), or have only logged in for remote sessions with time frame durations greater than 4 hours.</p>
+<button class="btn reveal" type="button">Show solution</button>
+<div class="sol"><h4>Solution</h4>
+<div class="codebox"><button class="btn copy" type="button">Copy</button><pre class="sql"><code>create or replace view practiceQuery3 as
+select e.ssn
+from employee e
+left join in_office o on e.ssn = o.ssn
+where o.building = 'Security'
+   or o.room like '%A'
+   or e.ssn in (select ssn from time_frames
+                group by ssn
+                having min(duration) &gt; 4)
+order by e.ssn desc
+limit 4 offset 1;</code></pre></div>
+<p>Three conditions joined with OR. “Only logged in for sessions longer than 4 hours” means every session is longer than 4 hours, so group time_frames by ssn and keep <code>MIN(duration) > 4</code>. Sort SSNs descending, skip the first, and keep four: <code>LIMIT 4 OFFSET 1</code>.</p>
+<p>On the original data six employees qualify. 712039854 is first, so it’s skipped, and 111223333 is sixth, so it’s cut.</p>
+<h4>What the hidden tests change</h4>
+<ul>
+<li>Rooms are renamed 5A and A5 in the Research building. Only 5A ends with A.</li>
+<li>Everyone moves to the Security building.</li>
+<li>Every session gets 3 hours longer.</li>
+<li>Durations drop below 5 and rooms become '1-A-1' in 'The Security building'. Nothing qualifies, so the correct output is empty.</li>
+</ul>
+<h4>Output on the original data</h4>
+<div class="tscroll"><table class="data"><thead><tr><th>ssn</th></tr></thead><tbody><tr><td>666884444</td></tr><tr><td>556001111</td></tr><tr><td>444556666</td></tr><tr><td>222334455</td></tr></tbody></table></div>
+</div>
+</article>
+
+<article class="q">
+<h3><span class="qn">4.</span> practiceQuery4</h3>
+<p class="prompt">For each department, display the department name, its total number of budgets, and the balance range (calculated as the maximum balance minus the minimum balance) among all of its budget records. Only show departments that have both a balance range exceeding $40,000 and at least one budget with a balance that meets or exceeds the maximum balance within department 6.</p>
+<button class="btn reveal" type="button">Show solution</button>
+<div class="sol"><h4>Solution</h4>
+<div class="codebox"><button class="btn copy" type="button">Copy</button><pre class="sql"><code>create or replace view practiceQuery4 as
+select d.dname, count(*) as num_budgets,
+       max(b.balance) - min(b.balance) as balance_range
+from department d
+join budget b on d.dnumber = b.dnumber
+group by d.dnumber, d.dname
+having max(b.balance) - min(b.balance) &gt; 40000
+   and max(b.balance) &gt;= (select max(balance) from budget where dnumber = 6);</code></pre></div>
+<p>Group budgets by department. HAVING keeps groups whose range is strictly above 40,000 and whose largest balance is at least department 6’s largest. If a department’s maximum meets that bar, at least one of its budgets does, so comparing MAX is enough.</p>
+<p>Department 6 (Security) has one budget of 12,000, so its own range is 0 and it drops out.</p>
+<h4>What the hidden tests change</h4>
+<ul>
+<li>New department 6 budgets raise its maximum, so Security can qualify and Headquarters can drop out.</li>
+<li>Two tests set the range to exactly 40,001 and exactly 40,000. Only the first passes “exceeding,” so the comparison must be >, not >=.</li>
+</ul>
+<h4>Output on the original data</h4>
+<div class="tscroll"><table class="data"><thead><tr><th>dname</th><th>num_budgets</th><th>balance_range</th></tr></thead><tbody><tr><td>Administration</td><td>3</td><td>46000</td></tr><tr><td>Headquarters</td><td>4</td><td>885000</td></tr><tr><td>Research</td><td>3</td><td>416000</td></tr></tbody></table></div>
+</div>
+</article>
+
+<article class="q">
+<h3><span class="qn">5.</span> practiceQuery5</h3>
+<p class="prompt">For each department, display the department number, average salary of the female employees in that department (rounded to 2 decimal places), and the total hours worked in that department by the female employees. Only consider employees that recorded the number of hours they worked on the project. Only show departments with more than 50 total hours worked by their female employees.</p>
+<button class="btn reveal" type="button">Show solution</button>
+<div class="sol"><h4>Solution</h4>
+<div class="codebox"><button class="btn copy" type="button">Copy</button><pre class="sql"><code>create or replace view practiceQuery5 as
+select e.dno, round(avg(e.salary), 2) as avg_female_salary,
+       sum(w.hours) as total_hours
+from employee e
+join works_on w on e.ssn = w.essn
+where e.sex = 'F' and w.hours is not null
+group by e.dno
+having sum(w.hours) &gt; 50;</code></pre></div>
+<p>Join employee to works_on so you can sum the hours. WHERE keeps women and non-NULL hours, GROUP BY makes one row per department, and HAVING keeps totals above 50.</p>
+<div class="callout trap"><span class="label">Trap</span><p>AVG runs over the joined rows, so a woman on four projects counts four times. The expected answer for department 4 is 36,888.89, the join-weighted average. Averaging each woman once gives 34,250 and loses the points.</p></div>
+<h4>What the hidden tests change</h4>
+<ul>
+<li>John Smith’s sex changes to F, which adds his hours and salary to department 5.</li>
+<li>Joyce English’s hours drop to 5 per project, so department 5 totals exactly 50 and drops out.</li>
+<li>Emily Davis moves to department 6 with 31 hours, so department 6 totals 51 and appears.</li>
+<li>Jennifer Wallace’s hours become NULL, so her rows leave both the sum and the average.</li>
+</ul>
+<h4>Output on the original data</h4>
+<div class="tscroll"><table class="data"><thead><tr><th>dno</th><th>avg_female_salary</th><th>total_hours</th></tr></thead><tbody><tr><td>4</td><td>36888.89</td><td>159.5</td></tr><tr><td>5</td><td>27333.33</td><td>80.0</td></tr></tbody></table></div>
+</div>
+</article>
+</section>
+</div>
+<script>(function () {
+  "use strict";
+  function esc(s) { return s.replace(/[&<>]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]; }); }
+  var KW = new Set(("select from where and or not in is null join left right inner outer cross full on group by having order asc desc limit offset as distinct union all any some exists like between case when then else end create replace view table primary key foreign references unique default check constraint insert into values update set delete drop cascade restrict action no int integer varchar char date decimal count sum avg min max round concat coalesce ifnull with intersect except").split(" "));
+  var TOK = /('(?:[^']|'')*')|("[^"]*")|(\b\d+(?:\.\d+)?\b)|([A-Za-z_][A-Za-z0-9_]*)|([\s\S])/g;
+  document.querySelectorAll("pre.sql > code").forEach(function (el) {
+    var src = el.textContent, out = "", m;
+    TOK.lastIndex = 0;
+    while ((m = TOK.exec(src)) !== null) {
+      if (m[1] || m[2]) out += '<span class="s">' + esc(m[1] || m[2]) + "</span>";
+      else if (m[3]) out += '<span class="n">' + m[3] + "</span>";
+      else if (m[4]) out += KW.has(m[4].toLowerCase()) ? '<span class="k">' + m[4] + "</span>" : esc(m[4]);
+      else out += esc(m[5]);
+    }
+    el.innerHTML = out;
+  });
+
+  function initTabs(list) {
+    var tabs = Array.prototype.slice.call(list.querySelectorAll('[role="tab"]'));
+    var useHash = list.hasAttribute("data-hash");
+    var scrollId = list.getAttribute("data-scroll");
+    function byId(id) { return tabs.filter(function (t) { return t.getAttribute("aria-controls") === id; })[0]; }
+    function select(tab, o) {
+      o = o || {};
+      tabs.forEach(function (t) {
+        var on = t === tab;
+        t.setAttribute("aria-selected", on ? "true" : "false");
+        t.tabIndex = on ? 0 : -1;
+        var p = document.getElementById(t.getAttribute("aria-controls"));
+        if (p) p.hidden = !on;
+      });
+      if (o.focus) tab.focus();
+      if (!o.user) return;
+      if (useHash) { try { history.replaceState(null, "", "#" + tab.getAttribute("aria-controls")); } catch (e) {} }
+      if (scrollId) {
+        var top = document.getElementById(scrollId);
+        if (top && top.getBoundingClientRect().top < 0) top.scrollIntoView({ block: "start" });
+      }
+      if (list.scrollWidth > list.clientWidth) tab.scrollIntoView({ block: "nearest", inline: "nearest" });
+    }
+    tabs.forEach(function (t, i) {
+      t.addEventListener("click", function () { select(t, { user: true }); });
+      t.addEventListener("keydown", function (e) {
+        var j = null;
+        if (e.key === "ArrowDown" || e.key === "ArrowRight") j = (i + 1) % tabs.length;
+        else if (e.key === "ArrowUp" || e.key === "ArrowLeft") j = (i - 1 + tabs.length) % tabs.length;
+        else if (e.key === "Home") j = 0;
+        else if (e.key === "End") j = tabs.length - 1;
+        if (j !== null) { e.preventDefault(); select(tabs[j], { focus: true, user: true }); }
+      });
+    });
+    list.selectById = function (id) { var t = byId(id); if (t) select(t, { user: true }); return !!t; };
+    var initial = useHash && location.hash ? byId(location.hash.slice(1)) : null;
+    if (!initial) initial = tabs.filter(function (t) { return t.getAttribute("aria-selected") === "true"; })[0] || tabs[0];
+    select(initial, {});
+  }
+  var lists = document.querySelectorAll('[role="tablist"]');
+  lists.forEach(initTabs);
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest ? e.target.closest("[data-tab]") : null;
+    if (!a) return;
+    var id = a.getAttribute("data-tab");
+    for (var k = 0; k < lists.length; k++) {
+      if (lists[k].selectById && lists[k].selectById(id)) {
+        e.preventDefault();
+        var p = document.getElementById(id);
+        if (p) p.scrollIntoView({ block: "start" });
+        break;
+      }
+    }
+  });
+
+  document.querySelectorAll("button.copy").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var pre = b.parentNode.querySelector("pre");
+      var text = pre ? pre.innerText : "";
+      var label = b.textContent;
+      function done() { b.textContent = "Copied"; setTimeout(function () { b.textContent = label; }, 1600); }
+      function fallback() {
+        var ta = document.createElement("textarea");
+        ta.value = text; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand("copy"); } catch (e) {}
+        document.body.removeChild(ta); done();
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback);
+      else fallback();
+    });
+  });
+
+  var reveals = document.querySelectorAll(".reveal");
+  reveals.forEach(function (b) {
+    b.setAttribute("aria-expanded", "false");
+    b.addEventListener("click", function () {
+      var q = b.closest(".q");
+      var open = q.classList.toggle("open");
+      b.textContent = open ? "Hide solution" : "Show solution";
+      b.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+  });
+  var pm = document.getElementById("practice");
+  if (pm) {
+    var apply = function () {
+      document.body.classList.toggle("practice", pm.checked);
+      document.querySelectorAll(".q.open").forEach(function (q) { q.classList.remove("open"); });
+      reveals.forEach(function (b) { b.textContent = "Show solution"; b.setAttribute("aria-expanded", "false"); });
+    };
+    pm.addEventListener("change", apply);
+    apply();
+  }
+
+  var drawer = document.getElementById("drawer");
+  if (drawer) {
+    var closeBtn = drawer.querySelector(".close"), last = null;
+    var openD = function () {
+      last = document.activeElement;
+      var active = document.querySelector('[role="tab"][aria-selected="true"][data-db]');
+      var id = active ? active.getAttribute("data-db") : null;
+      drawer.querySelectorAll(".db").forEach(function (d) { d.hidden = d.id !== id; });
+      drawer.classList.add("open");
+      drawer.setAttribute("aria-hidden", "false");
+      drawer.scrollTop = 0;
+      closeBtn.focus();
+    };
+    var closeD = function () {
+      drawer.classList.remove("open");
+      drawer.setAttribute("aria-hidden", "true");
+      if (last && last.focus) last.focus();
+    };
+    document.querySelectorAll("[data-open-drawer]").forEach(function (b) { b.addEventListener("click", openD); });
+    closeBtn.addEventListener("click", closeD);
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && drawer.classList.contains("open")) closeD(); });
+  }
+
+  var pb = document.getElementById("print-btn");
+  if (pb) pb.addEventListener("click", function () { window.print(); });
+})();
+</script>
+</body>
+</html>

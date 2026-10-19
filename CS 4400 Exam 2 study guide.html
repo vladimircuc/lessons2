@@ -1,0 +1,927 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CS 4400 Exam 2 study guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>:root{color-scheme:light;
+--bg:#F1F4F8;--surface:#FFFFFF;--ink:#17212B;--muted:#56626E;--line:#D7DDE5;
+--navy:#14365A;--gold:#B3A369;--gold-ink:#6B5C24;--hl:#FFE45C;--hl-ink:#17212B;
+--ok:#1B7346;--bad:#AE2A20;--code-bg:#EDF1F6;--code-ink:#1B2632;--k:#14365A;--s:#875700;--n:#1B7346;
+--sans:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+--mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;
+--bg:#0E1722;--surface:#152030;--ink:#E3E8EE;--muted:#9BA8B7;--line:#283646;
+--navy:#C3D7EE;--gold:#C9B97C;--gold-ink:#DCCD92;--hl:#F2D64A;--hl-ink:#121820;
+--ok:#62C28F;--bad:#F28B81;--code-bg:#1A2635;--code-ink:#DAE2EB;--k:#9EC3EC;--s:#E3C27A;--n:#8FD3AE}}
+:root[data-theme="dark"]{color-scheme:dark;
+--bg:#0E1722;--surface:#152030;--ink:#E3E8EE;--muted:#9BA8B7;--line:#283646;
+--navy:#C3D7EE;--gold:#C9B97C;--gold-ink:#DCCD92;--hl:#F2D64A;--hl-ink:#121820;
+--ok:#62C28F;--bad:#F28B81;--code-bg:#1A2635;--code-ink:#DAE2EB;--k:#9EC3EC;--s:#E3C27A;--n:#8FD3AE}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%;background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.58 var(--sans)}
+a{color:var(--navy);text-underline-offset:3px}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px;border-radius:3px}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 110px}
+.masthead{padding:4px 0 26px;border-bottom:1px solid var(--line);margin-bottom:26px}
+.course{font-size:15px;color:var(--muted);margin:0 0 8px}
+h1{font-size:clamp(2.1rem,5vw,3.3rem);line-height:1.04;letter-spacing:-.018em;margin:0 0 12px;color:var(--navy)}
+.lede{font-size:1.1rem;color:var(--muted);max-width:64ch;margin:0}
+h2{font-size:1.8rem;line-height:1.15;letter-spacing:-.01em;margin:0 0 12px;color:var(--navy)}
+h3{font-size:1.18rem;line-height:1.3;margin:2em 0 .5em;color:var(--navy)}
+h4{font-size:1rem;line-height:1.3;margin:1.3em 0 .4em}
+p,ul,ol{margin:0 0 1em}
+ul,ol{padding-left:1.35em}
+li{margin:.3em 0}
+code{font-family:var(--mono);font-size:.84em;background:var(--code-bg);padding:.1em .35em;border-radius:4px;white-space:nowrap}
+pre{font-family:var(--mono);font-size:13.5px;line-height:1.6;background:var(--code-bg);color:var(--code-ink);border:1px solid var(--line);border-radius:6px;padding:14px 16px;overflow-x:auto;margin:0 0 1.1em;tab-size:2}
+pre code{background:none;padding:0;font-size:inherit;white-space:pre}
+.k{color:var(--k);font-weight:700}.s{color:var(--s)}.n{color:var(--n)}
+.tscroll{overflow-x:auto;margin:0 0 1.2em;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:15px;line-height:1.45}
+table.wide{min-width:640px}
+th{text-align:left;vertical-align:bottom;font-weight:700;color:var(--navy);padding:8px 12px;border-bottom:2px solid var(--gold)}
+td{vertical-align:top;padding:8px 12px;border-bottom:1px solid var(--line)}
+td code{white-space:normal}
+table.data{width:auto;font-family:var(--mono);font-size:13px}
+table.data th,table.data td{padding:6px 12px;white-space:nowrap}
+table.data td.null{color:var(--muted);font-style:italic}
+mark{background:var(--hl);color:var(--hl-ink);padding:.05em .3em;border-radius:3px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.rel{font-family:var(--mono);font-size:14px;line-height:1.8;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 16px;margin:0 0 1em;overflow-x:auto}
+.rel div{white-space:nowrap}
+.rel .gap{height:.6em}
+.rel u{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px}
+.fk{color:var(--muted);font-size:.85em}
+.callout{border-left:4px solid var(--gold);background:var(--surface);padding:12px 16px;margin:0 0 1.2em;border-radius:0 6px 6px 0}
+.callout.trap{border-left-color:var(--bad)}
+.callout>:last-child{margin-bottom:0}
+.callout .label{display:block;font-weight:700;margin-bottom:4px;color:var(--gold-ink)}
+.callout.trap .label{color:var(--bad)}
+.ok{color:var(--ok);font-weight:700}.bad{color:var(--bad);font-weight:700}
+.meta{color:var(--muted);font-size:15px}
+.figure{background:#FFFFFF;border:1px solid var(--line);border-radius:6px;padding:12px;margin:0 0 1em;overflow-x:auto}
+.figure img{display:block;max-width:100%;height:auto;margin:0 auto}
+button{font:inherit}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;cursor:pointer;font-size:15px;line-height:1.3}
+.btn:hover{border-color:var(--gold)}
+.toolbar{display:flex;flex-wrap:wrap;gap:12px 22px;align-items:center;margin:0 0 6px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;padding:3px;background:var(--surface);gap:3px}
+.seg [role="tab"]{border:0;background:none;padding:8px 18px;border-radius:6px;color:var(--muted);cursor:pointer;font-size:15px;font-weight:700}
+.seg [role="tab"][aria-selected="true"]{background:var(--navy);color:var(--bg)}
+.switch{display:inline-flex;align-items:center;gap:9px;font-size:15px;cursor:pointer}
+.switch input{width:18px;height:18px;margin:0;accent-color:var(--navy)}
+/* topics layout */
+.pointmap{margin:24px 0 0;max-width:900px}
+.pm-row{display:grid;grid-template-columns:104px minmax(0,1fr);gap:12px;align-items:center;margin:0 0 8px}
+.pm-row .yr{font-size:14px;color:var(--muted);font-weight:700}
+.pm-bar{display:flex;height:42px;border-radius:6px;overflow:hidden}
+.pm-bar a{display:flex;align-items:center;justify-content:center;text-decoration:none;font-weight:700;font-size:15px;min-width:0}
+.pm-bar a+a{border-left:2px solid var(--bg)}
+.pm-bar a:hover{filter:brightness(1.08)}
+.c1{background:#14365A;color:#FFFFFF}.c2{background:#2F5F8A;color:#FFFFFF}.c3{background:#6F95BA;color:#0E1722}
+.c4{background:#B3A369;color:#17212B}.c5{background:#DCD0A3;color:#17212B}.c6{background:#8E99A6;color:#0E1722}
+.pm-legend{display:flex;flex-wrap:wrap;gap:6px 18px;margin:12px 0 0 116px;padding:0;list-style:none;font-size:14px;color:var(--muted)}
+.pm-legend li{display:flex;align-items:center;gap:7px;margin:0}
+.sw{width:12px;height:12px;border-radius:3px;display:inline-block}
+.pm-note{margin:12px 0 0 116px;font-size:14px;color:var(--muted)}
+.layout{display:grid;grid-template-columns:240px minmax(0,1fr);gap:44px;align-items:start}
+.rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px);display:flex;flex-direction:column;gap:2px;max-height:calc(100vh - 32px);overflow:auto}
+.rail [role="tab"]{display:block;text-align:left;border:0;border-left:3px solid transparent;background:none;color:var(--muted);padding:7px 12px;font-size:15px;line-height:1.3;cursor:pointer;border-radius:0 4px 4px 0}
+.rail [role="tab"]:hover{color:var(--ink)}
+.rail [role="tab"][aria-selected="true"]{color:var(--navy);font-weight:700;border-left-color:var(--gold);background:var(--surface)}
+.panel{max-width:82ch;min-width:0}
+.crib{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 30px}
+.crib h3{margin:1em 0 .4em}
+.crib ul{font-size:15px}
+@media (max-width:880px){
+.layout{grid-template-columns:minmax(0,1fr);gap:20px}
+.rail{flex-direction:row;overflow-x:auto;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);margin:0 -20px;padding:8px 20px;border-bottom:1px solid var(--line);max-height:none}
+.rail [role="tab"]{white-space:nowrap;border-left:0;border-bottom:3px solid transparent;border-radius:4px 4px 0 0}
+.rail [role="tab"][aria-selected="true"]{border-bottom-color:var(--gold)}
+.panel{scroll-margin-top:calc(env(safe-area-inset-top,0px) + 70px)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+}
+@media (max-width:640px){.pm-row{grid-template-columns:minmax(0,1fr);gap:4px}.pm-legend,.pm-note{margin-left:0}.crib{grid-template-columns:minmax(0,1fr)}h2{font-size:1.55rem}}
+/* exam pages */
+.exam{max-width:880px}
+.secthead{margin:46px 0 4px;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.secthead h2{margin:0}
+.pts{color:var(--muted);font-size:15px}
+.q{padding:22px 0 26px;border-top:1px solid var(--line)}
+.q>h3{margin:0 0 10px;display:flex;gap:10px;align-items:baseline}
+.qn{color:var(--gold-ink);font-variant-numeric:tabular-nums}
+.opts{list-style:none;padding:0;margin:0 0 1em}
+.opts li{display:flex;gap:10px;margin:7px 0}
+.opts li::before{content:"";flex:none;width:15px;height:15px;border:2px solid var(--muted);border-radius:50%;margin-top:4px}
+.opts.multi li::before{border-radius:3px}
+.optgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:0 0 1em}
+.optgrid figure{margin:0;min-width:0}
+.optgrid figcaption{font-weight:700;font-size:15px;margin:0 0 6px}
+.optgrid pre{margin:0;font-size:12.5px}
+@media (max-width:720px){.optgrid{grid-template-columns:minmax(0,1fr)}}
+.sol{margin-top:16px;padding:14px 18px 4px;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:0 6px 6px 0}
+.sol>h4:first-child{margin-top:0;color:var(--gold-ink);font-size:15px}
+.sol h4{color:var(--gold-ink);font-size:15px}
+.verdict{display:inline-block;font-weight:700;padding:2px 10px;border-radius:4px;background:var(--hl);color:var(--hl-ink)}
+.reveal{display:none;margin-top:12px}
+body.practice .sol{display:none}
+body.practice .reveal{display:inline-flex}
+body.practice .q.open .sol{display:block}
+.prompt{border-left:4px solid var(--navy);padding:2px 0 2px 16px;margin:0 0 1em;font-size:1.03rem}
+.codebox{display:grid}
+.codebox .copy{justify-self:end;margin:0 0 6px;padding:4px 12px;font-size:13px}
+details.all{margin:0 0 1.4em;border:1px solid var(--line);border-radius:6px;background:var(--surface);padding:10px 14px}
+details.all summary{cursor:pointer;font-weight:700;color:var(--navy)}
+details.all[open] summary{margin-bottom:10px}
+.fabbar{position:fixed;right:0;bottom:0;padding:0 16px calc(16px + env(safe-area-inset-bottom,0px)) 0;z-index:15}
+.fab{background:var(--navy);color:var(--bg);border-color:var(--navy);font-weight:700;box-shadow:0 3px 12px rgba(10,20,35,.25)}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(660px,100%);background:var(--surface);border-left:1px solid var(--line);z-index:30;overflow:auto;padding:calc(env(safe-area-inset-top,0px) + 18px) 20px calc(env(safe-area-inset-bottom,0px) + 28px);transform:translateX(100%);visibility:hidden;transition:transform .22s ease,visibility 0s linear .22s;box-shadow:-6px 0 24px rgba(10,20,35,.18)}
+.drawer.open{transform:none;visibility:visible;transition:transform .22s ease}
+.drawer-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.drawer-head h2{margin:0}
+.drawer h3{margin:1.5em 0 .2em}
+.drawer .meta{margin:0 0 .5em;font-size:14px}
+@media (prefers-reduced-motion:reduce){.drawer,.drawer.open{transition:none}}
+@media print{body{background:#fff;color:#000;font-size:11pt}.masthead,.rail,.fabbar,.drawer,.noprint,.toolbar{display:none!important}.layout{display:block}pre,.rel,.callout,.sol{background:#fff}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="masthead">
+<p class="course">CS 4400 Introduction to Database Systems, Fall 2026</p>
+<h1>Exam 2 study guide</h1>
+<p class="lede">Everything the paper and coding parts test, one tab per topic. The bars show where the 60 paper points went on the last two Exam 2 papers. Select a segment to open its topic.</p>
+<div class="pointmap">
+<div class="pm-row"><span class="yr">Fall 2025</span><div class="pm-bar">
+<a class="c1" style="flex:12" href="#mapping" data-tab="mapping" aria-label="Schema mapping, free response: 12 points">12</a>
+<a class="c2" style="flex:12" href="#tf" data-tab="tf" aria-label="Schema mapping, true or false: 12 points">12</a>
+<a class="c3" style="flex:8" href="#ddl" data-tab="ddl" aria-label="CREATE statements: 8 points">8</a>
+<a class="c4" style="flex:13" href="#integrity" data-tab="integrity" aria-label="Integrity constraints: 13 points">13</a>
+<a class="c5" style="flex:9" href="#joins" data-tab="joins" aria-label="SQL tracing: 9 points">9</a>
+<a class="c6" style="flex:6" href="#design" data-tab="design" aria-label="Design concepts: 6 points">6</a>
+</div></div>
+<div class="pm-row"><span class="yr">Spring 2026</span><div class="pm-bar">
+<a class="c1" style="flex:12" href="#mapping" data-tab="mapping" aria-label="Schema mapping, free response: 12 points">12</a>
+<a class="c2" style="flex:12" href="#tf" data-tab="tf" aria-label="Schema mapping, true or false: 12 points">12</a>
+<a class="c3" style="flex:8" href="#ddl" data-tab="ddl" aria-label="CREATE statements: 8 points">8</a>
+<a class="c4" style="flex:10" href="#integrity" data-tab="integrity" aria-label="Integrity constraints: 10 points">10</a>
+<a class="c5" style="flex:14" href="#joins" data-tab="joins" aria-label="SQL tracing: 14 points">14</a>
+<a class="c6" style="flex:4" href="#design" data-tab="design" aria-label="Design concepts: 4 points">4</a>
+</div></div>
+<ul class="pm-legend">
+<li><span class="sw c1"></span>Mapping, free response</li>
+<li><span class="sw c2"></span>Mapping, true/false</li>
+<li><span class="sw c3"></span>CREATE statements</li>
+<li><span class="sw c4"></span>Integrity constraints</li>
+<li><span class="sw c5"></span>SQL tracing</li>
+<li><span class="sw c6"></span>Design concepts</li>
+</ul>
+<p class="pm-note">Plus a coding part: five autograded views on <code>global_company</code>.</p>
+</div>
+</header>
+
+<div class="layout" id="layout">
+<nav class="rail" role="tablist" aria-label="Topics" aria-orientation="vertical" data-hash data-scroll="layout">
+<button role="tab" id="t-overview" aria-controls="overview" aria-selected="true">Exam map</button>
+<button role="tab" id="t-mapping" aria-controls="mapping" aria-selected="false">Schema mapping</button>
+<button role="tab" id="t-eer" aria-controls="eer" aria-selected="false">EER mapping</button>
+<button role="tab" id="t-tf" aria-controls="tf" aria-selected="false">Checking a mapping</button>
+<button role="tab" id="t-ddl" aria-controls="ddl" aria-selected="false">CREATE TABLE and guarantees</button>
+<button role="tab" id="t-integrity" aria-controls="integrity" aria-selected="false">Integrity constraints</button>
+<button role="tab" id="t-joins" aria-controls="joins" aria-selected="false">Joins and tracing</button>
+<button role="tab" id="t-aggregates" aria-controls="aggregates" aria-selected="false">Aggregates and GROUP BY</button>
+<button role="tab" id="t-subqueries" aria-controls="subqueries" aria-selected="false">Subqueries and set operations</button>
+<button role="tab" id="t-views" aria-controls="views" aria-selected="false">Views</button>
+<button role="tab" id="t-design" aria-controls="design" aria-selected="false">Keys and design</button>
+<button role="tab" id="t-coding" aria-controls="coding" aria-selected="false">Coding exam playbook</button>
+<button role="tab" id="t-crib" aria-controls="crib" aria-selected="false">Crib sheet</button>
+</nav>
+<main>
+
+<section class="panel" role="tabpanel" id="overview" aria-labelledby="t-overview">
+<h2>Exam map</h2>
+<p>Exam 2 has two parts. The paper part is worth 60 points and has used the same six sections every semester. The coding part has you write five SQL views that an autograder checks.</p>
+<h3>Paper part</h3>
+<div class="tscroll"><table class="wide">
+<thead><tr><th>Section</th><th>Points (F25 / S26)</th><th>What you do</th><th>Study tab</th></tr></thead>
+<tbody>
+<tr><td>Schema mapping, free response</td><td>12 / 12</td><td>Convert an EERD into relations, primary keys, and foreign key definitions.</td><td><a href="#mapping" data-tab="mapping">Schema mapping</a>, <a href="#eer" data-tab="eer">EER mapping</a></td></tr>
+<tr><td>Schema mapping, true/false</td><td>12 / 12</td><td>Decide whether each of three given mappings is valid.</td><td><a href="#tf" data-tab="tf">Checking a mapping</a></td></tr>
+<tr><td>CREATE statement MCQs</td><td>8 / 8</td><td>Pick the CREATE TABLE set that matches a schema, then mark which statements the constraints guarantee.</td><td><a href="#ddl" data-tab="ddl">CREATE TABLE and guarantees</a></td></tr>
+<tr><td>Integrity constraints</td><td>13 / 10</td><td>For each INSERT, UPDATE, or DELETE, mark key, entity, or referential errors, or success.</td><td><a href="#integrity" data-tab="integrity">Integrity constraints</a></td></tr>
+<tr><td>SQL tracing</td><td>9 / 14</td><td>Write the exact output table of a join query, headers included.</td><td><a href="#joins" data-tab="joins">Joins and tracing</a></td></tr>
+<tr><td>Database design concepts</td><td>6 / 4</td><td>Pick the minimal primary key for a scenario, and explain a LEFT JOIN + COUNT(*) bug.</td><td><a href="#design" data-tab="design">Keys and design</a>, <a href="#aggregates" data-tab="aggregates">Aggregates</a></td></tr>
+</tbody></table></div>
+<h3>Coding part</h3>
+<p>You write <code>practiceQuery1</code> to <code>practiceQuery5</code> as views on the <code>global_company</code> database in MySQL Workbench. The autograder reruns each view on changed copies of the data, so a query has to be right in general, not only on the rows you can see. See the <a href="#coding" data-tab="coding">coding exam playbook</a>.</p>
+<h3>Scope</h3>
+<ul>
+<li>On the exam: SQL joins and union queries, constraints, views, and schema mapping. Book chapters 5, 6.1-6.2, 7.3, and 9, plus the handouts.</li>
+<li>Not on Exam 2: normalization and stored procedures. Those are on Exam 3.</li>
+</ul>
+<h3>Logistics</h3>
+<ul>
+<li>Section A takes it Monday 10/19 and Section B Wednesday 10/21, both at 3:30 PM, in person, in the normal lecture slot.</li>
+<li>The Fall 2025 exam allowed one 8.5 x 11 crib sheet, written on one side. Confirm this semester’s rule, then copy the <a href="#crib" data-tab="crib">crib sheet tab</a>.</li>
+</ul>
+</section>
+
+<section class="panel" role="tabpanel" id="mapping" aria-labelledby="t-mapping" hidden>
+<h2>Schema mapping</h2>
+<p>Mapping turns an ER diagram into relations. Underline the primary key, tag each foreign key with [fkN], and list every foreign key under the relations. This is the notation the exam grades.</p>
+<div class="rel">
+<div>Movie = (<u>title</u>, releaseYear, sequelTitle<span class="fk">[fk1]</span>)</div>
+<div>Acts_In = (<u>actorID<span class="fk">[fk2]</span>, title<span class="fk">[fk3]</span></u>, screenTime)</div>
+<div class="gap"></div>
+<div>fk1: sequelTitle → Movie(title)</div>
+<div>fk2: actorID → Actor(actorID)</div>
+<div>fk3: title → Movie(title)</div>
+</div>
+<h3>Entities and attributes</h3>
+<div class="tscroll"><table>
+<thead><tr><th>Diagram element</th><th>How it maps</th></tr></thead>
+<tbody>
+<tr><td>Strong entity (rectangle)</td><td>One relation with every simple attribute. Underline the key attribute.</td></tr>
+<tr><td>Key attribute (underlined oval)</td><td>The primary key. A composite key, like licenseID made of licenseNumber and state, becomes a composite PK of its parts.</td></tr>
+<tr><td>Composite attribute (oval with child ovals)</td><td>Store only the simple parts (fname, lname), never the parent (name).</td></tr>
+<tr><td>Derived attribute (dashed oval)</td><td>Don’t store it anywhere: age, totalScreenTime, YearsTenured.</td></tr>
+<tr><td>Multivalued attribute (double oval)</td><td>A new relation holding the owner’s PK as an FK plus the value. The PK is both together. A composite multivalued attribute, like Authors (name, phoneNum), keeps all its parts in the PK.</td></tr>
+<tr><td>Weak entity (double rectangle)</td><td>A relation with the owner’s full PK as an FK plus the partial key (dashed underline). PK = owner’s PK + partial key.</td></tr>
+</tbody></table></div>
+<h3>Relationships</h3>
+<div class="tscroll"><table class="wide">
+<thead><tr><th>Relationship</th><th>Where the foreign key goes</th><th>Relationship attributes</th></tr></thead>
+<tbody>
+<tr><td>1:1</td><td><strong>Foreign key approach</strong> (the default): FK on either side, preferably the side with total participation. <strong>Merged relation</strong>: allowed only when both sides are total. <strong>Relationship relation</strong>: a new table holding both keys.</td><td>With the FK, or in the merged or new relation</td></tr>
+<tr><td>1:N</td><td>FK on the N side, pointing to the 1 side.</td><td>On the N side</td></tr>
+<tr><td>M:N</td><td>Always a new relation with an FK to each side. PK = both FKs.</td><td>In the new relation</td></tr>
+<tr><td>Recursive (one entity type)</td><td>Same rules, but the FK points to its own table and gets a role name: mentorID, sequelTitle. A recursive M:N becomes a new table with two FKs to the same table.</td><td>Same as its cardinality</td></tr>
+<tr><td>N-ary (3 or more entity types)</td><td>A new relation with an FK to every participant. PK = all of them, minus the FK of any side marked 1.</td><td>In the new relation</td></tr>
+<tr><td>Identifying (double diamond)</td><td>Already covered: the weak entity’s PK includes the owner’s key.</td><td>On the weak entity, since it’s the N side</td></tr>
+</tbody></table></div>
+<div class="callout"><span class="label">Participation</span><p>A double line means total participation. It decides whether the merged 1:1 option and the subclass-only EER option are legal. It doesn’t move a foreign key.</p></div>
+<h3>Worked example: Fall 2025 free response</h3>
+<p>Actor has the key actorID, a composite name, and a derived totalScreenTime. Movie has the key title, releaseYear, and a multivalued genres. Actor and Movie are M:N through Acts_In, which has screenTime, and Movie has a 1:1 recursive Sequel_Of.</p>
+<ol>
+<li>Strong entities first: Actor keeps actorID, fname, and lname. Drop totalScreenTime because it’s derived.</li>
+<li>Sequel_Of is 1:1 recursive, so Movie gets sequelTitle as an FK back to Movie(title).</li>
+<li>Acts_In is M:N, so it becomes its own relation keyed by both FKs, and screenTime goes with it.</li>
+<li>genres is multivalued, so it gets its own relation keyed by title and genre.</li>
+</ol>
+<div class="rel">
+<div>Actor = (<u>actorID</u>, fname, lname)</div>
+<div>Movie = (<u>title</u>, releaseYear, sequelTitle<span class="fk">[fk1]</span>)</div>
+<div>Acts_In = (<u>actorID<span class="fk">[fk2]</span>, title<span class="fk">[fk3]</span></u>, screenTime)</div>
+<div>Genres = (<u>title<span class="fk">[fk4]</span>, genre</u>)</div>
+<div class="gap"></div>
+<div>fk1: sequelTitle → Movie(title)</div>
+<div>fk2: actorID → Actor(actorID)</div>
+<div>fk3: title → Movie(title)</div>
+<div>fk4: title → Movie(title)</div>
+</div>
+</section>
+
+<section class="panel" role="tabpanel" id="eer" aria-labelledby="t-eer" hidden>
+<h2>EER mapping</h2>
+<p>EER diagrams add specializations (superclass and subclasses) and union types (categories). Each has a fixed set of mapping options.</p>
+<h3>Specialization: a circle with d or o</h3>
+<p>d means disjoint: an entity is in at most one subclass. o means overlapping. A double line from the superclass to the circle means total: every entity is in some subclass. In the table, k is the superclass key.</p>
+<div class="tscroll"><table class="wide">
+<thead><tr><th>Option</th><th>Relations</th><th>Legal when</th><th>Watch for</th></tr></thead>
+<tbody>
+<tr><td>8A: superclass and subclasses</td><td>L = (k, superclass attributes) and each S = (k[fk], subclass attributes), with k → L(k)</td><td>Always</td><td>Each subclass PK is k, even if the subclass has its own key attribute. Book keeps pubID as its PK, and ISBN is a plain attribute.</td></tr>
+<tr><td>8B: subclasses only</td><td>Each S = (k, superclass attributes, subclass attributes). No L.</td><td>Total specialization. Use it with disjoint, since overlapping stores an entity twice.</td><td>The superclass’s relationship FKs move into every subclass: registerNum sits in Sedan, SUV, and Muscle.</td></tr>
+<tr><td>8C: one relation, one type attribute</td><td>L = (k, every attribute, type)</td><td>Disjoint</td><td>Many NULLs</td></tr>
+<tr><td>8D: one relation, Boolean flags</td><td>L = (k, every attribute, isS1, isS2, …)</td><td>Overlapping, and disjoint too</td><td>Many NULLs</td></tr>
+</tbody></table></div>
+<p>A relationship attached to a subclass uses that subclass’s relation. Chapter references Book, and Muscle carries its owner’s ssn.</p>
+<h3>Union types: a circle with u</h3>
+<p>A category is a subclass of two or more different superclasses. A Payer is an Employer or an InsuranceCompany.</p>
+<ul>
+<li>Superclasses with different keys: add a surrogate key to the category, then add it as an FK in each superclass.</li>
+<li>Superclasses with the same key: no surrogate. The category uses that key.</li>
+</ul>
+<div class="rel">
+<div>Payer = (<u>payerID</u>, email)</div>
+<div>Employer = (<u>employerID</u>, payerID<span class="fk">[fk1]</span>, employerName)</div>
+<div>InsuranceCompany = (<u>corpID</u>, payerID<span class="fk">[fk2]</span>, phone)</div>
+<div class="gap"></div>
+<div>fk1: payerID → Payer(payerID)</div>
+<div>fk2: payerID → Payer(payerID)</div>
+</div>
+<div class="callout trap"><span class="label">Exam trap</span><p>The FK goes from each superclass to the category. The category doesn’t point at its superclasses.</p></div>
+</section>
+
+<section class="panel" role="tabpanel" id="tf" aria-labelledby="t-tf" hidden>
+<h2>Checking a mapping</h2>
+<p>True/false questions show a diagram and a schema. One wrong attribute, key, or foreign key makes the answer False. Check in this order:</p>
+<ol>
+<li><strong>Relations:</strong> every strong entity, weak entity, M:N relationship, multivalued attribute, and n-ary relationship has one, unless the EER option says otherwise.</li>
+<li><strong>Attributes:</strong> only the simple parts of composites, no derived attributes, none missing, and relationship attributes on the correct side.</li>
+<li><strong>Primary keys:</strong> weak entity = owner’s key + partial key, M:N = both FKs, multivalued = owner’s key + value, merged 1:1 = either side’s key.</li>
+<li><strong>Foreign keys:</strong> each one points at the referenced relation’s PK, in the right direction, with every part of a composite key.</li>
+<li><strong>EER option:</strong> the option is legal for the specialization’s constraints, and union types use a surrogate when the keys differ.</li>
+</ol>
+<h3>The six practice questions</h3>
+<div class="tscroll"><table class="wide">
+<thead><tr><th>Question</th><th>Answer</th><th>Deciding detail</th></tr></thead>
+<tbody>
+<tr><td>F25 Q1: Driver HAS License, merged</td><td class="ok">True</td><td>Both sides are total, so merging is legal. PhoneNumbers is keyed by the composite key plus the value, and the derived Age is dropped.</td></tr>
+<tr><td>F25 Q2: Publication, Book, Journal, Chapter</td><td class="bad">False</td><td>Chapter must use Book’s PK, pubID, not ISBN: Chapter = (<u>pubID, chapterNumber</u>, chapterTitle).</td></tr>
+<tr><td>F25 Q3: Payer union, Process M:N</td><td class="ok">True</td><td>Surrogate payerID sits in both superclasses, and Process is keyed by both FKs.</td></tr>
+<tr><td>S26 Q1: Author PUBLISHES Book, Versions</td><td class="bad">False</td><td>Book’s key is (bookName, email), so Versions needs both: Versions = (<u>bookName, email, versions</u>) with a composite FK.</td></tr>
+<tr><td>S26 Q2: Laptop union, OWNER M:N</td><td class="ok">True</td><td>Surrogate laptopID, silicon stored as series and version, and Owner keyed by (ssn, IMEI).</td></tr>
+<tr><td>S26 Q3: Car specialization</td><td class="ok">True</td><td>Total and disjoint, so subclass-only (8B) is legal. Each subclass carries licenseNum, color, and Car’s side of CREATES.</td></tr>
+</tbody></table></div>
+<h3>Common reasons a mapping is False</h3>
+<ul>
+<li>A weak entity, or a relation that references one, copies only part of the key.</li>
+<li>An FK references a non-key column, or points the wrong way.</li>
+<li>A derived attribute is stored, or a composite attribute is stored as one column.</li>
+<li>A multivalued attribute is left inside its entity’s relation.</li>
+<li>An M:N relationship is mapped as a plain FK.</li>
+<li>A merged 1:1 relation is used when one side is partial, or 8B is used for a partial specialization.</li>
+</ul>
+</section>
+
+<section class="panel" role="tabpanel" id="ddl" aria-labelledby="t-ddl" hidden>
+<h2>CREATE TABLE and guarantees</h2>
+<h3>Matching a schema</h3>
+<p>The correct option matches the schema exactly. Check four things in each option:</p>
+<ol>
+<li>Table names match the relation names.</li>
+<li>Column names match the attribute names: writtenBy, not authorId.</li>
+<li>Every underlined attribute is the PRIMARY KEY. A composite key is <code>PRIMARY KEY (a, b)</code>.</li>
+<li>Every FOREIGN KEY names a column that exists in this table and REFERENCES the parent’s primary key column.</li>
+</ol>
+<pre class="sql"><code>CREATE TABLE Author (
+  authorId VARCHAR(20) PRIMARY KEY,
+  fullName VARCHAR(100)
+);
+
+CREATE TABLE Book (
+  bookId    VARCHAR(20) PRIMARY KEY,
+  title     VARCHAR(255),
+  writtenBy VARCHAR(20),
+  FOREIGN KEY (writtenBy) REFERENCES Author(authorId)
+    ON UPDATE CASCADE ON DELETE SET NULL
+);
+
+CREATE TABLE Trips (
+  trip_id         INT PRIMARY KEY,
+  taxi_service_id INT,
+  plate_num       CHAR(4),
+  FOREIGN KEY (taxi_service_id, plate_num)
+    REFERENCES Cars(taxi_service_id, plate_num)
+);</code></pre>
+<h3>What each constraint guarantees</h3>
+<div class="tscroll"><table class="wide">
+<thead><tr><th>Constraint</th><th>Guarantees</th><th>Doesn’t guarantee</th></tr></thead>
+<tbody>
+<tr><td><code>PRIMARY KEY (x)</code></td><td>x is unique and never NULL.</td><td>Anything about other tables.</td></tr>
+<tr><td><code>UNIQUE (x)</code></td><td>No two rows share the same non-NULL x.</td><td>That x is filled in. Many rows can hold NULL.</td></tr>
+<tr><td><code>NOT NULL</code></td><td>Every row has a value.</td><td>Uniqueness.</td></tr>
+<tr><td><code>FOREIGN KEY (x) REFERENCES P(k)</code></td><td>Every non-NULL x exists in P.</td><td>That every P row is referenced, or that x is filled in.</td></tr>
+<tr><td>FK + UNIQUE</td><td>Each parent has at most one child.</td><td>That each parent has a child.</td></tr>
+<tr><td>FK + NOT NULL</td><td>Every child has exactly one parent.</td><td>That each parent has a child.</td></tr>
+<tr><td>FK alone</td><td>Only that the parent exists.</td><td>Any limit on children per parent.</td></tr>
+<tr><td><code>CHECK (condition)</code></td><td>Every row satisfies the condition (MySQL 8.0.16 and later).</td><td>Anything across rows.</td></tr>
+<tr><td><code>DEFAULT v</code></td><td>An omitted value becomes v.</td><td>That the value stays v.</td></tr>
+</tbody></table></div>
+<div class="callout"><span class="label">How to answer “guaranteed” questions</span><p>Try to build a valid database state that breaks the statement. If one exists, the statement isn’t guaranteed. A statement that says something is <em>possible</em> is guaranteed as soon as one valid state shows it.</p></div>
+<h3>Fall 2025: ParkingSpot.employee_id is UNIQUE and a nullable FK</h3>
+<div class="tscroll"><table class="wide">
+<thead><tr><th>Statement</th><th>Answer</th><th>Why</th></tr></thead>
+<tbody>
+<tr><td>Every employee must have a parking spot.</td><td>Not guaranteed</td><td>Nothing forces an Employee row to be referenced.</td></tr>
+<tr><td>A parking spot can’t be shared by two employees.</td><td>Guaranteed</td><td>spot_id is the PK, and each row holds one employee_id.</td></tr>
+<tr><td>Every parking spot must be assigned to an employee.</td><td>Not guaranteed</td><td>employee_id allows NULL. UNIQUE doesn’t imply NOT NULL.</td></tr>
+<tr><td>An employee can exist without a parking spot.</td><td>Guaranteed</td><td>An Employee with no ParkingSpot row is a valid state.</td></tr>
+<tr><td>Each employee can have at most one parking spot.</td><td>Guaranteed</td><td>UNIQUE on employee_id.</td></tr>
+</tbody></table></div>
+<h3>Spring 2026: Grammy.artist_id is NOT NULL and an FK, but not UNIQUE</h3>
+<div class="tscroll"><table class="wide">
+<thead><tr><th>Statement</th><th>Answer</th><th>Why</th></tr></thead>
+<tbody>
+<tr><td>An artist can exist without being linked to a grammy.</td><td>True</td><td>Nothing forces an Artist row to be referenced.</td></tr>
+<tr><td>Every artist must have a grammy.</td><td>False</td><td>Same reason.</td></tr>
+<tr><td>Each artist can have at most one grammy.</td><td>False</td><td>artist_id isn’t UNIQUE in Grammy.</td></tr>
+<tr><td>Grammys can’t be shared by two artists.</td><td>True</td><td>Each Grammy row, keyed by grammy_id, holds one artist_id.</td></tr>
+<tr><td>Every grammy must be assigned to an artist.</td><td>True</td><td>artist_id is NOT NULL.</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="panel" role="tabpanel" id="integrity" aria-labelledby="t-integrity" hidden>
+<h2>Integrity constraints</h2>
+<p>Each question runs an INSERT, UPDATE, or DELETE against the reference database and its foreign key policies. You mark which errors happen. Questions are independent, and one statement can cause more than one error type.</p>
+<h3>The three error types</h3>
+<div class="tscroll"><table class="wide">
+<thead><tr><th>Error</th><th>What breaks it</th><th>Typical cause</th></tr></thead>
+<tbody>
+<tr><td>Key integrity</td><td>Two rows with the same PK value.</td><td>An INSERT or UPDATE that repeats an existing PK.</td></tr>
+<tr><td>Entity integrity</td><td>NULL in any PK column.</td><td>An INSERT or UPDATE that puts NULL in a PK column, or ON DELETE SET NULL on an FK that’s part of a child’s PK.</td></tr>
+<tr><td>Referential integrity</td><td>An FK value with no matching parent, or a parent change that RESTRICT blocks.</td><td>Inserting a child whose parent doesn’t exist, or deleting a parent that RESTRICT protects.</td></tr>
+</tbody></table></div>
+<p>Non-key updates, statements whose WHERE matches no rows, and CASCADE or SET NULL actions that cause nothing else all succeed.</p>
+<h3>Foreign key policies</h3>
+<div class="tscroll"><table class="wide">
+<thead><tr><th>Policy</th><th>Parent row deleted</th><th>Parent key updated</th></tr></thead>
+<tbody>
+<tr><td>CASCADE</td><td>Delete the matching child rows, then check their children.</td><td>Change the child FK values to the new key.</td></tr>
+<tr><td>SET NULL</td><td>Set the child FK to NULL. If that column is part of the child’s PK, it’s an entity error.</td><td>Same, on update.</td></tr>
+<tr><td>RESTRICT or NO ACTION</td><td>Block the statement if any child row matches: a referential error.</td><td>Block it if any child uses the old key.</td></tr>
+<tr><td>SET DEFAULT</td><td>Set the child FK to its default value.</td><td>Same, on update.</td></tr>
+</tbody></table></div>
+<h3>Decision procedure</h3>
+<ol>
+<li>Find the rows the statement touches. If the WHERE matches nothing, it succeeds.</li>
+<li><strong>INSERT:</strong> a duplicate PK is a key error, NULL in the PK is an entity error, and each non-NULL FK value must exist in its parent or it’s a referential error.</li>
+<li><strong>UPDATE of a PK:</strong> a duplicate new value is a key error and NULL is an entity error. Then apply the children’s ON UPDATE policies. <strong>UPDATE of an FK:</strong> the new value must exist in the parent. <strong>UPDATE of any other column:</strong> success.</li>
+<li><strong>DELETE:</strong> never a key error. For each child table pointing at the deleted rows, RESTRICT with matches is a referential error, SET NULL on a PK column is an entity error, and CASCADE deletes those children, so repeat this step for them.</li>
+<li>Mark every type you found.</li>
+</ol>
+<h3>Worked chain: Fall 2025 Q4</h3>
+<p><code>DELETE FROM Members WHERE legal_name LIKE 'C%C%';</code> matches Charlie Chen, member 3. Follow every policy that points at member_id:</p>
+<ul>
+<li>Repositories.owner_id is CASCADE, so repo 111 is deleted too. Its commits cascade away, but PullRequests (PR 5) and Issues (111, 4) both RESTRICT deleting repo 111: a <mark>referential error</mark>.</li>
+<li>Issues.opened_by is SET NULL and part of the Issues PK, so (001, 3) would become (001, NULL): an <mark>entity error</mark>. Reviews.reviewed_by is also SET NULL inside its PK.</li>
+<li>PullRequests.author_id is SET NULL, but author_id isn’t in that PK, so it’s fine.</li>
+</ul>
+<p>Answer: entity and referential.</p>
+<h3>All nine practice statements</h3>
+<div class="tscroll"><table class="wide">
+<thead><tr><th>Statement</th><th>Result</th><th>Why</th></tr></thead>
+<tbody>
+<tr><td>F25 Q1: insert issue ('001', 3)</td><td>Key</td><td>(001, 3) already exists.</td></tr>
+<tr><td>F25 Q2: delete repo AI-Project</td><td>Referential</td><td>PR 1 references repo 000 under RESTRICT.</td></tr>
+<tr><td>F25 Q3: set pr_id to NULL for repo 100</td><td>Entity</td><td>pr_id is the PK of PullRequests.</td></tr>
+<tr><td>F25 Q4: delete members like 'C%C%'</td><td>Entity, referential</td><td>See the worked chain.</td></tr>
+<tr><td>S26 Q1: insert trip with car (5, '8888')</td><td>Referential</td><td>No such car exists.</td></tr>
+<tr><td>S26 Q2: update a car’s status</td><td>Success</td><td>status isn’t part of any key.</td></tr>
+<tr><td>S26 Q3: insert trip with trip_id NULL</td><td>Entity</td><td>trip_id is the PK.</td></tr>
+<tr><td>S26 Q4: delete passenger 001</td><td>Referential</td><td>Trips 101 and 105 RESTRICT it.</td></tr>
+<tr><td>S26 Q5: insert passenger '001'</td><td>Key</td><td>Passenger 001 already exists.</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="panel" role="tabpanel" id="joins" aria-labelledby="t-joins" hidden>
+<h2>Joins and tracing</h2>
+<h3>Join types</h3>
+<div class="tscroll"><table class="wide">
+<thead><tr><th>Join</th><th>Keeps</th><th>Columns with no match</th></tr></thead>
+<tbody>
+<tr><td><code>[INNER] JOIN … ON</code></td><td>Only pairs where ON is true.</td><td>Not applicable.</td></tr>
+<tr><td><code>LEFT JOIN</code></td><td>Every row of the left side.</td><td>Right-side columns are NULL.</td></tr>
+<tr><td><code>RIGHT JOIN</code></td><td>Every row of the right side, the table named after RIGHT JOIN.</td><td>Left-side columns are NULL.</td></tr>
+<tr><td><code>CROSS JOIN</code></td><td>Every pair: rows × rows.</td><td>Not applicable. Filter with WHERE.</td></tr>
+<tr><td><code>FULL OUTER JOIN</code></td><td>Not available in MySQL. Use a LEFT JOIN UNION a RIGHT JOIN.</td><td>Both sides can be NULL.</td></tr>
+</tbody></table></div>
+<h3>Chained joins run left to right</h3>
+<p><code>A LEFT JOIN B ON … RIGHT JOIN C ON …</code> means <code>(A LEFT JOIN B) RIGHT JOIN C</code>. The result keeps every C row and drops A rows that match no C row. That’s the Fall 2025 tracing question: every member stays.</p>
+<h3>ON versus WHERE in an outer join</h3>
+<pre class="sql"><code>SELECT d.dname, e.lname
+FROM department d
+LEFT JOIN employee e
+  ON e.dno = d.dnumber AND e.sex = 'F';</code></pre>
+<p>This keeps every department. A department with no women shows one row with a NULL lname. Moving <code>e.sex = 'F'</code> to WHERE drops those departments, which turns the LEFT JOIN into an inner join.</p>
+<h3>NULL rules</h3>
+<ul>
+<li>NULL = NULL isn’t true, so NULLs never match in ON. Test with IS NULL or IS NOT NULL.</li>
+<li>MySQL sorts NULLs first in ascending order and last in descending order.</li>
+<li>Joining on part of a key can match unrelated rows. Spring 2026 Q2 joins cars to trips on plate_num alone, and plate 1234 exists under two taxi services.</li>
+<li>Without ORDER BY, row order isn’t guaranteed. Answer keys list rows in table order.</li>
+</ul>
+<h3>Logical order of a query</h3>
+<ol>
+<li>FROM and JOINs</li>
+<li>WHERE</li>
+<li>GROUP BY</li>
+<li>HAVING</li>
+<li>SELECT, which creates the aliases</li>
+<li>DISTINCT</li>
+<li>ORDER BY</li>
+<li>LIMIT and OFFSET</li>
+</ol>
+<h3>Tracing by hand</h3>
+<ol>
+<li>Write the header row from the SELECT aliases, in order.</li>
+<li>Build the join one step at a time, writing NULLs for unmatched outer rows.</li>
+<li>Apply WHERE, then grouping, then ORDER BY.</li>
+<li>Apply LIMIT last, and write NULL wherever a value is missing.</li>
+</ol>
+<h3>LIMIT and OFFSET</h3>
+<div class="tscroll"><table>
+<thead><tr><th>You want</th><th>SQL</th></tr></thead>
+<tbody>
+<tr><td>The first 4 rows</td><td><code>LIMIT 4</code></td></tr>
+<tr><td>Only the 2nd row</td><td><code>LIMIT 1 OFFSET 1</code></td></tr>
+<tr><td>The 2nd to 5th rows</td><td><code>LIMIT 4 OFFSET 1</code></td></tr>
+<tr><td>Same, short form</td><td><code>LIMIT 1, 4</code> (offset first, then count)</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="panel" role="tabpanel" id="aggregates" aria-labelledby="t-aggregates" hidden>
+<h2>Aggregates and GROUP BY</h2>
+<div class="tscroll"><table>
+<thead><tr><th>Function</th><th>NULL behavior</th></tr></thead>
+<tbody>
+<tr><td><code>COUNT(*)</code></td><td>Counts rows, including a row of NULLs made by an outer join.</td></tr>
+<tr><td><code>COUNT(col)</code></td><td>Counts non-NULL values only.</td></tr>
+<tr><td><code>COUNT(DISTINCT col)</code></td><td>Counts distinct non-NULL values.</td></tr>
+<tr><td><code>SUM</code>, <code>AVG</code>, <code>MIN</code>, <code>MAX</code></td><td>Ignore NULLs. Return NULL when there’s nothing to aggregate.</td></tr>
+</tbody></table></div>
+<h3>The LEFT JOIN + COUNT trap</h3>
+<pre class="sql"><code>SELECT d.dept_id, COUNT(e.emp_id) AS employee_count
+FROM departments d
+LEFT JOIN employees e ON d.dept_id = e.dept_id
+GROUP BY d.dept_id;</code></pre>
+<p>A department with no employees still gets one joined row, with NULLs on the employee side. <code>COUNT(*)</code> counts that row as 1. <code>COUNT(e.emp_id)</code> skips the NULL and returns 0. This was Fall 2025 design Q2.</p>
+<h3>Joins repeat rows</h3>
+<p>After you join employee to works_on, an employee appears once per project, so <code>AVG(e.salary)</code> weights that employee once per project. Spring 2026 coding Q5 expects exactly this. Use a subquery or <code>COUNT(DISTINCT …)</code> when you need one value per employee.</p>
+<h3>WHERE versus HAVING</h3>
+<div class="tscroll"><table>
+<thead><tr><th>Clause</th><th>Runs on</th><th>Can use aggregates</th></tr></thead>
+<tbody>
+<tr><td>WHERE</td><td>Rows, before grouping</td><td>No</td></tr>
+<tr><td>HAVING</td><td>Groups, after grouping</td><td>Yes</td></tr>
+</tbody></table></div>
+<h3>ONLY_FULL_GROUP_BY</h3>
+<p>The coding exam turns this mode on. Every column in SELECT, HAVING, or ORDER BY must be in GROUP BY, inside an aggregate, or determined by a primary key you grouped by. Group by every non-aggregated column you select.</p>
+<pre class="sql"><code>SELECT dno, lname, AVG(salary)
+FROM employee
+GROUP BY dno;</code></pre>
+<p>This query fails because lname isn’t grouped or aggregated.</p>
+<ul>
+<li><code>ROUND(AVG(salary), 2)</code> rounds to 2 decimal places.</li>
+<li>GROUP BY puts all NULLs in one group.</li>
+</ul>
+</section>
+
+<section class="panel" role="tabpanel" id="subqueries" aria-labelledby="t-subqueries" hidden>
+<h2>Subqueries and set operations</h2>
+<div class="tscroll"><table class="wide">
+<thead><tr><th>Form</th><th>Meaning</th><th>Example</th></tr></thead>
+<tbody>
+<tr><td>Scalar subquery</td><td>Returns one value to compare with =, &lt;, or &gt;=.</td><td><code>salary &lt; (SELECT AVG(salary) FROM employee)</code></td></tr>
+<tr><td>IN, NOT IN</td><td>The value is, or isn’t, in the returned list.</td><td><code>ssn IN (SELECT essn FROM works_on)</code></td></tr>
+<tr><td>EXISTS, NOT EXISTS</td><td>True when the inner query returns any row. Usually correlated.</td><td><code>NOT EXISTS (SELECT * FROM works_on w WHERE w.essn = e.ssn)</code></td></tr>
+<tr><td>ANY, ALL</td><td>Compare with some, or every, returned value.</td><td><code>salary &gt; ALL (SELECT salary FROM employee WHERE dno = 5)</code></td></tr>
+<tr><td>Derived table</td><td>A subquery in FROM. It needs an alias.</td><td><code>FROM (SELECT dno, AVG(salary) AS a FROM employee GROUP BY dno) AS t</code></td></tr>
+</tbody></table></div>
+<div class="callout trap"><span class="label">Traps</span>
+<ul>
+<li>NOT IN returns no rows if the list contains a NULL. Use NOT EXISTS, or filter the NULLs out.</li>
+<li><code>&gt; ALL</code> of an empty list is true. <code>&gt; ANY</code> of an empty list is false.</li>
+<li>A scalar subquery that returns 2 or more rows is an error.</li>
+<li>Comparing with a scalar subquery that returns NULL is never true, so no rows come back.</li>
+</ul></div>
+<h3>“Only” and “every” questions</h3>
+<p>“Employees whose every session is over 4 hours” means no session is 4 hours or less. Both of these work:</p>
+<pre class="sql"><code>SELECT ssn FROM time_frames
+GROUP BY ssn
+HAVING MIN(duration) > 4;
+
+SELECT DISTINCT t.ssn FROM time_frames t
+WHERE NOT EXISTS (SELECT * FROM time_frames x
+                  WHERE x.ssn = t.ssn AND x.duration &lt;= 4);</code></pre>
+<h3>Set operations</h3>
+<ul>
+<li>UNION removes duplicates. UNION ALL keeps them.</li>
+<li>Both sides need the same number of columns with compatible types. Column names come from the first SELECT.</li>
+<li>One ORDER BY at the end sorts the whole result.</li>
+<li>MySQL 8.0.31 and later support INTERSECT and EXCEPT. On older versions, use IN for an intersect and NOT IN or NOT EXISTS for an except.</li>
+</ul>
+<pre class="sql"><code>SELECT ssn FROM in_office WHERE building = 'Main'
+UNION
+SELECT ssn FROM remote_access;</code></pre>
+</section>
+
+<section class="panel" role="tabpanel" id="views" aria-labelledby="t-views" hidden>
+<h2>Views</h2>
+<p>A view is a named, stored query. It stores no data: MySQL reruns the query every time you use the view, so the result is always current. MySQL has no materialized views.</p>
+<pre class="sql"><code>CREATE OR REPLACE VIEW high_earners AS
+SELECT ssn, fname, lname, salary
+FROM employee
+WHERE salary > 40000;
+
+SELECT * FROM high_earners WHERE lname LIKE 'W%';
+
+DROP VIEW high_earners;</code></pre>
+<h3>Why use views</h3>
+<ul>
+<li>Hide a complex query behind a simple name.</li>
+<li>Limit access: expose some columns or rows without granting the base table.</li>
+<li>Reuse the same logic in many queries.</li>
+<li>Keep queries working when the base tables change.</li>
+</ul>
+<h3>Updatable views</h3>
+<p>You can INSERT, UPDATE, or DELETE through a view only when each view row maps to exactly one base-table row. In practice that means one base table, and no aggregates, GROUP BY, HAVING, DISTINCT, or UNION. An INSERT also needs every NOT NULL column that has no default. <code>WITH CHECK OPTION</code> rejects changes that would push a row outside the view’s WHERE.</p>
+<h3>Views on the coding exam</h3>
+<ul>
+<li>Every answer is a view named practiceQuery1 to practiceQuery5.</li>
+<li>ORDER BY and LIMIT inside a view work in MySQL.</li>
+<li>The grader compares values by column position, so keep the column order the prompt asks for. Column names don’t matter.</li>
+</ul>
+</section>
+
+<section class="panel" role="tabpanel" id="design" aria-labelledby="t-design" hidden>
+<h2>Keys and design</h2>
+<div class="tscroll"><table>
+<thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+<tbody>
+<tr><td>Superkey</td><td>Any set of attributes that uniquely identifies a row.</td></tr>
+<tr><td>Candidate key</td><td>A minimal superkey: removing any attribute makes it non-unique.</td></tr>
+<tr><td>Primary key</td><td>The candidate key you choose. It’s underlined, unique, and never NULL.</td></tr>
+<tr><td>Alternate key</td><td>Another candidate key, usually declared UNIQUE.</td></tr>
+<tr><td>Foreign key</td><td>Attributes whose values must match a key in another relation, or the same one.</td></tr>
+</tbody></table></div>
+<h3>Picking a primary key from a scenario</h3>
+<ol>
+<li>Say what one row represents: one reservation, one surgery.</li>
+<li>Find the rule that stops two rows from repeating, like “no two surgeries for the same surgeon at the same time.”</li>
+<li>Use the attributes in that rule.</li>
+<li>Drop extras. If a smaller set is already unique, a bigger option isn’t minimal.</li>
+</ol>
+<div class="tscroll"><table class="wide">
+<thead><tr><th>Scenario</th><th>Answer</th><th>Why the others fail</th></tr></thead>
+<tbody>
+<tr><td>Hotel reservations (F25)</td><td>Room number, branch ID, check-in date</td><td>Room numbers repeat across branches, so branch ID is needed. A room is booked many times, so the date is needed. Adding guest ID would let two guests book the same room on the same day.</td></tr>
+<tr><td>Surgical schedules (S26)</td><td>surgeon_id, scheduled_time</td><td>No surgeon has two surgeries at one time. room_number and surgery_type add nothing.</td></tr>
+</tbody></table></div>
+<div class="callout"><span class="label">Watch for</span><p>Identifiers that are only unique inside something else, like a room number inside a branch. They pull the outer key into the PK.</p></div>
+</section>
+
+<section class="panel" role="tabpanel" id="coding" aria-labelledby="t-coding" hidden>
+<h2>Coding exam playbook</h2>
+<h3>Workflow in MySQL Workbench</h3>
+<ol>
+<li>Open <code>init.sql</code> and run the whole file. It creates global_company and the autograder.</li>
+<li>Open <code>student.sql</code>. Don’t edit anything above or below the marker lines.</li>
+<li>Write each answer as <code>create or replace view practiceQueryN as …</code> under its prompt.</li>
+<li>Run the whole <code>student.sql</code>. The last result grid shows points per query.</li>
+<li>If a query errors, check the <code>magic44_log_query_errors</code> table, fix the view, and run the file again.</li>
+</ol>
+<h3>The SQL mode the grader uses</h3>
+<div class="tscroll"><table class="wide">
+<thead><tr><th>Mode</th><th>Effect</th><th>What to do</th></tr></thead>
+<tbody>
+<tr><td>ANSI_QUOTES</td><td>Double quotes mark an identifier, like a column or alias name, not a string.</td><td>Write strings in single quotes: <code>'Computing'</code>. Use double quotes only for aliases with spaces.</td></tr>
+<tr><td>PIPES_AS_CONCAT</td><td><code>||</code> joins strings instead of meaning OR.</td><td>Use OR for logic.</td></tr>
+<tr><td>ONLY_FULL_GROUP_BY</td><td>Ungrouped, unaggregated columns are errors.</td><td>Group by every non-aggregated column.</td></tr>
+<tr><td>STRICT_ALL_TABLES, TRADITIONAL</td><td>Bad values raise errors instead of warnings.</td><td>Nothing extra.</td></tr>
+</tbody></table></div>
+<h3>How the grader scores you</h3>
+<ul>
+<li>It runs each view on the original data and on four changed copies with rows added, deleted, or edited.</li>
+<li>It compares values by column position, and it ignores letter case, spaces, and row order.</li>
+<li>ORDER BY matters only when LIMIT picks which rows appear.</li>
+<li>A value you looked up and typed in, like an SSN or an average, fails the changed copies. Only the values the prompt names, like “department 6,” are safe to type.</li>
+</ul>
+<h3>Prompt phrases to SQL</h3>
+<div class="tscroll"><table class="wide">
+<thead><tr><th>The prompt says</th><th>Write</th></tr></thead>
+<tbody>
+<tr><td>the second X, sorted by Y</td><td><code>ORDER BY Y LIMIT 1 OFFSET 1</code></td></tr>
+<tr><td>the 2nd to 5th</td><td><code>LIMIT 4 OFFSET 1</code></td></tr>
+<tr><td>below the company average</td><td><code>col &lt; (SELECT AVG(col) FROM t)</code></td></tr>
+<tr><td>for every X, show NULL for the Y part unless …</td><td><code>X LEFT JOIN Y ON match AND condition</code></td></tr>
+<tr><td>include X even if it has no Y</td><td>LEFT JOIN, and count a Y column</td></tr>
+<tr><td>only, every, all</td><td><code>HAVING MIN(…)</code> or <code>MAX(…)</code>, or NOT EXISTS</td></tr>
+<tr><td>more than, exceeding, greater than</td><td><code>&gt;</code></td></tr>
+<tr><td>at least, meets or exceeds</td><td><code>&gt;=</code></td></tr>
+<tr><td>unknown, no assignment</td><td><code>IS NULL</code>. An outer join makes NULLs too.</td></tr>
+<tr><td>ends with A</td><td><code>LIKE '%A'</code>, which ignores case by default</td></tr>
+<tr><td>without a dash</td><td><code>NOT LIKE '%-%'</code></td></tr>
+<tr><td>in the Computing building</td><td><code>= 'Computing'</code>, not LIKE</td></tr>
+<tr><td>formatted as “First Name, Last Name”</td><td><code>CONCAT(fname, ', ', lname)</code></td></tr>
+<tr><td>rounded to 2 decimal places</td><td><code>ROUND(x, 2)</code></td></tr>
+</tbody></table></div>
+<h3>global_company tables</h3>
+<p>The tables don’t declare foreign keys, so you write the join conditions yourself.</p>
+<div class="tscroll"><table class="wide">
+<thead><tr><th>Table</th><th>Key</th><th>Joins on</th></tr></thead>
+<tbody>
+<tr><td>employee</td><td>ssn</td><td>dno = department.dnumber, superssn = employee.ssn</td></tr>
+<tr><td>department</td><td>dnumber</td><td>mgrssn = employee.ssn</td></tr>
+<tr><td>dept_locations</td><td>(dnumber, dlocation)</td><td>dnumber = department.dnumber</td></tr>
+<tr><td>project</td><td>pnumber</td><td>dnum = department.dnumber</td></tr>
+<tr><td>works_on</td><td>(essn, pno)</td><td>essn = employee.ssn, pno = project.pnumber. hours can be NULL.</td></tr>
+<tr><td>dependent</td><td>(essn, dependent_name)</td><td>essn = employee.ssn</td></tr>
+<tr><td>fund_source</td><td>fsid</td><td>pnumber = project.pnumber</td></tr>
+<tr><td>customer</td><td>cid</td><td>fsid = fund_source.fsid, one customer per fund source. assets can be NULL.</td></tr>
+<tr><td>budget</td><td>(dnumber, bcode)</td><td>dnumber = department.dnumber, fsid = fund_source.fsid (unique, can be NULL)</td></tr>
+<tr><td>remote_access</td><td>ssn</td><td>ssn = employee.ssn. Employees who work remotely.</td></tr>
+<tr><td>time_frames</td><td>(ssn, start_hour, duration)</td><td>ssn = remote_access.ssn. One row per remote session.</td></tr>
+<tr><td>in_office</td><td>ssn</td><td>ssn = employee.ssn. room can be NULL.</td></tr>
+<tr><td>analysis, operations, maintenance</td><td>pnumber</td><td>pnumber = project.pnumber. Project subtypes.</td></tr>
+<tr><td>operation_skills</td><td>(pnumber, skill_name)</td><td>pnumber = operations.pnumber</td></tr>
+<tr><td>maintenance_types</td><td>(pnumber, remote_access, frequency, cost)</td><td>pnumber = maintenance.pnumber</td></tr>
+<tr><td>interns_in</td><td>(essn, dependent_name, dnumber)</td><td>(essn, dependent_name) = dependent, dnumber = department.dnumber</td></tr>
+</tbody></table></div>
+</section>
+
+<section class="panel" role="tabpanel" id="crib" aria-labelledby="t-crib" hidden>
+<h2>Crib sheet</h2>
+<p>The whole exam on one page. Copy it onto your sheet, then add your own weak spots.</p>
+<p class="noprint"><button class="btn" id="print-btn" type="button">Print this page</button></p>
+<div class="crib">
+<section>
+<h3>Mapping</h3>
+<ul>
+<li>Strong entity: every simple attribute, key underlined.</li>
+<li>Composite: simple parts only. Derived: drop it.</li>
+<li>Multivalued: new relation (owner key, value), both in the PK.</li>
+<li>Weak entity: owner’s full key + partial key = PK.</li>
+<li>1:1: FK on either side, preferring the total side. Merge only if both sides are total.</li>
+<li>1:N: FK on the N side. M:N: new relation, PK = both FKs.</li>
+<li>Relationship attributes go where the FK goes, or in the new relation.</li>
+<li>8A always. 8B needs total (use with disjoint). 8C disjoint. 8D overlapping.</li>
+<li>Union with different keys: surrogate key, FK in each superclass.</li>
+</ul>
+</section>
+<section>
+<h3>Constraints</h3>
+<ul>
+<li>Key: duplicate PK. Entity: NULL in the PK. Referential: missing parent, or a RESTRICT block.</li>
+<li>A DELETE never causes a key error.</li>
+<li>SET NULL on an FK inside a PK: entity error.</li>
+<li>CASCADE: follow the chain to the next RESTRICT.</li>
+<li>WHERE matches nothing: success. Non-key update: success.</li>
+<li>UNIQUE allows many NULLs. FK + UNIQUE: at most one child per parent.</li>
+<li>FK + NOT NULL: every child has a parent. Nothing forces a parent to have children.</li>
+</ul>
+</section>
+<section>
+<h3>SQL</h3>
+<ul>
+<li>Order: FROM, WHERE, GROUP BY, HAVING, SELECT, DISTINCT, ORDER BY, LIMIT.</li>
+<li>LEFT keeps left rows, RIGHT keeps right rows, and chains run left to right.</li>
+<li>In an outer join, filters in ON keep rows and filters in WHERE drop them.</li>
+<li>COUNT(*) counts NULL rows. COUNT(col) doesn’t.</li>
+<li>NOT IN with a NULL in the list returns no rows.</li>
+<li>NULLs sort first in ascending order.</li>
+<li>2nd row: LIMIT 1 OFFSET 1. 2nd to 5th: LIMIT 4 OFFSET 1.</li>
+</ul>
+</section>
+<section>
+<h3>Coding</h3>
+<ul>
+<li>Strings in single quotes (ANSI_QUOTES).</li>
+<li><code>||</code> concatenates. It isn’t OR.</li>
+<li>Group by every non-aggregated column.</li>
+<li>Exact matches use =. Patterns use LIKE.</li>
+<li><code>&gt;</code> for “exceeding,” <code>&gt;=</code> for “at least.”</li>
+<li>Don’t type in values you looked up. The grader changes the data.</li>
+</ul>
+</section>
+</div>
+</section>
+
+</main>
+</div>
+</div>
+<script>(function () {
+  "use strict";
+  function esc(s) { return s.replace(/[&<>]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]; }); }
+  var KW = new Set(("select from where and or not in is null join left right inner outer cross full on group by having order asc desc limit offset as distinct union all any some exists like between case when then else end create replace view table primary key foreign references unique default check constraint insert into values update set delete drop cascade restrict action no int integer varchar char date decimal count sum avg min max round concat coalesce ifnull with intersect except").split(" "));
+  var TOK = /('(?:[^']|'')*')|("[^"]*")|(\b\d+(?:\.\d+)?\b)|([A-Za-z_][A-Za-z0-9_]*)|([\s\S])/g;
+  document.querySelectorAll("pre.sql > code").forEach(function (el) {
+    var src = el.textContent, out = "", m;
+    TOK.lastIndex = 0;
+    while ((m = TOK.exec(src)) !== null) {
+      if (m[1] || m[2]) out += '<span class="s">' + esc(m[1] || m[2]) + "</span>";
+      else if (m[3]) out += '<span class="n">' + m[3] + "</span>";
+      else if (m[4]) out += KW.has(m[4].toLowerCase()) ? '<span class="k">' + m[4] + "</span>" : esc(m[4]);
+      else out += esc(m[5]);
+    }
+    el.innerHTML = out;
+  });
+
+  function initTabs(list) {
+    var tabs = Array.prototype.slice.call(list.querySelectorAll('[role="tab"]'));
+    var useHash = list.hasAttribute("data-hash");
+    var scrollId = list.getAttribute("data-scroll");
+    function byId(id) { return tabs.filter(function (t) { return t.getAttribute("aria-controls") === id; })[0]; }
+    function select(tab, o) {
+      o = o || {};
+      tabs.forEach(function (t) {
+        var on = t === tab;
+        t.setAttribute("aria-selected", on ? "true" : "false");
+        t.tabIndex = on ? 0 : -1;
+        var p = document.getElementById(t.getAttribute("aria-controls"));
+        if (p) p.hidden = !on;
+      });
+      if (o.focus) tab.focus();
+      if (!o.user) return;
+      if (useHash) { try { history.replaceState(null, "", "#" + tab.getAttribute("aria-controls")); } catch (e) {} }
+      if (scrollId) {
+        var top = document.getElementById(scrollId);
+        if (top && top.getBoundingClientRect().top < 0) top.scrollIntoView({ block: "start" });
+      }
+      if (list.scrollWidth > list.clientWidth) tab.scrollIntoView({ block: "nearest", inline: "nearest" });
+    }
+    tabs.forEach(function (t, i) {
+      t.addEventListener("click", function () { select(t, { user: true }); });
+      t.addEventListener("keydown", function (e) {
+        var j = null;
+        if (e.key === "ArrowDown" || e.key === "ArrowRight") j = (i + 1) % tabs.length;
+        else if (e.key === "ArrowUp" || e.key === "ArrowLeft") j = (i - 1 + tabs.length) % tabs.length;
+        else if (e.key === "Home") j = 0;
+        else if (e.key === "End") j = tabs.length - 1;
+        if (j !== null) { e.preventDefault(); select(tabs[j], { focus: true, user: true }); }
+      });
+    });
+    list.selectById = function (id) { var t = byId(id); if (t) select(t, { user: true }); return !!t; };
+    var initial = useHash && location.hash ? byId(location.hash.slice(1)) : null;
+    if (!initial) initial = tabs.filter(function (t) { return t.getAttribute("aria-selected") === "true"; })[0] || tabs[0];
+    select(initial, {});
+  }
+  var lists = document.querySelectorAll('[role="tablist"]');
+  lists.forEach(initTabs);
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest ? e.target.closest("[data-tab]") : null;
+    if (!a) return;
+    var id = a.getAttribute("data-tab");
+    for (var k = 0; k < lists.length; k++) {
+      if (lists[k].selectById && lists[k].selectById(id)) {
+        e.preventDefault();
+        var p = document.getElementById(id);
+        if (p) p.scrollIntoView({ block: "start" });
+        break;
+      }
+    }
+  });
+
+  document.querySelectorAll("button.copy").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var pre = b.parentNode.querySelector("pre");
+      var text = pre ? pre.innerText : "";
+      var label = b.textContent;
+      function done() { b.textContent = "Copied"; setTimeout(function () { b.textContent = label; }, 1600); }
+      function fallback() {
+        var ta = document.createElement("textarea");
+        ta.value = text; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand("copy"); } catch (e) {}
+        document.body.removeChild(ta); done();
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback);
+      else fallback();
+    });
+  });
+
+  var reveals = document.querySelectorAll(".reveal");
+  reveals.forEach(function (b) {
+    b.setAttribute("aria-expanded", "false");
+    b.addEventListener("click", function () {
+      var q = b.closest(".q");
+      var open = q.classList.toggle("open");
+      b.textContent = open ? "Hide solution" : "Show solution";
+      b.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+  });
+  var pm = document.getElementById("practice");
+  if (pm) {
+    var apply = function () {
+      document.body.classList.toggle("practice", pm.checked);
+      document.querySelectorAll(".q.open").forEach(function (q) { q.classList.remove("open"); });
+      reveals.forEach(function (b) { b.textContent = "Show solution"; b.setAttribute("aria-expanded", "false"); });
+    };
+    pm.addEventListener("change", apply);
+    apply();
+  }
+
+  var drawer = document.getElementById("drawer");
+  if (drawer) {
+    var closeBtn = drawer.querySelector(".close"), last = null;
+    var openD = function () {
+      last = document.activeElement;
+      var active = document.querySelector('[role="tab"][aria-selected="true"][data-db]');
+      var id = active ? active.getAttribute("data-db") : null;
+      drawer.querySelectorAll(".db").forEach(function (d) { d.hidden = d.id !== id; });
+      drawer.classList.add("open");
+      drawer.setAttribute("aria-hidden", "false");
+      drawer.scrollTop = 0;
+      closeBtn.focus();
+    };
+    var closeD = function () {
+      drawer.classList.remove("open");
+      drawer.setAttribute("aria-hidden", "true");
+      if (last && last.focus) last.focus();
+    };
+    document.querySelectorAll("[data-open-drawer]").forEach(function (b) { b.addEventListener("click", openD); });
+    closeBtn.addEventListener("click", closeD);
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && drawer.classList.contains("open")) closeD(); });
+  }
+
+  var pb = document.getElementById("print-btn");
+  if (pb) pb.addEventListener("click", function () { window.print(); });
+})();
+</script>
+</body>
+</html>
