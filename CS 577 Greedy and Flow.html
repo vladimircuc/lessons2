@@ -1,0 +1,2604 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>CS 577 Greedy and Flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;600;700&display=swap">
+<style>
+/* Layout: graph-paper notebook. Sticky tab bar, one tab visible at a time, each tab = short text + big visuals + step-through players. */
+:root {
+  --bg: #F5F7FB;
+  --grid: rgba(47, 85, 212, .07);
+  --surface: #FFFFFF;
+  --surface-2: #EEF2F9;
+  --ink: #132036;
+  --ink-2: #3A4A66;
+  --muted: #66758F;
+  --line: #D8DFEB;
+  --line-strong: #97A5BE;
+  --accent: #2F55D4;
+  --accent-deep: #1C3AA3;
+  --accent-soft: #E2E9FF;
+  --on-accent: #FFFFFF;
+  --amber: #C98400;
+  --amber-soft: #FFE8AE;
+  --good: #1F9254;
+  --good-soft: #D3F2E0;
+  --bad: #D03838;
+  --bad-soft: #FBE1E1;
+  --path: #E8590C;
+  --edge: #A2AFC5;
+  --red-v: #E03131;
+  --red-v-soft: #FFE1E1;
+  --blue-v: #1971C2;
+  --blue-v-soft: #DCEBFF;
+  --plant: #B87A00;
+  --plant-soft: #FFF0BF;
+  --c1: rgba(47, 85, 212, .10);
+  --c2: rgba(31, 146, 84, .12);
+  --c3: rgba(102, 117, 143, .12);
+  --shadow: 0 1px 2px rgba(19, 32, 54, .06), 0 6px 20px rgba(19, 32, 54, .06);
+  --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --r: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1320; --grid: rgba(124, 155, 255, .06); --surface: #151D2D; --surface-2: #1C2638;
+    --ink: #E7EDF8; --ink-2: #B9C5DA; --muted: #8391AB; --line: #29354D; --line-strong: #4C5C7B;
+    --accent: #7D9BFF; --accent-deep: #5C7DF2; --accent-soft: #1E2B50; --on-accent: #0A1020;
+    --amber: #F0B23C; --amber-soft: #3B3016; --good: #4CC38A; --good-soft: #15352A; --bad: #FF7A7A; --bad-soft: #3C1A1F;
+    --path: #FF922B; --edge: #586985; --red-v: #FF6B6B; --red-v-soft: #3A1C24; --blue-v: #5CA8FF; --blue-v-soft: #15294A;
+    --plant: #F2C14E; --plant-soft: #3A3115; --c1: rgba(125, 155, 255, .12); --c2: rgba(76, 195, 138, .12); --c3: rgba(131, 145, 171, .12);
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 6px 20px rgba(0, 0, 0, .25);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1320; --grid: rgba(124, 155, 255, .06); --surface: #151D2D; --surface-2: #1C2638;
+  --ink: #E7EDF8; --ink-2: #B9C5DA; --muted: #8391AB; --line: #29354D; --line-strong: #4C5C7B;
+  --accent: #7D9BFF; --accent-deep: #5C7DF2; --accent-soft: #1E2B50; --on-accent: #0A1020;
+  --amber: #F0B23C; --amber-soft: #3B3016; --good: #4CC38A; --good-soft: #15352A; --bad: #FF7A7A; --bad-soft: #3C1A1F;
+  --path: #FF922B; --edge: #586985; --red-v: #FF6B6B; --red-v-soft: #3A1C24; --blue-v: #5CA8FF; --blue-v-soft: #15294A;
+  --plant: #F2C14E; --plant-soft: #3A3115; --c1: rgba(125, 155, 255, .12); --c2: rgba(76, 195, 138, .12); --c3: rgba(131, 145, 171, .12);
+  --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 6px 20px rgba(0, 0, 0, .25);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  background: var(--bg);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 28px 28px;
+  color: var(--ink);
+  font: 16px/1.6 var(--f-body);
+  margin: 0;
+}
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 20px; }
+h1, h2, h3, h4 { font-family: var(--f-display); text-wrap: balance; margin: 0; line-height: 1.15; letter-spacing: -.01em; }
+p { margin: 0; }
+b, strong { font-weight: 700; }
+code, .mono { font-family: var(--f-mono); font-size: .9em; }
+.k { font-family: var(--f-mono); font-size: .88em; background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; padding: .05em .4em; white-space: nowrap; }
+
+/* header */
+.top { padding-block: 34px 18px; display: grid; gap: 8px; }
+.eyebrow { font: 700 12px/1 var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+.top h1 { font-size: clamp(30px, 5vw, 46px); font-weight: 800; }
+.top p { color: var(--ink-2); max-width: 64ch; font-size: 17px; }
+
+/* tabs */
+.tabbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.tabbar .wrap { display: flex; gap: 18px; overflow-x: auto; padding-block: 10px; scrollbar-width: thin; }
+.tgroup { display: flex; align-items: center; gap: 6px; flex: none; }
+.tgroup > span { font: 700 11px/1 var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-right: 2px; }
+.tab { font: 600 14px/1 var(--f-body); color: var(--ink-2); background: transparent; border: 1px solid transparent; border-radius: 999px; padding: 8px 12px; cursor: pointer; white-space: nowrap; }
+.tab:hover { background: var(--surface-2); color: var(--ink); }
+.tab[aria-selected="true"] { background: var(--ink); color: var(--bg); }
+.tab:focus-visible, button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* panels */
+main { padding-block: 28px 80px; }
+.panel { display: grid; gap: 34px; }
+.phead { display: grid; gap: 10px; }
+.phead h2 { font-size: clamp(28px, 4vw, 40px); font-weight: 800; }
+.lead { font-size: 18px; color: var(--ink-2); max-width: 66ch; }
+section.s { display: grid; gap: 14px; scroll-margin-top: 80px; }
+section.s > h3 { font-size: 22px; font-weight: 700; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+section.s > p, .note { max-width: 70ch; color: var(--ink-2); }
+.step-tag { font: 700 12px/1 var(--f-mono); color: var(--on-accent); background: var(--accent); border-radius: 999px; padding: 5px 9px; letter-spacing: .04em; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px 18px; box-shadow: var(--shadow); min-width: 0; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 14px; }
+.grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 14px; }
+.grid3f { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 760px) { .grid3f { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 480px) { .grid3f { grid-template-columns: minmax(0, 1fr); } }
+.mini h4 { font-size: 16px; margin-bottom: 4px; }
+.mini p { font-size: 14.5px; color: var(--ink-2); }
+.mini .gv { margin-bottom: 8px; }
+
+.key { border-radius: var(--r); padding: 16px 18px; background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); display: grid; gap: 6px; max-width: 820px; }
+.key .lbl { font: 700 11px/1 var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--accent-deep); }
+:root[data-theme="dark"] .key .lbl { color: var(--accent); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .key .lbl { color: var(--accent); } }
+.key p { color: var(--ink); font-size: 17px; }
+.warn { background: var(--amber-soft); border-color: color-mix(in srgb, var(--amber) 45%, transparent); }
+.warn .lbl { color: var(--amber) !important; }
+.bad { background: var(--bad-soft); border-color: color-mix(in srgb, var(--bad) 40%, transparent); }
+.bad .lbl { color: var(--bad) !important; }
+
+ul.ticks { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+ul.ticks li { padding-left: 26px; position: relative; color: var(--ink-2); }
+ul.ticks li::before { content: ""; position: absolute; left: 4px; top: .55em; width: 9px; height: 9px; border-radius: 3px; background: var(--accent); }
+
+/* tables */
+.tw { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); box-shadow: var(--shadow); }
+table.t { border-collapse: collapse; width: 100%; font-size: 15px; }
+table.t th, table.t td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.t th { font: 700 12px/1.2 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); background: var(--surface-2); }
+table.t tr:last-child td { border-bottom: 0; }
+table.t td.m { font-family: var(--f-mono); font-size: 14px; white-space: nowrap; }
+
+/* pseudocode */
+pre.code { margin: 0; background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 0; overflow-x: auto; font: 13.5px/1.55 var(--f-mono); color: var(--ink); }
+pre.code .ln { display: block; padding: 0 14px; white-space: pre; border-left: 3px solid transparent; transition: background .25s, border-color .25s; }
+pre.code .ln.on { background: var(--accent-soft); border-left-color: var(--accent); }
+pre.code .cm { color: var(--muted); }
+
+/* graph views */
+.gv svg { display: block; width: 100%; height: auto; overflow: visible; }
+.gv text { font-family: var(--f-mono); }
+.node .body { fill: var(--n-fill); stroke: var(--n-stroke); stroke-width: 2; transition: fill .35s, stroke .35s; }
+.node .ring { fill: none; stroke: transparent; stroke-width: 3; transition: stroke .35s; }
+.node .lbl { fill: var(--n-text); font-weight: 700; font-size: 14px; text-anchor: middle; dominant-baseline: central; transition: fill .35s; pointer-events: none; }
+.node .sub { fill: var(--ink); font-weight: 700; font-size: 13px; text-anchor: middle; dominant-baseline: central; paint-order: stroke; stroke: var(--surface); stroke-width: 5px; stroke-linejoin: round; }
+.node { --n-fill: var(--surface); --n-stroke: var(--line-strong); --n-text: var(--ink); transition: opacity .35s; }
+.node.n-frontier { --n-fill: var(--amber-soft); --n-stroke: var(--amber); }
+.node.n-current { --n-fill: var(--accent); --n-stroke: var(--accent-deep); --n-text: var(--on-accent); }
+.node.n-done { --n-fill: var(--good-soft); --n-stroke: var(--good); }
+.node.n-bad { --n-fill: var(--bad-soft); --n-stroke: var(--bad); }
+.node.n-dim { opacity: .25; }
+.node.k-red { --n-fill: var(--red-v-soft); --n-stroke: var(--red-v); --n-text: var(--ink); }
+.node.k-blue { --n-fill: var(--blue-v-soft); --n-stroke: var(--blue-v); --n-text: var(--ink); }
+.node.k-plant { --n-fill: var(--plant-soft); --n-stroke: var(--plant); --n-text: var(--ink); }
+.node.k-super { --n-fill: var(--surface-2); --n-stroke: var(--ink-2); --n-text: var(--ink); }
+.node.k-super .body { stroke-dasharray: 4 3; }
+.node.n-current .ring { stroke: var(--accent); animation: pulse 1.3s ease-in-out infinite; }
+.node.n-frontier[class*="k-"] .ring { stroke: var(--amber); }
+.node.n-done[class*="k-"] .ring { stroke: var(--good); }
+.node.n-bad .ring { stroke: var(--bad); }
+.node.flash .sub { animation: flash .9s ease-out; }
+.node.n-hl .ring { stroke: var(--accent); }
+
+.edge .ln { fill: none; stroke: var(--edge); stroke-width: 2.2; transition: stroke .3s, stroke-width .3s, opacity .3s; }
+.edge .ah { fill: var(--edge); transition: fill .3s, opacity .3s; }
+.edge.e-active .ln { stroke: var(--accent); stroke-width: 4; stroke-dasharray: 9 6; animation: march .7s linear infinite; }
+.edge.e-active .ah { fill: var(--accent); }
+.edge.e-check .ln { stroke: var(--muted); stroke-width: 3; stroke-dasharray: 4 5; }
+.edge.e-check .ah { fill: var(--muted); }
+.edge.e-tree .ln { stroke: var(--good); stroke-width: 4; }
+.edge.e-tree .ah { fill: var(--good); }
+.edge.e-back .ln { stroke: var(--bad); stroke-width: 4; stroke-dasharray: 8 5; }
+.edge.e-back .ah { fill: var(--bad); }
+.edge.e-cross .ln { stroke-dasharray: 3 5; }
+.edge.e-path .ln { stroke: var(--path); stroke-width: 5; }
+.edge.e-path .ah { fill: var(--path); }
+.edge.e-bad .ln { stroke: var(--bad); stroke-width: 4.5; }
+.edge.e-bad .ah { fill: var(--bad); }
+.edge.e-dim { opacity: .14; }
+.edge.e-ghost .ln { stroke-dasharray: 2 5; }
+.edge.e-hl .ln { stroke: var(--accent); stroke-width: 4; }
+.edge.e-hl .ah { fill: var(--accent); }
+.wt rect { fill: var(--surface); stroke: var(--line); stroke-width: 1; }
+.wt text { fill: var(--ink-2); font-size: 12.5px; font-weight: 700; text-anchor: middle; dominant-baseline: central; }
+.wt.neg text { fill: var(--bad); }
+.edge.e-dim .wt { opacity: .6; }
+.decor .band { fill: var(--surface-2); stroke: var(--line); }
+.decor .blob { stroke: none; }
+.decor .blob.c1 { fill: var(--c1); } .decor .blob.c2 { fill: var(--c2); } .decor .blob.c3 { fill: var(--c3); }
+.decor text { fill: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: .02em; }
+.decor .hide { opacity: 0; }
+.decor > * { transition: opacity .4s; }
+
+@keyframes pulse { 0%, 100% { stroke-opacity: .9; stroke-width: 3; } 50% { stroke-opacity: .25; stroke-width: 9; } }
+@keyframes march { to { stroke-dashoffset: -30; } }
+@keyframes flash { 0% { fill: var(--accent); font-size: 17px; } 100% { fill: var(--ink); font-size: 13px; } }
+@keyframes popin { from { transform: scale(.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+/* stage for diagrams */
+.stage { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--shadow); padding: 14px; min-width: 0; }
+.stage.flat { box-shadow: none; }
+
+/* player */
+.player { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+.pl-main { display: grid; gap: 10px; min-width: 0; }
+.pl-svg { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 10px; box-shadow: var(--shadow); }
+.pl-cap { min-height: 4.4em; background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 10px; padding: 10px 14px; font-size: 16px; color: var(--ink); }
+.pl-cap .stepn { font: 700 11px/1 var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 5px; }
+.pl-ctrl { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.btn { font: 700 14px/1 var(--f-body); border-radius: 10px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); padding: 9px 13px; cursor: pointer; }
+.btn:hover { background: var(--surface-2); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); min-width: 84px; }
+.btn.primary:hover { background: var(--accent-deep); }
+.btn[disabled] { opacity: .4; cursor: default; }
+.pl-ctrl input[type=range] { flex: 1 1 140px; accent-color: var(--accent); min-width: 120px; }
+.pl-ctrl select { font: 600 13px var(--f-body); background: var(--surface); color: var(--ink); border: 1px solid var(--line-strong); border-radius: 8px; padding: 7px 6px; }
+.pl-count { font: 600 12px/1 var(--f-mono); color: var(--muted); min-width: 64px; text-align: right; }
+.pl-side { display: grid; gap: 10px; min-width: 0; }
+.pl-panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; display: grid; gap: 12px; box-shadow: var(--shadow); min-width: 0; }
+@media (max-width: 860px) { .player { grid-template-columns: minmax(0, 1fr); } }
+
+/* data-structure widgets */
+.ds { display: grid; gap: 6px; min-width: 0; }
+.ds-h { font: 700 11px/1.2 var(--f-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.ds-row { display: flex; flex-wrap: wrap; gap: 6px; min-height: 34px; align-items: center; }
+.ds-col { display: flex; flex-direction: column; gap: 5px; }
+.chip { font: 700 14px/1 var(--f-mono); padding: 8px 10px; border-radius: 8px; background: var(--surface-2); border: 1px solid var(--line-strong); color: var(--ink); }
+.chip.q { background: var(--amber-soft); border-color: var(--amber); }
+.chip.cur { background: var(--accent); border-color: var(--accent-deep); color: var(--on-accent); }
+.chip.ok { background: var(--good-soft); border-color: var(--good); }
+.chip.badc { background: var(--bad-soft); border-color: var(--bad); }
+.chip.new { animation: popin .4s ease-out; }
+.chip small { font-weight: 600; opacity: .75; margin-left: 4px; }
+.empty { font: 600 13px var(--f-mono); color: var(--muted); }
+table.dt { border-collapse: collapse; font: 600 13px/1.2 var(--f-mono); width: 100%; }
+table.dt th, table.dt td { border: 1px solid var(--line); padding: 6px 7px; text-align: center; }
+table.dt th { color: var(--muted); background: var(--surface-2); font-weight: 700; }
+table.dt td.chg { background: var(--good-soft); color: var(--ink); }
+table.dt td.badc { background: var(--bad-soft); }
+table.dt tr.live td { outline: 0; }
+table.dt tr.live th { color: var(--accent); }
+.eq { font: 700 19px/1.4 var(--f-mono); text-align: center; padding: 8px; border-radius: 10px; background: var(--surface-2); }
+.eq .good { color: var(--good); } .eq .badt { color: var(--bad); }
+.elist { display: flex; flex-wrap: wrap; gap: 5px; }
+.elist span { font: 600 12.5px/1 var(--f-mono); padding: 6px 7px; border-radius: 6px; border: 1px solid var(--line); color: var(--ink-2); }
+.elist span.on { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.counter { display: flex; gap: 10px; flex-wrap: wrap; }
+.counter div { border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; background: var(--surface-2); font: 700 14px var(--f-mono); }
+.counter div.win { background: var(--good-soft); border-color: var(--good); }
+.counter b { font-size: 20px; margin-left: 6px; }
+
+/* legend */
+.legend { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 13.5px; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 7px; }
+.dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid; display: inline-block; flex: none; }
+.dot.idle { background: var(--surface); border-color: var(--line-strong); }
+.dot.front { background: var(--amber-soft); border-color: var(--amber); }
+.dot.cur { background: var(--accent); border-color: var(--accent-deep); }
+.dot.done { background: var(--good-soft); border-color: var(--good); }
+.dot.red { background: var(--red-v-soft); border-color: var(--red-v); }
+.dot.blue { background: var(--blue-v-soft); border-color: var(--blue-v); }
+.dot.plant { background: var(--plant-soft); border-color: var(--plant); border-radius: 4px; }
+.bar { width: 22px; height: 4px; border-radius: 2px; display: inline-block; flex: none; }
+.bar.tree { background: var(--good); } .bar.back { background: repeating-linear-gradient(90deg, var(--bad) 0 6px, transparent 6px 9px); }
+.bar.act { background: var(--accent); } .bar.path { background: var(--path); }
+
+/* problem pieces */
+.prob { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 18px 20px; display: grid; gap: 10px; box-shadow: var(--shadow); max-width: 860px; }
+.prob .lbl { font: 700 11px/1 var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.prob p { color: var(--ink); }
+.target { justify-self: start; font: 700 14px/1 var(--f-mono); background: var(--ink); color: var(--bg); border-radius: 999px; padding: 8px 12px; }
+.rail { display: flex; flex-wrap: wrap; gap: 6px; }
+.rail a { font: 600 13px/1 var(--f-body); color: var(--ink-2); text-decoration: none; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 7px 11px; }
+.rail a:hover { border-color: var(--accent); color: var(--accent); }
+.rail a b { font-family: var(--f-mono); color: var(--accent); margin-right: 4px; }
+.map { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 8px 12px; align-items: center; max-width: 760px; }
+.map .from { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; font-size: 15px; }
+.map .arrow { font: 700 18px var(--f-mono); color: var(--accent); text-align: center; }
+.map .to { background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); border-radius: 10px; padding: 9px 12px; font-size: 15px; font-weight: 700; }
+.hlw { background: var(--amber-soft); border-radius: 4px; padding: 0 3px; }
+.answer { background: var(--surface); border: 2px solid var(--ink); border-radius: var(--r); overflow: hidden; max-width: 860px; }
+.answer .ah-title { background: var(--ink); color: var(--bg); font: 700 13px/1 var(--f-mono); letter-spacing: .1em; text-transform: uppercase; padding: 11px 16px; }
+.answer dl { margin: 0; display: grid; grid-template-columns: 96px minmax(0, 1fr); }
+.answer dt, .answer dd { margin: 0; padding: 11px 16px; border-bottom: 1px solid var(--line); }
+.answer dt { font: 700 13px/1.5 var(--f-mono); color: var(--accent); text-transform: uppercase; letter-spacing: .06em; background: var(--surface-2); }
+.answer dd { color: var(--ink); }
+.answer dl > :nth-last-child(-n+2) { border-bottom: 0; }
+@media (max-width: 560px) { .answer dl { grid-template-columns: minmax(0, 1fr); } .answer dt { border-bottom: 0; padding-bottom: 2px; } }
+.math { font: 600 15px/1.8 var(--f-mono); background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; overflow-x: auto; max-width: 760px; }
+.math .hl { color: var(--accent); }
+.rounds { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.rounds .rb { width: 34px; height: 30px; border-radius: 6px; display: grid; place-items: center; font: 700 12px var(--f-mono); border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink-2); }
+.rounds .rb.on { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.rounds .rb.off { background: repeating-linear-gradient(45deg, var(--surface-2) 0 5px, var(--surface) 5px 10px); color: var(--muted); text-decoration: line-through; }
+.rounds .rl { font: 700 13px var(--f-mono); color: var(--ink-2); min-width: 150px; }
+.seg { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 10px; overflow: hidden; }
+.seg button { font: 700 14px var(--f-mono); background: var(--surface); color: var(--ink); border: 0; padding: 9px 14px; cursor: pointer; border-right: 1px solid var(--line); }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+.res { font: 700 16px var(--f-mono); }
+
+/* recipe */
+.recipe { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 12px; counter-reset: rs; }
+.rstep { display: grid; grid-template-columns: 46px minmax(0, 1fr); gap: 4px 12px; align-items: start; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; box-shadow: var(--shadow); }
+.rstep .num { grid-row: span 2; width: 46px; height: 46px; border-radius: 12px; background: var(--ink); color: var(--bg); display: grid; place-items: center; font: 800 22px var(--f-display); }
+.rstep h4 { font-size: 17px; }
+.rstep p { font-size: 14.5px; color: var(--ink-2); }
+.flow { display: grid; gap: 10px; max-width: 900px; }
+.flow .q { background: var(--ink); color: var(--bg); border-radius: 12px; padding: 12px 16px; font-weight: 700; justify-self: start; }
+.flow .branches { display: grid; gap: 8px; padding-left: 22px; border-left: 3px solid var(--line-strong); margin-left: 18px; }
+.flow .br { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 10px; align-items: center; position: relative; }
+.flow .br::before { content: ""; position: absolute; left: -22px; top: 50%; width: 18px; border-top: 3px solid var(--line-strong); }
+.flow .ask { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; font-size: 15px; }
+.flow .go { font: 700 18px var(--f-mono); color: var(--accent); }
+.flow .tool { background: var(--good-soft); border: 1px solid color-mix(in srgb, var(--good) 40%, transparent); border-radius: 10px; padding: 9px 12px; font-weight: 700; }
+.flow .tool small { display: block; font: 600 12.5px var(--f-mono); color: var(--ink-2); margin-top: 2px; }
+.flow .sub { grid-column: 1 / -1; display: grid; gap: 8px; padding-left: 22px; border-left: 3px dashed var(--line-strong); margin-left: 14px; }
+.flow .sub .br::before { border-top-style: dashed; }
+@media (max-width: 640px) { .flow .br { grid-template-columns: minmax(0, 1fr); } .flow .go { transform: rotate(90deg); justify-self: start; } .map { grid-template-columns: minmax(0, 1fr); } .map .arrow { transform: rotate(90deg); justify-self: start; } }
+
+.navfoot { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; border-top: 1px solid var(--line); padding-top: 18px; }
+.navfoot button { font: 700 15px var(--f-body); background: var(--surface); color: var(--ink); border: 1px solid var(--line-strong); border-radius: 12px; padding: 12px 16px; cursor: pointer; }
+.navfoot button:hover { border-color: var(--accent); color: var(--accent); }
+.navfoot .next { margin-left: auto; }
+
+/* misc visuals */
+.ripple svg { display: block; width: 100%; height: auto; }
+.rs-ring { fill: none; stroke: var(--line-strong); stroke-dasharray: 3 6; stroke-width: 1.5; }
+.rs-lab text { font: 700 12px var(--f-mono); fill: var(--muted); }
+.rs-edge line { stroke: var(--edge); stroke-width: 2.2; }
+.rs-node circle { fill: var(--surface); stroke: var(--line-strong); stroke-width: 2; }
+.rs-node .src { fill: var(--accent); stroke: var(--accent-deep); }
+.rs-txt text { font: 700 14px var(--f-mono); text-anchor: middle; dominant-baseline: central; fill: var(--ink); }
+.rs-txt .srct { fill: var(--on-accent); }
+.ripple .rp { fill: none; stroke: var(--accent); stroke-width: 2.5; opacity: 0; transform-box: fill-box; transform-origin: center; animation: ring 4.5s linear infinite; vector-effect: non-scaling-stroke; }
+@keyframes ring { 0% { transform: scale(.04); opacity: .9; } 92% { opacity: .5; } 100% { transform: scale(1); opacity: 0; } }
+.rs-node .lay { animation: lit 4.5s linear infinite; }
+.rs-node .l1 { animation-delay: 1.35s; } .rs-node .l2 { animation-delay: 2.9s; } .rs-node .l3 { animation-delay: 4.3s; }
+@keyframes lit { 0% { fill: var(--amber-soft); stroke: var(--amber); } 45% { fill: var(--amber-soft); stroke: var(--amber); } 60%, 100% { fill: var(--surface); stroke: var(--line-strong); } }
+.qvis { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font: 700 14px var(--f-mono); color: var(--ink-2); }
+.qvis .slot { width: 40px; height: 40px; border-radius: 9px; border: 2px solid var(--amber); background: var(--amber-soft); display: grid; place-items: center; color: var(--ink); }
+.svis { display: grid; gap: 4px; justify-items: center; font: 700 14px var(--f-mono); color: var(--ink-2); }
+.svis .plate { width: 90px; height: 30px; border-radius: 8px; border: 2px solid var(--amber); background: var(--amber-soft); display: grid; place-items: center; color: var(--ink); }
+.svis .plate.top { background: var(--accent); border-color: var(--accent-deep); color: var(--on-accent); }
+.adj { font: 600 15px/1 var(--f-mono); display: grid; gap: 6px; }
+.adj div { padding: 9px 12px; border-radius: 9px; border: 1px solid var(--line); background: var(--surface); transition: background .2s, border-color .2s; }
+.adj div.on { background: var(--accent-soft); border-color: var(--accent); }
+.adj b { color: var(--accent); }
+.split { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 14px; align-items: center; }
+@media (max-width: 760px) { .split { grid-template-columns: minmax(0, 1fr); } }
+.sumtag { font: 700 14px var(--f-mono); text-align: center; padding: 6px; border-radius: 8px; }
+.sumtag.ok { background: var(--good-soft); color: var(--good); } .sumtag.no { background: var(--bad-soft); color: var(--bad); }
+.numline { display: grid; grid-template-columns: 1fr 120px 1fr; text-align: center; font-weight: 700; border-radius: 12px; overflow: hidden; max-width: 760px; border: 1px solid var(--line); }
+.numline div { padding: 14px 10px; display: grid; gap: 4px; }
+.numline small { font-weight: 400; font-size: 13.5px; color: var(--ink-2); }
+.numline .neg { background: var(--bad-soft); } .numline .zero { background: var(--good-soft); } .numline .pos { background: var(--amber-soft); }
+@media (max-width: 560px) { .numline { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+<style>
+/* Session 2 additions: timelines, flow views, induction widgets */
+:root { --k1: #DCE6FF; --k1s: #3B5BDB; --k2: #FFE2C7; --k2s: #D9480F; --k3: #D3F5DD; --k3s: #2B8A3E; --k4: #F1DCFA; --k4s: #9C36B5; --k5: #CDF4F8; --k5s: #0C8599; --k6: #FFDCEB; --k6s: #C2255C; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --k1: #1E2B50; --k1s: #7D9BFF; --k2: #3D2612; --k2s: #FF922B; --k3: #15352A; --k3s: #4CC38A; --k4: #33183D; --k4s: #DA77F2; --k5: #0F3238; --k5s: #3BC9DB; --k6: #3A1729; --k6s: #F783AC; } }
+:root[data-theme="dark"] { --k1: #1E2B50; --k1s: #7D9BFF; --k2: #3D2612; --k2s: #FF922B; --k3: #15352A; --k3s: #4CC38A; --k4: #33183D; --k4s: #DA77F2; --k5: #0F3238; --k5s: #3BC9DB; --k6: #3A1729; --k6s: #F783AC; }
+
+.sc-axis { stroke: var(--line-strong); stroke-width: 1.5; }
+.sc-grid { stroke: var(--line); stroke-dasharray: 2 5; }
+.sc-tick { font: 600 11.5px var(--f-mono); fill: var(--muted); text-anchor: middle; }
+.sc-lane { font: 700 11.5px var(--f-mono); fill: var(--muted); letter-spacing: .05em; text-transform: uppercase; }
+.sc-band { fill: var(--surface-2); stroke: var(--line); }
+.sc-it { transition: transform .55s ease, opacity .35s ease; }
+.sc-it.fresh { transition: none; }
+.sc-it.gone { opacity: 0; pointer-events: none; }
+.sc-bar rect { fill: var(--surface); stroke: var(--line-strong); stroke-width: 1.6; transition: fill .3s, stroke .3s; }
+.sc-bar text { font: 700 12.5px var(--f-mono); fill: var(--ink); text-anchor: middle; dominant-baseline: central; }
+.b-cur rect { fill: var(--accent); stroke: var(--accent-deep); } .b-cur text { fill: var(--on-accent); }
+.b-pick rect { fill: var(--good-soft); stroke: var(--good); stroke-width: 2.4; }
+.b-rej rect { fill: var(--surface-2); stroke: var(--line-strong); stroke-dasharray: 4 3; } .b-rej text { fill: var(--muted); }
+.b-opt rect { fill: var(--blue-v-soft); stroke: var(--blue-v); stroke-width: 2.2; }
+.b-ghost rect { fill: none; stroke: var(--bad); stroke-dasharray: 5 4; stroke-width: 2.2; } .b-ghost text { fill: var(--bad); }
+.b-late rect { fill: var(--bad-soft); stroke: var(--bad); stroke-width: 1.4; } .b-late text { fill: var(--bad); font-size: 11px; }
+.b-bad rect { fill: var(--bad-soft); stroke: var(--bad); stroke-width: 2.4; }
+.b-faint { opacity: .32; }
+.b-k1 rect { fill: var(--k1); stroke: var(--k1s); } .b-k2 rect { fill: var(--k2); stroke: var(--k2s); } .b-k3 rect { fill: var(--k3); stroke: var(--k3s); }
+.b-k4 rect { fill: var(--k4); stroke: var(--k4s); } .b-k5 rect { fill: var(--k5); stroke: var(--k5s); } .b-k6 rect { fill: var(--k6); stroke: var(--k6s); }
+.sc-bar.hot rect { stroke: var(--accent); stroke-width: 3.2; }
+.sc-pt circle { fill: var(--surface); stroke: var(--ink-2); stroke-width: 2; transition: fill .3s, stroke .3s; }
+.sc-pt text { font: 700 11.5px var(--f-mono); fill: var(--ink-2); text-anchor: middle; }
+.p-cov circle { fill: var(--good-soft); stroke: var(--good); }
+.p-cur circle { fill: var(--accent); stroke: var(--accent-deep); } .p-cur text { fill: var(--accent); }
+.p-unc circle { fill: var(--bad-soft); stroke: var(--bad); } .p-unc text { fill: var(--bad); }
+.sc-range rect { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+.sc-range line { stroke: var(--accent); stroke-width: 2.5; }
+.sc-range text { font: 700 12px var(--f-mono); fill: var(--accent); text-anchor: middle; }
+.r-o rect { fill: var(--amber-soft); stroke: var(--amber); } .r-o line { stroke: var(--amber); } .r-o text { fill: var(--amber); }
+.r-bad rect { fill: var(--bad-soft); stroke: var(--bad); } .r-bad line { stroke: var(--bad); } .r-bad text { fill: var(--bad); }
+.sc-vline line { stroke: var(--ink-2); stroke-width: 2; stroke-dasharray: 5 4; }
+.sc-vline text { font: 700 12px var(--f-mono); fill: var(--ink-2); text-anchor: middle; }
+.v-acc line { stroke: var(--accent); } .v-acc text { fill: var(--accent); }
+.v-good line { stroke: var(--good); } .v-good text { fill: var(--good); }
+.v-bad line { stroke: var(--bad); } .v-bad text { fill: var(--bad); }
+.v-opt line { stroke: var(--blue-v); } .v-opt text { fill: var(--blue-v); }
+.sc-flag line { stroke: var(--ink-2); stroke-width: 1.6; } .sc-flag path { fill: var(--ink-2); }
+.sc-flag text { font: 700 11px var(--f-mono); fill: var(--ink-2); text-anchor: middle; }
+.f-bad line { stroke: var(--bad); } .f-bad path { fill: var(--bad); } .f-bad text { fill: var(--bad); }
+.f-good line { stroke: var(--good); } .f-good path { fill: var(--good); } .f-good text { fill: var(--good); }
+.sc-tower path { fill: var(--accent); stroke: var(--accent-deep); stroke-width: 1.2; }
+.sc-tower text { font: 700 11.5px var(--f-mono); fill: var(--accent); text-anchor: middle; }
+.w-o path { fill: var(--amber); stroke: var(--amber); } .w-o text { fill: var(--amber); }
+.sc-text text { font: 700 13px var(--f-mono); fill: var(--ink-2); dominant-baseline: central; }
+.x-good text { fill: var(--good); } .x-bad text { fill: var(--bad); } .x-acc text { fill: var(--accent); } .x-opt text { fill: var(--blue-v); } .x-muted text { fill: var(--muted); font-weight: 600; }
+.x-big text { font-size: 17px; }
+
+/* flow views */
+.pl-svg.dual { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.vw { min-width: 0; display: grid; gap: 4px; align-content: start; }
+.vt { font: 700 11px/1.2 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+@media (max-width: 760px) { .pl-svg.dual { grid-template-columns: minmax(0, 1fr); } }
+.player.wide { grid-template-columns: minmax(0, 1fr); }
+.player.wide .pl-side { grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)); align-items: start; }
+.edge.e-rb .ln { stroke: var(--amber); stroke-dasharray: 5 4; }
+.edge.e-rb .ah { fill: var(--amber); }
+.edge.e-flow .ln { stroke: var(--accent); stroke-width: 3.4; stroke-dasharray: 9 6; animation: march 1.2s linear infinite; }
+.edge.e-flow .ah { fill: var(--accent); }
+.edge.e-sat .ln { stroke: var(--accent-deep); stroke-width: 5; stroke-dasharray: 9 6; animation: march 1.2s linear infinite; }
+.edge.e-sat .ah { fill: var(--accent-deep); }
+.edge.e-hide { opacity: 0; }
+.edge.e-cut .ln { stroke: var(--bad); stroke-width: 5; stroke-dasharray: none; animation: none; }
+.edge.e-cut .ah { fill: var(--bad); }
+.edge.e-cutin .ln { stroke: var(--muted); stroke-dasharray: 2 5; }
+.edge.e-path .ln, .edge.e-rb.e-path .ln { stroke: var(--path); stroke-width: 5; stroke-dasharray: none; animation: none; }
+.edge.e-path .ah, .edge.e-rb.e-path .ah { fill: var(--path); }
+.edge.e-back .ln, .edge.e-rb.e-back .ln { stroke: var(--bad); stroke-width: 4.5; stroke-dasharray: 8 5; animation: march .8s linear infinite reverse; }
+.edge.e-back .ah { fill: var(--bad); }
+.edge.e-gone { opacity: .13; }
+.bignum { font: 800 34px/1 var(--f-display); color: var(--accent); }
+.bignum small { font: 600 14px var(--f-mono); color: var(--muted); margin-left: 6px; }
+
+/* coins, dominoes, squares */
+.coins { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.coin { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; font: 800 14px var(--f-mono); color: var(--ink); background: var(--amber-soft); border: 3px solid var(--amber); animation: popin .4s ease-out both; }
+.coin.s { width: 38px; height: 38px; font-size: 13px; }
+.coin.bad { background: var(--bad-soft); border-color: var(--bad); }
+.coin.ok { background: var(--good-soft); border-color: var(--good); }
+.coinrow { display: grid; gap: 6px; }
+.coinrow .lab { font: 700 12px var(--f-mono); color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+.dominoes { display: flex; gap: 22px; align-items: flex-end; padding: 18px 8px 30px; min-height: 120px; overflow: hidden; }
+.dom { width: 22px; height: 82px; border-radius: 5px; background: var(--surface); border: 2.5px solid var(--ink-2); position: relative; transform-origin: 100% 100%; flex: none; }
+.dom::after { content: attr(data-l); position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 6px; font: 700 11px var(--f-mono); color: var(--muted); white-space: nowrap; }
+.dom:first-child { border-color: var(--accent); background: var(--accent-soft); }
+.dominoes.run .dom { animation: fall .45s ease-in forwards; animation-delay: calc(var(--i) * .32s); }
+@keyframes fall { to { transform: rotate(62deg); background: var(--good-soft); border-color: var(--good); } }
+.domwrap { overflow-x: auto; }
+.sqgrid { display: grid; gap: 3px; justify-content: start; }
+.sqgrid span { width: 30px; height: 30px; border-radius: 5px; animation: popin .35s ease-out both; }
+.sqgrid .L1 { background: var(--k1); border: 1.5px solid var(--k1s); } .sqgrid .L2 { background: var(--k2); border: 1.5px solid var(--k2s); }
+.sqgrid .L3 { background: var(--k3); border: 1.5px solid var(--k3s); } .sqgrid .L4 { background: var(--k4); border: 1.5px solid var(--k4s); }
+.sqgrid .L5 { background: var(--k5); border: 1.5px solid var(--k5s); } .sqgrid .L6 { background: var(--k6); border: 1.5px solid var(--k6s); }
+.sqgrid .new { box-shadow: 0 0 0 2px var(--accent); }
+.sqeq { font: 700 17px/1.5 var(--f-mono); }
+.sqeq .t1 { color: var(--k1s); } .sqeq .t2 { color: var(--k2s); } .sqeq .t3 { color: var(--k3s); } .sqeq .t4 { color: var(--k4s); } .sqeq .t5 { color: var(--k5s); } .sqeq .t6 { color: var(--k6s); }
+.proof { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px 18px; display: grid; gap: 10px; max-width: 860px; box-shadow: var(--shadow); }
+.proof .pl { font: 700 11px/1 var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+.proof ol { margin: 0; padding-left: 22px; display: grid; gap: 8px; }
+.proof li { color: var(--ink); }
+.proof .why { color: var(--ink-2); font-size: 14.5px; }
+.mini2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: 14px; }
+.cmp { display: grid; gap: 4px; }
+.cmp .tag { justify-self: start; font: 700 12px var(--f-mono); border-radius: 999px; padding: 4px 10px; }
+.cmp .tag.ok { background: var(--good-soft); color: var(--good); } .cmp .tag.no { background: var(--bad-soft); color: var(--bad); }
+.slider-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; font: 700 14px var(--f-mono); }
+.slider-row input { flex: 1 1 200px; accent-color: var(--accent); }
+.vals { font: 700 15px var(--f-mono); }
+.vals b { color: var(--accent); }
+#ruleres, .resline { font: 600 16px/1.5 var(--f-body); color: var(--ink); margin: 0; }
+.chip.skip { text-decoration: line-through; opacity: .55; }
+.sc-range text { dominant-baseline: central; }
+.seg { flex-wrap: wrap; max-width: 100%; }
+.dominoes { gap: 16px; }
+@media (max-width: 480px) { .dominoes { gap: 10px; } .dom { width: 18px; height: 70px; } }
+</style>
+
+<header class="wrap top">
+  <span class="eyebrow">CS 577 · Session 2 · Greedy and flow</span>
+  <h1>Greedy algorithms and network flow</h1>
+  <p>Learn how greedy algorithms work and how to prove them right. Then learn flow and Ford-Fulkerson. Then use both on practice problems and all of HW5.</p>
+</header>
+
+<nav class="tabbar" aria-label="Lesson sections">
+  <div class="wrap" role="tablist">
+    <div class="tgroup"><span>Learn</span>
+      <button class="tab" role="tab" data-tab="greedy">Greedy</button>
+      <button class="tab" role="tab" data-tab="flow">Flow and Ford-Fulkerson</button>
+    </div>
+    <div class="tgroup"><span>Greedy practice</span>
+      <button class="tab" role="tab" data-tab="r1">R1 Meeting room</button>
+      <button class="tab" role="tab" data-tab="r3">R3 Max lateness</button>
+      <button class="tab" role="tab" data-tab="r5">R5 Cell towers</button>
+    </div>
+    <div class="tgroup"><span>HW5</span>
+      <button class="tab" role="tab" data-tab="p1">P1 Blood supply</button>
+      <button class="tab" role="tab" data-tab="p2">P2 Fair schedule</button>
+      <button class="tab" role="tab" data-tab="p3">P3 Friend's algorithm</button>
+      <button class="tab" role="tab" data-tab="p4">P4 Failure of Ford-Fulkerson</button>
+    </div>
+  </div>
+</nav>
+
+<main class="wrap">
+
+<!-- ============ GREEDY ============ -->
+<section class="panel" id="greedy" role="tabpanel">
+  <div class="phead">
+    <span class="eyebrow">Learn · 1 of 2</span>
+    <h2>Greedy algorithms</h2>
+    <p class="lead">A greedy algorithm builds its answer one piece at a time. At every step it grabs whatever looks best right now, and it never goes back to change a choice.</p>
+  </div>
+  <div class="rail"><a href="#g-s1"><b>1</b>The idea</a><a href="#g-s2"><b>2</b>When it breaks</a><a href="#g-s3"><b>3</b>Meeting room rules</a><a href="#g-s4"><b>4</b>Induction</a><a href="#g-s5"><b>5</b>Stays ahead</a><a href="#g-s6"><b>6</b>Exchange</a><a href="#g-s7"><b>7</b>Counterexamples</a><a href="#g-s8"><b>8</b>The recipe</a></div>
+
+  <section class="s" id="g-s1">
+    <h3>The idea: grab the best thing right now</h3>
+    <p>A cashier gives you 68¢ in change. The greedy rule: <b>always hand over the biggest coin that still fits.</b></p>
+    <div class="stage coinrow">
+      <span class="lab">68¢ with US coins, biggest first</span>
+      <div class="coins"><span class="coin" style="animation-delay:.05s">25</span><span class="coin" style="animation-delay:.25s">25</span><span class="coin" style="animation-delay:.45s">10</span><span class="coin s" style="animation-delay:.65s">5</span><span class="coin s" style="animation-delay:.85s">1</span><span class="coin s" style="animation-delay:1.05s">1</span><span class="coin s" style="animation-delay:1.25s">1</span></div>
+      <span class="note">68 → 43 → 18 → 8 → 3 → 2 → 1 → 0. Seven coins, and that's the fewest possible with US coins.</span>
+    </div>
+    <div class="grid3">
+      <div class="card mini"><h4>Fast</h4><p>One quick decision per step. Usually just a sort, then one pass: O(n log n).</p></div>
+      <div class="card mini"><h4>Simple</h4><p>Easy to describe in one sentence: "always take the ___".</p></div>
+      <div class="card mini"><h4>Often wrong</h4><p>Many greedy rules sound smart and still give a bad answer. That's why you have to prove the rule works.</p></div>
+    </div>
+  </section>
+
+  <section class="s" id="g-s2">
+    <h3>When greedy breaks</h3>
+    <p>Same rule, different coins. Suppose the only coins are 1¢, 3¢, and 4¢, and you owe 6¢.</p>
+    <div class="mini2">
+      <div class="stage coinrow"><span class="lab">Greedy: biggest first</span><div class="coins"><span class="coin bad">4</span><span class="coin bad s">1</span><span class="coin bad s">1</span></div><span class="note">3 coins.</span></div>
+      <div class="stage coinrow"><span class="lab">Best answer</span><div class="coins"><span class="coin ok">3</span><span class="coin ok">3</span></div><span class="note">2 coins. Greedy lost.</span></div>
+    </div>
+    <div class="key warn"><span class="lbl">Lesson</span><p>A greedy rule is guilty until proven innocent. You either <b>prove</b> it always works, or you find a small input where it fails (a <b>counterexample</b>).</p></div>
+  </section>
+
+  <section class="s" id="g-s3">
+    <h3>The meeting room: four greedy rules</h3>
+    <p>One room, many meeting requests. Each request has a start and an end. Goal: fit in <b>as many meetings as possible</b> with no overlaps. A meeting can start the moment another ends. Pick a rule to see what it does.</p>
+    <div class="stage" style="display:grid;gap:12px">
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+        <div class="seg" id="rulepick" role="group" aria-label="Greedy rule"><button data-r="start" aria-pressed="true">Earliest start</button><button data-r="short">Shortest</button><button data-r="conf">Fewest overlaps</button><button data-r="finish">Earliest finish</button></div>
+      </div>
+      <div class="gv" data-static="g-rules"></div>
+      <p class="res" id="ruleres"></p>
+      <div class="legend"><span><i class="dot done"></i>picked by the rule</span><span><i class="dot idle"></i>blocked or skipped</span><span><i class="dot blue"></i>a best answer</span></div>
+    </div>
+    <div class="key"><span class="lbl">Result</span><p>Three rules fail on some input. <b>Earliest finish</b> is the one that always works. The R1 tab proves it.</p></div>
+  </section>
+
+  <section class="s" id="g-s4">
+    <h3>Induction in five minutes</h3>
+    <p>Greedy proofs are induction proofs in disguise, so learn induction first. Picture a long row of dominoes.</p>
+    <div class="stage" style="display:grid;gap:10px">
+      <div class="domwrap"><div class="dominoes" id="doms">
+        <span class="dom" style="--i:0" data-l="P(1)"></span><span class="dom" style="--i:1" data-l="P(2)"></span><span class="dom" style="--i:2" data-l="P(3)"></span><span class="dom" style="--i:3" data-l="P(4)"></span><span class="dom" style="--i:4" data-l="P(5)"></span><span class="dom" style="--i:5" data-l="P(6)"></span><span class="dom" style="--i:6" data-l="P(7)"></span><span class="dom" style="--i:7" data-l="P(8)"></span><span class="dom" style="--i:8" data-l="…"></span>
+      </div></div>
+      <div><button class="btn primary" id="dompush">Push the first domino</button></div>
+    </div>
+    <div class="grid2">
+      <div class="card mini"><h4>Base case</h4><p>Knock over the first domino. In math: show the claim is true for the first value, <span class="k">P(1)</span>.</p></div>
+      <div class="card mini"><h4>Inductive step</h4><p>Show that <b>any</b> domino that falls knocks over the next one. In math: <b>assume</b> <span class="k">P(k)</span> is true, then show <span class="k">P(k+1)</span> is true.</p></div>
+    </div>
+    <p>If both are true, every domino falls. You never check them one by one.</p>
+    <div class="answer">
+      <div class="ah-title">Induction template</div>
+      <dl>
+        <dt>Claim</dt><dd>For every n ≥ 1, P(n) is true. (Write out exactly what P(n) says.)</dd>
+        <dt>Base</dt><dd>Check P(1) directly.</dd>
+        <dt>Assume</dt><dd>P(k) is true for some k ≥ 1. This is the <b>inductive hypothesis</b>.</dd>
+        <dt>Show</dt><dd>P(k+1) is true. Somewhere in this step you must <b>use</b> the assumption.</dd>
+        <dt>Done</dt><dd>By induction, P(n) holds for all n ≥ 1.</dd>
+      </dl>
+    </div>
+    <h3 style="font-size:18px">Worked example: adding odd numbers</h3>
+    <p>Claim: <span class="k">1 + 3 + 5 + … + (2n − 1) = n²</span>. Press Next to grow the square. Each new odd number is an L-shaped layer.</p>
+    <div class="split stage">
+      <div id="sq" class="sqgrid" aria-label="Square made of L-shaped layers"></div>
+      <div style="display:grid;gap:10px">
+        <div class="sqeq" id="sqeq"></div>
+        <p class="note" id="sqcap"></p>
+        <div style="display:flex;gap:8px"><button class="btn" id="sqback">◀ Back</button><button class="btn primary" id="sqnext">Next ▶</button></div>
+      </div>
+    </div>
+    <div class="proof">
+      <span class="pl">The proof, written out</span>
+      <ol>
+        <li><b>P(n):</b> 1 + 3 + … + (2n − 1) = n².</li>
+        <li><b>Base:</b> n = 1. The left side is 1 and the right side is 1² = 1. True.</li>
+        <li><b>Assume</b> P(k): 1 + 3 + … + (2k − 1) = k².</li>
+        <li><b>Show</b> P(k+1): the left side is (1 + 3 + … + (2k − 1)) + (2k + 1). By the assumption that is k² + 2k + 1 = (k + 1)². True.</li>
+        <li>By induction, the claim holds for every n ≥ 1.</li>
+      </ol>
+      <p class="why">In greedy proofs, n becomes "the step number of the algorithm", and P(r) becomes "after r steps, greedy is not behind".</p>
+    </div>
+  </section>
+
+  <section class="s" id="g-s5">
+    <h3>Proof style 1: greedy stays ahead</h3>
+    <p>Line up greedy's choices next to the choices of a best solution, in order. Show that after every step, greedy is <b>at least as far along</b>. If greedy is never behind, it can't finish with less.</p>
+    <div class="stage"><div class="gv" data-static="g-ladder"></div></div>
+    <p class="note">Meeting room example: greedy's r-th meeting always ends no later than the best solution's r-th meeting. Ending earlier = more room left = "ahead".</p>
+    <div class="answer">
+      <div class="ah-title">Stays-ahead template</div>
+      <dl>
+        <dt>Name</dt><dd>Greedy picks g₁, g₂, …, gₖ. A best solution picks o₁, o₂, …, oₘ, in the same order.</dd>
+        <dt>Measure</dt><dd>Choose a number that says how far along you are (finish time, distance covered).</dd>
+        <dt>Induct</dt><dd>Prove by induction on r: after step r, greedy's measure is at least as good as the best solution's.</dd>
+        <dt>Finish</dt><dd>Use "greedy is ahead at the last step" to show k ≥ m. So greedy is optimal.</dd>
+      </dl>
+    </div>
+  </section>
+
+  <section class="s" id="g-s6">
+    <h3>Proof style 2: the exchange argument</h3>
+    <p>Start with <b>any</b> best solution. Wherever it disagrees with greedy, swap two pieces to make it look more like greedy, and show the swap doesn't make it worse. Keep swapping until it <b>is</b> greedy's answer.</p>
+    <div class="mini2">
+      <div class="cmp stage"><span class="tag no">Before: two neighbors in the "wrong" order</span><div class="gv" data-static="g-swap-a"></div></div>
+      <div class="cmp stage"><span class="tag ok">After the swap: no worse</span><div class="gv" data-static="g-swap-b"></div></div>
+    </div>
+    <p class="note">Jobs with deadlines (the flags). Job j has the earlier deadline but runs second. Swapping them lowers the worst lateness from 3 to 1. The R3 tab proves a swap like this never hurts.</p>
+    <div class="answer">
+      <div class="ah-title">Exchange template</div>
+      <dl>
+        <dt>Start</dt><dd>Let O be any optimal solution.</dd>
+        <dt>Find</dt><dd>If O ≠ greedy's answer, find two neighboring pieces in the opposite order from greedy (an <b>inversion</b>).</dd>
+        <dt>Swap</dt><dd>Swap them. Show the result is still valid and <b>no worse</b>.</dd>
+        <dt>Repeat</dt><dd>Each swap removes an inversion, so you reach greedy's answer after finitely many swaps, never getting worse. So greedy is optimal too.</dd>
+      </dl>
+    </div>
+    <div class="tw"><table class="t">
+      <tr><th>Use stays ahead when…</th><th>Use exchange when…</th></tr>
+      <tr><td>You pick items one at a time and can measure progress (meetings, towers, gas stops).</td><td>The answer is an <b>order</b> or an arrangement (scheduling jobs, sorting by a rule).</td></tr>
+    </table></div>
+  </section>
+
+  <section class="s" id="g-s7">
+    <h3>Killing a bad rule with a counterexample</h3>
+    <ul class="ticks">
+      <li>Use tiny inputs: 2 to 4 items. Draw them.</li>
+      <li>Make the rule's favorite choice <b>block</b> several other good choices (one long meeting, one big coin).</li>
+      <li>Show both answers side by side: what the rule does, and something better.</li>
+      <li>One counterexample is a complete proof that a rule is wrong.</li>
+    </ul>
+  </section>
+
+  <section class="s" id="g-s8">
+    <h3>The greedy recipe</h3>
+    <p>The R1, R3, and R5 tabs follow these steps exactly.</p>
+    <div class="recipe">
+      <div class="rstep"><span class="num">1</span><h4>Understand</h4><p>What's the input? What's a valid answer? What makes one answer better?</p></div>
+      <div class="rstep"><span class="num">2</span><h4>Try rules</h4><p>List 3 or 4 natural greedy rules. Kill the bad ones with tiny counterexamples.</p></div>
+      <div class="rstep"><span class="num">3</span><h4>Write the algorithm</h4><p>Usually: sort by your rule, then one pass that keeps or skips each item.</p></div>
+      <div class="rstep"><span class="num">4</span><h4>Pick a proof style</h4><p>Stays ahead for "pick items one by one". Exchange for "choose an order".</p></div>
+      <div class="rstep"><span class="num">5</span><h4>Prove it</h4><p>Fill in the template. The induction step is where the greedy choice gets used.</p></div>
+      <div class="rstep"><span class="num">6</span><h4>Running time</h4><p>Sorting is O(n log n). The pass is usually O(n).</p></div>
+    </div>
+  </section>
+  <div class="navfoot"></div>
+</section>
+
+<!-- ============ FLOW ============ -->
+<section class="panel" id="flow" role="tabpanel" hidden>
+  <div class="phead">
+    <span class="eyebrow">Learn · 2 of 2</span>
+    <h2>Network flow and Ford-Fulkerson</h2>
+    <p class="lead">Think of one-way water pipes. Each pipe can carry only so much per second. How much water can you push from the source to the sink at the same time?</p>
+  </div>
+  <div class="rail"><a href="#f-s1"><b>1</b>Pipes</a><a href="#f-s2"><b>2</b>Two rules</a><a href="#f-s3"><b>3</b>First try</a><a href="#f-s4"><b>4</b>Residual graph</a><a href="#f-s5"><b>5</b>Backward edges</a><a href="#f-s6"><b>6</b>Ford-Fulkerson</a><a href="#f-s7"><b>7</b>Min cut</a><a href="#f-s8"><b>8</b>Integers and time</a><a href="#f-s9"><b>9</b>Modeling recipe</a></div>
+
+  <section class="s" id="f-s1">
+    <h3>A flow network is a set of pipes</h3>
+    <div class="stage"><div class="gv" data-static="flow-intro"></div></div>
+    <div class="grid3">
+      <div class="card mini"><h4>Source s and sink t</h4><p>Water enters at <b>s</b> and leaves at <b>t</b>. Every other vertex is just a junction.</p></div>
+      <div class="card mini"><h4>Capacity c(e)</h4><p>The most an edge can carry. Written after the slash: <span class="k">7/10</span> means 7 flowing, capacity 10.</p></div>
+      <div class="card mini"><h4>Flow f(e)</h4><p>How much actually flows on each edge. The moving dashes show edges in use; thick dark ones are full.</p></div>
+    </div>
+    <p class="note">This is the max flow for this network, which Ford-Fulkerson finds further down. Its value is 19.</p>
+  </section>
+
+  <section class="s" id="f-s2">
+    <h3>The two rules every flow must follow</h3>
+    <div class="grid2">
+      <div class="card mini"><div class="gv" data-static="flow-cap"></div><h4>1. Capacity rule</h4><p>0 ≤ f(e) ≤ c(e). A pipe can't carry more than it holds, and flow can't be negative.</p></div>
+      <div class="card mini"><div class="gv" data-static="flow-cons"></div><h4>2. Conservation rule</h4><p>At every vertex except s and t, flow in = flow out. Here 3 + 2 in, 4 + 1 out. Nothing leaks, nothing appears.</p></div>
+    </div>
+    <div class="key"><span class="lbl">Value of a flow</span><p><b>v(f)</b> = total flow leaving s (which equals the total arriving at t). The <b>max flow problem</b>: find a flow with the largest value.</p></div>
+  </section>
+
+  <section class="s" id="f-s3">
+    <h3>First try: push along any path with room</h3>
+    <p>A natural idea: find a path from s to t where every edge has room, push as much as fits, repeat. Watch what happens if the first path is unlucky. Left: the flow. Right: the residual graph, explained in the next section.</p>
+    <div data-player="ff-stuck"></div>
+    <div class="key bad"><span class="lbl">Stuck</span><p>The best answer is 2 (s → a → t and s → b → t), but this version is stuck at 1. Choosing a bad path early can't be fixed by only adding flow. You also need a way to <b>take flow back</b>.</p></div>
+  </section>
+
+  <section class="s" id="f-s4">
+    <h3>The residual graph: room left and flow you can undo</h3>
+    <p>For every edge u → v carrying f out of c, the residual graph G_f has up to two edges:</p>
+    <div class="grid2">
+      <div class="card mini"><h4>Forward edge u → v</h4><p>Residual capacity <b>c − f</b>: how much more you could push. Drawn solid.</p></div>
+      <div class="card mini"><h4>Backward edge v → u</h4><p>Residual capacity <b>f</b>: how much you could take back (undo). Drawn dashed amber.</p></div>
+    </div>
+    <div class="stage" style="display:grid;gap:12px">
+      <div class="slider-row"><label for="resf">Flow on u → v:</label><input type="range" id="resf" min="0" max="10" value="7"><span id="resv" class="vals"></span></div>
+      <div class="mini2"><div class="vw"><div class="vt">The edge in G</div><div class="gv" data-static="res-g"></div></div><div class="vw"><div class="vt">Its two residual edges in G_f</div><div class="gv" data-static="res-gf"></div></div></div>
+    </div>
+    <p class="note">An edge with 0 residual capacity disappears from G_f. A full edge has no forward edge; an empty edge has no backward edge.</p>
+  </section>
+
+  <section class="s" id="f-s5">
+    <h3>Backward edges fix the stuck example</h3>
+    <p>An <b>augmenting path</b> is any s → t path in the residual graph. It may use backward edges. Same unlucky first path as before, but now we search the residual graph.</p>
+    <div data-player="ff-fix"></div>
+    <div class="key"><span class="lbl">What the backward edge did</span><p>Pushing 1 along b → a in G_f took the flow off a → b. The water that went s → a → b now goes s → a → t, and the new path s → b → t uses the freed room. Net result: 2.</p></div>
+  </section>
+
+  <section class="s" id="f-s6">
+    <h3>Ford-Fulkerson</h3>
+    <p>Keep finding augmenting paths in the residual graph and pushing the bottleneck amount along them. Stop when s can't reach t in the residual graph. Here the path is found with BFS (the shortest path), which is the Edmonds-Karp version.</p>
+    <div data-player="ff-main"></div>
+    <div class="legend"><span><i class="bar path"></i>augmenting path</span><span><i class="bar act"></i>edge carrying flow</span><span><i class="bar back"></i>flow being undone</span><span><i class="dot done"></i>reachable from s at the end</span></div>
+  </section>
+
+  <section class="s" id="f-s7">
+    <h3>Cuts and the max-flow min-cut theorem</h3>
+    <p>A <b>cut</b> (A, B) splits the vertices into two sides: s in A, t in B. Its <b>capacity</b> is the total capacity of edges going from A to B. Edges going from B back to A don't count. Pick a cut:</p>
+    <div class="stage" style="display:grid;gap:12px">
+      <div class="seg" id="cutpick" role="group" aria-label="Choose a cut" style="flex-wrap:wrap"><button data-c="0" aria-pressed="true">A = {s}</button><button data-c="1">{s, a}</button><button data-c="2">{s, b}</button><button data-c="3">{s, a, b}</button><button data-c="4">{s, a, b, d}</button><button data-c="5">all but t</button></div>
+      <div class="gv" data-static="cut-g"></div>
+      <p class="resline" id="cutres"></p>
+      <div class="legend"><span><i class="dot done"></i>side A (with s)</span><span><i class="dot idle"></i>side B (with t)</span><span><i class="bar" style="background:var(--bad)"></i>A → B edge, counted</span><span><i class="bar" style="background:var(--muted)"></i>B → A edge, not counted</span></div>
+    </div>
+    <div class="grid3">
+      <div class="card mini"><h4>Flow ≤ any cut</h4><p>All water must cross from A to B somewhere, so no flow can beat any cut's capacity.</p></div>
+      <div class="card mini"><h4>Max flow = min cut</h4><p>The biggest flow equals the smallest cut. Here both are 19.</p></div>
+      <div class="card mini"><h4>The certificate</h4><p>When Ford-Fulkerson stops, A = everything s can still reach in G_f. That cut's capacity equals the flow, which proves the flow is max.</p></div>
+    </div>
+  </section>
+
+  <section class="s" id="f-s8">
+    <h3>Whole numbers and running time</h3>
+    <div class="key"><span class="lbl">Integrality theorem</span><p>If every capacity is a whole number, Ford-Fulkerson only ever pushes whole numbers, so it ends with a max flow where <b>every edge carries a whole number</b>. This is what lets flow answer yes-or-no assignment questions (P1, P2).</p></div>
+    <div class="tw"><table class="t">
+      <tr><th>Version</th><th>Time</th><th>Why</th></tr>
+      <tr><td>Ford-Fulkerson, whole-number capacities</td><td class="m">O(F · (m + n))</td><td>Each path adds at least 1, so at most F paths (F = max flow value). Each path search is one BFS or DFS.</td></tr>
+      <tr><td>Edmonds-Karp (always the shortest path, by BFS)</td><td class="m">O(n · m²)</td><td>Doesn't depend on the capacity numbers at all.</td></tr>
+      <tr><td>Ford-Fulkerson, irrational capacities</td><td>May never stop</td><td>Each push can get smaller and smaller forever. That's HW5 P4.</td></tr>
+    </table></div>
+    <p class="note">F can be huge compared to the input size (capacities like 1,000,000 take only 7 digits to write), so O(F · (m + n)) is not polynomial. That's why Edmonds-Karp matters.</p>
+  </section>
+
+  <section class="s" id="f-s9">
+    <h3>The modeling recipe: turn a problem into flow</h3>
+    <p>Most flow problems on homework and exams never ask you to run Ford-Fulkerson by hand. They ask you to <b>build the right network</b>. P1 and P2 follow these steps.</p>
+    <div class="recipe">
+      <div class="rstep"><span class="num">1</span><h4>What flows?</h4><p>Decide what one unit of flow means: one unit of blood, one day of driving, one matched pair.</p></div>
+      <div class="rstep"><span class="num">2</span><h4>Draw a tiny example</h4><p>Small numbers. Find the right answer by hand.</p></div>
+      <div class="rstep"><span class="num">3</span><h4>Build the network</h4><p>Usually: s → "givers" → "receivers" → t. Capacities are the limits in the story.</p></div>
+      <div class="rstep"><span class="num">4</span><h4>Prove both directions</h4><p>A valid answer gives a flow, and a whole-number flow gives a valid answer. Same size both ways.</p></div>
+      <div class="rstep"><span class="num">5</span><h4>Read the answer</h4><p>Run max flow. Compare its value to what you need (total demand, number of days).</p></div>
+      <div class="rstep"><span class="num">6</span><h4>Running time</h4><p>Count vertices and edges of <b>your</b> network, then plug into O(F · (m + n)) or Edmonds-Karp.</p></div>
+    </div>
+    <h3 style="font-size:18px">Common building blocks</h3>
+    <div class="grid3">
+      <div class="card mini"><div class="gv" data-static="gad-bip"></div><h4>Givers and receivers</h4><p>s → each giver (capacity = how much it has) → each receiver it may serve → t (capacity = how much it needs).</p></div>
+      <div class="card mini"><div class="gv" data-static="gad-super"></div><h4>Super source</h4><p>Several sources? Add one new s* with an edge to each of them.</p></div>
+      <div class="card mini"><div class="gv" data-static="gad-split"></div><h4>Vertex capacity</h4><p>A vertex can only handle c(v)? Split it into v_in → v_out with capacity c(v).</p></div>
+    </div>
+  </section>
+  <div class="navfoot"></div>
+</section>
+
+<!-- ============ R1 ============ -->
+<section class="panel" id="r1" role="tabpanel" hidden>
+  <div class="phead"><span class="eyebrow">Greedy practice · R1 (warm-up)</span><h2>The meeting room</h2></div>
+  <div class="prob">
+    <span class="lbl">The problem</span>
+    <p>Prove that repeatedly choosing the compatible interval with the <b>earliest finish time</b> gives a maximum set of non-overlapping intervals. Use a "greedy stays ahead" argument, and give the running time.</p>
+    <span class="target">Proof style: stays ahead</span>
+  </div>
+  <div class="rail"><a href="#r1-s1"><b>1</b>Understand</a><a href="#r1-s2"><b>2</b>Try rules</a><a href="#r1-s3"><b>3</b>Algorithm</a><a href="#r1-s4"><b>4</b>Proof style</a><a href="#r1-s5"><b>5</b>Prove it</a><a href="#r1-s6"><b>6</b>Running time</a></div>
+
+  <section class="s" id="r1-s1">
+    <h3><span class="step-tag">Step 1</span> Understand the problem</h3>
+    <div class="map">
+      <div class="from">Input</div><div class="arrow">→</div><div class="to">n intervals [sᵢ, fᵢ): a start and a finish time</div>
+      <div class="from">Valid answer</div><div class="arrow">→</div><div class="to">A set of intervals where no two overlap (touching is fine)</div>
+      <div class="from">Better answer</div><div class="arrow">→</div><div class="to">More intervals</div>
+    </div>
+    <div class="stage"><div class="gv" data-static="r1-ex"></div></div>
+  </section>
+
+  <section class="s" id="r1-s2">
+    <h3><span class="step-tag">Step 2</span> Try rules and kill the bad ones</h3>
+    <div class="tw"><table class="t">
+      <tr><th>Rule</th><th>Verdict</th><th>Counterexample (see the Greedy tab)</th></tr>
+      <tr><td>Earliest start</td><td>Wrong</td><td>One long interval starts first and blocks three short ones.</td></tr>
+      <tr><td>Shortest first</td><td>Wrong</td><td>A short interval sits across two longer ones that fit together.</td></tr>
+      <tr><td>Fewest overlaps</td><td>Wrong</td><td>The 11-interval example: the rule keeps 3, the best is 4.</td></tr>
+      <tr><td><b>Earliest finish</b></td><td><b>Correct</b></td><td>No counterexample exists. Steps 4 and 5 prove it.</td></tr>
+    </table></div>
+    <p>Why earliest finish feels right: the interval that ends first <b>frees the room as early as possible</b>, leaving the most time for everything else.</p>
+  </section>
+
+  <section class="s" id="r1-s3">
+    <h3><span class="step-tag">Step 3</span> Write the algorithm</h3>
+    <div data-player="r1-algo"></div>
+    <div class="legend"><span><i class="dot cur"></i>being checked</span><span><i class="dot done"></i>kept</span><span><i class="dot idle"></i>skipped</span><span><i class="bar" style="background:var(--good)"></i>end of the last kept interval</span></div>
+  </section>
+
+  <section class="s" id="r1-s4">
+    <h3><span class="step-tag">Step 4</span> Pick the proof style</h3>
+    <p>We pick intervals one at a time, so use <b>greedy stays ahead</b>. The measure: <b>the finish time of the r-th pick</b>. Finishing earlier means more room left, so earlier is "ahead".</p>
+  </section>
+
+  <section class="s" id="r1-s5">
+    <h3><span class="step-tag">Step 5</span> Prove it</h3>
+    <p>Step through the proof on a small example. Greedy's picks are on top, a best solution's picks are below.</p>
+    <div data-player="r1-proof"></div>
+    <div class="proof">
+      <span class="pl">The proof, written out</span>
+      <ol>
+        <li>Let greedy pick g₁, …, gₖ in order. Let O be any optimal set, with intervals o₁, …, oₘ sorted by finish time. We show k = m.</li>
+        <li><b>Claim:</b> for every r ≤ k, f(gᵣ) ≤ f(oᵣ). <b>Proof by induction on r.</b></li>
+        <li><b>Base (r = 1):</b> greedy's first pick ends earliest of all intervals, so f(g₁) ≤ f(o₁).</li>
+        <li><b>Step:</b> assume f(gᵣ₋₁) ≤ f(oᵣ₋₁). Since O has no overlaps, s(oᵣ) ≥ f(oᵣ₋₁) ≥ f(gᵣ₋₁). So oᵣ doesn't overlap greedy's first r − 1 picks, and was available when greedy chose gᵣ. Greedy chose the available interval that ends first, so f(gᵣ) ≤ f(oᵣ).</li>
+        <li><b>Finish:</b> suppose m &gt; k. Then oₖ₊₁ exists and s(oₖ₊₁) ≥ f(oₖ) ≥ f(gₖ), so it was still available after greedy's last pick. But greedy only stops when nothing is available. Contradiction, so m ≤ k, and greedy is optimal.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="s" id="r1-s6">
+    <h3><span class="step-tag">Step 6</span> Running time</h3>
+    <div class="math">sort by finish time: <span class="hl">O(n log n)</span><br>one pass, O(1) per interval: <span class="hl">O(n)</span><br>total: <span class="hl">O(n log n)</span></div>
+  </section>
+  <div class="navfoot"></div>
+</section>
+
+<!-- ============ R3 ============ -->
+<section class="panel" id="r3" role="tabpanel" hidden>
+  <div class="phead"><span class="eyebrow">Greedy practice · R3 (exam level)</span><h2>Minimize the maximum lateness</h2></div>
+  <div class="prob">
+    <span class="lbl">The problem</span>
+    <p>Jobs have processing times tⱼ and deadlines dⱼ, and run one at a time on a single machine. If job j finishes at time fⱼ, its <b>lateness</b> is max(0, fⱼ − dⱼ). Minimize the <b>largest</b> lateness. (1) Give counterexamples for "shortest job first" and "smallest slack dⱼ − tⱼ first". (2) Prove that Earliest Deadline First (EDF) is optimal with an exchange argument.</p>
+    <span class="target">Proof style: exchange</span>
+  </div>
+  <div class="rail"><a href="#r3-s1"><b>1</b>Understand</a><a href="#r3-s2"><b>2</b>Try rules</a><a href="#r3-s3"><b>3</b>Algorithm</a><a href="#r3-s4"><b>4</b>Proof style</a><a href="#r3-s5"><b>5</b>Prove it</a><a href="#r3-s6"><b>6</b>Running time</a></div>
+
+  <section class="s" id="r3-s1">
+    <h3><span class="step-tag">Step 1</span> Understand the problem</h3>
+    <div class="map">
+      <div class="from">Input</div><div class="arrow">→</div><div class="to">n jobs, each with a length tⱼ and a deadline dⱼ</div>
+      <div class="from">Valid answer</div><div class="arrow">→</div><div class="to">An order to run the jobs, back to back from time 0</div>
+      <div class="from">Better answer</div><div class="arrow">→</div><div class="to">Smaller worst lateness</div>
+    </div>
+    <div class="stage"><div class="gv" data-static="r3-ex"></div></div>
+    <p class="note">Each flag is a deadline. A red bar under a job shows how late it finished. Only the <b>biggest</b> red bar matters.</p>
+  </section>
+
+  <section class="s" id="r3-s2">
+    <h3><span class="step-tag">Step 2</span> Try rules and kill the bad ones</h3>
+    <div class="mini2">
+      <div class="card mini" style="display:grid;gap:8px">
+        <h4>Shortest job first: wrong</h4>
+        <p>Job 1: t = 1, d = 11. Job 2: t = 10, d = 10.</p>
+        <div class="cmp"><span class="tag no">Shortest first: job 1, then job 2 → worst lateness 1</span><div class="gv" data-static="r3-sjf-a"></div></div>
+        <div class="cmp"><span class="tag ok">EDF: job 2, then job 1 → worst lateness 0</span><div class="gv" data-static="r3-sjf-b"></div></div>
+      </div>
+      <div class="card mini" style="display:grid;gap:8px">
+        <h4>Smallest slack first: wrong</h4>
+        <p>Job 1: t = 1, d = 2 (slack 1). Job 2: t = 10, d = 10 (slack 0).</p>
+        <div class="cmp"><span class="tag no">Smallest slack: job 2, then job 1 → worst lateness 9</span><div class="gv" data-static="r3-slack-a"></div></div>
+        <div class="cmp"><span class="tag ok">EDF: job 1, then job 2 → worst lateness 1</span><div class="gv" data-static="r3-slack-b"></div></div>
+      </div>
+    </div>
+    <p>The length of a job doesn't tell you how urgent it is. The deadline does. That points to <b>earliest deadline first</b>.</p>
+  </section>
+
+  <section class="s" id="r3-s3">
+    <h3><span class="step-tag">Step 3</span> Write the algorithm</h3>
+    <div data-player="r3-algo"></div>
+  </section>
+
+  <section class="s" id="r3-s4">
+    <h3><span class="step-tag">Step 4</span> Pick the proof style</h3>
+    <p>The answer is an <b>order</b>, so use the <b>exchange argument</b>. Key word: an <b>inversion</b> is a pair of jobs where the one with the later deadline runs first.</p>
+  </section>
+
+  <section class="s" id="r3-s5">
+    <h3><span class="step-tag">Step 5</span> Prove it</h3>
+    <p>Start from any schedule and keep swapping two <b>neighboring</b> jobs that form an inversion. Watch the worst lateness: it never goes up, and you end at EDF's order.</p>
+    <div data-player="r3-swap"></div>
+    <div class="proof">
+      <span class="pl">The proof, written out</span>
+      <ol>
+        <li><b>No idle time:</b> some optimal schedule has no gaps, because a gap only delays jobs. Let O be such a schedule.</li>
+        <li><b>Neighbors:</b> if O has an inversion, it has one between two <b>neighboring</b> jobs i, j (i runs right before j, but dⱼ &lt; dᵢ). If every neighboring pair were in deadline order, the whole schedule would be sorted.</li>
+        <li><b>The swap doesn't hurt:</b> swap i and j. Every other job finishes at the same time as before. j now finishes earlier, so its lateness can't go up. i now finishes where j used to, at fⱼ, so its new lateness is fⱼ − dᵢ &lt; fⱼ − dⱼ, which was j's old lateness. So the worst lateness doesn't go up.</li>
+        <li><b>Keep going:</b> each swap removes one inversion, so after finitely many swaps O has no inversions and is still optimal.</li>
+        <li><b>Same as EDF:</b> any gap-free schedule with no inversions is EDF's order, except that jobs with equal deadlines may be in a different order. Those jobs run in one block that ends at the same time, so the worst lateness is the same. So EDF is optimal.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="s" id="r3-s6">
+    <h3><span class="step-tag">Step 6</span> Running time</h3>
+    <div class="math">sort by deadline: <span class="hl">O(n log n)</span><br>run them back to back: <span class="hl">O(n)</span><br>total: <span class="hl">O(n log n)</span></div>
+  </section>
+  <div class="navfoot"></div>
+</section>
+
+<!-- ============ R5 ============ -->
+<section class="panel" id="r5" role="tabpanel" hidden>
+  <div class="phead"><span class="eyebrow">Greedy practice · R5 (warm-up)</span><h2>Cell phone towers along a road</h2></div>
+  <div class="prob">
+    <span class="lbl">The problem</span>
+    <p>Houses sit at positions x₁ &lt; x₂ &lt; … &lt; xₙ along a straight road. A tower covers every house within <b>4 miles</b> of it. Place the <b>fewest towers</b> so that every house is covered.</p>
+    <span class="target">Proof style: stays ahead</span>
+  </div>
+  <div class="rail"><a href="#r5-s1"><b>1</b>Understand</a><a href="#r5-s2"><b>2</b>Try rules</a><a href="#r5-s3"><b>3</b>Algorithm</a><a href="#r5-s4"><b>4</b>Proof style</a><a href="#r5-s5"><b>5</b>Prove it</a><a href="#r5-s6"><b>6</b>Running time</a></div>
+
+  <section class="s" id="r5-s1">
+    <h3><span class="step-tag">Step 1</span> Understand the problem</h3>
+    <div class="map">
+      <div class="from">Input</div><div class="arrow">→</div><div class="to">House positions on a line, sorted west to east</div>
+      <div class="from">Valid answer</div><div class="arrow">→</div><div class="to">Tower positions so every house is within 4 miles of one</div>
+      <div class="from">Better answer</div><div class="arrow">→</div><div class="to">Fewer towers</div>
+    </div>
+    <div class="stage"><div class="gv" data-static="r5-ex"></div></div>
+    <p class="note">One tower covers an 8-mile stretch: 4 miles each way.</p>
+  </section>
+
+  <section class="s" id="r5-s2">
+    <h3><span class="step-tag">Step 2</span> Try rules</h3>
+    <div class="mini2">
+      <div class="cmp stage"><span class="tag no">Tower right on the first uncovered house</span><div class="gv" data-static="r5-rule-a"></div><p class="note">Half of its coverage (miles −3 to 1) has no houses. Wasted.</p></div>
+      <div class="cmp stage"><span class="tag ok">Tower 4 miles past the first uncovered house</span><div class="gv" data-static="r5-rule-b"></div><p class="note">That house is still just covered, and the tower reaches as far east as possible.</p></div>
+    </div>
+    <p>Rule: walk east. At the first house that isn't covered, put a tower <b>4 miles past it</b>. Pushing the tower east covers the most new road while still covering that house.</p>
+  </section>
+
+  <section class="s" id="r5-s3">
+    <h3><span class="step-tag">Step 3</span> Write the algorithm</h3>
+    <div data-player="r5-algo"></div>
+  </section>
+
+  <section class="s" id="r5-s4">
+    <h3><span class="step-tag">Step 4</span> Pick the proof style</h3>
+    <p>Towers get placed one at a time, west to east, so use <b>greedy stays ahead</b>. The measure: <b>the position of the r-th tower</b>. Farther east means more road covered, so farther east is "ahead".</p>
+  </section>
+
+  <section class="s" id="r5-s5">
+    <h3><span class="step-tag">Step 5</span> Prove it</h3>
+    <div data-player="r5-proof"></div>
+    <div class="proof">
+      <span class="pl">The proof, written out</span>
+      <ol>
+        <li>Greedy places towers g₁ &lt; … &lt; gₖ. Let O be any valid placement, with towers o₁ ≤ … ≤ oₘ. We show m ≥ k.</li>
+        <li><b>Claim:</b> for every r ≤ min(k, m), gᵣ ≥ oᵣ. <b>Proof by induction on r.</b></li>
+        <li><b>Base (r = 1):</b> house x₁ is covered by some tower oₜ of O, so o₁ ≤ oₜ ≤ x₁ + 4 = g₁.</li>
+        <li><b>Step:</b> assume gᵣ₋₁ ≥ oᵣ₋₁. Greedy put gᵣ at h + 4, where h is the first house its first r − 1 towers miss, so h &gt; gᵣ₋₁ + 4 ≥ oᵣ₋₁ + 4. Then o₁, …, oᵣ₋₁ all miss h too, so h is covered by some oₜ with t ≥ r. So oᵣ ≤ oₜ ≤ h + 4 = gᵣ.</li>
+        <li><b>Finish:</b> suppose m &lt; k. Greedy placed gₖ for a house h with h &gt; gₖ₋₁ + 4 ≥ gₘ + 4 ≥ oₘ + 4. Every tower of O is at most oₘ, so none of them reaches h. O misses a house, contradiction. So m ≥ k: greedy uses the fewest towers.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="s" id="r5-s6">
+    <h3><span class="step-tag">Step 6</span> Running time</h3>
+    <div class="math">houses are already sorted: one pass, <span class="hl">O(n)</span><br>(if they weren't sorted: sort first, <span class="hl">O(n log n)</span>)</div>
+  </section>
+  <div class="navfoot"></div>
+</section>
+
+<!-- ============ P1 ============ -->
+<section class="panel" id="p1" role="tabpanel" hidden>
+  <div class="phead"><span class="eyebrow">HW5 · Problem 1</span><h2>Blood supply</h2></div>
+  <div class="prob">
+    <span class="lbl">The problem</span>
+    <p>Each patient has one blood type: A, B, AB, or O. Type A patients can receive A or O blood. Type B patients can receive B or O. Type O patients can only receive O. Type AB patients can receive any type. The hospital has supplies s_O, s_A, s_B, s_AB on hand and projected demands d_O, d_A, d_B, d_AB for the week. Give an algorithm that decides whether the supply is enough to cover the demand.</p>
+    <span class="target">Hint: set up something that looks like a matching</span>
+  </div>
+  <div class="rail"><a href="#p1-s1"><b>1</b>What flows</a><a href="#p1-s2"><b>2</b>Tiny example</a><a href="#p1-s3"><b>3</b>Build</a><a href="#p1-s4"><b>4</b>Both directions</a><a href="#p1-s5"><b>5</b>Run and read</a><a href="#p1-s6"><b>6</b>Running time</a></div>
+
+  <section class="s" id="p1-s1">
+    <h3><span class="step-tag">Step 1</span> What flows?</h3>
+    <p><b>One unit of flow = one unit of blood.</b> It leaves the supply shelf of some type, goes to a group of patients who are allowed to receive that type, and is used there.</p>
+    <div class="tw"><table class="t">
+      <tr><th>Patient type</th><th>Can receive</th></tr>
+      <tr><td><b>O</b></td><td>O only</td></tr>
+      <tr><td><b>A</b></td><td>A, O</td></tr>
+      <tr><td><b>B</b></td><td>B, O</td></tr>
+      <tr><td><b>AB</b></td><td>A, B, AB, O (anything)</td></tr>
+    </table></div>
+    <p class="note">Flip it around to see who can <b>give</b>: O blood can go to everyone, A blood to A and AB, B blood to B and AB, AB blood only to AB.</p>
+  </section>
+
+  <section class="s" id="p1-s2">
+    <h3><span class="step-tag">Step 2</span> Draw a tiny example</h3>
+    <div class="tw"><table class="t">
+      <tr><th></th><th>O</th><th>A</th><th>B</th><th>AB</th><th>Total</th></tr>
+      <tr><td><b>Week 1 supply</b></td><td class="m">5</td><td class="m">3</td><td class="m">2</td><td class="m">1</td><td class="m">11</td></tr>
+      <tr><td><b>Week 1 demand</b></td><td class="m">4</td><td class="m">4</td><td class="m">1</td><td class="m">2</td><td class="m">11</td></tr>
+      <tr><td><b>Week 2 supply</b></td><td class="m">3</td><td class="m">5</td><td class="m">3</td><td class="m">2</td><td class="m">13</td></tr>
+      <tr><td><b>Week 2 demand</b></td><td class="m">4</td><td class="m">2</td><td class="m">2</td><td class="m">3</td><td class="m">11</td></tr>
+    </table></div>
+    <ul class="ticks">
+      <li><b>Week 1 by hand:</b> O patients take 4 O. A patients take 3 A plus the last O. B patients take 1 B. AB patients take 1 AB plus the spare B. Everyone is covered.</li>
+      <li><b>Week 2 by hand:</b> there's more blood than demand in total (13 vs 11), but O patients need 4 units of O and only 3 exist. <b>Not enough.</b> Comparing totals isn't a valid test.</li>
+    </ul>
+  </section>
+
+  <section class="s" id="p1-s3">
+    <h3><span class="step-tag">Step 3</span> Build the network</h3>
+    <div class="stage"><div class="gv" data-static="p1-net"></div></div>
+    <div class="tw"><table class="t">
+      <tr><th>Edge</th><th>Capacity</th><th>Meaning</th></tr>
+      <tr><td>s → supply X</td><td class="m">s_X</td><td>We can't use more type X blood than we have.</td></tr>
+      <tr><td>supply X → patients Y</td><td class="m">∞</td><td>Only if Y can receive X. No limit on how much moves.</td></tr>
+      <tr><td>patients Y → t</td><td class="m">d_Y</td><td>Y patients need d_Y units in total.</td></tr>
+    </table></div>
+    <p class="note">10 vertices (s, t, 4 supply, 4 patient) and 17 edges (4 + 9 compatible pairs + 4), no matter how big the numbers are.</p>
+  </section>
+
+  <section class="s" id="p1-s4">
+    <h3><span class="step-tag">Step 4</span> Prove both directions</h3>
+    <p>Let D = d_O + d_A + d_B + d_AB. Claim: <b>the supply is enough exactly when the max flow equals D.</b></p>
+    <div class="grid2">
+      <div class="card mini"><h4>Plan → flow</h4><p>Suppose a plan covers everyone. Send x units along s → X → Y → t whenever the plan gives x units of type X to Y patients. Capacities hold (we never use more than s_X, and Y gets exactly d_Y), so this is a flow of value D.</p></div>
+      <div class="card mini"><h4>Flow → plan</h4><p>Suppose the max flow is D. By integrality there's a max flow with whole numbers. Give f(X → Y) units of X to Y patients. Only compatible edges exist, supply caps hold, and every Y → t edge is full, so every patient group gets d_Y.</p></div>
+    </div>
+    <p>The max flow can never be more than D, because the edges into t add up to D.</p>
+  </section>
+
+  <section class="s" id="p1-s5">
+    <h3><span class="step-tag">Step 5</span> Run max flow and read the answer</h3>
+    <h3 style="font-size:18px">Week 1: enough</h3>
+    <div data-player="p1-run1"></div>
+    <h3 style="font-size:18px">Week 2: not enough</h3>
+    <div data-player="p1-run2"></div>
+  </section>
+
+  <section class="s" id="p1-s6">
+    <h3><span class="step-tag">Step 6</span> Running time</h3>
+    <div class="math">vertices: <span class="hl">10</span>, edges: <span class="hl">17</span>, always<br>Edmonds-Karp: O(n · m²) = O(10 · 17²) = <span class="hl">O(1)</span> path searches and arithmetic steps<br>(plain Ford-Fulkerson: at most D augmenting paths, <span class="hl">O(D)</span>)</div>
+    <div class="answer">
+      <div class="ah-title">Write-up</div>
+      <dl>
+        <dt>Build</dt><dd>Vertices s, t, one supply vertex and one patient vertex per blood type. Edges s → supply X with capacity s_X; supply X → patients Y with capacity ∞ whenever Y can receive X (9 pairs); patients Y → t with capacity d_Y.</dd>
+        <dt>Run</dt><dd>Compute a max flow (Edmonds-Karp, or Ford-Fulkerson since all capacities are integers).</dd>
+        <dt>Return</dt><dd>"Enough" if the max flow equals D = d_O + d_A + d_B + d_AB; otherwise "not enough". The flow on supply X → patients Y says how many units of X to give to Y.</dd>
+        <dt>Why</dt><dd>Any plan that covers all demand is a flow of value D, and any whole-number flow of value D is a plan (integrality theorem). The edges into t cap every flow at D.</dd>
+        <dt>Time</dt><dd>The network has 10 vertices and 17 edges for any input, so Edmonds-Karp runs in constant time (O(D · 17) with plain Ford-Fulkerson).</dd>
+      </dl>
+    </div>
+  </section>
+  <div class="navfoot"></div>
+</section>
+
+<!-- ============ P2 ============ -->
+<section class="panel" id="p2" role="tabpanel" hidden>
+  <div class="phead"><span class="eyebrow">HW5 · Problem 2</span><h2>Fair schedule</h2></div>
+  <div class="prob">
+    <span class="lbl">The problem</span>
+    <p>n people carpool for d days. On day i, a nonempty group Sᵢ goes to work, and each person in Sᵢ picks up a driving obligation of 1/|Sᵢ| that day. Person j's total obligation is Δⱼ = the sum of 1/|Sᵢ| over the days j rides. A schedule assigns at most one driver (from Sᵢ) to each day. It is <b>fair</b> if each person j drives at most ⌈Δⱼ⌉ times. Find a fair schedule that assigns a driver to as many days as possible.</p>
+    <span class="target">Hint: reduce to flow. What is the max flow value?</span>
+  </div>
+  <div class="rail"><a href="#p2-s1"><b>1</b>What flows</a><a href="#p2-s2"><b>2</b>Tiny example</a><a href="#p2-s3"><b>3</b>Build</a><a href="#p2-s4"><b>4</b>Both directions</a><a href="#p2-s5"><b>5</b>The hint</a><a href="#p2-s6"><b>6</b>Run it, time</a></div>
+
+  <section class="s" id="p2-s1">
+    <h3><span class="step-tag">Step 1</span> What flows?</h3>
+    <p><b>One unit of flow = one day's driving job.</b> Each day has one job. It must go to one person who rides that day. Each person can take only so many jobs (⌈Δⱼ⌉).</p>
+  </section>
+
+  <section class="s" id="p2-s2">
+    <h3><span class="step-tag">Step 2</span> Draw a tiny example</h3>
+    <p>3 people (Ana, Ben, Cal) and 4 days. Each cell shows that person's share of the day's driving.</p>
+    <div class="tw"><table class="t">
+      <tr><th>Day</th><th>Who rides</th><th>Ana</th><th>Ben</th><th>Cal</th></tr>
+      <tr><td>Day 1</td><td>Ana, Ben</td><td class="m">1/2</td><td class="m">1/2</td><td class="m">·</td></tr>
+      <tr><td>Day 2</td><td>Ana, Ben, Cal</td><td class="m">1/3</td><td class="m">1/3</td><td class="m">1/3</td></tr>
+      <tr><td>Day 3</td><td>Ben, Cal</td><td class="m">·</td><td class="m">1/2</td><td class="m">1/2</td></tr>
+      <tr><td>Day 4</td><td>Ana</td><td class="m">1</td><td class="m">·</td><td class="m">·</td></tr>
+      <tr><td><b>Δ (total)</b></td><td></td><td class="m">11/6 ≈ 1.83</td><td class="m">4/3 ≈ 1.33</td><td class="m">5/6 ≈ 0.83</td></tr>
+      <tr><td><b>⌈Δ⌉ (max drives)</b></td><td></td><td class="m">2</td><td class="m">2</td><td class="m">1</td></tr>
+    </table></div>
+    <p class="note">The shares on each day add up to 1, so all the Δ's add up to d = 4. By hand: Ana must drive day 4. Then Ben day 1, Ana day 2, Ben day 3 works. Every day gets a driver.</p>
+  </section>
+
+  <section class="s" id="p2-s3">
+    <h3><span class="step-tag">Step 3</span> Build the network</h3>
+    <div class="stage"><div class="gv" data-static="p2-net"></div></div>
+    <div class="tw"><table class="t">
+      <tr><th>Edge</th><th>Capacity</th><th>Meaning</th></tr>
+      <tr><td>s → day i</td><td class="m">1</td><td>Each day has one driving job.</td></tr>
+      <tr><td>day i → person j</td><td class="m">1</td><td>Only if j rides on day i.</td></tr>
+      <tr><td>person j → t</td><td class="m">⌈Δⱼ⌉</td><td>Fairness limit for person j.</td></tr>
+    </table></div>
+  </section>
+
+  <section class="s" id="p2-s4">
+    <h3><span class="step-tag">Step 4</span> Prove both directions</h3>
+    <div class="grid2">
+      <div class="card mini"><h4>Schedule → flow</h4><p>A fair schedule that covers k days gives a flow of value k: send 1 along s → day i → its driver → t. Each day sends at most 1, and person j receives at most ⌈Δⱼ⌉.</p></div>
+      <div class="card mini"><h4>Flow → schedule</h4><p>A whole-number flow of value k gives a fair schedule covering k days: if 1 unit goes day i → person j, then j drives day i. Each day has at most one driver, and j drives at most ⌈Δⱼ⌉ times.</p></div>
+    </div>
+    <p>So the max number of covered days equals the max flow value.</p>
+  </section>
+
+  <section class="s" id="p2-s5">
+    <h3><span class="step-tag">Step 5</span> The hint: the max flow is always d</h3>
+    <p>Split each day's job evenly among its riders. This is a flow, just with fractions:</p>
+    <div class="stage"><div class="gv" data-static="p2-frac"></div></div>
+    <ul class="ticks">
+      <li><b>It's a valid flow.</b> Day i gets 1 in and sends 1/|Sᵢ| to each of its |Sᵢ| riders, so 1 out. Person j receives exactly Δⱼ ≤ ⌈Δⱼ⌉, which fits the capacity to t.</li>
+      <li><b>Its value is d.</b> Every s → day edge carries 1. The cut around s has capacity d, so no flow beats d. So the max flow is <b>exactly d</b>.</li>
+      <li><b>Now use integrality.</b> All capacities are whole numbers, so some max flow (the one Ford-Fulkerson finds) is all whole numbers. Its value is also d, and it's a real schedule: <b>every day gets a driver, and it's fair.</b></li>
+    </ul>
+  </section>
+
+  <section class="s" id="p2-s6">
+    <h3><span class="step-tag">Step 6</span> Run it and count the time</h3>
+    <div data-player="p2-run"></div>
+    <div class="answer">
+      <div class="ah-title">Write-up</div>
+      <dl>
+        <dt>Build</dt><dd>Vertices s, t, one per day, one per person. Edges s → day i (capacity 1); day i → person j for each j ∈ Sᵢ (capacity 1); person j → t (capacity ⌈Δⱼ⌉).</dd>
+        <dt>Run</dt><dd>Ford-Fulkerson (all capacities are integers, so it returns a whole-number max flow).</dd>
+        <dt>Return</dt><dd>For each day i, the driver is the person j with flow 1 on day i → j. Every day gets a driver.</dd>
+        <dt>Why</dt><dd>Whole-number flows of value k are exactly fair schedules covering k days. Splitting each day evenly gives a fractional flow of value d, and the cut around s caps flows at d, so the max flow is d. By integrality, the whole-number max flow also has value d.</dd>
+        <dt>Time</dt><dd>V = n + d + 2 and E = d + Σ|Sᵢ| + n ≤ d + nd + n. The max flow is d, so Ford-Fulkerson does at most d augmentations of O(V + E) each: O(d · (n + d + Σ|Sᵢ|)) = <b>O(n · d²)</b>.</dd>
+      </dl>
+    </div>
+  </section>
+  <div class="navfoot"></div>
+</section>
+
+<!-- ============ P3 ============ -->
+<section class="panel" id="p3" role="tabpanel" hidden>
+  <div class="phead"><span class="eyebrow">HW5 · Problem 3</span><h2>Friend's algorithm</h2></div>
+  <div class="prob">
+    <span class="lbl">The problem</span>
+    <p>A friend's max-flow code repeatedly finds augmenting paths, but it never uses backward edges: it only uses paths made of forward edges with room left, and stops when none remain. (How it picks those paths is not specified.) The friend claims there is a constant b such that on <b>every</b> input, the code finds a flow of at least 1/b times the max. Is the friend right? Prove your answer.</p>
+    <span class="target">Answer: no</span>
+  </div>
+  <div class="rail"><a href="#p3-s1"><b>1</b>Understand</a><a href="#p3-s2"><b>2</b>Small test</a><a href="#p3-s3"><b>3</b>Guess</a><a href="#p3-s4"><b>4</b>Bad family</a><a href="#p3-s5"><b>5</b>Prove it</a><a href="#p3-s6"><b>6</b>Write-up</a></div>
+
+  <section class="s" id="p3-s1">
+    <h3><span class="step-tag">Step 1</span> Understand the claim</h3>
+    <div class="map">
+      <div class="from">The friend's code</div><div class="arrow">→</div><div class="to">Ford-Fulkerson with no backward edges</div>
+      <div class="from">"Within a factor of b"</div><div class="arrow">→</div><div class="to">Always gets at least max / b</div>
+      <div class="from">"No matter what input"</div><div class="arrow">→</div><div class="to">One bad input for each b proves it wrong</div>
+    </div>
+    <div class="key warn"><span class="lbl">How to disprove a "for every input" claim</span><p>For <b>any</b> b someone names, build an input where the code gets <b>less than max / b</b>. Since the path choice isn't specified, the claim has to hold no matter which forward paths the code picks, so one bad sequence of choices is enough.</p></div>
+  </section>
+
+  <section class="s" id="p3-s2">
+    <h3><span class="step-tag">Step 2</span> Test it on a small graph</h3>
+    <p>The diamond from the Flow tab: with the unlucky first path s → a → b → t, the forward-only code gets 1, but the max flow is 2. So b = 1 is already false. Can the gap get bigger?</p>
+  </section>
+
+  <section class="s" id="p3-s3">
+    <h3><span class="step-tag">Step 3</span> Guess</h3>
+    <p>The trick in the diamond: one bad path used up the <b>middle</b> edge that every other path needed. Make a graph where one bad path uses up the middle edges of <b>k</b> good paths at once. Then the code gets 1 and the max is k. Since k can be anything, no constant b works.</p>
+  </section>
+
+  <section class="s" id="p3-s4">
+    <h3><span class="step-tag">Step 4</span> Build the bad family</h3>
+    <p>Vertices s, t, u₁…uₖ, v₁…vₖ. Edges s → uᵢ, uᵢ → vᵢ, vᵢ → t for every i, plus vᵢ → uᵢ₊₁. Every capacity is 1.</p>
+    <div class="stage" style="display:grid;gap:12px">
+      <div class="seg" id="p3k" role="group" aria-label="Choose k"><button data-k="2">k = 2</button><button data-k="3" aria-pressed="true">k = 3</button><button data-k="4">k = 4</button></div>
+      <div id="p3fam" class="gv"></div>
+      <p class="resline" id="p3res"></p>
+    </div>
+  </section>
+
+  <section class="s" id="p3-s5">
+    <h3><span class="step-tag">Step 5</span> Prove it</h3>
+    <div data-player="p3-run"></div>
+    <div class="proof">
+      <span class="pl">The proof, written out</span>
+      <ol>
+        <li><b>The code can get stuck at 1.</b> The zig-zag path s → u₁ → v₁ → u₂ → v₂ → … → uₖ → vₖ → t uses only forward edges, each with capacity 1, so the code may push 1 along it. That fills every uᵢ → vᵢ edge.</li>
+        <li>The only edge leaving uᵢ is uᵢ → vᵢ. Every s → t path enters some uᵢ (all edges out of s go to u's) and must leave it through uᵢ → vᵢ, which is full. So no forward-only path is left, and the code stops with flow <b>1</b>.</li>
+        <li><b>The max flow is k.</b> The k paths s → uᵢ → vᵢ → t share no edges, so together they carry k. The edges out of s have total capacity k, so no flow is bigger.</li>
+        <li><b>Conclusion.</b> The code's flow is 1 = max / k. Given any constant b, pick k &gt; b: the code gets max / k &lt; max / b. So no constant b works, and the friend is wrong.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="s" id="p3-s6">
+    <h3><span class="step-tag">Step 6</span> Write-up</h3>
+    <div class="answer">
+      <div class="ah-title">Write-up</div>
+      <dl>
+        <dt>Answer</dt><dd>The friend is wrong: no constant b works.</dd>
+        <dt>Input</dt><dd>For any k ≥ 2: vertices s, t, u₁…uₖ, v₁…vₖ; unit-capacity edges s → uᵢ, uᵢ → vᵢ, vᵢ → t, and vᵢ → uᵢ₊₁ for i &lt; k.</dd>
+        <dt>Bad run</dt><dd>The forward-only code may first pick s → u₁ → v₁ → … → uₖ → vₖ → t, which fills all uᵢ → vᵢ. Every s → t path must use some uᵢ → vᵢ, so it stops with value 1.</dd>
+        <dt>Max</dt><dd>The k disjoint paths s → uᵢ → vᵢ → t give value k, and the cut around s has capacity k, so the max flow is k.</dd>
+        <dt>Finish</dt><dd>The ratio is k. For any b, choosing k &gt; b gives flow 1 &lt; k / b. So the claim fails.</dd>
+      </dl>
+    </div>
+  </section>
+  <div class="navfoot"></div>
+</section>
+
+<!-- ============ P4 ============ -->
+<section class="panel" id="p4" role="tabpanel" hidden>
+  <div class="phead"><span class="eyebrow">HW5 · Problem 4</span><h2>Failure of Ford-Fulkerson</h2></div>
+  <div class="prob">
+    <span class="lbl">The problem</span>
+    <p>With real-number capacities, Ford-Fulkerson might never stop, and its flow might approach a value far below the max. The graph: s → a, s → b, s → d, a → t, c → t, d → t all have capacity X ≥ 10; the middle edges are b → a (capacity 1), b → c (capacity 1), and d → c (capacity φ), where φ = (√5 − 1)/2. Use the paths A: s → a → b → c → t, B: s → d → c → b → a → t, C: s → b → c → d → t, which may use backward edges. Track (r₁, r₂, r₃), the residual capacities of (b, a), (b, c), (d, c) in their original directions. Parts (a) to (e) below.</p>
+    <span class="target">Facts: 0 &lt; φ &lt; 1 and φ² = 1 − φ</span>
+  </div>
+  <div class="rail"><a href="#p4-s0"><b>0</b>Setup</a><a href="#p4-sa"><b>a</b>Max flow</a><a href="#p4-sb"><b>b</b>First push</a><a href="#p4-sc"><b>c</b>The table</a><a href="#p4-sd"><b>d</b>The sum</a><a href="#p4-se"><b>e</b>Conclude</a></div>
+
+  <section class="s" id="p4-s0">
+    <h3><span class="step-tag">Setup</span> The graph, φ, and the three paths</h3>
+    <div class="grid2">
+      <div class="card mini">
+        <h4>φ (phi) ≈ 0.618</h4>
+        <p>Because φ² = 1 − φ, multiplying by φ again and again gives a shrinking chain where each term is the difference of the two before it:</p>
+        <div class="math" style="margin-top:8px">1, φ ≈ 0.618, φ² ≈ 0.382, φ³ ≈ 0.236, φ⁴ ≈ 0.146, …<br>φᵏ⁻¹ − φᵏ = φᵏ⁻¹(1 − φ) = φᵏ⁺¹</div>
+      </div>
+      <div class="card mini">
+        <h4>Residual rules you'll use</h4>
+        <p>An edge with capacity u and forward residual r carries flow u − r, so its backward residual is u − r. Pushing forward lowers r. Pushing <b>backward</b> raises r (it undoes flow).</p>
+      </div>
+    </div>
+    <div class="stage" style="display:grid;gap:12px">
+      <div class="seg" id="p4path" role="group" aria-label="Show a path"><button data-p="none" aria-pressed="true">Graph</button><button data-p="A">Path A</button><button data-p="B">Path B</button><button data-p="C">Path C</button></div>
+      <div class="gv" data-static="p4-graph"></div>
+      <p class="resline" id="p4pathres"></p>
+      <div class="legend"><span><i class="bar path"></i>used forward</span><span><i class="bar back"></i>used backward (undoes flow)</span></div>
+    </div>
+  </section>
+
+  <section class="s" id="p4-sa">
+    <h3><span class="step-tag">Part (a)</span> The max flow is 2X + 1</h3>
+    <div class="mini2">
+      <div class="cmp stage"><span class="tag ok">A flow of value 2X + 1</span><div class="gv" data-static="p4-flow"></div><p class="note">X along s → a → t, X along s → d → t, and 1 along s → b → c → t.</p></div>
+      <div class="cmp stage"><span class="tag ok">A cut of capacity 2X + 1</span><div class="gv" data-static="p4-cut"></div><p class="note">A = {s, a, b}. Edges leaving A: s → d (X), a → t (X), b → c (1). The edge b → a stays inside A.</p></div>
+    </div>
+    <div class="key"><span class="lbl">Why that proves it</span><p>Every flow is at most every cut's capacity, so no flow beats 2X + 1, and we have a flow of exactly 2X + 1. So the max flow is 2X + 1.</p></div>
+  </section>
+
+  <section class="s" id="p4-sb">
+    <h3><span class="step-tag">Part (b)</span> The first push</h3>
+    <p>Start at zero flow, so (r₁, r₂, r₃) = (1, 1, φ). The path s → b → c → t has room X, 1, X. The bottleneck is 1. After pushing 1, edge b → c is full: <b>(r₁, r₂, r₃) = (1, 0, φ)</b>. The player below starts with this push.</p>
+  </section>
+
+  <section class="s" id="p4-sc">
+    <h3><span class="step-tag">Part (c)</span> The inductive step: four pushes</h3>
+    <p>Assume (r₁, r₂, r₃) = (φᵏ⁻¹, 0, φᵏ). Push along B, C, B, A. Step through k = 1 (the round right after part b), then k = 3, to see the pattern repeat.</p>
+    <div data-player="p4-run"></div>
+    <div class="tw"><table class="t">
+      <tr><th>Augmentation</th><th>Bottleneck (middle edges)</th><th>r₁</th><th>r₂</th><th>r₃</th></tr>
+      <tr><td>Start of the round</td><td></td><td class="m">φᵏ⁻¹</td><td class="m">0</td><td class="m">φᵏ</td></tr>
+      <tr><td>Add φᵏ along B</td><td class="m">min(r₃ = φᵏ, 1 − r₂ = 1, r₁ = φᵏ⁻¹) = φᵏ</td><td class="m">φᵏ⁺¹</td><td class="m">φᵏ</td><td class="m">0</td></tr>
+      <tr><td>Add φᵏ along C</td><td class="m">min(r₂ = φᵏ, φ − r₃ = φ) = φᵏ</td><td class="m">φᵏ⁺¹</td><td class="m">0</td><td class="m">φᵏ</td></tr>
+      <tr><td>Add φᵏ⁺¹ along B</td><td class="m">min(r₃ = φᵏ, 1 − r₂ = 1, r₁ = φᵏ⁺¹) = φᵏ⁺¹</td><td class="m">0</td><td class="m">φᵏ⁺¹</td><td class="m">φᵏ⁺²</td></tr>
+      <tr><td>Add φᵏ⁺¹ along A</td><td class="m">min(1 − r₁ = 1, r₂ = φᵏ⁺¹) = φᵏ⁺¹</td><td class="m">φᵏ⁺¹</td><td class="m">0</td><td class="m">φᵏ⁺²</td></tr>
+    </table></div>
+    <ul class="ticks">
+      <li>Row 1: r₁ = φᵏ⁻¹ − φᵏ = φᵏ⁺¹ by the hint. B goes backward through c → b, so r₂ goes up by φᵏ.</li>
+      <li>Row 2: C goes backward through c → d, so r₃ goes up by φᵏ, from 0 to φᵏ.</li>
+      <li>Row 3: r₃ = φᵏ − φᵏ⁺¹ = φᵏ⁺² (the hint again, one step later).</li>
+      <li>Row 4: A goes backward through a → b, so r₁ goes up from 0 to φᵏ⁺¹. The end state (φᵏ⁺¹, 0, φᵏ⁺²) has the same shape as the start with k replaced by k + 2, so the round repeats forever.</li>
+      <li>We only looked at the middle edges. The X edges never limit a push, which part (d) proves.</li>
+    </ul>
+  </section>
+
+  <section class="s" id="p4-sd">
+    <h3><span class="step-tag">Part (d)</span> Add it all up</h3>
+    <p>Part (b) pushes 1. Each round pushes φᵏ, φᵏ, φᵏ⁺¹, φᵏ⁺¹ for k = 1, 3, 5, …, so the amounts are 1, φ, φ, φ², φ², φ³, φ³, …</p>
+    <div class="math" style="white-space:pre-wrap">total = 1 + 2(φ + φ² + φ³ + …)<br>     = 1 + 2 · φ / (1 − φ)        <span class="hl">(geometric series, 0 &lt; φ &lt; 1)</span><br>     = 1 + 2 · φ / φ²  = 1 + 2/φ   <span class="hl">(1 − φ = φ²)</span><br>     = 1 + (1 + √5) = 2 + √5 ≈ <span class="hl">4.236 &lt; 7</span></div>
+    <div class="stage"><div class="gv" data-static="p4-line"></div></div>
+    <div class="key"><span class="lbl">Why the X edges never become the bottleneck</span><p>Each path uses each capacity-X edge at most once, always forward. So the flow on any X edge is at most the total pushed so far, which is less than 7. Its residual capacity stays above X − 7 ≥ 3 &gt; 1, bigger than every middle-edge amount. So the sequence can really continue forever, which also justifies the assumption in part (c).</p></div>
+  </section>
+
+  <section class="s" id="p4-se">
+    <h3><span class="step-tag">Part (e)</span> Conclude</h3>
+    <ul class="ticks">
+      <li><b>It never stops.</b> Every round leaves an augmenting path with positive room, so Ford-Fulkerson keeps going forever.</li>
+      <li><b>It gets stuck far from the answer.</b> The flow values climb toward 2 + √5 ≈ 4.24, but the max flow is 2X + 1. X can be as large as you like, so the gap 2X + 1 − (2 + √5) can be made arbitrarily large.</li>
+      <li><b>The lesson:</b> the "at most F augmentations" argument needs whole-number capacities, so each push adds at least 1. With irrational capacities the pushes can shrink forever.</li>
+    </ul>
+    <div class="answer">
+      <div class="ah-title">Write-up summary</div>
+      <dl>
+        <dt>(a)</dt><dd>Flow: X on s→a→t, X on s→d→t, 1 on s→b→c→t, value 2X + 1. Cut A = {s, a, b}: s→d + a→t + b→c = 2X + 1. Equal, so both are optimal.</dd>
+        <dt>(b)</dt><dd>s→b→c→t has bottleneck min(X, 1, X) = 1. After it, b→c is full: (1, 0, φ).</dd>
+        <dt>(c)</dt><dd>The four rows of the table, using φᵏ⁻¹ − φᵏ = φᵏ⁺¹ and the rule that backward pushes raise the forward residual.</dd>
+        <dt>(d)</dt><dd>1 + 2Σφⁱ = 1 + 2φ/(1 − φ) = 2 + √5 &lt; 7. Each X edge carries at most the total, so its residual stays above X − 7 &gt; 1.</dd>
+        <dt>(e)</dt><dd>Infinitely many augmentations, values converge to 2 + √5, while the max flow 2X + 1 is arbitrarily larger.</dd>
+      </dl>
+    </div>
+  </section>
+  <div class="navfoot"></div>
+</section>
+</main>
+
+<script>
+/* ===== Graph engine: SVG renderer + step-through player ===== */
+const NS = 'http://www.w3.org/2000/svg';
+function S(tag, attrs, parent) {
+  const e = document.createElementNS(NS, tag);
+  if (attrs) for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function fmt(v) {
+  if (v === Infinity) return '∞';
+  if (v === -Infinity) return '−∞';
+  if (typeof v === 'number' && v < 0) return '−' + Math.abs(v);
+  return String(v);
+}
+const STATIC = {}, PLAYERS = {}, CUSTOM = [], ALLPLAYERS = [];
+
+function nodeExt(n, ux, uy) {
+  if (n.shape === 'circle') return n.rad;
+  const ax = Math.abs(ux), ay = Math.abs(uy);
+  const tx = ax > 1e-6 ? n.hw / ax : 1e9, ty = ay > 1e-6 ? n.hh / ay : 1e9;
+  return Math.min(tx, ty) + 1;
+}
+
+class GraphView {
+  constructor(host, g) {
+    this.g = g;
+    const R = g.r || 19;
+    const svg = S('svg', { viewBox: `0 0 ${g.w} ${g.h}`, role: 'img', 'aria-label': g.label || 'Graph diagram' });
+    svg.style.maxWidth = (g.maxw || Math.round(g.w * 1.3)) + 'px';
+    svg.style.marginInline = 'auto';
+    host.appendChild(svg);
+    this.svg = svg;
+    this.N = {}; this.E = {}; this.D = {};
+    const byId = {};
+    g.nodes.forEach(n => {
+      n.shape = n.shape || 'circle';
+      if (n.shape === 'pill') { n.hw = Math.max(24, String(n.label).length * 4.7 + 14); n.hh = 16; }
+      else if (n.shape === 'square') { n.hw = n.hh = R - 1; }
+      else n.rad = n.r || R;
+      byId[n.id] = n;
+    });
+    this.byId = byId;
+    // decor
+    const dg = S('g', { class: 'decor' }, svg);
+    (g.decor || []).forEach(d => {
+      let el;
+      if (d.type === 'band') {
+        el = S('g', {}, dg);
+        S('rect', { class: 'band', x: d.x, y: d.y, width: d.w, height: d.h, rx: 12 }, el);
+        if (d.text) { const t = d.corner ? S('text', { x: d.x + d.w - 12, y: d.y + d.h - 10, 'text-anchor': 'end' }, el) : S('text', { x: d.x + 12, y: d.y + 18 }, el); t.textContent = d.text; }
+      } else if (d.type === 'blob') {
+        el = S('g', {}, dg);
+        S('rect', { class: 'blob ' + (d.cls || 'c1'), x: d.x, y: d.y, width: d.w, height: d.h, rx: d.rx || 26 }, el);
+        if (d.text) { const t = S('text', { x: d.tx != null ? d.tx : d.x + 12, y: d.ty != null ? d.ty : d.y + 18 }, el); t.textContent = d.text; }
+      } else if (d.type === 'text') {
+        el = S('text', { x: d.x, y: d.y, 'text-anchor': d.anchor || 'start' }, dg); el.textContent = d.text;
+        if (d.style) el.setAttribute('style', d.style);
+      }
+      if (el && d.id) this.D[d.id] = el;
+      if (el && d.hidden) el.classList.add('hide');
+    });
+    const eg = S('g', {}, svg), wg = S('g', {}, svg), ng = S('g', {}, svg);
+    // edges
+    g.edges.forEach(e => {
+      const a = byId[e.from], b = byId[e.to];
+      const id = e.id || `${e.from}>${e.to}`;
+      e.id = id;
+      const directed = e.directed != null ? e.directed : !!g.directed;
+      const dx = b.x - a.x, dy = b.y - a.y, L = Math.hypot(dx, dy) || 1;
+      const nx = -dy / L, ny = dx / L, bend = e.bend || 0;
+      const cx = (a.x + b.x) / 2 + nx * bend, cy = (a.y + b.y) / 2 + ny * bend;
+      let u1x, u1y, u2x, u2y;
+      if (bend) {
+        const l1 = Math.hypot(cx - a.x, cy - a.y), l2 = Math.hypot(b.x - cx, b.y - cy);
+        u1x = (cx - a.x) / l1; u1y = (cy - a.y) / l1; u2x = (b.x - cx) / l2; u2y = (b.y - cy) / l2;
+      } else { u1x = u2x = dx / L; u1y = u2y = dy / L; }
+      const e1 = nodeExt(a, u1x, u1y), e2 = nodeExt(b, u2x, u2y);
+      const p0x = a.x + u1x * e1, p0y = a.y + u1y * e1;
+      const p2x = b.x - u2x * (e2 + (directed ? 1 : 0)), p2y = b.y - u2y * (e2 + (directed ? 1 : 0));
+      const AL = 11, AW = 6.5;
+      const lex = directed ? p2x - u2x * AL * 0.8 : p2x, ley = directed ? p2y - u2y * AL * 0.8 : p2y;
+      const grp = S('g', { class: 'edge e-idle' }, eg);
+      const d = bend ? `M${p0x.toFixed(1)},${p0y.toFixed(1)} Q${cx.toFixed(1)},${cy.toFixed(1)} ${lex.toFixed(1)},${ley.toFixed(1)}`
+                     : `M${p0x.toFixed(1)},${p0y.toFixed(1)} L${lex.toFixed(1)},${ley.toFixed(1)}`;
+      S('path', { class: 'ln', d }, grp);
+      if (directed) {
+        const bx = p2x - u2x * AL, by = p2y - u2y * AL, px = -u2y, py = u2x;
+        S('polygon', { class: 'ah', points: `${p2x.toFixed(1)},${p2y.toFixed(1)} ${(bx + px * AW).toFixed(1)},${(by + py * AW).toFixed(1)} ${(bx - px * AW).toFixed(1)},${(by - py * AW).toFixed(1)}` }, grp);
+      }
+      let wl = null;
+      if (e.w != null || e.label != null) {
+        const t = e.lt != null ? e.lt : 0.5;
+        let lx, ly;
+        if (bend) { const it = 1 - t; lx = it * it * p0x + 2 * it * t * cx + t * t * p2x; ly = it * it * p0y + 2 * it * t * cy + t * t * p2y; }
+        else { lx = p0x + (p2x - p0x) * t; ly = p0y + (p2y - p0y) * t; }
+        if (e.lo) { lx += e.lo[0]; ly += e.lo[1]; }
+        wl = S('g', { class: 'wt' }, wg);
+        const rect = S('rect', { height: 19, rx: 5 }, wl);
+        const txt = S('text', { x: lx.toFixed(1), y: ly.toFixed(1) }, wl);
+        wl._rect = rect; wl._x = lx; wl._y = ly; wl._txt = txt;
+        this.setLabel(wl, e.label != null ? e.label : e.w);
+        grp._wl = wl;
+      }
+      this.E[id] = { el: grp, e, wl };
+      if (e.cls) grp.dataset.base = e.cls;
+    });
+    // nodes
+    g.nodes.forEach(n => {
+      const grp = S('g', { class: 'node n-idle' }, ng);
+      if (n.kind) grp.dataset.kind = n.kind;
+      if (n.shape === 'circle') {
+        S('circle', { class: 'ring', cx: n.x, cy: n.y, r: n.rad + 5 }, grp);
+        S('circle', { class: 'body', cx: n.x, cy: n.y, r: n.rad }, grp);
+      } else {
+        const rx = n.shape === 'pill' ? n.hh : 7;
+        S('rect', { class: 'ring', x: n.x - n.hw - 5, y: n.y - n.hh - 5, width: 2 * n.hw + 10, height: 2 * n.hh + 10, rx: rx + 5 }, grp);
+        S('rect', { class: 'body', x: n.x - n.hw, y: n.y - n.hh, width: 2 * n.hw, height: 2 * n.hh, rx }, grp);
+      }
+      const lbl = S('text', { class: 'lbl', x: n.x, y: n.y + 0.5 }, grp);
+      lbl.textContent = n.label != null ? n.label : n.id;
+      if (n.shape === 'pill') lbl.style.fontSize = '13px';
+      if (n.fs) lbl.style.fontSize = n.fs + 'px';
+      const ext = n.shape === 'circle' ? n.rad : n.hh;
+      const lp = n.lp || 'b';
+      let sx = n.x, sy = n.y + ext + 15, anchor = 'middle';
+      if (lp === 't') sy = n.y - ext - 14;
+      if (lp === 'l') { sx = n.x - (n.shape === 'circle' ? n.rad : n.hw) - 8; sy = n.y; anchor = 'end'; }
+      if (lp === 'r') { sx = n.x + (n.shape === 'circle' ? n.rad : n.hw) + 8; sy = n.y; anchor = 'start'; }
+      const sub = S('text', { class: 'sub', x: sx, y: sy }, grp);
+      sub.style.textAnchor = anchor;
+      this.N[n.id] = { el: grp, sub, n };
+    });
+  }
+  setLabel(wl, val) {
+    const s = typeof val === 'number' ? fmt(val) : String(val);
+    wl._txt.textContent = s;
+    wl.style.display = s === '' ? 'none' : '';
+    const w = s.length * 7.6 + 10;
+    wl._rect.setAttribute('x', (wl._x - w / 2).toFixed(1));
+    wl._rect.setAttribute('y', (wl._y - 9.5).toFixed(1));
+    wl._rect.setAttribute('width', w.toFixed(1));
+    wl.classList.toggle('neg', (typeof val === 'number' && val < 0) || /^[−-]/.test(s));
+  }
+  apply(f) {
+    f = f || {};
+    for (const id in this.N) {
+      const o = this.N[id], st = (f.ns && f.ns[id]) || 'idle';
+      const kind = o.el.dataset.kind ? ' k-' + o.el.dataset.kind : '';
+      const keepFlash = o.el.classList.contains('flash') && !(f.flash && f.flash.includes(id));
+      o.el.setAttribute('class', `node n-${st}${kind}${keepFlash ? ' flash' : ''}`);
+      const s = f.sub ? f.sub[id] : undefined;
+      o.sub.textContent = s == null ? '' : (typeof s === 'number' ? fmt(s) : s);
+    }
+    if (f.flash) f.flash.forEach(id => {
+      const o = this.N[id]; if (!o) return;
+      o.el.classList.remove('flash');
+      requestAnimationFrame(() => requestAnimationFrame(() => o.el.classList.add('flash')));
+    });
+    for (const id in this.E) {
+      const o = this.E[id], st = (f.es && f.es[id]) || 'idle';
+      const base = o.el.dataset.base ? ' e-' + o.el.dataset.base : '';
+      o.el.setAttribute('class', `edge${base} e-${st}`);
+      if (o.wl) {
+        o.wl.setAttribute('class', `wt${st === 'dim' ? ' dimw' : ''}`);
+        const v = f.wl && f.wl[id] != null ? f.wl[id] : (o.e.label != null ? o.e.label : o.e.w);
+        this.setLabel(o.wl, v);
+        o.wl.style.opacity = st === 'dim' ? '.35' : (st === 'hide' ? '0' : '');
+      }
+    }
+    if (f.dc) for (const id in f.dc) { const el = this.D[id]; if (el) el.classList.toggle('hide', !f.dc[id]); }
+  }
+}
+
+/* panel helpers */
+const chip = (t, cls, isNew, small) => `<span class="chip ${cls || ''}${isNew ? ' new' : ''}">${t}${small != null ? `<small>${small}</small>` : ''}</span>`;
+const ds = (title, right, body) => `<div class="ds"><div class="ds-h"><span>${title}</span><span>${right || ''}</span></div>${body}</div>`;
+const rowOf = items => `<div class="ds-row">${items.length ? items.join('') : '<span class="empty">empty</span>'}</div>`;
+const colOf = items => `<div class="ds-col">${items.length ? items.join('') : '<span class="empty">empty</span>'}</div>`;
+function listText(arr) {
+  const b = arr.map(x => `<b>${x}</b>`);
+  if (b.length < 2) return b.join('');
+  return b.slice(0, -1).join(', ') + ' and ' + b[b.length - 1];
+}
+
+class Player {
+  constructor(host, name, spec) {
+    this.spec = spec; this.frames = spec.frames; this.i = 0; this.timer = null;
+    const N = this.frames.length;
+    host.classList.add('player');
+    const code = spec.code ? `<pre class="code" aria-label="Pseudocode">${spec.code.map(l => `<span class="ln">${l.replace(/(\/\/.*)$/, '<span class="cm">$1</span>')}</span>`).join('')}</pre>` : '';
+    const dual = !!spec.graph2;
+    if (dual || spec.wide) host.classList.add('wide');
+    const svgbox = dual ? `<div class="pl-svg dual"><div class="vw"><div class="vt">${(spec.titles || [])[0] || ''}</div><div class="v1 gv"></div></div><div class="vw"><div class="vt">${(spec.titles || [])[1] || ''}</div><div class="v2 gv"></div></div></div>` : `<div class="pl-svg gv"></div>`;
+    host.innerHTML = `<div class="pl-main">${svgbox}<div class="pl-cap" aria-live="polite"></div>
+      <div class="pl-ctrl"><button class="btn" data-a="reset">Reset</button><button class="btn" data-a="back">◀ Back</button><button class="btn primary" data-a="play">▶ Play</button><button class="btn" data-a="next">Next ▶</button>
+      <input type="range" id="rng-${name}" min="0" max="${N - 1}" value="0" aria-label="Jump to step">
+      <select id="spd-${name}" aria-label="Speed"><option value="1900">Slow</option><option value="1200" selected>Normal</option><option value="650">Fast</option></select>
+      <span class="pl-count"></span></div></div>
+      <div class="pl-side"><div class="pl-panel"></div>${code}</div>`;
+    const box = dual ? host.querySelector('.v1') : host.querySelector('.pl-svg');
+    this.view = spec.scene ? new SceneView(box, spec.scene) : new GraphView(box, spec.graph);
+    if (dual) this.view2 = new GraphView(host.querySelector('.v2'), spec.graph2);
+    this.cap = host.querySelector('.pl-cap'); this.panel = host.querySelector('.pl-panel');
+    this.lines = [...host.querySelectorAll('pre.code .ln')];
+    this.rng = host.querySelector('input[type=range]'); this.spd = host.querySelector('select');
+    this.cnt = host.querySelector('.pl-count');
+    this.btn = {}; host.querySelectorAll('button[data-a]').forEach(b => this.btn[b.dataset.a] = b);
+    this.btn.reset.onclick = () => { this.stop(); this.go(0); };
+    this.btn.back.onclick = () => { this.stop(); this.go(this.i - 1); };
+    this.btn.next.onclick = () => { this.stop(); this.go(this.i + 1); };
+    this.btn.play.onclick = () => this.timer ? this.stop() : this.play();
+    this.rng.oninput = () => { this.stop(); this.go(+this.rng.value); };
+    this.spd.onchange = () => { if (this.timer) { this.stop(); this.play(); } };
+    if (!spec.panel && !spec.code) host.querySelector('.pl-side').hidden = true;
+    ALLPLAYERS.push(this);
+    this.go(0);
+  }
+  go(i) {
+    const N = this.frames.length;
+    i = Math.max(0, Math.min(N - 1, i)); this.i = i;
+    const f = this.frames[i];
+    this.view.apply(f);
+    if (this.view2) this.view2.apply(f.g2 || {});
+    this.cap.innerHTML = `<span class="stepn">Step ${i + 1} of ${N}</span>${f.cap || ''}`;
+    this.panel.innerHTML = f.panel || '';
+    this.panel.hidden = !f.panel;
+    const on = f.line == null ? [] : [].concat(f.line);
+    this.lines.forEach((l, k) => l.classList.toggle('on', on.includes(k)));
+    this.rng.value = i;
+    this.cnt.textContent = `${i + 1} / ${N}`;
+    this.btn.back.disabled = i === 0;
+    this.btn.next.disabled = i === N - 1;
+  }
+  play() {
+    if (this.i >= this.frames.length - 1) this.go(0);
+    this.btn.play.textContent = '❚❚ Pause';
+    this.timer = setInterval(() => {
+      if (this.i >= this.frames.length - 1) this.stop(); else this.go(this.i + 1);
+    }, +this.spd.value);
+  }
+  stop() {
+    if (this.timer) clearInterval(this.timer);
+    this.timer = null;
+    this.btn.play.textContent = '▶ Play';
+  }
+}
+
+/* frame recorder used by all generators */
+function recorder(g) {
+  const st = { ns: {}, es: {}, sub: {} };
+  const frames = [];
+  return {
+    st, frames,
+    snap(extra) {
+      frames.push(Object.assign({ ns: { ...st.ns }, es: { ...st.es }, sub: { ...st.sub } }, extra || {}));
+    }
+  };
+}
+function adjOf(g, undirected) {
+  const adj = {};
+  g.nodes.forEach(n => adj[n.id] = []);
+  g.edges.forEach(e => {
+    const id = e.id || `${e.from}>${e.to}`;
+    adj[e.from].push({ v: e.to, id, w: e.w });
+    if (undirected) adj[e.to].push({ v: e.from, id, w: e.w });
+  });
+  return adj;
+}
+/* ===== Timeline scenes (intervals, jobs, houses, towers) ===== */
+const ZDEF = { range: 0, bar: 1, flag: 1, vline: 1, pt: 2, tower: 2, text: 2 };
+const PFX = { bar: 'b', pt: 'p', range: 'r', vline: 'v', flag: 'f', tower: 'w', text: 'x' };
+class SceneView {
+  constructor(host, sc) {
+    this.sc = sc;
+    const svg = S('svg', { viewBox: `0 0 ${sc.w} ${sc.h}`, role: 'img', 'aria-label': sc.label || 'Timeline diagram' });
+    svg.style.maxWidth = (sc.maxw || Math.round(sc.w * 1.3)) + 'px';
+    svg.style.marginInline = 'auto';
+    host.appendChild(svg);
+    this.svg = svg;
+    const k = (sc.px1 - sc.px0) / (sc.xmax - sc.xmin);
+    this.X = v => sc.px0 + (v - sc.xmin) * k;
+    const base = S('g', { class: 'sc-base' }, svg);
+    (sc.lanes || []).forEach(l => {
+      if (l.band) S('rect', { x: 4, y: l.y - l.band / 2, width: sc.w - 8, height: l.band, rx: 10, class: 'sc-band' }, base);
+      if (l.label) { const t = S('text', { x: 12, y: l.y + 4, class: 'sc-lane' }, base); t.textContent = l.label; }
+    });
+    if (sc.axis) {
+      const a = sc.axis, y = a.y;
+      if (a.grid) for (let v = sc.xmin; v <= sc.xmax + 1e-9; v += a.step) S('line', { x1: this.X(v), x2: this.X(v), y1: a.grid[0], y2: a.grid[1], class: 'sc-grid' }, base);
+      S('line', { x1: this.X(sc.xmin), x2: this.X(sc.xmax), y1: y, y2: y, class: 'sc-axis' }, base);
+      let i = 0;
+      for (let v = sc.xmin; v <= sc.xmax + 1e-9; v += a.step, i++) {
+        S('line', { x1: this.X(v), x2: this.X(v), y1: y, y2: y + 5, class: 'sc-axis' }, base);
+        if (i % (a.every || 1) === 0) { const t = S('text', { x: this.X(v), y: y + 19, class: 'sc-tick' }, base); t.textContent = v; }
+      }
+      if (a.label) { const t = S('text', { x: this.X(sc.xmax), y: y + 35, class: 'sc-tick', 'text-anchor': 'end' }, base); t.textContent = a.label; t.style.textAnchor = 'end'; }
+    }
+    this.layers = [S('g', {}, svg), S('g', {}, svg), S('g', {}, svg)];
+    this.items = new Map();
+  }
+  apply(f) {
+    const seen = new Set();
+    (f.items || []).forEach(it => {
+      seen.add(it.k);
+      let o = this.items.get(it.k);
+      if (!o || o.t !== it.t) { if (o) o.g.remove(); o = this.make(it); this.items.set(it.k, o); }
+      this.update(o, it);
+    });
+    this.items.forEach((o, key) => { if (!seen.has(key)) o.g.classList.add('gone'); });
+  }
+  make(it) {
+    const T = it.t, g = S('g', {}, this.layers[it.z != null ? it.z : ZDEF[T]]), o = { t: T, g, fresh: true };
+    if (T === 'bar' || T === 'range') { o.r = S('rect', { rx: T === 'bar' ? 6 : 5 }, g); }
+    if (T === 'range') { o.l1 = S('line', {}, g); o.l2 = S('line', {}, g); }
+    if (T === 'pt') o.c = S('circle', { r: it.r || 8 }, g);
+    if (T === 'vline' || T === 'flag') o.l = S('line', {}, g);
+    if (T === 'flag' || T === 'tower') o.p = S('path', {}, g);
+    o.tx = S('text', {}, g);
+    return o;
+  }
+  update(o, it) {
+    const X = this.X, T = it.t;
+    o.g.setAttribute('class', `sc-it sc-${T} ${PFX[T]}-${it.c || 'idle'}${it.cls ? ' ' + it.cls : ''}${o.fresh ? ' fresh' : ''}`);
+    let tx = 0, ty = 0;
+    o.tx.textContent = it.label != null ? it.label : (it.text || '');
+    if (T === 'bar' || T === 'range') {
+      const h = it.h || (T === 'bar' ? 26 : 30), w = Math.max(2, X(it.e) - X(it.s));
+      tx = X(it.s); ty = it.y - h / 2;
+      o.r.setAttribute('width', w.toFixed(1)); o.r.setAttribute('height', h);
+      o.tx.setAttribute('x', (w / 2).toFixed(1));
+      o.tx.setAttribute('y', T === 'bar' ? (h / 2 + 0.5) : (it.ly != null ? it.ly : -8));
+      if (T === 'range') {
+        [[o.l1, 0], [o.l2, w]].forEach(([l, x]) => { l.setAttribute('x1', x); l.setAttribute('x2', x); l.setAttribute('y1', -4); l.setAttribute('y2', h + 4); });
+      }
+    } else if (T === 'pt') {
+      tx = X(it.x); ty = it.y;
+      o.tx.setAttribute('x', 0); o.tx.setAttribute('y', it.ly != null ? it.ly : 25);
+    } else if (T === 'vline') {
+      tx = X(it.x); ty = 0;
+      o.l.setAttribute('x1', 0); o.l.setAttribute('x2', 0); o.l.setAttribute('y1', it.y1); o.l.setAttribute('y2', it.y2);
+      o.tx.setAttribute('x', it.lx || 0); o.tx.setAttribute('y', it.ly != null ? it.ly : it.y1 - 7);
+      if (it.anchor) o.tx.style.textAnchor = it.anchor;
+    } else if (T === 'flag') {
+      tx = X(it.x); ty = it.y;
+      o.l.setAttribute('x1', 0); o.l.setAttribute('x2', 0); o.l.setAttribute('y1', 0); o.l.setAttribute('y2', -(it.hgt || 24));
+      const top = -(it.hgt || 24);
+      o.p.setAttribute('d', `M0,${top} L11,${top + 5} L0,${top + 10} Z`);
+      o.tx.setAttribute('x', 0); o.tx.setAttribute('y', top - 6);
+    } else if (T === 'tower') {
+      tx = X(it.x); ty = it.y;
+      o.p.setAttribute('d', 'M0,-30 L-8,0 L-4.5,0 L0,-15 L4.5,0 L8,0 Z M-7,-30 a7,7 0 0 1 14,0');
+      o.tx.setAttribute('x', 0); o.tx.setAttribute('y', it.ly != null ? it.ly : 16);
+    } else if (T === 'text') {
+      tx = it.px ? it.x : X(it.x); ty = it.y;
+      o.tx.style.textAnchor = it.anchor || 'middle';
+    }
+    o.g.style.transform = `translate(${tx.toFixed(1)}px, ${ty.toFixed(1)}px)`;
+    if (o.fresh) { o.fresh = false; requestAnimationFrame(() => requestAnimationFrame(() => o.g.classList.remove('fresh'))); }
+  }
+}
+
+/* ===== Flow helpers ===== */
+const SUP = { 0: '⁰', 1: '¹', 2: '²', 3: '³', 4: '⁴', 5: '⁵', 6: '⁶', 7: '⁷', 8: '⁸', 9: '⁹' };
+const phiP = n => n === 0 ? '1' : n === 1 ? 'φ' : 'φ' + String(n).split('').map(c => SUP[c]).join('');
+const capS = c => c === Infinity ? '∞' : fmt(c);
+
+function resGraph(g) {
+  const edges = [];
+  g.edges.forEach(e => {
+    const id = e.id || `${e.from}>${e.to}`, b = e.rbend != null ? e.rbend : 13;
+    edges.push({ id: 'f:' + id, from: e.from, to: e.to, w: 0, bend: b, lt: e.rlt });
+    edges.push({ id: 'b:' + id, from: e.to, to: e.from, w: 0, bend: b, cls: 'rb', lt: e.rlt });
+  });
+  return { w: g.w, h: g.h, r: g.r, directed: true, label: 'Residual graph', nodes: g.nodes.map(n => ({ id: n.id, x: n.x, y: n.y, label: n.label, kind: n.kind, lp: n.lp })), edges };
+}
+
+/* Ford-Fulkerson on g (edge w = capacity). Records frames for the flow view and (as g2) the residual view.
+   opts: first (array of node paths to use first), forwardOnly, finalCut (default true), stuckCap, title */
+function genFF(g, s, t, opts = {}) {
+  const E = g.edges.map(e => ({ id: e.id || `${e.from}>${e.to}`, u: e.from, v: e.to, c: e.w }));
+  const L = id => { const n = g.nodes.find(x => x.id === id); return (n && n.name) || labelOf(g, id); };
+  const f = {}; E.forEach(e => f[e.id] = 0);
+  let total = 0;
+  const hist = [];
+  const frames = [];
+  const flowLabels = () => Object.fromEntries(E.map(e => [e.id, e.c === Infinity && !(f[e.id] > 0) ? '' : `${fmt(+f[e.id].toFixed(6))}/${capS(e.c)}`]));
+  const flowStates = () => { const es = {}; E.forEach(e => { if (f[e.id] > 0) es[e.id] = f[e.id] >= e.c ? 'sat' : 'flow'; }); return es; };
+  const resid = () => {
+    const wl = {}, es = {};
+    E.forEach(e => {
+      const rf = e.c - f[e.id], rb = f[e.id];
+      wl['f:' + e.id] = rf === Infinity ? '∞' : fmt(rf); wl['b:' + e.id] = fmt(rb);
+      if (!(rf > 1e-12)) es['f:' + e.id] = 'hide';
+      if (!(rb > 1e-12)) es['b:' + e.id] = 'hide';
+    });
+    return { wl, es };
+  };
+  const arcs = () => {
+    const A = [];
+    E.forEach(e => {
+      if (e.c - f[e.id] > 1e-12) A.push({ from: e.u, to: e.v, id: e.id, dir: 1, r: e.c - f[e.id] });
+      if (!opts.forwardOnly && f[e.id] > 1e-12) A.push({ from: e.v, to: e.u, id: e.id, dir: -1, r: f[e.id] });
+    });
+    return A;
+  };
+  const bfs = () => {
+    const A = arcs(), prev = { [s]: null }, Q = [s];
+    while (Q.length) {
+      const x = Q.shift();
+      if (x === t) break;
+      for (const a of A) if (a.from === x && !(a.to in prev)) { prev[a.to] = a; Q.push(a.to); }
+    }
+    if (!(t in prev)) return null;
+    const path = []; let x = t;
+    while (x !== s) { path.unshift(prev[x]); x = prev[x].from; }
+    return path;
+  };
+  const forced = nodes => {
+    const A = arcs(), path = [];
+    for (let i = 0; i + 1 < nodes.length; i++) {
+      const a = A.find(q => q.from === nodes[i] && q.to === nodes[i + 1] && q.dir === 1) || A.find(q => q.from === nodes[i] && q.to === nodes[i + 1]);
+      if (!a) return null;
+      path.push(a);
+    }
+    return path;
+  };
+  const reach = () => {
+    const A = arcs(), seen = new Set([s]), Q = [s];
+    while (Q.length) { const x = Q.shift(); for (const a of A) if (a.from === x && !seen.has(a.to)) { seen.add(a.to); Q.push(a.to); } }
+    return seen;
+  };
+  const panel = (note) => ds('Flow value', '', `<div class="bignum">${fmt(+total.toFixed(6))}</div>`) +
+    ds('Augmenting paths so far', '', hist.length ? `<div class="ds-col">${hist.map((h, i) => `<span class="chip ${i === hist.length - 1 ? 'q' : ''}">#${i + 1}: +${h.b} via ${h.txt}</span>`).join('')}</div>` : '<span class="empty">none yet</span>') + (note || '');
+  const snap = (cap, x1 = {}, x2 = {}, note) => {
+    const R = resid();
+    frames.push({ cap, es: Object.assign(flowStates(), x1.es || {}), wl: flowLabels(), ns: x1.ns || {}, sub: x1.sub || {}, panel: panel(note), line: x1.line,
+      g2: { es: Object.assign(R.es, x2.es || {}), wl: R.wl, ns: x2.ns || {} } });
+  };
+  const pathText = p => [L(s)].concat(p.map(a => L(a.to))).join(' → ');
+  snap(opts.startCap || `Start with zero flow everywhere. In the residual graph, every edge has all of its room left.`, { line: [1] });
+  let guard = 0, firsts = (opts.first || []).slice();
+  while (guard++ < 60) {
+    const p = firsts.length ? forced(firsts.shift()) : bfs();
+    if (!p) break;
+    const b = Math.min(...p.map(a => a.r));
+    const hl1 = { es: {} }, hl2 = { es: {} };
+    p.forEach(a => { hl1.es[a.id] = a.dir === 1 ? 'path' : 'back'; hl2.es[(a.dir === 1 ? 'f:' : 'b:') + a.id] = 'path'; });
+    const backs = p.filter(a => a.dir === -1);
+    const rooms = p.map(a => fmt(+a.r.toFixed(6))).join(', ');
+    snap(`Path in the residual graph: <b>${pathText(p)}</b>. Room on its edges: ${rooms}. The smallest is <b>${fmt(+b.toFixed(6))}</b>, so that's how much we can push.${backs.length ? ` It uses ${backs.length > 1 ? 'backward edges' : 'a backward edge'}, which ${backs.length > 1 ? 'undo' : 'undoes'} flow on ${backs.map(a => `${L(a.to)} → ${L(a.from)}`).join(' and ')}.` : ''}`, Object.assign(hl1, { line: [2, 3] }), hl2);
+    p.forEach(a => { f[a.id] += a.dir * b; });
+    total += b; hist.push({ b: fmt(+b.toFixed(6)), txt: pathText(p) });
+    snap(`Push ${fmt(+b.toFixed(6))}: edges used forward gain ${fmt(+b.toFixed(6))}${backs.length ? ', and the backward step takes ' + fmt(+b.toFixed(6)) + ' off the edge it undoes' : ''}. The flow value is now <b>${fmt(+total.toFixed(6))}</b>.`, Object.assign({ es: Object.fromEntries(p.map(a => [a.id, a.dir === 1 ? 'path' : 'back'])) }, { line: [4] }), {});
+  }
+  if (opts.forwardOnly) {
+    snap(opts.stuckCap || `No s → t path uses only edges with room left, so this version stops at <b>${fmt(total)}</b>.`, {}, {});
+  } else if (opts.finalCut !== false) {
+    const A = reach();
+    const ns1 = {}, ns2 = {};
+    A.forEach(v => { ns1[v] = 'done'; ns2[v] = 'done'; });
+    snap(`No s → t path is left in the residual graph, so Ford-Fulkerson stops. Max flow = <b>${fmt(total)}</b>.`, { line: [5] }, {});
+    const cut = E.filter(e => A.has(e.u) && !A.has(e.v));
+    const es1 = {}; cut.forEach(e => es1[e.id] = 'cut');
+    const sum = cut.reduce((x, e) => x + e.c, 0);
+    snap(`The vertices s can still reach in the residual graph are {${[...A].map(L).join(', ')}}. Edges leaving that set: ${cut.map(e => `${L(e.u)} → ${L(e.v)} (${capS(e.c)})`).join(' + ')} = <b>${capS(sum)}</b>. Same number as the flow, so this cut proves the flow is maximum.`, { ns: ns1, es: es1 }, { ns: ns2 });
+  }
+  return { frames, total, f };
+}
+const FF_CODE = ['FordFulkerson(G, s, t):', '  start with f(e) = 0 on every edge', '  while G_f has an s → t path P:', '    b = smallest residual capacity on P', '    push b along P (backward steps undo flow)', '  return f   // no path left = max flow'];
+/* ===== Frame generators: each one really runs the algorithm and records snapshots ===== */
+function labelOf(g, id) { const n = g.nodes.find(x => x.id === id); return n && n.label != null ? n.label : id; }
+
+const CODE = {
+  bfs: ['BFS(G, s):', '  dist[s] = 0, all others = ∞', '  queue = [s]', '  while queue is not empty:', '    u = queue.pop_front()', '    for each neighbor v of u:', '      if dist[v] == ∞:      // never seen', '        dist[v] = dist[u] + 1', '        parent[v] = u', '        queue.push_back(v)'],
+  dfs: ['DFS(u):', '  mark u in progress; start[u] = ++time', '  for each edge u → v:', '    if v is unvisited: DFS(v)     // tree edge', '    else if v is in progress:', '      found a cycle!              // back edge', '    else: skip                    // v is finished', '  mark u finished; finish[u] = ++time'],
+  topodfs: ['TopoSort(G):', '  for each vertex u: if unvisited, DFS(u)', 'DFS(u):', '  mark u in progress', '  for each edge u → v:', '    if v is unvisited: DFS(v)', '  mark u finished', '  put u at the FRONT of the list'],
+  kahn: ['TopoSort(G):', '  ready = vertices with 0 incoming edges', '  while ready is not empty:', '    take u from ready; add u to the order', '    for each edge u → v:', '      remove it: in[v] = in[v] − 1', '      if in[v] == 0: add v to ready'],
+  relax: ['relax(u, v):', '  if d[u] + w(u,v) < d[v]:', '    d[v] = d[u] + w(u,v)', '    parent[v] = u'],
+  bf: ['BellmanFord(G, s):', '  d[s] = 0, all others = ∞', '  repeat V − 1 times:          // one round', '    for each edge u → v:', '      if d[u] + w < d[v]:       // relax', '        d[v] = d[u] + w', '  for each edge u → v:          // extra round', '    if d[u] + w < d[v]:', '      report "negative cycle"'],
+  dij: ['Dijkstra(G, s):', '  d[s] = 0, all others = ∞', '  PQ = all vertices, keyed by d', '  while PQ is not empty:', '    u = PQ.extract_min()      // closest = final', '    for each edge u → v (weight w):', '      if d[u] + w < d[v]:     // relax', '        d[v] = d[u] + w', '        parent[v] = u']
+};
+
+function genBFS(g, s) {
+  const adj = adjOf(g, true);
+  for (const k in adj) adj[k].sort((x, y) => String(x.v).localeCompare(String(y.v)));
+  const R = recorder(g), st = R.st, dist = {}, Q = [], done = [];
+  g.nodes.forEach(n => dist[n.id] = Infinity);
+  const panel = (nw = []) => ds('Queue', 'front → back', rowOf(Q.map(x => chip(x, 'q', nw.includes(x))))) + ds('Done, in order', '', rowOf(done.map(x => chip(x, 'ok'))));
+  dist[s] = 0; st.sub[s] = 0; st.ns[s] = 'frontier'; Q.push(s);
+  R.snap({ cap: `Start at <b>${s}</b>. Its distance is 0. Put it in the queue.`, line: [1, 2], panel: panel([s]) });
+  while (Q.length) {
+    const u = Q.shift(); st.ns[u] = 'current';
+    R.snap({ cap: `Take <b>${u}</b> from the front of the queue and look at its neighbors.`, line: [3, 4], panel: panel() });
+    const seen = [];
+    for (const { v, id } of adj[u]) {
+      if (dist[v] === Infinity) {
+        dist[v] = dist[u] + 1; st.sub[v] = dist[v]; st.ns[v] = 'frontier'; st.es[id] = 'tree'; Q.push(v);
+        R.snap({ cap: `<b>${v}</b> is new. Its distance is ${dist[u]} + 1 = <b>${dist[v]}</b>. Add ${v} to the back of the queue.`, line: [6, 7, 8, 9], panel: panel([v]), flash: [v] });
+      } else if (st.es[id] !== 'tree') seen.push({ v, id });
+    }
+    if (seen.length) {
+      seen.forEach(o => st.es[o.id] = 'check');
+      R.snap({ cap: `${listText(seen.map(o => o.v))} ${seen.length > 1 ? 'were' : 'was'} already seen. Skip.`, line: [5, 6], panel: panel() });
+      seen.forEach(o => delete st.es[o.id]);
+    }
+    st.ns[u] = 'done'; done.push(u);
+  }
+  R.snap({ cap: `The queue is empty, so BFS is done. Each number is the <b>fewest edges</b> from ${s}. The green edges form the BFS tree.`, panel: panel() });
+  return R.frames;
+}
+
+function genDFS(g, roots, opts = {}) {
+  const adj = adjOf(g, false);
+  if (opts.sort) for (const k in adj) adj[k].sort((x, y) => String(x.v).localeCompare(String(y.v)));
+  const R = recorder(g), st = R.st, state = {}, stack = [], fin = [], list = [];
+  let time = 0, lastNew = null;
+  const L = id => labelOf(g, id);
+  g.nodes.forEach(n => state[n.id] = 'idle');
+  const panel = (pushed) => ds('Stack', 'top first', colOf(stack.slice().reverse().map((x, k) => chip(L(x), k === 0 ? 'cur' : 'q', pushed && k === 0)))) +
+    (opts.topo ? ds('List', 'front → back', rowOf(list.map(x => chip(L(x), 'ok', x === lastNew)))) : ds('Finished, in order', '', rowOf(fin.map(x => chip(L(x), 'ok', x === lastNew)))));
+  const ln = opts.topo ? { enter: [3], tree: [4, 5], back: [4], cross: [4], fin: [6, 7] } : { enter: [1], tree: [2, 3], back: [4, 5], cross: [6], fin: [7] };
+  function visit(u) {
+    time++; state[u] = 'prog'; stack.push(u); lastNew = null;
+    stack.forEach(x => st.ns[x] = 'frontier'); st.ns[u] = 'current';
+    const d = time; st.sub[u] = `${d}/`;
+    R.snap({ cap: `Enter <b>${L(u)}</b> at time ${d}. Push it on the stack.`, line: ln.enter, panel: panel(true), flash: [u] });
+    for (const { v, id } of adj[u]) {
+      if (state[v] === 'idle') {
+        st.es[id] = 'tree';
+        R.snap({ cap: `Edge ${L(u)} → ${L(v)}: <b>${L(v)}</b> is unvisited. Go deeper.`, line: ln.tree, panel: panel() });
+        visit(v); st.ns[u] = 'current';
+      } else if (state[v] === 'prog') {
+        st.es[id] = 'back';
+        const cyc = stack.slice(stack.indexOf(v)).concat(v).map(L).join(' → ');
+        R.snap({ cap: `Edge ${L(u)} → ${L(v)}: <b>${L(v)}</b> is still in progress. That's a <b>back edge</b>, so there's a cycle: <b>${cyc}</b>.`, line: ln.back, panel: panel() });
+      } else {
+        st.es[id] = 'cross';
+        R.snap({ cap: `Edge ${L(u)} → ${L(v)}: <b>${L(v)}</b> is already finished. It can't lead back here. Skip.`, line: ln.cross, panel: panel() });
+      }
+    }
+    time++; state[u] = 'done'; stack.pop(); st.ns[u] = 'done'; st.sub[u] = `${d}/${time}`; fin.push(u); lastNew = u;
+    if (opts.topo) list.unshift(u);
+    if (stack.length) st.ns[stack[stack.length - 1]] = 'current';
+    R.snap({ cap: opts.topo ? `<b>${L(u)}</b> finishes at time ${time}. Put it at the <b>front</b> of the list.` : `<b>${L(u)}</b> has no edges left. It finishes at time ${time}. Pop it off the stack.`, line: ln.fin, panel: panel() });
+  }
+  for (const r of roots) if (state[r] === 'idle') {
+    if (fin.length) { lastNew = null; R.snap({ cap: `The stack is empty, but <b>${L(r)}</b> hasn't been visited. Start a new DFS from it.`, line: opts.topo ? [1] : [0], panel: panel() }); }
+    visit(r);
+  }
+  R.snap({ cap: opts.topo ? `Done. The list is a topological order: <b>${list.map(L).join(', ')}</b>.` : `DFS is done. Each vertex shows <b>start/finish</b>. The red dashed edge is the back edge that proves there's a cycle.`, panel: panel() });
+  return { frames: R.frames, list };
+}
+
+function genKahn(g) {
+  const adj = adjOf(g, false), indeg = {}, L = id => labelOf(g, id);
+  g.nodes.forEach(n => indeg[n.id] = 0); g.edges.forEach(e => indeg[e.to]++);
+  const R = recorder(g), st = R.st, ready = [], out = [];
+  g.nodes.forEach(n => st.sub[n.id] = `in: ${indeg[n.id]}`);
+  const panel = (nw = [], placed) => ds('Ready', '', rowOf(ready.map(x => chip(L(x), 'q', nw.includes(x))))) + ds('Order so far', '', rowOf(out.map((x, k) => chip(`${k + 1}. ${L(x)}`, 'ok', x === placed))));
+  R.snap({ cap: `The small number under each item counts the arrows coming <b>into</b> it: how many things must happen first.`, panel: panel() });
+  g.nodes.forEach(n => { if (indeg[n.id] === 0) { ready.push(n.id); st.ns[n.id] = 'frontier'; } });
+  R.snap({ cap: `${listText(ready.map(L))} have 0 incoming arrows. Nothing has to come before them, so they're <b>ready</b>.`, panel: panel(ready), line: [1] });
+  while (ready.length) {
+    const u = ready.shift(); st.ns[u] = 'current';
+    R.snap({ cap: `Take <b>${L(u)}</b> from the ready list. It goes next in the order.`, panel: panel(), line: [2, 3] });
+    out.push(u); st.ns[u] = 'done'; st.sub[u] = `#${out.length}`;
+    const nw = [];
+    for (const { v, id } of adj[u]) {
+      st.es[id] = 'dim'; indeg[v]--; st.sub[v] = `in: ${indeg[v]}`;
+      if (indeg[v] === 0) { ready.push(v); st.ns[v] = 'frontier'; nw.push(v); }
+    }
+    let cap = adj[u].length ? `Cross out ${L(u)}'s arrows and lower the counts. ` : `${L(u)} has no outgoing arrows. `;
+    if (nw.length) cap += `${listText(nw.map(L))} now ${nw.length > 1 ? 'have' : 'has'} 0 incoming arrows, so ${nw.length > 1 ? 'they are' : 'it is'} ready.`;
+    else if (adj[u].length) cap += 'Nothing new becomes ready.';
+    R.snap({ cap, panel: panel(nw, u), line: [4, 5, 6], flash: adj[u].map(o => o.v) });
+  }
+  R.snap({ cap: `Everything is placed. Every arrow goes from an earlier item to a later one, so this is a topological order.`, panel: panel() });
+  return { frames: R.frames, order: out };
+}
+
+/* Bellman-Ford. opts: rounds, perEdge, check, ghost, weights (id->w override), wl (labels for frames), title */
+function genBF(g, s, order, opts = {}) {
+  const E = {}; g.edges.forEach(e => { e.id = e.id || `${e.from}>${e.to}`; E[e.id] = e; });
+  const W = id => (opts.weights && opts.weights[id] != null) ? opts.weights[id] : E[id].w;
+  const L = id => labelOf(g, id);
+  const V = g.nodes.length, rounds = opts.rounds || V - 1, cols = opts.cols || g.nodes.map(n => n.id);
+  const R = recorder(g), st = R.st, d = {}, par = {};
+  g.nodes.forEach(n => { d[n.id] = Infinity; st.sub[n.id] = Infinity; });
+  d[s] = 0; st.sub[s] = 0;
+  const rows = [{ h: 'start', vals: cols.map(c => d[c]), chg: [] }];
+  const tableHTML = (live) => {
+    let h = `<div class="tw" style="box-shadow:none"><table class="dt"><tr><th></th>${cols.map(c => `<th>${L(c)}</th>`).join('')}</tr>`;
+    const all = live ? rows.concat([live]) : rows;
+    all.forEach((r, k) => {
+      h += `<tr class="${live && k === all.length - 1 ? 'live' : ''}"><th>${r.h}</th>${r.vals.map((v, j) => `<td class="${r.chg.includes(cols[j]) ? (r.bad ? 'badc' : 'chg') : ''}">${r.skip ? '·' : fmt(v)}</td>`).join('')}</tr>`;
+    });
+    return h + '</table></div>';
+  };
+  const elist = on => `<div class="elist">${order.map(id => `<span class="${id === on ? 'on' : ''}">${L(E[id].from)} → ${L(E[id].to)} (${fmt(W(id))})</span>`).join('')}</div>`;
+  const pre = opts.title ? `<b>${opts.title}</b> ` : '';
+  const panel = (on, live) => (opts.perEdge ? ds('Edge order, used every round', '', elist(on)) : '') + ds('d[ ] after each round', '', tableHTML(live));
+  const snap = (x) => R.snap(Object.assign({ wl: opts.wl }, x));
+  snap({ cap: `${pre}Start: d[${L(s)}] = 0, everything else is ∞.`, panel: panel(null), line: [1] });
+  const setPar = (v, id) => { if (par[v]) delete st.es[par[v]]; par[v] = id; st.es[id] = 'tree'; };
+  for (let r = 1; r <= rounds; r++) {
+    const chg = [];
+    for (const id of order) {
+      const u = E[id].from, v = E[id].to, w = W(id);
+      if (!opts.perEdge) { if (d[u] !== Infinity && d[u] + w < d[v]) { d[v] = d[u] + w; st.sub[v] = d[v]; setPar(v, id); if (!chg.includes(v)) chg.push(v); } continue; }
+      const keep = st.es[id]; st.es[id] = 'active'; st.ns[u] = 'current';
+      let cap, flash, line = [3, 4];
+      if (d[u] === Infinity) cap = `Round ${r}, edge ${L(u)} → ${L(v)}: d[${L(u)}] is still ∞, so there's nothing to try yet.`;
+      else {
+        const c = d[u] + w;
+        if (c < d[v]) {
+          const old = d[v]; d[v] = c; st.sub[v] = c; st.ns[v] = 'done'; flash = [v]; line = [3, 4, 5];
+          if (par[v] && par[v] !== id) { delete st.es[par[v]]; par[v] = null; }
+          if (!chg.includes(v)) chg.push(v);
+          cap = `Round ${r}, edge ${L(u)} → ${L(v)}: ${fmt(d[u])} + ${w < 0 ? '(' + fmt(w) + ')' : w} = <b>${fmt(c)}</b>, better than ${fmt(old)}. Update ${L(v)}.`;
+          snap({ cap, line, flash, panel: panel(id, { h: `round ${r}`, vals: cols.map(x => d[x]), chg: chg.slice() }) });
+          delete st.ns[v]; delete st.ns[u]; setPar(v, id);
+          continue;
+        }
+        cap = `Round ${r}, edge ${L(u)} → ${L(v)}: ${fmt(d[u])} + ${w < 0 ? '(' + fmt(w) + ')' : w} = ${fmt(c)}, not better than ${fmt(d[v])}. Keep it.`;
+      }
+      snap({ cap, line, panel: panel(id, { h: `round ${r}`, vals: cols.map(x => d[x]), chg: chg.slice() }) });
+      if (keep) st.es[id] = keep; else delete st.es[id];
+      delete st.ns[u];
+    }
+    rows.push({ h: `round ${r}`, vals: cols.map(c => d[c]), chg });
+    chg.forEach(v => st.ns[v] = 'done');
+    snap({ cap: `${pre}End of round ${r}. ${chg.length ? 'Improved: ' + listText(chg.map(L)) + '.' : 'Nothing changed.'}`, panel: panel(null), line: [2], flash: opts.perEdge ? undefined : chg });
+    chg.forEach(v => delete st.ns[v]);
+  }
+  if (opts.ghost) {
+    const skipped = [];
+    for (let r = rounds + 1; r <= V - 1; r++) {
+      let any = false;
+      for (const id of order) { const u = E[id].from, v = E[id].to; if (d[u] !== Infinity && d[u] + W(id) < d[v]) any = true; }
+      skipped.push(r); rows.push({ h: `round ${r}`, vals: cols.map(c => d[c]), chg: [], skip: true });
+      if (any) console.warn('ghost round would change something');
+    }
+    snap({ cap: `Normal Bellman-Ford would keep going for rounds ${skipped.join(' and ')}. They would change <b>nothing</b>, because every vertex already has its true distance. So we stop after round ${rounds}.`, panel: panel(null) });
+  }
+  let found = null;
+  if (opts.check) {
+    for (const id of order) { const u = E[id].from, v = E[id].to; if (d[u] !== Infinity && d[u] + W(id) < d[v]) { found = { id, u, v, c: d[u] + W(id) }; break; } }
+    if (found) {
+      st.es[found.id] = 'bad'; st.ns[found.v] = 'bad'; st.ns[found.u] = 'bad';
+      rows.push({ h: 'extra', vals: cols.map(c => c === found.v ? found.c : d[c]), chg: [found.v], bad: true });
+      snap({ cap: `${pre}Extra round: edge ${L(found.u)} → ${L(found.v)} still improves (${fmt(found.c)} &lt; ${fmt(d[found.v])}). After V − 1 rounds that's impossible unless there's a <b>negative cycle</b>.`, panel: panel(null), line: [6, 7, 8] });
+    } else {
+      rows.push({ h: 'extra', vals: cols.map(c => d[c]), chg: [] });
+      snap({ cap: `${pre}Extra round: nothing improves. So there's <b>no negative cycle</b> and every number is a true shortest distance.`, panel: panel(null), line: [6, 7] });
+    }
+  }
+  return { frames: R.frames, d, found };
+}
+
+function genDij(g, s, opts = {}) {
+  const adj = adjOf(g, false), L = id => labelOf(g, id);
+  const R = recorder(g), st = R.st, d = {}, par = {}, settled = {}, order = [];
+  const hide = opts.hide || [];
+  g.nodes.forEach(n => { d[n.id] = Infinity; st.sub[n.id] = hide.includes(n.id) ? '' : Infinity; if (hide.includes(n.id)) st.ns[n.id] = 'dim'; });
+  (opts.hideEdges || []).forEach(id => st.es[id] = 'dim');
+  d[s] = 0; st.sub[s] = 0; st.ns[s] = 'frontier';
+  const pq = () => g.nodes.filter(n => !settled[n.id] && d[n.id] < Infinity).sort((a, b) => d[a.id] - d[b.id]).map(n => n.id);
+  const panel = (cur, nw = []) => ds('Priority queue', 'smallest first', rowOf(pq().map(x => chip(L(x), x === cur ? 'cur' : 'q', nw.includes(x), fmt(d[x]))))) +
+    ds('Settled (final)', '', rowOf(order.map(x => chip(L(x), 'ok', false, fmt(d[x])))));
+  R.snap({ cap: `Start: d[${L(s)}] = 0, everything else is ∞. Only ${L(s)} is in the queue with a real distance.`, line: [1, 2], panel: panel() });
+  while (pq().length) {
+    const u = pq()[0]; st.ns[u] = 'current';
+    R.snap({ cap: `The closest unsettled vertex is <b>${L(u)}</b> (d = ${fmt(d[u])}). Settle it: this distance is now final.`, line: [3, 4], panel: panel(u) });
+    settled[u] = true; order.push(u);
+    for (const { v, id, w } of adj[u]) {
+      if (settled[v]) { const k = st.es[id]; st.es[id] = 'check'; R.snap({ cap: `Edge ${L(u)} → ${L(v)}: ${L(v)} is already settled. Skip.`, line: [5], panel: panel(u) }); if (k) st.es[id] = k; else delete st.es[id]; continue; }
+      const keep = st.es[id]; st.es[id] = 'active';
+      const c = d[u] + w;
+      if (c < d[v]) {
+        const old = d[v]; d[v] = c; st.sub[v] = c; st.ns[v] = 'frontier';
+        R.snap({ cap: `Edge ${L(u)} → ${L(v)}: ${fmt(d[u])} + ${w} = <b>${fmt(c)}</b>, better than ${fmt(old)}. Update ${L(v)}.`, line: [5, 6, 7, 8], panel: panel(u, [v]), flash: [v] });
+        if (par[v]) delete st.es[par[v]]; par[v] = id; st.es[id] = 'tree';
+      } else {
+        R.snap({ cap: `Edge ${L(u)} → ${L(v)}: ${fmt(d[u])} + ${w} = ${fmt(c)}, not better than ${fmt(d[v])}. Keep ${fmt(d[v])}.`, line: [5, 6], panel: panel(u) });
+        if (keep) st.es[id] = keep; else delete st.es[id];
+      }
+    }
+    st.ns[u] = 'done';
+  }
+  if (opts.finish) opts.finish(R, st, d, par, panel);
+  else R.snap({ cap: `The queue is empty. Every number is final. The green edges show the best way into each vertex.`, panel: panel() });
+  return { frames: R.frames, d, par };
+}
+/* ===== Greedy tab demos ===== */
+const nd = (id, x, y, o) => Object.assign({ id, x, y }, o || {});
+const ed = (from, to, w, o) => Object.assign({ from, to, w }, o || {});
+const overlap = (a, b) => a.s < b.e && b.s < a.e;
+
+/* run a greedy rule on intervals; returns picked names in pick order */
+function greedyPick(list, rule) {
+  let cand = list.slice();
+  const out = [];
+  if (rule === 'conf') {
+    while (cand.length) {
+      const cnt = c => cand.filter(o => o !== c && overlap(o, c)).length;
+      let best = cand[0];
+      cand.forEach(c => { if (cnt(c) < cnt(best)) best = c; });
+      out.push(best);
+      cand = cand.filter(c => c !== best && !overlap(c, best));
+    }
+    return out;
+  }
+  const key = { start: c => c.s, short: c => c.e - c.s, finish: c => c.e }[rule];
+  const sorted = cand.slice().sort((a, b) => key(a) - key(b));
+  sorted.forEach(c => { if (out.every(o => !overlap(o, c))) out.push(c); });
+  return out;
+}
+
+const RULE_SETS = {
+  start: { ivs: [{ n: 'long', s: 0, e: 11, y: 40 }, { n: 'a', s: 1, e: 3, y: 80 }, { n: 'b', s: 4, e: 6, y: 80 }, { n: 'c', s: 7, e: 9, y: 80 }], best: ['a', 'b', 'c'] },
+  short: { ivs: [{ n: 'x', s: 0, e: 5, y: 40 }, { n: 'y', s: 6, e: 11, y: 40 }, { n: 'short', s: 4, e: 7, y: 80 }], best: ['x', 'y'] },
+  conf: { ivs: [{ n: 'A', s: 0, e: 2, y: 30 }, { n: 'B', s: 3, e: 5, y: 30 }, { n: 'C', s: 6, e: 8, y: 30 }, { n: 'D', s: 9, e: 11, y: 30 }, { n: 'E', s: 4, e: 7, y: 64 },
+    { n: 'X1', s: 1, e: 4, y: 98 }, { n: 'X2', s: 1, e: 4, y: 132 }, { n: 'X3', s: 1, e: 4, y: 166 }, { n: 'Y1', s: 7, e: 10, y: 98 }, { n: 'Y2', s: 7, e: 10, y: 132 }, { n: 'Y3', s: 7, e: 10, y: 166 }], best: ['A', 'B', 'C', 'D'] }
+};
+RULE_SETS.finish = RULE_SETS.conf;
+const RULE_TEXT = {
+  start: (k, b) => `Earliest start grabs the long meeting first and keeps only ${k}. The best answer has ${b}.`,
+  short: (k, b) => `Shortest grabs the short meeting, which blocks both others. It keeps ${k}; the best answer has ${b}.`,
+  conf: (k, b) => `Fewest overlaps grabs E first (only 2 overlaps), which blocks B and C. It keeps ${k}; the best answer has ${b}.`,
+  finish: (k, b) => `Earliest finish keeps ${k}: A, B, C, D. That's the best possible.`
+};
+const SC_RULES = () => ({ w: 640, h: 225, xmin: 0, xmax: 12, px0: 40, px1: 620, axis: { y: 196, step: 1, label: 'time' }, label: 'Meeting requests on a timeline' });
+function ruleFrame(rule) {
+  const set = RULE_SETS[rule], picked = greedyPick(set.ivs, rule).map(c => c.n);
+  const items = set.ivs.map(c => ({ k: rule === 'finish' ? 'conf' + c.n : rule + c.n, t: 'bar', s: c.s, e: c.e, y: c.y, label: c.n, c: picked.includes(c.n) ? 'pick' : (set.best.includes(c.n) ? 'opt' : 'rej') }));
+  return { items, text: RULE_TEXT[rule](picked.length, set.best.length) };
+}
+STATIC['g-rules'] = () => ({ scene: SC_RULES(), frame: { items: ruleFrame('start').items } });
+CUSTOM.push(() => {
+  const host = document.querySelector('[data-static="g-rules"]'), view = host._view, res = document.getElementById('ruleres');
+  const set = r => {
+    const fr = ruleFrame(r);
+    view.apply({ items: fr.items });
+    res.textContent = fr.text;
+    document.querySelectorAll('#rulepick button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.r === r)));
+  };
+  document.querySelectorAll('#rulepick button').forEach(b => b.addEventListener('click', () => set(b.dataset.r)));
+  set('start');
+});
+
+/* dominoes */
+CUSTOM.push(() => {
+  const d = document.getElementById('doms'), b = document.getElementById('dompush');
+  b.addEventListener('click', () => {
+    d.classList.remove('run');
+    requestAnimationFrame(() => requestAnimationFrame(() => d.classList.add('run')));
+    b.textContent = 'Push again';
+  });
+});
+
+/* odd numbers make squares */
+CUSTOM.push(() => {
+  const grid = document.getElementById('sq'), eq = document.getElementById('sqeq'), cap = document.getElementById('sqcap');
+  let n = 1;
+  const draw = () => {
+    grid.style.gridTemplateColumns = `repeat(${n}, 30px)`;
+    let h = '';
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) { const L = Math.max(r, c) + 1; h += `<span class="L${L}${L === n && n > 1 ? ' new' : ''}" style="animation-delay:${L === n ? (r + c) * 0.03 : 0}s"></span>`; }
+    grid.innerHTML = h;
+    const terms = []; for (let i = 1; i <= n; i++) terms.push(`<span class="t${i}">${2 * i - 1}</span>`);
+    eq.innerHTML = `${terms.join(' + ')} = ${n * n} = ${n}²`;
+    cap.textContent = n === 1 ? 'Base case: one square. 1 = 1².'
+      : `Inductive step: the ${n - 1}×${n - 1} square (that's ${(n - 1) * (n - 1)}) plus an L of 2·${n} − 1 = ${2 * n - 1} new squares makes a ${n}×${n} square.`;
+    document.getElementById('sqback').disabled = n === 1;
+    document.getElementById('sqnext').disabled = n === 6;
+  };
+  document.getElementById('sqback').onclick = () => { n = Math.max(1, n - 1); draw(); };
+  document.getElementById('sqnext').onclick = () => { n = Math.min(6, n + 1); draw(); };
+  draw();
+});
+
+/* stays-ahead ladder (same numbers as the R1 proof) */
+const R1P_G = [{ s: 0, e: 2 }, { s: 3, e: 5 }, { s: 6, e: 9 }], R1P_O = [{ s: 1, e: 3 }, { s: 4, e: 7 }, { s: 8, e: 10 }];
+STATIC['g-ladder'] = () => {
+  const items = [];
+  R1P_G.forEach((g, i) => items.push({ k: 'g' + i, t: 'bar', s: g.s, e: g.e, y: 40, label: 'g' + '₁₂₃'[i], c: 'pick' }));
+  R1P_O.forEach((o, i) => items.push({ k: 'o' + i, t: 'bar', s: o.s, e: o.e, y: 108, label: 'o' + '₁₂₃'[i], c: 'opt' }));
+  R1P_G.forEach((g, i) => {
+    items.push({ k: 'v' + i, t: 'vline', x: g.e, y1: 24, y2: 124, c: 'good', label: '' });
+    items.push({ k: 't' + i, t: 'text', x: g.e + 0.15, y: 74, text: `${g.e} ≤ ${R1P_O[i].e}`, anchor: 'start', c: 'good' });
+  });
+  return { scene: { w: 620, h: 175, xmin: 0, xmax: 11, px0: 84, px1: 604, lanes: [{ y: 40, label: 'Greedy' }, { y: 108, label: 'Best' }], axis: { y: 146, step: 1 }, label: 'Greedy finish times compared with a best solution' }, frame: { items } };
+};
+
+/* exchange before/after */
+const SWAP_SC = () => ({ w: 380, h: 150, xmin: 0, xmax: 8, px0: 20, px1: 360, axis: { y: 124, step: 1 }, label: 'Two jobs before and after a swap' });
+function jobsItems(order, jobs, opts = {}) {
+  let t = 0; const items = [];
+  order.forEach(id => {
+    const j = jobs[id], s = t, e = t + j.t; t = e;
+    items.push({ k: 'j' + id, t: 'bar', s, e, y: 56, label: j.n, c: j.c });
+    items.push({ k: 'd' + id, t: 'flag', x: j.d, y: 42, label: `d${j.sub}=${j.d}`, c: e > j.d ? 'bad' : 'idle' });
+    if (e > j.d) items.push({ k: 'l' + id, t: 'bar', s: j.d, e, y: 94, h: 20, label: `late ${e - j.d}`, c: 'late' });
+  });
+  return items;
+}
+const SWAPJ = { i: { n: 'i', t: 4, d: 6, c: 'k1', sub: 'ᵢ' }, j: { n: 'j', t: 3, d: 4, c: 'k2', sub: 'ⱼ' } };
+STATIC['g-swap-a'] = () => ({ scene: SWAP_SC(), frame: { items: jobsItems(['i', 'j'], SWAPJ) } });
+STATIC['g-swap-b'] = () => ({ scene: SWAP_SC(), frame: { items: jobsItems(['j', 'i'], SWAPJ) } });
+/* ===== Flow tab demos ===== */
+const G_F1 = () => ({ w: 570, h: 340, directed: true, label: 'Flow network from practice problem F1', nodes: [nd('s', 50, 170, { lp: 'l' }), nd('a', 190, 70, { lp: 't' }), nd('b', 190, 270), nd('c', 380, 70, { lp: 't' }), nd('d', 380, 270), nd('t', 520, 170, { lp: 'r' })],
+  edges: [ed('s', 'a', 10), ed('s', 'b', 10), ed('a', 'b', 2), ed('a', 'c', 4), ed('a', 'd', 8, { lt: 0.4 }), ed('b', 'd', 9), ed('d', 'c', 6), ed('c', 't', 10), ed('d', 't', 10)] });
+const G_DIA = () => ({ w: 350, h: 240, directed: true, label: 'Diamond network, every capacity 1', nodes: [nd('s', 45, 120, { lp: 'l' }), nd('a', 175, 45, { lp: 't' }), nd('b', 175, 195), nd('t', 305, 120, { lp: 'r' })],
+  edges: [ed('s', 'a', 1), ed('s', 'b', 1), ed('a', 'b', 1), ed('a', 't', 1), ed('b', 't', 1)] });
+const flowFrame = (g, f) => { const wl = {}, es = {}; g.edges.forEach(e => { const id = `${e.from}>${e.to}`, x = f[id] || 0; wl[id] = `${fmt(x)}/${capS(e.w)}`; if (x > 0) es[id] = x >= e.w ? 'sat' : 'flow'; }); return { wl, es }; };
+
+STATIC['flow-intro'] = () => { const g = G_F1(); return { graph: g, frame: flowFrame(G_F1(), genFF(G_F1(), 's', 't').f) }; };
+STATIC['flow-cap'] = () => ({ graph: { w: 300, h: 130, directed: true, nodes: [nd('x', 40, 35), nd('y', 260, 35), nd('p', 40, 100), nd('q', 260, 100)], edges: [ed('x', 'y', null, { label: '7/10 ✓' }), ed('p', 'q', null, { label: '12/10 ✗' })] }, frame: { es: { 'x>y': 'flow', 'p>q': 'bad' } } });
+STATIC['flow-cons'] = () => ({ graph: { w: 300, h: 150, directed: true, nodes: [nd('x', 30, 30), nd('y', 30, 120), nd('v', 150, 75, { lp: 'b' }), nd('z', 270, 30), nd('w', 270, 120)], edges: [ed('x', 'v', 3), ed('y', 'v', 2), ed('v', 'z', 4), ed('v', 'w', 1)] }, frame: { es: { 'x>v': 'flow', 'y>v': 'flow', 'v>z': 'flow', 'v>w': 'flow' }, ns: { v: 'current' }, sub: { v: '5 in = 5 out' } } });
+
+PLAYERS['ff-stuck'] = () => {
+  const r = genFF(G_DIA(), 's', 't', { first: [['s', 'a', 'b', 't']], forwardOnly: true, startCap: 'Start with zero flow. The first path we happen to pick is s → a → b → t.',
+    stuckCap: 'Look for another path that only uses edges with room: s → b has room, but b → t is full, and s → a is full. Nothing works, so this version stops at <b>1</b>. The dashed amber edge b → a on the right is the way out, but this version never looks at it.' });
+  return { graph: G_DIA(), graph2: resGraph(G_DIA()), titles: ['Flow in G (flow / capacity)', 'Residual graph G_f'], frames: r.frames, panel: true };
+};
+PLAYERS['ff-fix'] = () => {
+  const r = genFF(G_DIA(), 's', 't', { first: [['s', 'a', 'b', 't']], startCap: 'Same start: zero flow, and the unlucky first path s → a → b → t.' });
+  return { graph: G_DIA(), graph2: resGraph(G_DIA()), titles: ['Flow in G (flow / capacity)', 'Residual graph G_f'], frames: r.frames, code: FF_CODE, panel: true };
+};
+PLAYERS['ff-main'] = () => {
+  const r = genFF(G_F1(), 's', 't');
+  return { graph: G_F1(), graph2: resGraph(G_F1()), titles: ['Flow in G (flow / capacity)', 'Residual graph G_f'], frames: r.frames, code: FF_CODE, panel: true };
+};
+
+/* residual slider */
+const G_ONE = () => ({ w: 300, h: 120, directed: true, nodes: [nd('u', 45, 60), nd('v', 255, 60)], edges: [ed('u', 'v', 10, { rbend: 26 })] });
+STATIC['res-g'] = () => ({ graph: G_ONE() });
+STATIC['res-gf'] = () => ({ graph: resGraph(G_ONE()) });
+CUSTOM.push(() => {
+  const vg = document.querySelector('[data-static="res-g"]')._view, vr = document.querySelector('[data-static="res-gf"]')._view;
+  const sl = document.getElementById('resf'), out = document.getElementById('resv');
+  const set = () => {
+    const x = +sl.value;
+    vg.apply({ wl: { 'u>v': `${x}/10` }, es: { 'u>v': x === 0 ? 'idle' : (x >= 10 ? 'sat' : 'flow') } });
+    vr.apply({ wl: { 'f:u>v': String(10 - x), 'b:u>v': String(x) }, es: { 'f:u>v': x >= 10 ? 'hide' : 'idle', 'b:u>v': x <= 0 ? 'hide' : 'idle' } });
+    out.innerHTML = `f = <b>${x}</b> · room left <b>${10 - x}</b> · can undo <b>${x}</b>`;
+  };
+  sl.addEventListener('input', set);
+  set();
+});
+
+/* cut explorer */
+const CUTS = [['s'], ['s', 'a'], ['s', 'b'], ['s', 'a', 'b'], ['s', 'a', 'b', 'd'], ['s', 'a', 'b', 'c', 'd']];
+STATIC['cut-g'] = () => ({ graph: G_F1() });
+CUSTOM.push(() => {
+  const view = document.querySelector('[data-static="cut-g"]')._view, res = document.getElementById('cutres');
+  const g = G_F1();
+  const set = i => {
+    const A = new Set(CUTS[i]), ns = {}, es = {};
+    A.forEach(v => ns[v] = 'done');
+    const cross = [];
+    g.edges.forEach(e => {
+      const id = `${e.from}>${e.to}`;
+      if (A.has(e.from) && !A.has(e.to)) { es[id] = 'cut'; cross.push(e); }
+      else if (!A.has(e.from) && A.has(e.to)) es[id] = 'cutin';
+    });
+    view.apply({ ns, es });
+    const sum = cross.reduce((x, e) => x + e.w, 0);
+    res.innerHTML = `A = {${CUTS[i].join(', ')}}. Edges from A to B: ${cross.map(e => `${e.from} → ${e.to} (${e.w})`).join(' + ')} = <b>${sum}</b>.${sum === 19 ? ' This is the smallest cut, and it equals the max flow.' : ' Bigger than 19, the max flow.'}`;
+    document.querySelectorAll('#cutpick button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.c === i)));
+  };
+  document.querySelectorAll('#cutpick button').forEach(b => b.addEventListener('click', () => set(+b.dataset.c)));
+  set(0);
+});
+
+/* modeling gadgets */
+STATIC['gad-bip'] = () => ({ graph: { w: 320, h: 165, directed: true, r: 17, nodes: [nd('s', 25, 82), nd('g1', 115, 35, { label: 'g₁' }), nd('g2', 115, 130, { label: 'g₂' }), nd('r1', 210, 35, { label: 'r₁' }), nd('r2', 210, 130, { label: 'r₂' }), nd('t', 295, 82)],
+  edges: [ed('s', 'g1', 5), ed('s', 'g2', 3), ed('g1', 'r1', null, { label: '∞' }), ed('g1', 'r2', null, { label: '∞', lt: 0.3 }), ed('g2', 'r2', null, { label: '∞' }), ed('r1', 't', 4), ed('r2', 't', 2)] } });
+STATIC['gad-super'] = () => ({ graph: { w: 320, h: 165, directed: true, r: 17, nodes: [nd('X', 30, 82, { label: 's*', kind: 'super' }), nd('s1', 125, 35, { label: 's₁' }), nd('s2', 125, 130, { label: 's₂' }), nd('x', 215, 82), nd('t', 295, 82)],
+  edges: [ed('X', 's1', null, { label: '∞', cls: 'ghost', lt: 0.6 }), ed('X', 's2', null, { label: '∞', cls: 'ghost', lt: 0.6 }), ed('s1', 'x', 4), ed('s2', 'x', 3), ed('x', 't', 6)] } });
+STATIC['gad-split'] = () => ({ graph: { w: 320, h: 165, directed: true, r: 17, nodes: [nd('a', 25, 40), nd('b', 25, 125), nd('vi', 100, 82, { label: 'v in', shape: 'pill' }), nd('vo', 222, 82, { label: 'v out', shape: 'pill' }), nd('c', 295, 40), nd('d', 295, 125)],
+  edges: [ed('a', 'vi'), ed('b', 'vi'), ed('vi', 'vo', null, { label: 'c(v)' }), ed('vo', 'c'), ed('vo', 'd')] }, frame: { es: { 'vi>vo': 'hl' } } });
+/* ===== R1, R3, R5 demos ===== */
+const SUBS = ['₁', '₂', '₃', '₄', '₅', '₆'];
+
+/* ---------- R1 ---------- */
+const R1_IVS = [{ n: 'A', s: 0, e: 6, y: 34 }, { n: 'B', s: 1, e: 3, y: 68 }, { n: 'C', s: 3, e: 5, y: 102 }, { n: 'D', s: 4, e: 7, y: 68 }, { n: 'E', s: 5, e: 8, y: 102 }, { n: 'F', s: 6, e: 9, y: 34 }, { n: 'G', s: 8, e: 11, y: 68 }, { n: 'H', s: 9, e: 12, y: 34 }, { n: 'I', s: 2, e: 10, y: 136 }];
+const SC_R1 = () => ({ w: 640, h: 205, xmin: 0, xmax: 13, px0: 30, px1: 620, axis: { y: 172, step: 1, label: 'time' }, label: 'Nine intervals on a timeline' });
+STATIC['r1-ex'] = () => ({ scene: SC_R1(), frame: { items: R1_IVS.map(c => ({ k: c.n, t: 'bar', s: c.s, e: c.e, y: c.y, label: c.n })) } });
+const R1_CODE = ['IntervalScheduling(intervals):', '  sort intervals by finish time', '  lastEnd = −∞;  kept = []', '  for each [s, f) in that order:', '    if s ≥ lastEnd:          // fits after the last kept one', '      keep it;  lastEnd = f', '    else: skip it            // overlaps the last kept one', '  return kept'];
+PLAYERS['r1-algo'] = () => {
+  const sorted = R1_IVS.slice().sort((a, b) => a.e - b.e), st = {}, frames = [];
+  let last = -Infinity;
+  const items = cur => {
+    const it = R1_IVS.map(c => ({ k: c.n, t: 'bar', s: c.s, e: c.e, y: c.y, label: c.n, c: c.n === cur ? 'cur' : (st[c.n] || 'idle') }));
+    if (last > -Infinity) it.push({ k: 'last', t: 'vline', x: last, y1: 18, y2: 152, c: 'good', label: `last end = ${last}` });
+    return it;
+  };
+  const panel = cur => ds('Sorted by finish time', '', rowOf(sorted.map(c => chip(`${c.n} [${c.s},${c.e})`, c.n === cur ? 'cur' : (st[c.n] === 'pick' ? 'ok' : (st[c.n] === 'rej' ? 'skip' : ''))))))
+    + ds('Kept so far', '', rowOf(sorted.filter(c => st[c.n] === 'pick').map(c => chip(c.n, 'ok'))));
+  frames.push({ items: items(), cap: `Sort by finish time: ${sorted.map(c => `${c.n} (${c.e})`).join(', ')}. Nothing is kept yet.`, panel: panel(), line: [1, 2] });
+  sorted.forEach(c => {
+    if (c.s >= last) {
+      frames.push({ items: items(c.n), cap: `Check <b>${c.n}</b> [${c.s}, ${c.e}): it starts at ${c.s}, ${last === -Infinity ? 'and nothing is kept yet' : `and ${c.s} ≥ ${last} (the last end)`}. It fits.`, panel: panel(c.n), line: [3, 4] });
+      st[c.n] = 'pick'; last = c.e;
+      frames.push({ items: items(), cap: `Keep <b>${c.n}</b>. The room is busy until ${c.e}.`, panel: panel(), line: [5] });
+    } else {
+      frames.push({ items: items(c.n), cap: `Check <b>${c.n}</b> [${c.s}, ${c.e}): it starts at ${c.s}, before the last end (${last}). It overlaps, so skip it.`, panel: panel(c.n), line: [3, 6] });
+      st[c.n] = 'rej';
+    }
+  });
+  const kept = sorted.filter(c => st[c.n] === 'pick').map(c => c.n);
+  frames.push({ items: items(), cap: `Done. Greedy keeps <b>${kept.join(', ')}</b>: ${kept.length} intervals with no overlaps.`, panel: panel(), line: [7] });
+  return { scene: SC_R1(), frames, code: R1_CODE, panel: true };
+};
+PLAYERS['r1-proof'] = () => {
+  const sc = { w: 640, h: 190, xmin: 0, xmax: 12, px0: 86, px1: 626, lanes: [{ y: 40, label: 'Greedy' }, { y: 112, label: 'Best' }], axis: { y: 162, step: 1 }, label: 'Greedy picks compared with a best solution' };
+  const G = R1P_G, O = R1P_O;
+  const base = (hl = [], extra = []) => G.map((g, i) => ({ k: 'g' + i, t: 'bar', s: g.s, e: g.e, y: 40, label: 'g' + SUBS[i], c: 'pick', cls: hl.includes('g' + i) ? 'hot' : (hl.length ? 'b-faint' : '') }))
+    .concat(O.map((o, i) => ({ k: 'o' + i, t: 'bar', s: o.s, e: o.e, y: 112, label: 'o' + SUBS[i], c: 'opt', cls: hl.includes('o' + i) ? 'hot' : (hl.length ? 'b-faint' : '') }))).concat(extra);
+  const vg = (x, lab) => ({ k: 'vg', t: 'vline', x, y1: 20, y2: 128, c: 'good', label: lab });
+  const vo = (x, lab) => ({ k: 'vo', t: 'vline', x, y1: 24, y2: 130, c: 'opt', label: lab, ly: 146 });
+  const tx = (x, text, c) => ({ k: 'tx', t: 'text', x, y: 76, text, anchor: 'start', c: c || 'good' });
+  const F = [
+    { items: base(), cap: 'Greedy picks g₁, g₂, g₃ in that order. Take <b>any</b> best solution and sort its intervals by finish time: o₁, o₂, o₃. Goal: greedy has at least as many.' },
+    { items: base(), cap: '<b>Claim:</b> for every r, f(gᵣ) ≤ f(oᵣ). Greedy\'s r-th interval ends no later than the best solution\'s r-th interval. Prove it by induction on r.' },
+    { items: base(['g0', 'o0'], [vg(2, 'f(g₁) = 2'), vo(3, 'f(o₁) = 3'), tx(3.15, '2 ≤ 3 ✓')]), cap: '<b>Base case, r = 1.</b> Greedy\'s first pick is the interval that ends earliest out of <b>all</b> intervals. o₁ is one of them, so f(g₁) ≤ f(o₁).' },
+    { items: base(['o1'], [vg(2, 'f(g₁) = 2'), vo(3, 'f(o₁) = 3'), tx(4.15, 's(o₂) = 4 ≥ 3 ≥ 2', 'opt')]), cap: '<b>Inductive step.</b> Assume f(g₁) ≤ f(o₁). The best solution has no overlaps, so o₂ starts after o₁ ends, which is after g₁ ends. So o₂ does not overlap g₁: it was <b>still available</b> when greedy made its 2nd pick.' },
+    { items: base(['g1', 'o1'], [vg(5, 'f(g₂) = 5'), vo(7, 'f(o₂) = 7'), tx(7.15, '5 ≤ 7 ✓')]), cap: 'Greedy\'s 2nd pick is the available interval that ends first. o₂ was available, so f(g₂) ≤ f(o₂). The domino fell.' },
+    { items: base(['g2', 'o2'], [vg(9, 'f(g₃) = 9'), vo(10, 'f(o₃) = 10'), tx(10.15, '9 ≤ 10 ✓')]), cap: 'Same argument for r = 3: o₃ starts at 8 ≥ f(o₂) = 7 ≥ f(g₂) = 5, so o₃ was available, so f(g₃) ≤ f(o₃).' },
+    { items: base(['g2'], [vg(9, 'f(g₃) = 9'), vo(10, 'f(o₃) = 10'), { k: 'o3', t: 'bar', s: 10.3, e: 11.7, y: 112, label: 'o₄?', c: 'ghost' }, tx(10.2, 'o₄ would fit after g₃', 'bad')]), cap: '<b>Finish.</b> Suppose the best solution had a 4th interval o₄. It starts after o₃ ends (10), so after g₃ ends (9). Then greedy still had something available and would not have stopped. Contradiction. So greedy\'s 3 is the max.' }
+  ];
+  return { scene: sc, frames: F, panel: false };
+};
+
+/* ---------- R3 ---------- */
+function schedItems(order, jobs, opts = {}) {
+  let time = 0; const items = [], st = [];
+  order.forEach(id => {
+    const j = jobs[id], s = time, e = time + j.t; time = e;
+    const late = Math.max(0, e - j.d);
+    items.push({ k: 'j' + id, t: 'bar', s, e, y: 74, label: late ? `${j.n} +${late}` : j.n, c: j.c, cls: (opts.hot || []).includes(id) ? 'hot' : '' });
+    st.push({ id, s, e, late });
+  });
+  Object.keys(jobs).forEach(id => {
+    const j = jobs[id], rec = st.find(x => x.id === id);
+    if (opts.flagsAll || rec) items.push({ k: 'd' + id, t: 'flag', x: j.d, y: 60, hgt: 18 + (j.lv || 0) * 15, label: `d${j.sub}=${j.d}`, c: rec && rec.late > 0 ? 'bad' : 'idle' });
+    if (rec && rec.late > 0) items.push({ k: 'l' + id, t: 'bar', s: j.d, e: rec.e, y: 98 + (st.indexOf(rec) % 4) * 10, h: 8, label: '', c: 'late' });
+  });
+  return { items, st, max: Math.max(0, ...st.map(x => x.late)) };
+}
+const SC_JOBS = (xmax, w, label) => ({ w: w || 640, h: 160, xmin: 0, xmax, px0: 22, px1: (w || 640) - 18, axis: { y: 136, step: 1 }, label: label || 'Jobs on one machine' });
+const mkJobs = arr => Object.fromEntries(arr.map(([id, t, d, lv], i) => [id, { n: id, t, d, lv, c: 'k' + (i + 1), sub: SUBS[+id - 1] || '' }]));
+const R3_EX = mkJobs([['1', 3, 4, 0], ['2', 2, 6, 0], ['3', 3, 5, 1]]);
+STATIC['r3-ex'] = () => ({ scene: SC_JOBS(10), frame: { items: schedItems(['1', '2', '3'], R3_EX).items } });
+const R3_SJF = mkJobs([['1', 1, 11, 1], ['2', 10, 10, 0]]), R3_SLK = mkJobs([['1', 1, 2, 0], ['2', 10, 10, 0]]);
+STATIC['r3-sjf-a'] = () => ({ scene: SC_JOBS(12, 460), frame: { items: schedItems(['1', '2'], R3_SJF).items } });
+STATIC['r3-sjf-b'] = () => ({ scene: SC_JOBS(12, 460), frame: { items: schedItems(['2', '1'], R3_SJF).items } });
+STATIC['r3-slack-a'] = () => ({ scene: SC_JOBS(12, 460), frame: { items: schedItems(['2', '1'], R3_SLK).items } });
+STATIC['r3-slack-b'] = () => ({ scene: SC_JOBS(12, 460), frame: { items: schedItems(['1', '2'], R3_SLK).items } });
+const R3_KT = mkJobs([['1', 3, 6, 0], ['2', 2, 8, 0], ['3', 1, 9, 1], ['4', 4, 9, 2], ['5', 3, 14, 0], ['6', 2, 15, 1]]);
+const EDF_CODE = ['EDF(jobs):', '  sort jobs by deadline d', '  time = 0', '  for each job j in that order:', '    run j from time to time + tⱼ', '    time = time + tⱼ', '    lateness of j = max(0, time − dⱼ)', '  return the order'];
+PLAYERS['r3-algo'] = () => {
+  const order = Object.keys(R3_KT).sort((a, b) => R3_KT[a].d - R3_KT[b].d), frames = [];
+  const table = (k) => {
+    const r = schedItems(order.slice(0, k), R3_KT);
+    return ds('Placed so far', '', `<table class="dt"><tr><th>job</th><th>t</th><th>d</th><th>finish</th><th>late</th></tr>${r.st.map(x => `<tr><th>${x.id}</th><td>${R3_KT[x.id].t}</td><td>${R3_KT[x.id].d}</td><td>${x.e}</td><td class="${x.late ? 'badc' : ''}">${x.late}</td></tr>`).join('')}</table>`) + ds('Worst lateness so far', '', `<div class="bignum">${r.max}</div>`);
+  };
+  frames.push({ items: schedItems([], R3_KT, { flagsAll: true }).items, cap: `Sort by deadline: ${order.map(id => `${id} (d=${R3_KT[id].d})`).join(', ')}. The flags are the deadlines. Start the clock at 0.`, panel: table(0), line: [1, 2] });
+  order.forEach((id, k) => {
+    const r = schedItems(order.slice(0, k + 1), R3_KT, { flagsAll: true, hot: [id] }), x = r.st[k];
+    frames.push({ items: r.items, cap: `Run job <b>${id}</b> from ${x.s} to ${x.e}. Its deadline is ${R3_KT[id].d}, so it is ${x.late ? `<b>${x.late} late</b>` : 'on time'}.`, panel: table(k + 1), line: [3, 4, 5, 6] });
+  });
+  const r = schedItems(order, R3_KT, { flagsAll: true });
+  frames.push({ items: r.items, cap: `Done. The worst lateness is <b>${r.max}</b> (job 4). Step 5 proves no other order can do better.`, panel: table(order.length), line: [7] });
+  return { scene: SC_JOBS(16), frames, code: EDF_CODE, panel: true };
+};
+const R3_SW = mkJobs([['1', 2, 3, 0], ['2', 3, 6, 0], ['3', 1, 7, 1], ['4', 4, 8, 0]]);
+PLAYERS['r3-swap'] = () => {
+  let order = ['4', '2', '3', '1'];
+  const frames = [], hist = [];
+  const inv = o => { let c = 0; for (let i = 0; i < o.length; i++) for (let j = i + 1; j < o.length; j++) if (R3_SW[o[j]].d < R3_SW[o[i]].d) c++; return c; };
+  const panel = () => ds('Order', '', rowOf(order.map(id => chip('job ' + id, '')))) + ds('Inversions left', '', `<div class="bignum">${inv(order)}</div>`) + ds('Worst lateness after each step', '', rowOf(hist.map((h, i) => chip(h, i === hist.length - 1 ? 'q' : ''))));
+  let r = schedItems(order, R3_SW); hist.push(r.max);
+  frames.push({ items: r.items, cap: `Start from some order: 4, 2, 3, 1. Worst lateness: <b>${r.max}</b>. Job 4 has the latest deadline but runs first, so this order has inversions.`, panel: panel() });
+  let guard = 0;
+  while (guard++ < 10) {
+    let p = -1;
+    for (let i = order.length - 2; i >= 0; i--) if (R3_SW[order[i + 1]].d < R3_SW[order[i]].d) { p = i; break; }
+    if (p < 0) break;
+    const a = order[p], b = order[p + 1];
+    r = schedItems(order, R3_SW, { hot: [a, b] });
+    frames.push({ items: r.items, cap: `Jobs ${a} and ${b} are neighbors, and job ${b} has the earlier deadline (${R3_SW[b].d} &lt; ${R3_SW[a].d}). That's an inversion. Swap them.`, panel: panel() });
+    const before = r.max;
+    order = order.slice(); order[p] = b; order[p + 1] = a;
+    r = schedItems(order, R3_SW, { hot: [a, b] }); hist.push(r.max);
+    frames.push({ items: r.items, cap: `Swapped. Every other job stays put. Job ${b} now finishes earlier; job ${a} finishes where ${b} used to, but its deadline is later. Worst lateness: ${before} → <b>${r.max}</b>${r.max < before ? '' : ' (no worse)'}.`, panel: panel() });
+  }
+  r = schedItems(order, R3_SW);
+  frames.push({ items: r.items, cap: `No inversions left, so this is EDF order: ${order.join(', ')}. The worst lateness went ${hist.join(' → ')} and never went up.`, panel: panel() });
+  return { scene: SC_JOBS(11), frames, panel: true };
+};
+
+/* ---------- R5 ---------- */
+const HOUSES = [1, 3, 7, 10, 11, 18, 20, 21, 27];
+const SC_R5 = (h) => ({ w: 640, h: h || 175, xmin: -5, xmax: 30, px0: 20, px1: 620, axis: { y: 150, step: 1, every: 5, label: 'miles' }, label: 'Houses along a road' });
+const houseItems = (cov = () => false, cur = null, y = 112) => HOUSES.map(x => ({ k: 'h' + x, t: 'pt', x, y, label: String(x), ly: 23, c: x === cur ? 'cur' : (cov(x) ? 'cov' : 'idle') }));
+const towerItems = (p, i, c) => [{ k: 'r' + i, t: 'range', s: p - 4, e: p + 4, y: 112, h: 36, c: c || 'idle', label: '' }, { k: 'w' + i, t: 'tower', x: p, y: 84, label: `tower at ${p}`, ly: -38, c: c || 'idle' }];
+STATIC['r5-ex'] = () => ({ scene: SC_R5(), frame: { items: houseItems(x => x >= 10 && x <= 18).concat(towerItems(14, 0)) } });
+STATIC['r5-rule-a'] = () => ({ scene: SC_R5(), frame: { items: houseItems(x => x <= 5).concat(towerItems(1, 0, 'o')) } });
+STATIC['r5-rule-b'] = () => ({ scene: SC_R5(), frame: { items: houseItems(x => x <= 9).concat(towerItems(5, 0)) } });
+const R5_CODE = ['PlaceTowers(x₁ < x₂ < … < xₙ):', '  towers = [];  coveredUpTo = −∞', '  for each house x, west to east:', '    if x > coveredUpTo:          // not covered yet', '      put a tower at x + 4', '      coveredUpTo = x + 8', '  return towers'];
+PLAYERS['r5-algo'] = () => {
+  const towers = [], frames = [];
+  let upTo = -Infinity;
+  const covered = x => towers.some(p => Math.abs(p - x) <= 4);
+  const items = cur => houseItems(covered, cur).concat(...towers.map((p, i) => towerItems(p, i)));
+  const panel = () => ds('Towers', '', rowOf(towers.map(p => chip('at ' + p, 'ok')))) + ds('Covered up to mile', '', `<div class="bignum">${upTo === -Infinity ? '−∞' : upTo}</div>`);
+  frames.push({ items: items(), cap: `Houses at miles ${HOUSES.join(', ')}. Walk east from the first house. Nothing is covered yet.`, panel: panel(), line: [1] });
+  let skipped = [];
+  HOUSES.forEach(x => {
+    if (x > upTo) {
+      if (skipped.length) { frames.push({ items: items(), cap: `${listText(skipped.map(String))} ${skipped.length > 1 ? 'are' : 'is'} already covered. Skip.`, panel: panel(), line: [2, 3] }); skipped = []; }
+      frames.push({ items: items(x), cap: `The house at <b>${x}</b> is not covered (${x} &gt; ${upTo === -Infinity ? '−∞' : upTo}).`, panel: panel(), line: [2, 3] });
+      towers.push(x + 4); upTo = x + 8;
+      frames.push({ items: items(), cap: `Put a tower 4 miles past it, at <b>${x + 4}</b>. It covers miles ${x} to ${x + 8}.`, panel: panel(), line: [4, 5] });
+    } else skipped.push(x);
+  });
+  if (skipped.length) frames.push({ items: items(), cap: `${listText(skipped.map(String))} ${skipped.length > 1 ? 'are' : 'is'} already covered. Skip.`, panel: panel(), line: [2, 3] });
+  frames.push({ items: items(), cap: `Every house is covered with <b>${towers.length} towers</b>, at ${towers.join(', ')}.`, panel: panel(), line: [6] });
+  return { scene: SC_R5(), frames, code: R5_CODE, panel: true };
+};
+PLAYERS['r5-proof'] = () => {
+  const sc = { w: 660, h: 238, xmin: -5, xmax: 30, px0: 92, px1: 640, lanes: [{ y: 52, label: 'Greedy' }, { y: 120, label: 'Houses' }, { y: 176, label: 'Other' }], axis: { y: 212, step: 1, every: 5 }, label: 'Greedy towers compared with another valid answer' };
+  const G = [5, 14, 24], O = [3, 14, 23];
+  const items = (hl = [], o = O, curH = null, unc = null, extra = []) => {
+    const it = [];
+    G.forEach((p, i) => it.push({ k: 'g' + i, t: 'range', s: p - 4, e: p + 4, y: 52, h: 26, c: 'idle', label: `g${SUBS[i]} = ${p}`, ly: 17, cls: hl.length && !hl.includes('g' + i) ? 'b-faint' : '' }));
+    o.forEach((p, i) => it.push({ k: 'o' + i, t: 'range', s: p - 4, e: p + 4, y: 176, h: 26, c: 'o', label: `o${SUBS[i]} = ${p}`, ly: 17, cls: hl.length && !hl.includes('o' + i) ? 'b-faint' : '' }));
+    HOUSES.forEach(x => it.push({ k: 'h' + x, t: 'pt', x, y: 120, label: String(x), ly: 23, c: x === curH ? 'cur' : (x === unc ? 'unc' : 'idle') }));
+    return it.concat(extra);
+  };
+  const v = (k, x, c, lab, y1, y2, ly) => ({ k, t: 'vline', x, y1, y2, c, label: lab, ly });
+  const F = [
+    { items: items(), cap: 'Greedy places towers at 5, 14, 24. Here is another valid answer O with towers at 3, 14, 23. <b>Claim:</b> gᵣ ≥ oᵣ for every r. Greedy\'s r-th tower is at least as far east.' },
+    { items: items(['g0', 'o0'], O, 1, null, [v('va', 5, 'good', 'g₁ = 5', 18, 140), v('vb', 3, 'opt', 'o₁ = 3', 100, 196, 205)]), cap: '<b>Base case.</b> The first house (mile 1) must be covered by some tower of O, and that tower is at most 1 + 4 = 5. o₁ is O\'s westernmost tower, so o₁ ≤ 5 = g₁.' },
+    { items: items(['g0', 'o0'], O, 10, null, [v('va', 9, 'good', 'g₁ + 4 = 9', 18, 140), v('vb', 7, 'opt', 'o₁ + 4 = 7', 100, 196, 205)]), cap: '<b>Inductive step.</b> Assume g₁ ≥ o₁. The first house greedy\'s first tower misses is <b>10</b>, and 10 &gt; g₁ + 4 = 9 ≥ o₁ + 4 = 7. So o₁ misses house 10 too.' },
+    { items: items(['g1', 'o1'], O, 10, null, [v('va', 14, 'good', 'g₂ = 14', 18, 140), v('vb', 14, 'opt', 'o₂ = 14', 100, 196, 205)]), cap: 'Some later tower of O covers house 10, so o₂ ≤ 10 + 4 = 14 = g₂. Greedy is still not behind.' },
+    { items: items(['g2', 'o2'], O, 20, null, [v('va', 24, 'good', 'g₃ = 24', 18, 140), v('vb', 23, 'opt', 'o₃ = 23', 100, 196, 205)]), cap: 'Same for r = 3: house 20 &gt; g₂ + 4 = 18 ≥ o₂ + 4 = 18, so a later tower of O covers it, and o₃ ≤ 20 + 4 = 24 = g₃.' },
+    { items: items([], [3, 14], null, 20, [v('vb', 18, 'bad', 'o₂ + 4 = 18', 100, 196, 205)]), cap: '<b>Finish.</b> Suppose O used only 2 towers. Greedy needed a 3rd tower because house 20 &gt; g₂ + 4 ≥ o₂ + 4. Then no tower of O reaches house 20. O misses a house, contradiction. So every valid answer needs at least 3 towers.' }
+  ];
+  return { scene: sc, frames: F, panel: false };
+};
+/* ===== HW5 P1 and P2 demos ===== */
+const BT = ['O', 'A', 'B', 'AB'];
+const COMPAT = [['O', 'O'], ['O', 'A'], ['O', 'B'], ['O', 'AB'], ['A', 'A'], ['A', 'AB'], ['B', 'B'], ['B', 'AB'], ['AB', 'AB']];
+const BY = { O: 55, A: 145, B: 235, AB: 325 };
+function bloodNet(sup, dem) {
+  const nodes = [nd('s', 40, 190, { lp: 'l' }), nd('t', 570, 190, { lp: 'r' })];
+  BT.forEach(x => { nodes.push(nd('s' + x, 190, BY[x], { label: x, name: x + ' blood', kind: 'plant', lp: 't' })); nodes.push(nd('p' + x, 420, BY[x], { label: x, name: x + ' patients', kind: 'blue', lp: 't' })); });
+  const lt = { 'O>O': .5, 'O>A': .22, 'O>B': .18, 'O>AB': .14, 'A>A': .5, 'A>AB': .25, 'B>B': .5, 'B>AB': .3, 'AB>AB': .5 };
+  const edges = BT.map(x => ed('s', 's' + x, sup[x]))
+    .concat(COMPAT.map(([x, y]) => ed('s' + x, 'p' + y, Infinity, { lt: lt[x + '>' + y] })))
+    .concat(BT.map(y => ed('p' + y, 't', dem[y])));
+  return { w: 610, h: 372, directed: true, label: 'Blood supply network', nodes, edges, decor: [{ type: 'text', x: 190, y: 16, text: 'blood on hand', anchor: 'middle' }, { type: 'text', x: 420, y: 16, text: 'patient groups', anchor: 'middle' }] };
+}
+const WEEK1 = [{ O: 5, A: 3, B: 2, AB: 1 }, { O: 4, A: 4, B: 1, AB: 2 }], WEEK2 = [{ O: 3, A: 5, B: 3, AB: 2 }, { O: 4, A: 2, B: 2, AB: 3 }];
+STATIC['p1-net'] = () => ({ graph: bloodNet(...WEEK1) });
+function bloodRun(week, enough) {
+  const g = () => bloodNet(...week), r = genFF(g(), 's', 't');
+  const D = BT.reduce((x, y) => x + week[1][y], 0);
+  const plan = COMPAT.filter(([x, y]) => r.f[`s${x}>p${y}`] > 0).map(([x, y]) => `${r.f[`s${x}>p${y}`]} ${x} → ${y}`).join(', ');
+  const last = r.frames[r.frames.length - 1];
+  r.frames.push(Object.assign({}, last, {
+    cap: enough ? `Max flow = <b>${r.total}</b> = total demand ${D}, so the supply <b>is enough</b>. The middle edges are the plan: ${plan}.`
+      : `Max flow = <b>${r.total}</b>, less than total demand ${D}, so the supply is <b>not enough</b>. The cut shows why: O patients can only use O blood, and there are only ${week[0].O} units of it for ${week[1].O} patients.`
+  }));
+  return { graph: g(), frames: r.frames, code: FF_CODE, panel: true };
+}
+PLAYERS['p1-run1'] = () => bloodRun(WEEK1, true);
+PLAYERS['p1-run2'] = () => bloodRun(WEEK2, false);
+
+/* P2 */
+const P2_DAYS = { D1: ['Ana', 'Ben'], D2: ['Ana', 'Ben', 'Cal'], D3: ['Ben', 'Cal'], D4: ['Ana'] };
+const P2_CAP = { Ana: 2, Ben: 2, Cal: 1 };
+function carpoolNet() {
+  const nodes = [nd('s', 40, 175, { lp: 'l' }), nd('t', 545, 175, { lp: 'r' })];
+  Object.keys(P2_DAYS).forEach((d, i) => nodes.push(nd(d, 175, 48 + i * 86, { label: 'Day ' + (i + 1), shape: 'pill', kind: 'plant' })));
+  ['Ana', 'Ben', 'Cal'].forEach((p, i) => nodes.push(nd(p, 390, 85 + i * 90, { label: p, shape: 'pill', kind: 'blue' })));
+  const edges = Object.keys(P2_DAYS).map(d => ed('s', d, 1));
+  Object.entries(P2_DAYS).forEach(([d, ps]) => ps.forEach(p => edges.push(ed(d, p, 1, { lt: 0.3 }))));
+  ['Ana', 'Ben', 'Cal'].forEach(p => edges.push(ed(p, 't', P2_CAP[p])));
+  return { w: 590, h: 350, directed: true, label: 'Carpool network: days to people', nodes, edges };
+}
+STATIC['p2-net'] = () => ({ graph: carpoolNet() });
+STATIC['p2-frac'] = () => {
+  const wl = {}, es = {}, g = carpoolNet();
+  g.edges.forEach(e => { es[`${e.from}>${e.to}`] = 'flow'; });
+  Object.keys(P2_DAYS).forEach(d => wl[`s>${d}`] = '1');
+  Object.entries(P2_DAYS).forEach(([d, ps]) => ps.forEach(p => wl[`${d}>${p}`] = ps.length === 1 ? '1' : `1/${ps.length}`));
+  wl['Ana>t'] = '11/6 ≤ 2'; wl['Ben>t'] = '4/3 ≤ 2'; wl['Cal>t'] = '5/6 ≤ 1';
+  return { graph: g, frame: { wl, es } };
+};
+PLAYERS['p2-run'] = () => {
+  const r = genFF(carpoolNet(), 's', 't', { startCap: 'Zero flow. Each day can send 1 unit (its driving job) to one rider.' });
+  const sched = Object.keys(P2_DAYS).map((d, i) => { const p = P2_DAYS[d].find(q => r.f[`${d}>${q}`] > 0); return `Day ${i + 1} → ${p || 'nobody'}`; });
+  const drives = p => Object.keys(P2_DAYS).filter(d => r.f[`${d}>${p}`] > 0).length;
+  const last = r.frames[r.frames.length - 1];
+  r.frames.push(Object.assign({}, last, { cap: `Read the schedule from the day → person edges: <b>${sched.join(', ')}</b>. Ana drives ${drives('Ana')} ≤ 2, Ben ${drives('Ben')} ≤ 2, Cal ${drives('Cal')} ≤ 1. All ${Object.keys(P2_DAYS).length} days have a driver, and it's fair.` }));
+  return { graph: carpoolNet(), frames: r.frames, code: FF_CODE, panel: true };
+};
+/* ===== HW5 P3 and P4 demos ===== */
+function ladder(k, W) {
+  W = W || 540;
+  const nodes = [nd('s', W / 2, 30, { lp: 'r' }), nd('t', W / 2, 300, { lp: 'r' })], xs = [];
+  for (let i = 1; i <= k; i++) {
+    const x = k === 1 ? W / 2 : 90 + (i - 1) * (W - 180) / (k - 1); xs.push(x);
+    nodes.push(nd('u' + i, x, 118, { label: 'u' + SUBS[i - 1], lp: 'l' }), nd('v' + i, x, 212, { label: 'v' + SUBS[i - 1], lp: 'l' }));
+  }
+  const edges = [];
+  for (let i = 1; i <= k; i++) { edges.push(ed('s', 'u' + i, 1), ed('u' + i, 'v' + i, 1), ed('v' + i, 't', 1)); if (i < k) edges.push(ed('v' + i, 'u' + (i + 1), 1)); }
+  return { w: W, h: 330, directed: true, label: `Bad input with k = ${k}`, nodes, edges };
+}
+const zigzag = k => { const ids = ['s>u1']; for (let i = 1; i <= k; i++) { ids.push(`u${i}>v${i}`); ids.push(i < k ? `v${i}>u${i + 1}` : `v${k}>t`); } return ids; };
+CUSTOM.push(() => {
+  const host = document.getElementById('p3fam'), res = document.getElementById('p3res');
+  const set = k => {
+    host.innerHTML = '';
+    const g = ladder(k), view = new GraphView(host, g);
+    const es = {}; zigzag(k).forEach(id => es[id] = 'path');
+    const wl = {}; g.edges.forEach(e => wl[`${e.from}>${e.to}`] = '1');
+    view.apply({ es, wl });
+    res.innerHTML = `k = ${k}: the orange zig-zag path fills every uᵢ → vᵢ edge, so forward-only gets <b>1</b>. The max flow is <b>${k}</b>. Ratio ${k}.`;
+    document.querySelectorAll('#p3k button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.k === k)));
+  };
+  document.querySelectorAll('#p3k button').forEach(b => b.addEventListener('click', () => set(+b.dataset.k)));
+  set(3);
+});
+PLAYERS['p3-run'] = () => {
+  const k = 3, g = ladder(k), ids = g.edges.map(e => `${e.from}>${e.to}`), zz = zigzag(k);
+  const lab = f => Object.fromEntries(ids.map(id => [id, `${f[id] || 0}/1`]));
+  const f0 = {}, f1 = Object.fromEntries(zz.map(id => [id, 1])), fmax = {};
+  for (let i = 1; i <= k; i++) { fmax[`s>u${i}`] = 1; fmax[`u${i}>v${i}`] = 1; fmax[`v${i}>t`] = 1; }
+  const sat = f => Object.fromEntries(Object.keys(f).filter(id => f[id] > 0).map(id => [id, 'sat']));
+  const room = ids.filter(id => !f1[id]);
+  const panel = (code, best) => ds("Friend's code", '', `<div class="bignum">${code}</div>`) + ds('Max flow', '', `<div class="bignum">${best}</div>`);
+  const F = [
+    { wl: lab(f0), es: {}, cap: `k = 3. Every edge has capacity 1. The friend's code starts from zero flow.`, panel: panel(0, '?') },
+    { wl: lab(f0), es: Object.fromEntries(zz.map(id => [id, 'path'])), cap: 'The code is allowed to pick any forward path. Suppose it picks the zig-zag s → u₁ → v₁ → u₂ → v₂ → u₃ → v₃ → t. Every edge has room 1, so it pushes 1.', panel: panel(0, '?') },
+    { wl: lab(f1), es: sat(f1), cap: 'After the push, every edge on the zig-zag is full, including <b>all three</b> uᵢ → vᵢ edges.', panel: panel(1, '?') },
+    { wl: lab(f1), es: Object.assign(sat(f1), Object.fromEntries(room.map(id => [id, 'hl']))), ns: { u1: 'bad', u2: 'bad', u3: 'bad' }, cap: 'The edges with room left are shown in blue. You can get from s to u₂ or u₃, but the only way out of a uᵢ is uᵢ → vᵢ, which is full. No forward path reaches t, so the code <b>stops at 1</b>.', panel: panel(1, '?') },
+    { wl: lab(fmax), es: sat(fmax), cap: 'The real max flow: send 1 along each of s → u₁ → v₁ → t, s → u₂ → v₂ → t, s → u₃ → v₃ → t. That is <b>3</b>, and the 3 edges out of s cap every flow at 3.', panel: panel(1, 3) },
+    { wl: lab(fmax), es: sat(fmax), cap: 'So the code got 1 out of 3. With k rungs it gets 1 out of k. For any b, pick k &gt; b: the code gets less than max / b. <b>The friend is wrong.</b>', panel: panel(1, 3) }
+  ];
+  return { graph: g, frames: F, panel: true };
+};
+
+/* P4 */
+const PHI = (Math.sqrt(5) - 1) / 2;
+const G_P4 = () => ({ w: 550, h: 305, directed: true, label: 'Zwick-style network with capacities X, 1 and phi', nodes: [nd('s', 275, 30, { lp: 'r' }), nd('a', 80, 150, { lp: 'l' }), nd('b', 210, 150), nd('c', 340, 150), nd('d', 470, 150, { lp: 'r' }), nd('t', 275, 275, { lp: 'r' })],
+  edges: [ed('s', 'a', null, { label: 'X' }), ed('s', 'b', null, { label: 'X' }), ed('s', 'd', null, { label: 'X' }), ed('b', 'a', null, { label: '1' }), ed('b', 'c', null, { label: '1' }), ed('d', 'c', null, { label: 'φ' }), ed('a', 't', null, { label: 'X' }), ed('c', 't', null, { label: 'X' }), ed('d', 't', null, { label: 'X' })] });
+const P4P = {
+  A: { e: [['s>a', 1], ['b>a', -1], ['b>c', 1], ['c>t', 1]], txt: 'A: s → a → b → c → t. The step a → b goes backward on edge b → a.' },
+  B: { e: [['s>d', 1], ['d>c', 1], ['b>c', -1], ['b>a', 1], ['a>t', 1]], txt: 'B: s → d → c → b → a → t. The step c → b goes backward on edge b → c.' },
+  C: { e: [['s>b', 1], ['b>c', 1], ['d>c', -1], ['d>t', 1]], txt: 'C: s → b → c → d → t. The step c → d goes backward on edge d → c.' },
+  M: { e: [['s>b', 1], ['b>c', 1], ['c>t', 1]], txt: 's → b → c → t, all forward.' }
+};
+const pathEs = p => Object.fromEntries(P4P[p].e.map(([id, d]) => [id, d === 1 ? 'path' : 'back']));
+STATIC['p4-graph'] = () => ({ graph: G_P4() });
+CUSTOM.push(() => {
+  const view = document.querySelector('[data-static="p4-graph"]')._view, res = document.getElementById('p4pathres');
+  const set = p => {
+    view.apply({ es: p === 'none' ? {} : pathEs(p) });
+    res.textContent = p === 'none' ? 'Capacities: X on the six outer edges, 1 on b → a and b → c, φ on d → c.' : 'Path ' + P4P[p].txt;
+    document.querySelectorAll('#p4path button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.p === p)));
+  };
+  document.querySelectorAll('#p4path button').forEach(b => b.addEventListener('click', () => set(b.dataset.p)));
+  set('none');
+});
+STATIC['p4-flow'] = () => ({ graph: G_P4(), frame: { wl: { 's>a': 'X/X', 'a>t': 'X/X', 's>d': 'X/X', 'd>t': 'X/X', 's>b': '1/X', 'b>c': '1/1', 'c>t': '1/X', 'b>a': '0/1', 'd>c': '0/φ' }, es: { 's>a': 'sat', 'a>t': 'sat', 's>d': 'sat', 'd>t': 'sat', 's>b': 'flow', 'b>c': 'sat', 'c>t': 'flow' } } });
+STATIC['p4-cut'] = () => ({ graph: G_P4(), frame: { ns: { s: 'done', a: 'done', b: 'done' }, es: { 's>d': 'cut', 'a>t': 'cut', 'b>c': 'cut' } } });
+STATIC['p4-line'] = () => {
+  const amts = [1]; for (let k = 1; k <= 13; k += 2) amts.push(PHI ** k, PHI ** k, PHI ** (k + 1), PHI ** (k + 1));
+  let s = 0; const items = [];
+  amts.forEach((a, i) => { s += a; items.push({ k: 'p' + i, t: 'pt', x: s, y: 70, r: 5, label: i < 4 ? s.toFixed(2) : '', ly: -12, c: 'cov' }); });
+  items.push({ k: 'lim', t: 'vline', x: 2 + Math.sqrt(5), y1: 30, y2: 92, c: 'acc', label: 'limit 2 + √5 ≈ 4.24' });
+  items.push({ k: 'max', t: 'vline', x: 21, y1: 30, y2: 92, c: 'bad', label: 'max flow 2X + 1 = 21', anchor: 'end' });
+  items.push({ k: 'gap', t: 'text', x: 12.6, y: 52, text: 'never closed: the gap grows with X', c: 'bad' });
+  return { scene: { w: 640, h: 135, xmin: 0, xmax: 22, px0: 20, px1: 620, axis: { y: 104, step: 1, every: 2, label: 'flow value (X = 10)' }, label: 'Flow values after each augmentation, approaching 4.24, far below the max flow' }, frame: { items } };
+};
+PLAYERS['p4-run'] = () => {
+  const P = phiP;
+  const om = S => S === '0' ? '1' : `1 − ${S}`, pm = S => S === '0' ? 'φ' : `φ − ${S}`;
+  const SEQ = [
+    { p: 'M', a: '1', n: 1, after: ['1', '0', 'φ'] },
+    { p: 'B', a: P(1), n: PHI, after: [P(2), P(1), '0'], k: 1 },
+    { p: 'C', a: P(1), n: PHI, after: [P(2), '0', P(1)], k: 1 },
+    { p: 'B', a: P(2), n: PHI ** 2, after: ['0', P(2), P(3)], k: 1 },
+    { p: 'A', a: P(2), n: PHI ** 2, after: [P(2), '0', P(3)], k: 1 },
+    { p: 'B', a: P(3), n: PHI ** 3, after: [P(4), P(3), '0'], k: 3 },
+    { p: 'C', a: P(3), n: PHI ** 3, after: [P(4), '0', P(3)], k: 3 },
+    { p: 'B', a: P(4), n: PHI ** 4, after: ['0', P(4), P(5)], k: 3 },
+    { p: 'A', a: P(4), n: PHI ** 4, after: [P(4), '0', P(5)], k: 3 }
+  ];
+  let r = ['1', '1', 'φ'], total = 0;
+  const hist = [{ t: 'start', r: r.slice() }];
+  const wl = r => ({ 'b>a': `r₁ = ${r[0]}`, 'b>c': `r₂ = ${r[1]}`, 'd>c': `r₃ = ${r[2]}` });
+  const panel = () => ds('Flow so far', 'heads toward 2 + √5 ≈ 4.236', `<div class="bignum">${total.toFixed(3)}</div>`) +
+    ds('(r₁, r₂, r₃) after each push', '', `<table class="dt"><tr><th>push</th><th>r₁</th><th>r₂</th><th>r₃</th></tr>${hist.map((h, i) => `<tr class="${i === hist.length - 1 ? 'live' : ''}"><th>${h.t}</th><td>${h.r[0]}</td><td>${h.r[1]}</td><td>${h.r[2]}</td></tr>`).join('')}</table>`);
+  const F = [{ wl: wl(r), es: {}, cap: 'Zero flow. The middle edges have residual capacities (r₁, r₂, r₃) = (1, 1, φ). The outer X edges are huge and never matter here.', panel: panel() }];
+  SEQ.forEach((st, i) => {
+    let why;
+    if (st.p === 'M') why = 'Part (b): path s → b → c → t. Room: X, then r₂ = 1, then X. Bottleneck <b>1</b>.';
+    else if (st.p === 'B') why = `Path B (s → d → c → b → a → t). Room on the middle: d → c forward has r₃ = ${r[2]}, c → b backward has ${om(r[1])}${r[1] === '0' ? '' : ''}, b → a forward has r₁ = ${r[0]}. Bottleneck <b>${st.a}</b>.`;
+    else if (st.p === 'C') why = `Path C (s → b → c → d → t). Room on the middle: b → c forward has r₂ = ${r[1]}, c → d backward has ${pm(r[2])}. Bottleneck <b>${st.a}</b>.`;
+    else why = `Path A (s → a → b → c → t). Room on the middle: a → b backward has ${om(r[0])}, b → c forward has r₂ = ${r[1]}. Bottleneck <b>${st.a}</b>.`;
+    const head = st.k ? `Round k = ${st.k}, push ${((i - 1) % 4) + 1} of 4. ` : '';
+    F.push({ wl: wl(r), es: pathEs(st.p), cap: head + why, panel: panel() });
+    r = st.after.slice(); total += st.n; hist.push({ t: `+${st.a} ${st.p === 'M' ? 'center' : st.p}`, r: r.slice() });
+    F.push({ wl: wl(r), es: pathEs(st.p), cap: `Push ${st.a}. Now (r₁, r₂, r₃) = (${r.join(', ')}). Total flow ≈ ${total.toFixed(3)}.${i === 4 ? ' Same shape as the start of the round, (φᵏ⁻¹, 0, φᵏ), with k = 3 now.' : ''}`, panel: panel() });
+  });
+  F.push({ wl: wl(r), es: {}, cap: 'The pattern never ends: the pushes are 1, φ, φ, φ², φ², φ³, φ³, … and the flow creeps toward 2 + √5 ≈ 4.236, while the max flow is 2X + 1 ≥ 21.', panel: panel() });
+  return { graph: G_P4(), frames: F, panel: true };
+};
+/* ===== Mount everything + tabs ===== */
+(function init() {
+  document.querySelectorAll('[data-static]').forEach(host => {
+    const make = STATIC[host.dataset.static];
+    if (!make) { console.warn('missing static', host.dataset.static); return; }
+    const spec = make();
+    host.classList.add('gv');
+    const view = spec.scene ? new SceneView(host, spec.scene) : new GraphView(host, spec.graph);
+    view.apply(spec.frame || {});
+    host._view = view;
+  });
+  document.querySelectorAll('[data-player]').forEach(host => {
+    const name = host.dataset.player, make = PLAYERS[name];
+    if (!make) { console.warn('missing player', name); return; }
+    new Player(host, name, make());
+  });
+  CUSTOM.forEach(fn => { try { fn(); } catch (e) { console.error(e); } });
+
+  const tabs = [...document.querySelectorAll('.tab')];
+  const panels = [...document.querySelectorAll('.panel')];
+  const ids = panels.map(p => p.id);
+  const nameOf = id => (tabs.find(t => t.dataset.tab === id) || {}).textContent || id;
+  function show(id, scroll) {
+    if (!ids.includes(id)) id = ids[0];
+    panels.forEach(p => p.hidden = p.id !== id);
+    tabs.forEach(t => { const on = t.dataset.tab === id; t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1; if (on) t.scrollIntoView({ block: 'nearest', inline: 'nearest' }); });
+    ALLPLAYERS.forEach(p => p.stop());
+    try { localStorage.setItem('cs577-greedyflow-tab', id); } catch (e) { }
+    try { history.replaceState(null, '', '#' + id); } catch (e) { }
+    if (scroll) window.scrollTo({ top: 0 });
+  }
+  tabs.forEach(t => t.addEventListener('click', () => show(t.dataset.tab, true)));
+  document.querySelector('[role=tablist]').addEventListener('keydown', e => {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    const i = tabs.indexOf(document.activeElement); if (i < 0) return;
+    const j = (i + (e.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+    tabs[j].focus(); show(tabs[j].dataset.tab, false);
+  });
+  panels.forEach((p, i) => {
+    const foot = p.querySelector('.navfoot'); if (!foot) return;
+    if (i > 0) { const b = document.createElement('button'); b.textContent = '← ' + nameOf(ids[i - 1]); b.onclick = () => show(ids[i - 1], true); foot.appendChild(b); }
+    if (i < ids.length - 1) { const b = document.createElement('button'); b.className = 'next'; b.textContent = nameOf(ids[i + 1]) + ' →'; b.onclick = () => show(ids[i + 1], true); foot.appendChild(b); }
+  });
+  document.querySelectorAll('.rail a').forEach(a => a.addEventListener('click', e => {
+    e.preventDefault();
+    const el = document.getElementById(a.getAttribute('href').slice(1));
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }));
+  let start = (location.hash || '').slice(1);
+  if (!ids.includes(start)) { try { start = localStorage.getItem('cs577-greedyflow-tab') || ''; } catch (e) { start = ''; } }
+  show(ids.includes(start) ? start : ids[0], false);
+})();
+
+</script>
+
+</body></html>
