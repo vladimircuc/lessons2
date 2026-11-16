@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CS 577 · P vs NP and reductions (HW6)</title>
+<style>
+:root{
+  --bg:#f5f6fa; --card:#fff; --ink:#1f2433; --muted:#5d6475; --line:#e3e6ee;
+  --accent:#4f46e5; --accent-soft:#eef2ff;
+  --t1:#2563eb; --t1s:#dbeafe; --t2:#7c3aed; --t2s:#ede9fe;
+  --t3:#ea580c; --t3s:#ffedd5; --t4:#16a34a; --t4s:#dcfce7;
+  --yes:#15803d; --no:#dc2626;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55;font-size:16px}
+header.top{background:#151a2d;color:#fff;padding:22px 28px 18px}
+header.top h1{margin:0;font-size:24px;letter-spacing:.2px}
+header.top p{margin:4px 0 0;color:#aeb6d3;font-size:14px}
+nav.tabs{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--line);display:flex;gap:4px;overflow-x:auto;padding:8px 16px;box-shadow:0 2px 8px rgba(20,25,45,.05)}
+.tab-btn{border:0;background:transparent;padding:9px 13px;border-radius:8px;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;font-family:inherit}
+.tab-btn:hover{background:var(--accent-soft);color:var(--accent)}
+.tab-btn.active{background:var(--accent);color:#fff}
+.tab-btn .num{opacity:.65;margin-right:5px}
+main{max-width:1040px;margin:0 auto;padding:26px 20px 80px}
+.tab-panel{display:none}
+.tab-panel.active{display:block;animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+h2{font-size:27px;margin:0 0 6px}
+h3{font-size:19px;margin:34px 0 10px}
+h4{margin:0 0 4px;font-size:16px}
+p{margin:8px 0}
+.lead{color:var(--muted);font-size:17px;margin:0 0 10px}
+.muted{color:var(--muted)}
+.small{font-size:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:12px 0}
+.card p:last-child{margin-bottom:0}
+.callout{border-radius:12px;padding:12px 16px;margin:14px 0;border-left:5px solid}
+.callout.idea{background:#fefce8;border-color:#eab308}
+.callout.warn{background:#fef2f2;border-color:#dc2626}
+.callout.tip{background:#ecfeff;border-color:#0891b2}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.grid4 .card{margin:0}
+@media(max-width:820px){.grid2,.grid4{grid-template-columns:1fr}}
+.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12.5px;font-weight:700;letter-spacing:.2px;white-space:nowrap}
+.badge.t1{background:var(--t1s);color:var(--t1)}
+.badge.t2{background:var(--t2s);color:var(--t2)}
+.badge.t3{background:var(--t3s);color:var(--t3)}
+.badge.t4{background:var(--t4s);color:var(--t4)}
+.badge.gray{background:#eef0f5;color:#475069}
+.badge.cP{background:#bbf7d0;color:#14532d}
+.badge.cNP{background:#bfdbfe;color:#1e3a8a}
+.badge.cNPC{background:#ddd6fe;color:#4c1d95}
+.badge.cNPH{background:#fecaca;color:#7f1d1d}
+.btn{border:0;background:var(--accent);color:#fff;font-weight:600;font-size:14px;padding:8px 14px;border-radius:9px;cursor:pointer;font-family:inherit}
+.btn:hover{filter:brightness(1.08)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.ghost{background:#fff;color:var(--accent);border:1.5px solid #c7cbf5}
+.btn.sel{background:#1e1b4b}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0 0}
+pre.code{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:14px 16px;font-size:13.5px;overflow-x:auto;line-height:1.55;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;margin:10px 0}
+pre.code .c{color:#94a3b8}
+pre.code .k{color:#c4b5fd}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:#eef0f5;padding:1px 5px;border-radius:4px;font-size:.92em}
+ol.steps{list-style:none;padding:0;margin:0;counter-reset:s}
+ol.steps>li{counter-increment:s;position:relative;padding:13px 16px 13px 60px;background:#fff;border:1px solid var(--line);border-radius:12px;margin:10px 0}
+ol.steps>li::before{content:counter(s);position:absolute;left:16px;top:13px;width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:15px}
+ol.steps>li p{margin:4px 0 0}
+.r-t1 ol.steps>li::before{background:var(--t1)}
+.r-t2 ol.steps>li::before{background:var(--t2)}
+.r-t3 ol.steps>li::before{background:var(--t3)}
+.r-t4 ol.steps>li::before{background:var(--t4)}
+.recipe{border-radius:16px;padding:16px 18px;margin:16px 0;border:1px solid var(--line);background:#fff}
+.recipe.r-t1{border-top:5px solid var(--t1)}
+.recipe.r-t2{border-top:5px solid var(--t2)}
+.recipe.r-t3{border-top:5px solid var(--t3)}
+.recipe.r-t4{border-top:5px solid var(--t4)}
+.recipe h3{margin:0 0 6px}
+.recipe ol.steps>li{background:#fafbfd}
+.viz{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin:16px 0}
+.viz-title{font-weight:700;margin-bottom:6px}
+.viz svg{width:100%;height:auto;display:block}
+.status{font-size:15px;padding:10px 12px;background:#f8fafc;border-radius:8px;border:1px solid var(--line);min-height:44px;margin-top:8px}
+.log{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:8px 10px;max-height:170px;overflow:auto;margin-top:8px;white-space:pre-wrap}
+.log:empty{display:none}
+.yes{color:var(--yes);font-weight:700}
+.no{color:var(--no);font-weight:700}
+table.simple{border-collapse:collapse;width:100%;font-size:14.5px;background:#fff;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
+table.simple th,table.simple td{border-bottom:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
+table.simple th{background:#f3f4f8;font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:#475069}
+table.simple tr:last-child td{border-bottom:0}
+.prob-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.pnum{font-size:13px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.8px}
+.statement{background:#f8fafc}
+.part{margin-top:38px;padding-top:10px;border-top:2px dashed #d5d9e4}
+.part-label{display:inline-block;font-weight:800;font-size:15px;background:#1e1b4b;color:#fff;border-radius:8px;padding:3px 10px;margin-right:8px}
+.navfoot{display:flex;justify-content:space-between;margin-top:40px;gap:10px}
+.numchip{border:2px solid #c7cbf5;background:#fff;border-radius:10px;font-size:18px;font-weight:700;padding:8px 14px;margin:4px;cursor:pointer;color:var(--ink);font-family:inherit;transition:all .15s}
+.numchip.on{background:var(--accent);border-color:var(--accent);color:#fff;transform:translateY(-2px)}
+.chain{display:flex;align-items:center;gap:10px;margin:8px 0;flex-wrap:wrap}
+.pill{padding:6px 14px;border-radius:999px;font-weight:700;font-size:14px}
+.pill.known{background:#fee2e2;color:#991b1b}
+.pill.new{background:#ede9fe;color:#5b21b6}
+.chain .arr{font-weight:800;color:var(--muted)}
+.chain .where{font-size:13px;color:var(--muted)}
+.cls{cursor:pointer;transition:box-shadow .2s,transform .2s}
+.cls:hover{transform:translateY(-2px)}
+.cls.on{box-shadow:0 0 0 3px var(--accent)}
+.cls .ex{font-size:13.5px;color:var(--muted)}
+.cert{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:8px 0}
+.cert .v{display:inline-flex;width:34px;height:34px;border-radius:50%;align-items:center;justify-content:center;font-weight:800;border:2px solid #334155;background:#fff;transition:all .2s}
+.cert .v.cur{background:#ffedd5;border-color:#ea580c}
+.cert .v.ok{background:#dcfce7;border-color:#16a34a}
+.cert .v.bad{background:#fee2e2;border-color:#dc2626}
+.cert .sep{color:#94a3b8;font-weight:700}
+.tt{border-collapse:collapse;margin:8px 0;font-size:15px}
+.tt th,.tt td{padding:6px 14px;text-align:center;border-bottom:1px solid var(--line)}
+.tt th{background:#f3f4f8}
+.tt td.T{color:var(--yes);font-weight:700}
+.tt td.F{color:#9aa3b5}
+.tt tr.sat td{background:#f0fdf4}
+.tt tr.pop td{animation:pop .5s ease}
+.tt .ycol{background:#faf5ff}
+@keyframes pop{from{background:#fde68a}to{}}
+.palette{display:flex;gap:10px;margin:8px 0;flex-wrap:wrap}
+.sw{width:58px;height:42px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;position:relative;transition:all .2s}
+.sw.blocked{opacity:.3}
+.sw.blocked::after{content:"✕";position:absolute;font-size:26px;color:#111}
+.sw.pick{box-shadow:0 0 0 4px #111;transform:scale(1.08)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:13.5px;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:5px}
+input[type=number]{font-size:15px;padding:7px 10px;border:1.5px solid #c7cbf5;border-radius:8px;width:140px;font-family:inherit}
+input[type=range]{width:160px}
+/* SVG graph styling */
+.g-edge{stroke:#9aa3b5;stroke-width:3.5;stroke-linecap:round;transition:stroke .35s,opacity .45s,stroke-width .35s}
+.g-edge.e-check{stroke:#ea580c;stroke-width:6;stroke-dasharray:9 6}
+.g-edge.e-good{stroke:#16a34a;stroke-width:6}
+.g-edge.e-bad{stroke:#dc2626;stroke-width:5;stroke-dasharray:7 6}
+.g-edge.e-gone{opacity:.12;stroke-dasharray:4 6}
+.g-edge.e-keep{stroke:#1e293b;stroke-width:5}
+.g-edge.e-path{stroke:#16a34a;stroke-width:7}
+.g-edge.e-tree{stroke:#60a5fa;stroke-width:5}
+.g-edge.e-hub{stroke:#c4b5fd;stroke-width:2.5;stroke-dasharray:6 5}
+.g-edge.hidden,.g-node.hidden{opacity:0}
+.g-node circle{fill:#fff;stroke:#334155;stroke-width:2.5;transition:fill .35s,stroke .35s}
+.g-node text{font-weight:800;font-size:15px;text-anchor:middle;dominant-baseline:central;pointer-events:none;fill:#1f2433}
+.g-node{transition:opacity .45s}
+.g-node.n-cur circle{fill:#ffedd5;stroke:#ea580c;stroke-width:4}
+.g-node.n-front circle{fill:#fef3c7;stroke:#d97706}
+.g-node.n-done circle{fill:#dbeafe;stroke:#2563eb}
+.g-node.n-ok circle{fill:#dcfce7;stroke:#16a34a}
+.g-node.n-hub circle{fill:#ede9fe;stroke:#7c3aed}
+.dlabel{font-size:12.5px;font-weight:700;fill:#2563eb;text-anchor:middle}
+.v-np{fill:#bfdbfe;stroke:#3b82f6;stroke-width:2}
+.v-hard{fill:#fecaca;stroke:#ef4444;stroke-width:2}
+.v-npc{fill:#ddd6fe;stroke:none}
+.v-p{fill:#bbf7d0;stroke:#22c55e;stroke-width:2;opacity:.95}
+.v-hl{stroke:#111 !important;stroke-width:4 !important}
+.vlab{font-weight:800;font-size:17px;text-anchor:middle}
+.vex{font-size:12.5px;text-anchor:middle;fill:#334155}
+.pbox{fill:#fff;stroke:#334155;stroke-width:2}
+.pbox.lit{fill:#fef3c7;stroke:#d97706}
+.ptxt{font-size:14px;font-weight:800;text-anchor:middle}
+.psub{font-size:11.5px;text-anchor:middle;fill:#5d6475}
+.pouter{fill:#f5f3ff;stroke:#7c3aed;stroke-width:2;stroke-dasharray:8 6}
+.parrow{stroke:#334155;stroke-width:2.2;fill:none}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>P vs NP and reductions</h1>
+  <p>CS 577 · Problem Set 06 lesson · concepts, the method, then every problem solved step by step</p>
+</header>
+<nav class="tabs">
+  <button class="tab-btn active" data-tab="concepts" data-label="Concepts"><span class="num">1</span>Concepts</button>
+  <button class="tab-btn" data-tab="method" data-label="The method"><span class="num">2</span>The method</button>
+  <button class="tab-btn" data-tab="p1" data-label="P1 DoubleSAT"><span class="num">P1</span>DoubleSAT</button>
+  <button class="tab-btn" data-tab="p2" data-label="P2 Ham path"><span class="num">P2</span>Ham path</button>
+  <button class="tab-btn" data-tab="p3" data-label="P3 Path problems"><span class="num">P3</span>Path problems</button>
+  <button class="tab-btn" data-tab="p4" data-label="P4 Bendy sticks"><span class="num">P4</span>Bendy sticks</button>
+  <button class="tab-btn" data-tab="p5" data-label="P5 Factoring"><span class="num">P5</span>Factoring</button>
+  <button class="tab-btn" data-tab="p6" data-label="P6 Coloring"><span class="num">P6</span>Coloring</button>
+</nav>
+<main>
+
+<!-- ===================== CONCEPTS ===================== -->
+<section class="tab-panel active" id="tab-concepts">
+  <h2>P vs NP, from scratch</h2>
+  <p class="lead">So far, every problem in the course had a fast algorithm. This unit is about problems where nobody knows one, and how you prove a problem belongs in that group.</p>
+
+  <h3>1. Every problem is a yes/no question</h3>
+  <div class="grid2">
+    <div class="card"><span class="badge gray">Search version</span><p>Find the longest simple path from a to b.</p></div>
+    <div class="card"><span class="badge t2">Decision version</span><p>Is there a simple path from a to b with at least k edges? <b>Answer YES or NO.</b></p></div>
+  </div>
+  <p>The HW writes each problem as the <b>set of its YES instances</b>:</p>
+  <pre class="code">LPATH = { (G, a, b, k) | G has a simple path from a to b with at least k edges }</pre>
+  <p>"Solve LPATH" means: given some (G, a, b, k), decide whether it's in the set.</p>
+
+  <h3>2. Solving vs checking</h3>
+  <p>Pick numbers that add up to <b>50</b>. Checking a pick is instant. Finding one is the hard part.</p>
+  <div class="viz">
+    <div id="ss-chips"></div>
+    <div class="status" id="ss-status">Click numbers to pick them.</div>
+    <div class="controls"><button class="btn" id="ss-brute">Brute force it</button><button class="btn ghost" id="ss-clear">Clear</button><span class="small" id="ss-count"></span></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><h4>Checking is fast</h4><p>Add the picked numbers and compare to 50. One pass over the list.</p></div>
+    <div class="card"><h4>Finding seems slow</h4><p>8 numbers have 2<sup>8</sup> = 256 subsets. Each extra number doubles that. Nobody knows a shortcut that always works.</p></div>
+  </div>
+  <table class="simple">
+    <tr><th>Input size n</th><th>n²</th><th>n³</th><th>2ⁿ</th></tr>
+    <tr><td>10</td><td>100</td><td>1,000</td><td>1,024</td></tr>
+    <tr><td>20</td><td>400</td><td>8,000</td><td>about 1 million</td></tr>
+    <tr><td>50</td><td>2,500</td><td>125,000</td><td>about 10<sup>15</sup></td></tr>
+    <tr><td>100</td><td>10,000</td><td>1,000,000</td><td><b>about 10<sup>30</sup></b></td></tr>
+  </table>
+  <p class="small muted">At a billion steps per second, 2<sup>100</sup> steps take about 40 trillion years. Polynomial is fine. Exponential is hopeless.</p>
+
+  <h3>3. The four labels</h3>
+  <div class="grid4">
+    <div class="card cls" data-cls="P"><span class="badge cP">P</span><h4 style="margin-top:8px">Solvable fast</h4><p>A polynomial-time algorithm answers it.</p><p class="ex">BFS shortest path, max flow, sorting</p></div>
+    <div class="card cls" data-cls="NP"><span class="badge cNP">NP</span><h4 style="margin-top:8px">Checkable fast</h4><p>If the answer is YES, there's a proof (a <b>certificate</b>) you can check in polynomial time.</p><p class="ex">NP means "nondeterministic polynomial," not "not polynomial."</p></div>
+    <div class="card cls" data-cls="NPC"><span class="badge cNPC">NP-complete</span><h4 style="margin-top:8px">Hardest in NP</h4><p>In NP <b>and</b> NP-hard.</p><p class="ex">SAT, HAMPATH, PARTITION, 3-COLOR</p></div>
+    <div class="card cls" data-cls="NPH"><span class="badge cNPH">NP-hard</span><h4 style="margin-top:8px">As hard as all of NP</h4><p>A fast algorithm for it gives a fast algorithm for every NP problem.</p><p class="ex">Doesn't have to be in NP itself.</p></div>
+  </div>
+  <div class="viz">
+    <div class="viz-title">The map (drawn assuming P ≠ NP)</div>
+    <svg id="venn" viewBox="0 0 700 360"></svg>
+    <div class="controls"><button class="btn" id="venn-toggle">What if P = NP?</button><span id="venn-cap" class="small muted">Click a card to highlight its region.</span></div>
+  </div>
+  <div class="callout tip"><b>The open question.</b> P ⊆ NP for sure: if you can solve it fast, you can check it fast. Is P = NP? Nobody knows. Most people bet no, and a proof either way wins $1,000,000.</div>
+
+  <h3>4. Reductions: how you prove a problem is hard</h3>
+  <p><b>Y ≤ₚ X</b> means you can turn any instance of Y into an instance of X in polynomial time, and the answer stays the same.</p>
+  <div class="viz">
+    <svg id="pipe" viewBox="0 0 760 212"></svg>
+    <div class="status" id="pipe-cap">Press play to send an instance through.</div>
+    <div class="controls"><button class="btn" id="pipe-play">▶ Play</button></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><h4>Why this proves X is hard</h4><p>If X had a fast solver, the dashed box would be a fast solver for Y. Y is known to be hard, so X is at least as hard as Y.</p></div>
+    <div class="card"><h4>Direction matters</h4><p><b>Known hard ≤ₚ your new problem.</b> To show LPATH is hard, turn HAMPATH instances into LPATH instances. Never the other way around.</p></div>
+  </div>
+  <div class="viz">
+    <div class="viz-title">"Same answer" has to hold both ways</div>
+    <svg id="map" viewBox="0 0 640 270"></svg>
+    <div class="controls"><button class="btn ghost" id="map-toggle">Show a broken f</button><span id="map-cap" class="small muted">Every YES goes to a YES, every NO goes to a NO.</span></div>
+  </div>
+  <p>That's why every reduction proof has two directions. <b>(⇒)</b> If y is YES, then f(y) is YES. <b>(⇐)</b> If f(y) is YES, then y was YES. The second one is the same as "NO goes to NO."</p>
+
+  <h3>5. One trap: input size</h3>
+  <div class="card">
+    <p>Runtime is measured in the <b>size of the input</b>. Writing down a number n takes about log₂ n bits. So a loop from 1 to n is <b>exponential</b> in the input size.</p>
+    <table class="simple">
+      <tr><th>n</th><th>Bits to write n</th><th>Loop from 1 to n</th></tr>
+      <tr><td>1,000,000</td><td>20</td><td>about 2<sup>20</sup> steps</td></tr>
+      <tr><td>a 2048-bit number</td><td>2048</td><td>about 2<sup>2048</sup> steps</td></tr>
+    </table>
+    <p>This matters in Problem 4 (stick lengths) and Problem 5 (factoring).</p>
+  </div>
+
+  <h3>6. The reductions in HW6</h3>
+  <div class="card">
+    <div class="chain"><span class="pill known">SAT</span><span class="arr">≤ₚ</span><span class="pill new">DOUBLE-SAT</span><span class="where">Problem 1</span></div>
+    <div class="chain"><span class="pill known">HAMPATH</span><span class="arr">≤ₚ</span><span class="pill new">LPATH</span><span class="where">Problem 3b</span></div>
+    <div class="chain"><span class="pill known">PARTITION</span><span class="arr">≤ₚ</span><span class="pill new">BENDY</span><span class="where">Problem 4</span></div>
+    <p class="small muted">Red = known NP-complete (given to you). Purple = the problem you prove NP-complete.</p>
+  </div>
+</section>
+
+<!-- ===================== METHOD ===================== -->
+<section class="tab-panel" id="tab-method">
+  <h2>The method</h2>
+  <p class="lead">Every question in HW6 is one of four types. Read the question, pick the type, and follow its recipe.</p>
+
+  <h3>Step 0: what does the question ask?</h3>
+  <table class="simple">
+    <tr><th>The question says</th><th>Type</th><th>HW6</th></tr>
+    <tr><td>"Show X is in NP"</td><td><span class="badge t1">Type 1 · Certificate</span></td><td>2a</td></tr>
+    <tr><td>"Show X is NP-complete"</td><td><span class="badge t2">Type 2 · Reduction</span></td><td>1, 3b, 4</td></tr>
+    <tr><td>"If P = NP, show you can find or compute ..."</td><td><span class="badge t3">Type 3 · Black box</span></td><td>2b, 5</td></tr>
+    <tr><td>"Show X is in P" or "give an algorithm"</td><td><span class="badge t4">Type 4 · Algorithm</span></td><td>3a, 6</td></tr>
+  </table>
+
+  <div class="recipe r-t1">
+    <h3><span class="badge t1">Type 1</span> Show X ∈ NP</h3>
+    <ol class="steps">
+      <li><h4>Name the certificate</h4><p>What would a "proof of YES" look like? Usually the solution itself: the path, the assignment, the factor.</p></li>
+      <li><h4>Write the verifier</h4><p>List the checks that confirm the certificate is valid.</p></li>
+      <li><h4>Show it's polynomial</h4><p>Each check is a loop over the input. Add them up.</p></li>
+    </ol>
+<pre class="code"><span class="c">Template</span>
+Certificate: ...
+Verifier: given the input and a certificate c,
+  1. check that ...
+  2. check that ...
+  Accept if every check passes.
+Runtime: O(...), which is polynomial.</pre>
+  </div>
+
+  <div class="recipe r-t2">
+    <h3><span class="badge t2">Type 2</span> Show X is NP-complete</h3>
+    <ol class="steps">
+      <li><h4>X ∈ NP</h4><p>Do the Type 1 recipe.</p></li>
+      <li><h4>Pick a known NP-complete problem Y</h4><p>The hint usually names it. Otherwise, pick the one that looks most like X.</p></li>
+      <li><h4>Build f: an instance of Y → an instance of X</h4><p>Say exactly what f outputs. Draw a small example.</p></li>
+      <li><h4>f runs in polynomial time</h4><p>Count what f adds: vertices, edges, clauses, numbers.</p></li>
+      <li><h4>(⇒) YES becomes YES</h4><p>Take a solution for y. Build a solution for f(y).</p></li>
+      <li><h4>(⇐) YES came from YES</h4><p>Take a solution for f(y). Build a solution for y. This is usually the harder direction.</p></li>
+    </ol>
+<pre class="code"><span class="c">Template</span>
+(1) X ∈ NP: certificate ..., verifier ..., polynomial.
+(2) Reduce Y ≤ₚ X, where Y is NP-complete.
+    Given an instance y of Y, f outputs ...
+(3) f runs in polynomial time because ...
+(4) (⇒) If y ∈ Y, then f(y) ∈ X because ...
+(5) (⇐) If f(y) ∈ X, then y ∈ Y because ...
+So X is NP-complete.</pre>
+  </div>
+
+  <div class="recipe r-t3">
+    <h3><span class="badge t3">Type 3</span> If P = NP, find the actual answer</h3>
+    <ol class="steps">
+      <li><h4>Get the black box</h4><p>The yes/no version D is in NP. If P = NP, then D ∈ P. Call its fast test BOX. You can't look inside it.</p></li>
+      <li><h4>Ask once</h4><p>If BOX says NO, there's nothing to find.</p></li>
+      <li><h4>Shrink one piece at a time</h4><p>Delete a piece, or cut a range in half, and ask BOX again. Keep the change only if the answer is still YES.</p></li>
+      <li><h4>Argue it's correct and polynomial</h4><p>Invariant: "a solution still exists." Runtime: (number of BOX calls) × (polynomial per call).</p></li>
+    </ol>
+  </div>
+
+  <div class="recipe r-t4">
+    <h3><span class="badge t4">Type 4</span> Show X ∈ P (or give an algorithm)</h3>
+    <ol class="steps">
+      <li><h4>Give the algorithm</h4><p>Often one you already know: BFS, Dijkstra, a greedy rule.</p></li>
+      <li><h4>Argue it's correct</h4><p>Why does its answer match the definition of the problem?</p></li>
+      <li><h4>Give the runtime</h4><p>It must be polynomial in the input size.</p></li>
+    </ol>
+  </div>
+
+  <h3>Which known problem do I reduce from?</h3>
+  <table class="simple">
+    <tr><th>Your problem looks like</th><th>Try reducing from</th></tr>
+    <tr><td>True/false choices, formulas</td><td>SAT, 3-SAT</td></tr>
+    <tr><td>Visit every vertex exactly once</td><td>HAMPATH, HAMCYCLE</td></tr>
+    <tr><td>Split numbers into two equal halves</td><td>PARTITION</td></tr>
+    <tr><td>Hit an exact total</td><td>SUBSET-SUM</td></tr>
+    <tr><td>Pick vertices that touch every edge</td><td>VERTEX-COVER</td></tr>
+    <tr><td>Color a graph with 3 colors</td><td>3-COLOR</td></tr>
+  </table>
+  <p class="small muted">In HW6, the problem or hint always names it.</p>
+
+  <h3>Common mistakes</h3>
+  <div class="callout warn">
+    <p><b>Wrong direction.</b> Reducing X to SAT only shows X is no harder than SAT. Reduce the known problem <i>to</i> X.</p>
+    <p><b>Only one direction.</b> You need both (⇒) and (⇐).</p>
+    <p><b>Skipping X ∈ NP.</b> NP-complete means NP-hard <i>and</i> in NP.</p>
+    <p><b>A "magic" f.</b> f must run in polynomial time. It can't secretly solve Y first, like finding the Hamiltonian path and then building the output.</p>
+    <p><b>Counting in n instead of bits.</b> For numbers, the input size is the number of bits.</p>
+  </div>
+</section>
+
+<!-- ===================== P1 ===================== -->
+<section class="tab-panel" id="tab-p1">
+  <div class="prob-head"><div><div class="pnum">Problem 1</div><h2>DoubleSAT</h2></div><span class="badge t2">Type 2 · NP-complete</span></div>
+  <div class="card statement"><b>Question.</b> DOUBLE-SAT = {boolean formulas φ with <b>at least two</b> satisfying assignments}. Show DOUBLE-SAT is NP-complete. You may use: SAT is NP-complete.</div>
+  <div class="callout idea"><b>The idea.</b> Add a new variable y that the formula doesn't care about. Then every solution comes in a pair: one with y = 0, one with y = 1.</div>
+
+  <div class="viz">
+    <div class="viz-title">Watch the solutions double</div>
+    <div class="controls" id="p1-forms"></div>
+    <div id="p1-table"></div>
+    <div class="controls"><button class="btn" id="p1-y">Add y: φ′ = φ ∧ (y ∨ ¬y)</button></div>
+    <div class="status" id="p1-status"></div>
+  </div>
+
+  <h3>Solve it with the method</h3>
+  <div class="r-t2">
+  <ol class="steps">
+    <li><h4>DOUBLE-SAT ∈ NP</h4><p><b>Certificate:</b> two assignments A₁ and A₂. <b>Verifier:</b> check A₁ ≠ A₂, plug each one into φ, and check both make φ true. Plugging in takes time linear in the size of φ, so this is polynomial.</p></li>
+    <li><h4>Pick the known problem</h4><p>SAT. The problem gives it to you.</p></li>
+    <li><h4>Build f</h4><p>Given φ, output <code>φ′ = φ ∧ (y ∨ ¬y)</code>, where y is a new variable that isn't in φ. The clause (y ∨ ¬y) is always true, so y can be anything.</p></li>
+    <li><h4>f is polynomial</h4><p>It adds one variable and one clause: O(size of φ).</p></li>
+    <li><h4>(⇒) φ ∈ SAT gives φ′ ∈ DOUBLE-SAT</h4><p>Some assignment A makes φ true. Then A with y = 0 and A with y = 1 both make φ′ true, and they're different. That's two.</p></li>
+    <li><h4>(⇐) φ′ ∈ DOUBLE-SAT gives φ ∈ SAT</h4><p>Take any satisfying assignment of φ′. Since φ′ = φ AND (something), it makes φ true. Drop y, and you have a satisfying assignment of φ.</p></li>
+  </ol>
+  </div>
+  <div class="callout warn"><b>Why not output φ unchanged?</b> If φ has exactly one solution, SAT says YES but DOUBLE-SAT says NO. The answers don't match, so it's not a reduction. Try the first formula in the demo.</div>
+</section>
+
+<!-- ===================== P2 ===================== -->
+<section class="tab-panel" id="tab-p2">
+  <div class="prob-head"><div><div class="pnum">Problem 2</div><h2>Alexander's Path</h2></div><div><span class="badge t1">(a) Type 1</span> <span class="badge t3">(b) Type 3</span></div></div>
+  <div class="card statement"><b>Question.</b> A Hamiltonian path visits every vertex exactly once. HAMPATH = {graphs that have one}. <b>(a)</b> Show HAMPATH ∈ NP. <b>(b)</b> If P = NP, show you can <i>find</i> the path in polynomial time. The yes/no test is a black box: it only says YES or NO.</div>
+
+  <div class="part"><span class="part-label">(a)</span><b>HAMPATH ∈ NP</b>
+    <div class="callout idea"><b>The idea.</b> The certificate is the path itself. Checking it is easy.</div>
+    <div class="viz">
+      <div class="viz-title">Run the verifier</div>
+      <div class="grid2">
+        <svg id="p2a-svg" viewBox="0 0 520 300"></svg>
+        <div>
+          <div class="small muted">Certificate (an ordering of the vertices):</div>
+          <div class="cert" id="p2a-cert"></div>
+          <div class="controls">
+            <button class="btn" data-c="good">Good certificate</button>
+            <button class="btn ghost" data-c="miss">Bad: missing edge</button>
+            <button class="btn ghost" data-c="rep">Bad: repeated vertex</button>
+          </div>
+          <div class="status" id="p2a-status">Pick a certificate to check.</div>
+        </div>
+      </div>
+    </div>
+    <div class="r-t1">
+    <ol class="steps">
+      <li><h4>Certificate</h4><p>An ordering v₁, v₂, …, vₙ of the vertices.</p></li>
+      <li><h4>Verifier</h4><p>Check 1: every vertex appears exactly once. Mark each one in a "seen" array. Check 2: every consecutive pair (vᵢ, vᵢ₊₁) is an edge. That's n − 1 edge lookups.</p></li>
+      <li><h4>Polynomial</h4><p>O(n + m) with an adjacency list (O(n²) with a matrix). So HAMPATH ∈ NP.</p></li>
+    </ol>
+    </div>
+  </div>
+
+  <div class="part"><span class="part-label">(b)</span><b>Find the path using only a yes/no box</b>
+    <div class="callout idea"><b>The idea.</b> Try deleting edges one at a time. If the box still says YES without an edge, that edge wasn't needed, so delete it for good. Whatever survives is the path.</div>
+<pre class="code">FIND-HAMPATH(G):
+  <span class="k">if</span> BOX(G) = NO: <span class="k">return</span> "no Hamiltonian path"
+  <span class="k">for</span> each edge e in G:
+      <span class="k">if</span> BOX(G − e) = YES:
+          G ← G − e          <span class="c"># e isn't needed, delete it for good</span>
+  <span class="k">return</span> the edges left in G   <span class="c"># exactly the path</span></pre>
+    <div class="viz">
+      <div class="viz-title">Watch the edges get tested</div>
+      <svg id="p2b-svg" viewBox="0 0 540 300" style="max-width:640px;margin:0 auto"></svg>
+      <div class="legend"><span><i style="background:#ea580c"></i>being tested</span><span><i style="background:#1e293b"></i>needed (kept)</span><span><i style="background:#e2e8f0"></i>deleted</span><span><i style="background:#16a34a"></i>final path</span></div>
+      <div class="controls"><button class="btn" id="p2b-step">Step</button><button class="btn" id="p2b-run">Run all</button><button class="btn ghost" id="p2b-reset">Reset</button><span class="small" id="p2b-calls"></span></div>
+      <div class="status" id="p2b-status">Press Step. The first call asks BOX about the whole graph.</div>
+      <div class="log" id="p2b-log"></div>
+    </div>
+    <div class="r-t3">
+    <ol class="steps">
+      <li><h4>Get the black box</h4><p>Part (a) shows HAMPATH ∈ NP. If P = NP, then HAMPATH ∈ P, so there's a polynomial-time test BOX(G).</p></li>
+      <li><h4>Ask once</h4><p>If BOX(G) = NO, report that there's no path.</p></li>
+      <li><h4>Invariant: G always has a Hamiltonian path</h4><p>We only delete an edge when BOX says the graph still has one.</p></li>
+      <li><h4>Every edge left is needed</h4><p>When we tried deleting edge e, BOX said NO. Later deletions only make the graph smaller, so removing e at the end still kills every Hamiltonian path.</p></li>
+      <li><h4>So the leftover graph is the path</h4><p>The final G has a Hamiltonian path P. If some edge e weren't on P, then G − e would still contain P, which contradicts step 4. So G has exactly P's n − 1 edges. Start at a vertex with degree 1 and walk.</p></li>
+      <li><h4>Polynomial</h4><p>m + 1 calls to BOX, each polynomial, plus polynomial bookkeeping.</p></li>
+    </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== P3 ===================== -->
+<section class="tab-panel" id="tab-p3">
+  <div class="prob-head"><div><div class="pnum">Problem 3</div><h2>Path problems</h2></div><div><span class="badge t4">(a) Type 4</span> <span class="badge t2">(b) Type 2</span></div></div>
+  <div class="card statement"><b>Question.</b> G is undirected and unweighted. A simple path repeats no vertex. SPATH = {(G, a, b, k) | a simple a→b path with <b>at most</b> k edges}. LPATH = {(G, a, b, k) | a simple a→b path with <b>at least</b> k edges}. <b>(a)</b> Show SPATH ∈ P. <b>(b)</b> Show LPATH is NP-complete, using HAMPATH.</div>
+  <div class="callout tip"><b>Same question, opposite difficulty.</b> Short paths: BFS finds them fast. Long simple paths: you have to avoid repeats, and nobody knows a fast way to do that.</div>
+
+  <div class="part"><span class="part-label">(a)</span><b>SPATH ∈ P</b>
+    <div class="callout idea"><b>The idea.</b> "At most k edges" only needs the shortest path, and BFS finds it.</div>
+    <div class="viz">
+      <div class="viz-title">BFS from a, layer by layer</div>
+      <svg id="p3a-svg" viewBox="0 0 570 300" style="max-width:660px;margin:0 auto"></svg>
+      <div class="controls"><button class="btn" id="p3a-run">Run BFS</button><button class="btn ghost" id="p3a-reset">Reset</button><label class="small">k = <b id="p3a-kv">4</b> <input type="range" id="p3a-k" min="1" max="6" value="4"></label></div>
+      <div class="status" id="p3a-status">Press Run BFS.</div>
+    </div>
+    <div class="r-t4">
+    <ol class="steps">
+      <li><h4>Algorithm</h4><p>Run BFS from a. It gives dist(a, b), the fewest edges on any a→b path. Answer YES if dist(a, b) ≤ k, and NO otherwise (also NO if b is unreachable).</p></li>
+      <li><h4>The shortest path is simple</h4><p>If it repeated a vertex, you could cut out the loop between the repeats and get a shorter path.</p></li>
+      <li><h4>Correct</h4><p>Some simple path has ≤ k edges ⇔ the shortest path has ≤ k edges ⇔ dist(a, b) ≤ k.</p></li>
+      <li><h4>Polynomial</h4><p>BFS is O(n + m). So SPATH ∈ P.</p></li>
+    </ol>
+    </div>
+  </div>
+
+  <div class="part"><span class="part-label">(b)</span><b>LPATH is NP-complete</b>
+    <div class="callout idea"><b>The idea.</b> A Hamiltonian path is a very long path: it uses all n vertices. HAMPATH doesn't fix the endpoints, so add two "hub" vertices s and t connected to everything, and ask for a long path from s to t.</div>
+    <div class="viz">
+      <div class="viz-title">Build f(G) and see the long path</div>
+      <svg id="p3b-svg" viewBox="0 0 620 310" style="max-width:700px;margin:0 auto"></svg>
+      <div class="controls"><button class="btn" id="p3b-hubs">1. Add hubs s and t</button><button class="btn" id="p3b-path">2. Show the long path</button><button class="btn ghost" id="p3b-reset">Reset</button></div>
+      <div class="status" id="p3b-status">G has n = 5 vertices. Does it have a Hamiltonian path?</div>
+    </div>
+    <div class="r-t2">
+    <ol class="steps">
+      <li><h4>LPATH ∈ NP</h4><p><b>Certificate:</b> the path as a list of vertices. <b>Verifier:</b> it starts at a and ends at b, no vertex repeats, each consecutive pair is an edge, and it has ≥ k edges. All O(n + m).</p></li>
+      <li><h4>Pick the known problem</h4><p>HAMPATH, from the hint.</p></li>
+      <li><h4>Build f</h4><p>Given G with n vertices, make G′: add a new vertex s with an edge to every vertex of G, and a new vertex t with an edge to every vertex of G (no edge between s and t). Output <code>(G′, s, t, k = n + 1)</code>.</p></li>
+      <li><h4>f is polynomial</h4><p>It adds 2 vertices and 2n edges.</p></li>
+      <li><h4>(⇒) HAMPATH YES gives LPATH YES</h4><p>G has a Hamiltonian path v₁, …, vₙ. Then s, v₁, …, vₙ, t is a simple path in G′ with n + 1 edges.</p></li>
+      <li><h4>(⇐) LPATH YES gives HAMPATH YES</h4><p>G′ has a simple s→t path with ≥ n + 1 edges, so it has ≥ n + 2 vertices. G′ only has n + 2 vertices, so the path uses all of them. s and t sit only at the ends, so the middle part visits all n vertices of G using G's edges. That's a Hamiltonian path in G.</p></li>
+    </ol>
+    </div>
+    <div class="callout tip"><b>A shortcut you might see:</b> for every pair (a, b), ask LPATH(G, a, b, n − 1). That works as an algorithm, but it asks n² questions. A reduction should produce <i>one</i> instance, which is why the hub trick is the clean answer.</div>
+  </div>
+</section>
+
+<!-- ===================== P4 ===================== -->
+<section class="tab-panel" id="tab-p4">
+  <div class="prob-head"><div><div class="pnum">Problem 4</div><h2>Bendy sticks</h2></div><span class="badge t2">Type 2 · NP-complete</span></div>
+  <div class="card statement"><b>Question.</b> A stick has segments of lengths ℓ₁, …, ℓₙ with hinges between them. You can fold any hinge 180°, so every segment points left or right. The stick fits in a box of length b if the folded stick spans at most b. Show BENDY is NP-complete. Hint: reduce PARTITION to BENDY.</div>
+  <div class="card"><b>PARTITION</b> (known NP-complete): given numbers a₁, …, aₙ, can you split them into two groups with equal sums? Example: {3, 1, 2, 2} → {3, 1} and {2, 2}, both sum to 4.</div>
+  <div class="callout idea"><b>The idea.</b> Folding means picking right or left for each segment. Right moves add, left moves subtract. Ending where you started means right total = left total, which is a partition. Big pieces at both ends force the middle to start and end at the center of the box.</div>
+
+  <div class="viz">
+    <div class="viz-title">Fold the stick: 2A, A, a₁, …, aₙ, A, 2A into a box of length 2A</div>
+    <div class="controls"><button class="btn sel" id="p4-ex0">Numbers {3, 1, 2, 2}</button><button class="btn ghost" id="p4-ex1">Numbers {5, 1, 2}</button><button class="btn" id="p4-solve">Show a partition</button><button class="btn ghost" id="p4-reset">All right</button></div>
+    <svg id="p4-svg" viewBox="0 0 720 340"></svg>
+    <div class="legend"><span><i style="background:#2563eb"></i>a-piece going right (click to flip)</span><span><i style="background:#ea580c"></i>a-piece going left (click to flip)</span><span><i style="background:#64748b"></i>fixed pieces</span><span><i style="background:#dc2626"></i>sticks out of the box</span></div>
+    <div class="status" id="p4-status"></div>
+  </div>
+
+  <h3>Solve it with the method</h3>
+  <div class="r-t2">
+  <ol class="steps">
+    <li><h4>BENDY ∈ NP</h4><p><b>Certificate:</b> a direction (→ or ←) for each segment. <b>Verifier:</b> walk along the stick, track your position, and record the min and max. Accept if max − min ≤ b. That's n additions: polynomial.</p></li>
+    <li><h4>Pick the known problem</h4><p>PARTITION, from the hint.</p></li>
+    <li><h4>Build f</h4><p>Let A = a₁ + … + aₙ. Output the stick <code>2A, A, a₁, a₂, …, aₙ, A, 2A</code> and box length <code>b = 2A</code>.</p></li>
+    <li><h4>f is polynomial</h4><p>n + 4 numbers, each at most 2A, so each takes only one more bit than A.</p></li>
+    <li><h4>(⇒) Partition gives a fold that fits</h4><p>Split into groups R and L with equal sums. The 2A piece goes 0 → 2A. The A piece goes left to A, the center. Each aᵢ goes right if it's in R and left if it's in L. You never drift more than A from the center, so you stay inside [0, 2A]. R and L are equal, so you end back at A. Then the A piece goes right to 2A, and the last 2A piece goes left to 0. It fits.</p></li>
+    <li><h4>(⇐) A fold that fits gives a partition</h4><p>The first 2A piece fills the whole box, so it ends at a wall, say 2A. The next A piece has to go left, to the center. The last 2A piece also fills the box, so it starts at a wall. The A piece before it starts A away from that wall, which is the center. So the a-pieces start at the center and end at the center: right total = left total. That's a partition.</p></li>
+  </ol>
+  </div>
+  <div class="callout tip"><b>Why the 2A and A pieces?</b> Without them, the middle part would start against a wall. Then its first move could stick out even when a partition exists. The end pieces park you at the center with A of room on each side, and the a-pieces add up to A, so they can never escape.</div>
+</section>
+
+<!-- ===================== P5 ===================== -->
+<section class="tab-panel" id="tab-p5">
+  <div class="prob-head"><div><div class="pnum">Problem 5</div><h2>Factoring</h2></div><span class="badge t3">Type 3 · Black box</span></div>
+  <div class="card statement"><b>Question.</b> If P = NP, show you can factor a composite n in polynomial time: find p, q &gt; 1 with n = pq. Use F = {(n, a, b) | n = pq for some a ≤ p ≤ b}. Treat F as a black box, like in Problem 2.</div>
+  <div class="callout idea"><b>The idea.</b> F answers "is there a factor in this range?" That's exactly what binary search needs.</div>
+
+<pre class="code">FACTOR(n):
+  lo ← 2,  hi ← n − 1
+  <span class="k">while</span> lo &lt; hi:
+      mid ← ⌊(lo + hi) / 2⌋
+      <span class="k">if</span> F(n, lo, mid):  hi ← mid        <span class="c"># a factor is in the left half</span>
+      <span class="k">else</span>:              lo ← mid + 1    <span class="c"># so it must be in the right half</span>
+  p ← lo,  q ← n / p
+  <span class="k">return</span> (p, q)</pre>
+
+  <div class="viz">
+    <div class="viz-title">Binary search with the F box</div>
+    <div class="controls"><label class="small">n = <input type="number" id="p5-n" value="221" min="4"></label><button class="btn ghost" id="p5-set">Use this n</button><button class="btn" id="p5-step">Step</button><button class="btn" id="p5-run">Run all</button></div>
+    <svg id="p5-svg" viewBox="0 0 720 210"></svg>
+    <div class="legend"><span><i style="background:#a78bfa"></i>current range [lo, hi]</span><span><i style="background:#ea580c"></i>mid</span><span><i style="background:#16a34a"></i>actual factors (only the box knows)</span></div>
+    <div class="status" id="p5-status"></div>
+    <div class="log" id="p5-log"></div>
+  </div>
+
+  <h3>Solve it with the method</h3>
+  <div class="r-t3">
+  <ol class="steps">
+    <li><h4>Get the black box</h4><p>F ∈ NP. <b>Certificate:</b> the factor p. <b>Verifier:</b> check a ≤ p ≤ b, 1 &lt; p &lt; n, and n mod p = 0. Dividing numbers with B bits takes poly(B) time. So if P = NP, F has a polynomial-time BOX.</p></li>
+    <li><h4>Algorithm</h4><p>Binary search on [2, n − 1] with FACTOR(n).</p></li>
+    <li><h4>Invariant</h4><p>A factor of n lies in [lo, hi]. It's true at the start because n is composite, and each step keeps a half that has one. When lo = hi, that number is a factor p, and q = n / p.</p></li>
+    <li><h4>Polynomial</h4><p>The range halves every call, so there are about log₂ n calls. log₂ n is the number of bits of n, which is the input size. Each call is polynomial, so the total is polynomial.</p></li>
+  </ol>
+  </div>
+  <div class="callout warn"><b>Trap: why not try p = 2, 3, 4, … up to √n?</b> √n = 2<sup>(bits / 2)</sup>. That's exponential in the input size.</div>
+  <table class="simple">
+    <tr><th>Bits in n</th><th>Trial division (up to √n)</th><th>Binary search calls</th></tr>
+    <tr><td>20</td><td>about 1,000</td><td>20</td></tr>
+    <tr><td>64</td><td>about 4.3 billion</td><td>64</td></tr>
+    <tr><td>2048 (RSA size)</td><td>about 2<sup>1024</sup></td><td>2048</td></tr>
+  </table>
+  <p class="small muted">Factoring is in NP, but nobody has shown it's NP-complete or found a fast algorithm. RSA encryption depends on it staying hard.</p>
+</section>
+
+<!-- ===================== P6 ===================== -->
+<section class="tab-panel" id="tab-p6">
+  <div class="prob-head"><div><div class="pnum">Problem 6</div><h2>Coloring a graph</h2></div><span class="badge t4">Type 4 · Greedy algorithm</span></div>
+  <div class="card statement"><b>Question.</b> A vertex coloring gives neighbors different colors. Every vertex has degree at most d. Give a greedy algorithm that colors the graph with d + 1 colors.</div>
+  <div class="callout idea"><b>The idea.</b> Color the vertices one at a time. A vertex has at most d neighbors, so at most d colors are blocked. With d + 1 colors, one is always free.</div>
+
+<pre class="code">GREEDY-COLOR(G, d):
+  <span class="k">for</span> each vertex v (any order):
+      blocked ← colors of v's neighbors that are already colored
+      color[v] ← smallest color in {1, …, d + 1} not in blocked</pre>
+
+  <div class="viz">
+    <div class="viz-title">Greedy coloring with d = 3, so 4 colors</div>
+    <div class="grid2">
+      <svg id="p6-svg" viewBox="0 0 540 310"></svg>
+      <div>
+        <div class="small muted">Order:</div>
+        <div class="cert" id="p6-order"></div>
+        <div class="small muted">Palette for the current vertex:</div>
+        <div class="palette" id="p6-pal"></div>
+        <div class="controls"><button class="btn" id="p6-step">Step</button><button class="btn" id="p6-run">Run all</button><button class="btn ghost" id="p6-shuffle">Shuffle order</button><button class="btn ghost" id="p6-reset">Reset</button></div>
+        <div class="status" id="p6-status">Press Step.</div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Solve it with the method</h3>
+  <div class="r-t4">
+  <ol class="steps">
+    <li><h4>Algorithm</h4><p>GREEDY-COLOR, in any vertex order.</p></li>
+    <li><h4>It never gets stuck</h4><p>v has at most d neighbors, so at most d colors are blocked. At least one of the d + 1 colors is free.</p></li>
+    <li><h4>The coloring is valid</h4><p>Take any edge (u, v), and say u got colored first. When v is colored, u's color is blocked, so v picks a different one.</p></li>
+    <li><h4>Polynomial</h4><p>Each vertex scans its neighbors once: O(n + m) total, plus O(d) per vertex to find the free color.</p></li>
+  </ol>
+  </div>
+  <div class="callout tip"><b>The NP connection.</b> "Can G be colored with 3 colors?" is NP-complete. Greedy guarantees d + 1 colors, not the fewest possible.</div>
+</section>
+
+</main>
+<script>
+/* ---------- helpers ---------- */
+const NS='http://www.w3.org/2000/svg';
+const $=id=>document.getElementById(id);
+function S(tag,attrs,parent){const e=document.createElementNS(NS,tag);if(attrs)for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+function T(tag,attrs,text,parent){const e=S(tag,attrs,parent);e.textContent=text;return e;}
+function H(tag,c,html){const e=document.createElement(tag);if(c)e.className=c;if(html!=null)e.innerHTML=html;return e;}
+function cls(e,c){e.setAttribute('class',c);}
+function clear(svg){while(svg.firstChild)svg.removeChild(svg.firstChild);}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function Runner(){let tok=0;return{start(){tok+=1;return tok;},alive(t){return t===tok;},stop(){tok+=1;}};}
+function tween(dur,fn){return new Promise(res=>{const t0=performance.now();function f(now){const k=Math.min(1,(now-t0)/dur);const e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;fn(e);if(k<1)requestAnimationFrame(f);else res();}requestAnimationFrame(f);});}
+function drawGraph(svg,nodes,edges,opt){
+  opt=opt||{};const r=opt.r||19;
+  const gE=S('g',{},svg),gX=S('g',{},svg),gN=S('g',{},svg);
+  const E=edges.map(([u,v])=>S('line',{x1:nodes[u].x,y1:nodes[u].y,x2:nodes[v].x,y2:nodes[v].y,class:'g-edge'},gE));
+  const N=nodes.map(nd=>{const g=S('g',{class:'g-node',transform:`translate(${nd.x},${nd.y})`},gN);S('circle',{r:r},g);T('text',{},nd.label,g);return g;});
+  return {E,N,gE,gX,gN};
+}
+function edgeIndex(edges){const m={};edges.forEach(([u,v],i)=>{m[u+','+v]=i;m[v+','+u]=i;});return m;}
+
+/* ---------- tabs ---------- */
+const tabBtns=[...document.querySelectorAll('.tab-btn')];
+const panels=[...document.querySelectorAll('.tab-panel')];
+function showTab(id){
+  tabBtns.forEach(b=>b.classList.toggle('active',b.dataset.tab===id));
+  panels.forEach(p=>p.classList.toggle('active',p.id==='tab-'+id));
+  window.scrollTo({top:0});
+}
+tabBtns.forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
+panels.forEach((p,i)=>{
+  const f=H('div','navfoot');
+  if(i>0){const b=H('button','btn ghost','← '+tabBtns[i-1].dataset.label);b.onclick=()=>showTab(tabBtns[i-1].dataset.tab);f.appendChild(b);} else f.appendChild(H('span'));
+  if(i<panels.length-1){const b=H('button','btn','Next: '+tabBtns[i+1].dataset.label+' →');b.onclick=()=>showTab(tabBtns[i+1].dataset.tab);f.appendChild(b);}
+  p.appendChild(f);
+});
+
+/* ---------- concepts: subset sum ---------- */
+(function(){
+  const nums=[14,9,23,6,17,11,4,20], target=50;
+  const box=$('ss-chips'), sel=new Set(), chips=[], R=Runner();
+  nums.forEach((v,i)=>{const c=H('button','numchip',String(v));c.onclick=()=>{R.stop();$('ss-count').textContent='';if(sel.has(i))sel.delete(i);else sel.add(i);render();};box.appendChild(c);chips.push(c);});
+  function render(){
+    chips.forEach((c,i)=>c.classList.toggle('on',sel.has(i)));
+    const picked=[...sel].sort((a,b)=>a-b).map(i=>nums[i]);const s=picked.reduce((a,b)=>a+b,0);
+    if(!picked.length){$('ss-status').innerHTML='Click numbers to pick them.';return;}
+    $('ss-status').innerHTML=picked.join(' + ')+' = <b>'+s+'</b> '+(s===target?'<span class="yes">✓ equals 50. Checked in one pass.</span>':'<span class="no">✗ not 50</span>');
+  }
+  $('ss-clear').onclick=()=>{R.stop();sel.clear();$('ss-count').textContent='';render();};
+  $('ss-brute').onclick=async()=>{
+    const t=R.start();const total=(1<<nums.length)-1;
+    for(let m=1;m<=total;m++){
+      if(!R.alive(t))return;
+      sel.clear();for(let i=0;i<nums.length;i++)if(m>>i&1)sel.add(i);render();
+      let s=0;sel.forEach(i=>s+=nums[i]);
+      $('ss-count').textContent='Subsets tried: '+m+' of '+total;
+      if(s===target){$('ss-count').innerHTML='Found one after <b>'+m+'</b> tries. Worst case: '+total+'. With 100 numbers: about 10<sup>30</sup>.';return;}
+      await sleep(30);
+    }
+  };
+})();
+
+/* ---------- concepts: class map ---------- */
+(function(){
+  const svg=$('venn');
+  const defs=S('defs',{},svg);const cp=S('clipPath',{id:'npclip'},defs);S('ellipse',{cx:260,cy:180,rx:230,ry:150},cp);
+  const reg={};
+  reg.NPH=S('ellipse',{cx:610,cy:180,rx:240,ry:172,class:'v-hard'},svg);
+  reg.NP=S('ellipse',{cx:260,cy:180,rx:230,ry:150,class:'v-np'},svg);
+  reg.NPC=S('ellipse',{cx:610,cy:180,rx:240,ry:172,class:'v-npc','clip-path':'url(#npclip)'},svg);
+  reg.P=S('ellipse',{cx:170,cy:190,rx:110,ry:88,class:'v-p'},svg);
+  const npLab=T('text',{x:110,y:84,class:'vlab',fill:'#1e3a8a'},'NP',svg);
+  const pLab=T('text',{x:170,y:152,class:'vlab',fill:'#14532d'},'P',svg);
+  const pEx=['BFS paths','Max flow','Sorting'].map((s,i)=>T('text',{x:170,y:182+i*19,class:'vex'},s,svg));
+  T('text',{x:430,y:150,class:'vlab',fill:'#4c1d95',style:'font-size:14px'},'NP-complete',svg);
+  ['SAT','HAMPATH','PARTITION','3-COLOR'].forEach((s,i)=>T('text',{x:428,y:176+i*18,class:'vex'},s,svg));
+  T('text',{x:615,y:72,class:'vlab',fill:'#7f1d1d'},'NP-hard',svg);
+  T('text',{x:615,y:196,class:'vex'},'Halting problem',svg);
+  T('text',{x:615,y:213,class:'vex'},'(not even in NP)',svg);
+  T('text',{x:322,y:284,class:'vex',style:'font-weight:700'},'Factoring (P5)',svg);
+  const facSub=T('text',{x:322,y:300,class:'vex'},'not known to be in P',svg);
+  let eq=false;const P0={cx:170,cy:190,rx:110,ry:88},P1={cx:260,cy:180,rx:230,ry:150};
+  $('venn-toggle').onclick=async()=>{
+    eq=!eq;const from=eq?P0:P1,to=eq?P1:P0;$('venn-toggle').disabled=true;
+    pLab.style.display='none';pEx.forEach(t=>t.style.display='none');
+    await tween(900,k=>{for(const a in from)reg.P.setAttribute(a,from[a]+(to[a]-from[a])*k);});
+    $('venn-toggle').disabled=false;
+    npLab.textContent=eq?'P = NP':'NP';npLab.setAttribute('fill',eq?'#14532d':'#1e3a8a');
+    pLab.style.display=eq?'none':'';pEx.forEach(t=>t.style.display=eq?'none':'');
+    facSub.textContent=eq?'now in P':'not known to be in P';
+    $('venn-toggle').textContent=eq?'Back to P ≠ NP':'What if P = NP?';
+    $('venn-cap').innerHTML=eq?'If P = NP, P swallows all of NP. SAT, HAMPATH, and factoring would all have fast algorithms. Problems 2b and 5 live in this world.':'Click a card to highlight its region.';
+  };
+  document.querySelectorAll('.cls').forEach(c=>c.addEventListener('click',()=>{
+    const on=!c.classList.contains('on');
+    document.querySelectorAll('.cls').forEach(x=>x.classList.remove('on'));
+    Object.values(reg).forEach(r=>r.classList.remove('v-hl'));
+    if(on){c.classList.add('on');reg[c.dataset.cls].classList.add('v-hl');}
+  }));
+})();
+
+/* ---------- concepts: reduction pipeline ---------- */
+(function(){
+  const svg=$('pipe');
+  const defs=S('defs',{},svg);
+  const mk=S('marker',{id:'ah',viewBox:'0 0 10 10',refX:9,refY:5,markerWidth:7,markerHeight:7,orient:'auto'},defs);S('path',{d:'M0,0 L10,5 L0,10 z',fill:'#334155'},mk);
+  S('rect',{x:174,y:30,width:486,height:150,rx:14,class:'pouter'},svg);
+  T('text',{x:417,y:200,class:'psub',style:'font-size:13px;font-weight:700;fill:#6d28d9'},'Everything in the dashed box = a solver for Y',svg);
+  const B=[{x:8,w:140,a:'Instance y',b:'of Y (known hard)'},{x:194,w:110,a:'f',b:'poly-time transform'},{x:346,w:140,a:'Instance f(y)',b:'of X (new problem)'},{x:528,w:118,a:'Solver for X',b:'(pretend it exists)'},{x:684,w:70,a:'YES/NO',b:'same as y'}];
+  const rects=B.map(b=>{const r=S('rect',{x:b.x,y:73,width:b.w,height:68,rx:10,class:'pbox'},svg);T('text',{x:b.x+b.w/2,y:103,class:'ptxt'},b.a,svg);T('text',{x:b.x+b.w/2,y:124,class:'psub'},b.b,svg);return r;});
+  for(let i=0;i<B.length-1;i++)S('line',{x1:B[i].x+B[i].w+2,y1:107,x2:B[i+1].x-4,y2:107,class:'parrow','marker-end':'url(#ah)'},svg);
+  const cx=B.map(b=>b.x+b.w/2);
+  const dot=S('circle',{cx:cx[0],cy:54,r:9,fill:'#ea580c',opacity:0},svg);
+  const caps=['Start with any instance y of Y. Nobody knows how to solve Y fast.','f transforms it. f must run in polynomial time.','Now it is an instance of X, and it has the same answer as y.','Run the (hypothetical) fast solver for X.','Its answer is the answer for y. So a fast solver for X would give a fast solver for Y.'];
+  const R=Runner();
+  $('pipe-play').onclick=async()=>{
+    const t=R.start();dot.setAttribute('opacity',1);dot.setAttribute('cx',cx[0]);
+    for(let i=0;i<B.length;i++){
+      if(!R.alive(t))return;
+      rects.forEach((r,j)=>r.classList.toggle('lit',j===i));$('pipe-cap').textContent=caps[i];
+      if(i<B.length-1){await sleep(1300);if(!R.alive(t))return;const a=cx[i],b=cx[i+1];await tween(600,k=>dot.setAttribute('cx',a+(b-a)*k));}
+    }
+  };
+})();
+
+/* ---------- concepts: yes/no mapping ---------- */
+(function(){
+  const svg=$('map');
+  const defs=S('defs',{},svg);
+  [['ahg','#94a3b8'],['ahr','#dc2626']].forEach(([id,c])=>{const m=S('marker',{id,viewBox:'0 0 10 10',refX:9,refY:5,markerWidth:7,markerHeight:7,orient:'auto'},defs);S('path',{d:'M0,0 L10,5 L0,10 z',fill:c},m);});
+  T('text',{x:120,y:22,class:'ptxt'},'Instances of Y',svg);T('text',{x:500,y:22,class:'ptxt'},'Instances of X',svg);
+  const Y=[1,0,1,0,1,0],X=[1,0,1,1,0,0,1,0,1];
+  const yPos=Y.map((v,i)=>({x:120,y:52+i*36})),xPos=X.map((v,i)=>({x:500,y:44+i*24}));
+  const good=[0,1,3,4,6,7],broken=[0,1,3,2,6,7];
+  const gA=S('g',{},svg);
+  function dotAt(p,v,parent){const g=S('g',{},parent);S('circle',{cx:p.x,cy:p.y,r:11,fill:v?'#16a34a':'#dc2626'},g);T('text',{x:p.x,y:p.y+4,style:'font-size:11px;font-weight:800;fill:#fff;text-anchor:middle'},v?'Y':'N',g);return g;}
+  Y.forEach((v,i)=>dotAt(yPos[i],v,svg));
+  const xDots=X.map((v,i)=>dotAt(xPos[i],v,svg));
+  T('text',{x:320,y:262,class:'psub'},'Faded X instances are never produced by f. That is fine.',svg);
+  let br=false;
+  function draw(){
+    clear(gA);const m=br?broken:good;
+    m.forEach((xi,yi)=>{const a=yPos[yi],b=xPos[xi];const bad=br&&yi===3;
+      S('path',{d:`M${a.x+14},${a.y} C 310,${a.y} 310,${b.y} ${b.x-15},${b.y}`,fill:'none',stroke:bad?'#dc2626':'#94a3b8','stroke-width':bad?3.5:2,'marker-end':bad?'url(#ahr)':'url(#ahg)'},gA);});
+    xDots.forEach((d,i)=>d.setAttribute('opacity',m.includes(i)?1:.3));
+  }
+  $('map-toggle').onclick=()=>{br=!br;draw();
+    $('map-toggle').textContent=br?'Fix f':'Show a broken f';
+    $('map-cap').innerHTML=br?'<span class="no">Broken:</span> a NO instance of Y lands on a YES of X. X would give the wrong answer for y, so this f is not a reduction.':'Every YES goes to a YES, every NO goes to a NO.';};
+  draw();
+})();
+
+/* ---------- P1: truth table ---------- */
+(function(){
+  const FS=[{n:'x₁ ∧ ¬x₂',f:(a,b)=>a&&!b},{n:'x₁ ∨ x₂',f:(a,b)=>a||b},{n:'x₁ ∧ ¬x₁',f:(a,b)=>a&&!a}];
+  let fi=0,y=false,popNext=false;
+  const btns=FS.map((F,i)=>{const b=H('button','btn ghost','φ = '+F.n);b.onclick=()=>{fi=i;y=false;render();};$('p1-forms').appendChild(b);return b;});
+  $('p1-y').onclick=()=>{y=!y;popNext=y;render();};
+  const tv=v=>v?'<td class="T">T</td>':'<td class="F">F</td>';
+  const yn=v=>v?'<span class="yes">YES</span>':'<span class="no">NO</span>';
+  function render(){
+    btns.forEach((b,i)=>b.className='btn '+(i===fi?'sel':'ghost'));
+    $('p1-y').textContent=y?'Remove y':'Add y: φ′ = φ ∧ (y ∨ ¬y)';
+    const F=FS[fi];let c=0,c2=0;
+    let h='<table class="tt"><tr><th>x₁</th><th>x₂</th>'+(y?'<th class="ycol">y</th>':'')+'<th>φ</th>'+(y?'<th>φ′</th>':'')+'</tr>';
+    for(const a of [0,1])for(const b of [0,1]){
+      const v=!!F.f(a,b);if(v)c++;
+      (y?[0,1]:[null]).forEach(yy=>{if(y&&v)c2++;
+        h+=`<tr class="${v?'sat':''} ${popNext&&yy===1?'pop':''}"><td>${a}</td><td>${b}</td>${y?`<td class="ycol">${yy}</td>`:''}${tv(v)}${y?tv(v):''}</tr>`;});
+    }
+    $('p1-table').innerHTML=h+'</table>';popNext=false;
+    let s=`<b>φ = ${F.n}</b> has <b>${c}</b> satisfying assignment${c===1?'':'s'}. SAT(φ) = ${yn(c>=1)}, DOUBLE-SAT(φ) = ${yn(c>=2)}.`;
+    if(!y&&c===1)s+='<br>SAT and DOUBLE-SAT disagree here, so outputting φ unchanged fails. Press <b>Add y</b>.';
+    if(y)s+=`<br><b>φ′</b> has <b>${c2}</b> (each green row of φ split into two). DOUBLE-SAT(φ′) = ${yn(c2>=2)}, the same answer as SAT(φ) ✓`;
+    $('p1-status').innerHTML=s;
+  }
+  render();
+})();
+
+/* ---------- P2a: verifier ---------- */
+(function(){
+  const nodes=[{x:80,y:80,label:'A'},{x:240,y:48,label:'B'},{x:400,y:80,label:'C'},{x:440,y:225,label:'D'},{x:260,y:255,label:'E'},{x:95,y:222,label:'F'}];
+  const edges=[[0,1],[1,2],[2,3],[3,4],[4,5],[5,0],[1,4],[1,3]];
+  const G=drawGraph($('p2a-svg'),nodes,edges);const eidx=edgeIndex(edges);
+  const C={good:[0,1,2,3,4,5],miss:[0,1,3,2,4,5],rep:[0,1,4,1,2,3]};
+  const R=Runner();let temp=null;const L=v=>nodes[v].label;
+  function reset(){G.E.forEach(e=>cls(e,'g-edge'));G.N.forEach(x=>cls(x,'g-node'));if(temp){temp.remove();temp=null;}}
+  function chips(cert){const box=$('p2a-cert');box.innerHTML='';const vs=[];cert.forEach((v,i)=>{if(i)box.appendChild(H('span','sep','→'));const c=H('span','v',L(v));box.appendChild(c);vs.push(c);});return vs;}
+  async function check(key){
+    const t=R.start();reset();const cert=C[key];const vs=chips(cert);const st=$('p2a-status');
+    document.querySelectorAll('#tab-p2 [data-c]').forEach(b=>b.className='btn '+(b.dataset.c===key?'':'ghost'));
+    st.innerHTML='<b>Check 1:</b> does every vertex appear exactly once?';await sleep(900);if(!R.alive(t))return;
+    const seen=new Array(nodes.length).fill(0);cert.forEach(v=>seen[v]++);
+    const missing=nodes.map((n,i)=>seen[i]===0?n.label:null).filter(Boolean);
+    const dupV=cert.find(v=>seen[v]>1);
+    if(dupV!==undefined||missing.length){
+      vs.forEach((c,i)=>c.classList.add(seen[cert[i]]>1?'bad':'ok'));cls(G.N[dupV],'g-node n-cur');
+      st.innerHTML=`<span class="no">✗ Reject.</span> ${L(dupV)} appears twice and ${missing.join(', ')} never appears.`;return;
+    }
+    vs.forEach(c=>c.classList.add('ok'));
+    st.innerHTML='<span class="yes">✓</span> Every vertex appears once. <b>Check 2:</b> is every consecutive pair an edge?';
+    await sleep(1000);if(!R.alive(t))return;vs.forEach(c=>c.classList.remove('ok'));
+    for(let i=0;i<cert.length-1;i++){
+      const u=cert[i],v=cert[i+1];vs[i].classList.add('cur');vs[i+1].classList.add('cur');
+      const ei=eidx[u+','+v];
+      if(ei===undefined){
+        temp=S('line',{x1:nodes[u].x,y1:nodes[u].y,x2:nodes[v].x,y2:nodes[v].y,class:'g-edge e-bad'},G.gX);
+        vs[i].classList.replace('cur','bad');vs[i+1].classList.replace('cur','bad');
+        st.innerHTML=`<span class="no">✗ Reject.</span> (${L(u)}, ${L(v)}) is not an edge.`;return;
+      }
+      cls(G.E[ei],'g-edge e-good');st.innerHTML=`(${L(u)}, ${L(v)}) is an edge ✓`;
+      await sleep(700);if(!R.alive(t))return;vs[i].classList.replace('cur','ok');vs[i+1].classList.remove('cur');
+    }
+    vs[vs.length-1].classList.add('ok');
+    st.innerHTML=`<span class="yes">✓ Accept.</span> Every vertex appears once and all ${cert.length-1} pairs are edges. That took O(n + m) time.`;
+  }
+  document.querySelectorAll('#tab-p2 [data-c]').forEach(b=>b.onclick=()=>check(b.dataset.c));
+  chips(C.good);
+})();
+
+/* ---------- P2b: delete edges with the black box ---------- */
+(function(){
+  const nodes=[{x:90,y:70,label:'A'},{x:270,y:40,label:'B'},{x:450,y:70,label:'C'},{x:470,y:230,label:'D'},{x:280,y:262,label:'E'},{x:80,y:230,label:'F'}];
+  const edges=[[0,1],[0,4],[0,5],[1,2],[1,4],[1,3],[2,3],[2,4],[3,4],[4,5],[1,5]];
+  const G=drawGraph($('p2b-svg'),nodes,edges);const n=nodes.length,m=edges.length;
+  const L=i=>`(${nodes[edges[i][0]].label},${nodes[edges[i][1]].label})`;
+  function hasHP(alive){
+    const adj=new Array(n).fill(0);edges.forEach(([u,v],i)=>{if(alive[i]){adj[u]|=1<<v;adj[v]|=1<<u;}});
+    const full=(1<<n)-1,dp=new Array(1<<n).fill(0);for(let v=0;v<n;v++)dp[1<<v]=1<<v;
+    for(let mask=1;mask<=full;mask++){const ends=dp[mask];if(!ends)continue;
+      for(let v=0;v<n;v++)if(ends>>v&1)for(let w=0;w<n;w++)if((adj[v]>>w&1)&&!(mask>>w&1))dp[mask|1<<w]|=1<<w;}
+    return dp[full]!==0;
+  }
+  let alive,idx,calls,busy=false;const R=Runner();
+  function upd(){$('p2b-calls').textContent=`BOX calls: ${calls}`;$('p2b-step').disabled=busy||idx>m;$('p2b-run').disabled=busy||idx>m;}
+  function log(s){const lg=$('p2b-log');lg.textContent+=s+'\n';lg.scrollTop=lg.scrollHeight;}
+  function reset(){R.stop();busy=false;alive=new Array(m).fill(true);idx=-1;calls=0;
+    G.E.forEach(e=>cls(e,'g-edge'));G.N.forEach(x=>cls(x,'g-node'));$('p2b-log').textContent='';
+    $('p2b-status').innerHTML='Press Step. The first call asks BOX about the whole graph.';upd();}
+  async function step(t){
+    const st=$('p2b-status');
+    if(idx===-1){calls++;const ans=hasHP(alive);log(`BOX(G) = ${ans?'YES':'NO'}`);
+      st.innerHTML=`BOX(G) = <span class="yes">YES</span>. A Hamiltonian path exists. Now test the ${m} edges one at a time.`;idx=0;return;}
+    if(idx<m){const e=idx;cls(G.E[e],'g-edge e-check');
+      st.innerHTML=`Testing ${L(e)}: does G without ${L(e)} still have a Hamiltonian path?`;
+      await sleep(800);if(!R.alive(t))return;
+      alive[e]=false;const ans=hasHP(alive);calls++;
+      if(ans){cls(G.E[e],'g-edge e-gone');log(`BOX(G − ${L(e)}) = YES → delete ${L(e)} for good`);
+        st.innerHTML=`BOX = <span class="yes">YES</span>. A path still exists without ${L(e)}, so delete it for good.`;}
+      else{alive[e]=true;cls(G.E[e],'g-edge e-keep');log(`BOX(G − ${L(e)}) = NO  → ${L(e)} is needed, keep it`);
+        st.innerHTML=`BOX = <span class="no">NO</span>. Without ${L(e)} there's no path, so ${L(e)} is needed. Keep it.`;}
+      idx++;return;}
+    idx=m+1;const keep=edges.map((e,i)=>i).filter(i=>alive[i]);keep.forEach(i=>cls(G.E[i],'g-edge e-path'));
+    const deg=new Array(n).fill(0),adj=Array.from({length:n},()=>[]);
+    keep.forEach(i=>{const [u,v]=edges[i];deg[u]++;deg[v]++;adj[u].push(v);adj[v].push(u);});
+    let cur=deg.indexOf(1),prev=-1;const order=[];
+    while(cur!==-1&&order.length<n){order.push(cur);const nx=adj[cur].find(w=>w!==prev);prev=cur;cur=(nx===undefined)?-1:nx;}
+    G.N.forEach(x=>cls(x,'g-node n-ok'));
+    st.innerHTML=`<span class="yes">Done.</span> ${keep.length} edges are left, which is n − 1. They form the path <b>${order.map(v=>nodes[v].label).join(' → ')}</b>. BOX calls: ${calls} = m + 1.`;
+  }
+  $('p2b-step').onclick=async()=>{if(busy)return;busy=true;upd();const t=R.start();await step(t);if(!R.alive(t))return;busy=false;upd();};
+  $('p2b-run').onclick=async()=>{if(busy)return;busy=true;upd();const t=R.start();
+    while(idx<=m){await step(t);if(!R.alive(t))return;await sleep(450);if(!R.alive(t))return;upd();}
+    busy=false;upd();};
+  $('p2b-reset').onclick=reset;reset();
+})();
+
+/* ---------- P3a: BFS ---------- */
+(function(){
+  const nodes=[{x:60,y:150,label:'a'},{x:175,y:65,label:'c'},{x:175,y:235,label:'d'},{x:295,y:45,label:'e'},{x:295,y:150,label:'f'},{x:295,y:255,label:'g'},{x:415,y:95,label:'h'},{x:510,y:190,label:'b'}];
+  const edges=[[0,1],[0,2],[1,3],[1,4],[2,4],[2,5],[3,6],[4,6],[5,7],[6,7],[4,5]];
+  const svg=$('p3a-svg');const G=drawGraph(svg,nodes,edges);const n=nodes.length,B=7;
+  const dl=nodes.map(nd=>T('text',{x:nd.x,y:nd.y-27,class:'dlabel'},'',svg));
+  const adj=Array.from({length:n},()=>[]);edges.forEach(([u,v],i)=>{adj[u].push([v,i]);adj[v].push([u,i]);});
+  let dist=null;const R=Runner();
+  function reset(){R.stop();dist=null;G.E.forEach(e=>cls(e,'g-edge'));G.N.forEach(x=>cls(x,'g-node'));dl.forEach(t=>t.textContent='');$('p3a-status').textContent='Press Run BFS.';$('p3a-run').disabled=false;}
+  function verdict(){if(!dist)return;const k=+$('p3a-k').value,d=dist[B];
+    $('p3a-status').innerHTML=`dist(a, b) = <b>${d}</b>. Is ${d} ≤ k = ${k}? ${d<=k?'<span class="yes">YES</span>: a simple path with at most k edges exists (the green one).':'<span class="no">NO</span>: every a→b path has more than k edges.'}`;}
+  $('p3a-k').oninput=()=>{$('p3a-kv').textContent=$('p3a-k').value;verdict();};
+  $('p3a-run').onclick=async()=>{
+    reset();const t=R.start();$('p3a-run').disabled=true;
+    const d=new Array(n).fill(-1),p=new Array(n).fill(-1),pe=new Array(n).fill(-1);d[0]=0;let layer=[0];
+    cls(G.N[0],'g-node n-front');dl[0].textContent='d=0';$('p3a-status').innerHTML='Layer 0: just a.';await sleep(900);
+    while(layer.length){
+      if(!R.alive(t))return;layer.forEach(v=>cls(G.N[v],'g-node n-done'));const next=[];
+      for(const u of layer)for(const [v,ei] of adj[u])if(d[v]===-1){d[v]=d[u]+1;p[v]=u;pe[v]=ei;next.push(v);cls(G.E[ei],'g-edge e-tree');cls(G.N[v],'g-node n-front');dl[v].textContent='d='+d[v];}
+      if(next.length){const k=d[next[0]];$('p3a-status').innerHTML=`Layer ${k}: ${next.map(v=>nodes[v].label).join(', ')}. Each is ${k} edge${k>1?'s':''} from a.`;}
+      layer=next;await sleep(1100);
+    }
+    if(!R.alive(t))return;
+    let v=B;while(p[v]!==-1){cls(G.E[pe[v]],'g-edge e-path');v=p[v];}
+    dist=d;$('p3a-run').disabled=false;verdict();
+  };
+  $('p3a-reset').onclick=reset;reset();
+})();
+
+/* ---------- P3b: hub reduction ---------- */
+(function(){
+  const nodes=[{x:280,y:45,label:'v₁'},{x:350,y:105,label:'v₂'},{x:290,y:165,label:'v₃'},{x:350,y:225,label:'v₄'},{x:280,y:282,label:'v₅'},{x:50,y:160,label:'s'},{x:570,y:160,label:'t'}];
+  const gEdges=[[0,1],[1,2],[2,3],[3,4],[1,3],[0,2]];
+  const hub=[];for(let i=0;i<5;i++)hub.push([5,i]);for(let i=0;i<5;i++)hub.push([6,i]);
+  const edges=gEdges.concat(hub);const G=drawGraph($('p3b-svg'),nodes,edges);const eidx=edgeIndex(edges);
+  const isHub=i=>i>=gEdges.length;const R=Runner();let stage=0;
+  function base(showHubs){edges.forEach((e,i)=>cls(G.E[i],isHub(i)?'g-edge e-hub'+(showHubs?'':' hidden'):'g-edge'));G.N.forEach((x,i)=>cls(x,i>=5?'g-node n-hub'+(showHubs?'':' hidden'):'g-node'));}
+  function reset(){R.stop();stage=0;base(false);$('p3b-status').innerHTML='G has n = 5 vertices. Does it have a Hamiltonian path? Press <b>Add hubs</b> to build f(G).';}
+  function hubs(){R.stop();base(true);stage=1;$('p3b-status').innerHTML='f(G) = (G′, s, t, k = n + 1 = 6). s and t connect to every vertex of G, but not to each other.';}
+  $('p3b-hubs').onclick=hubs;
+  $('p3b-path').onclick=async()=>{
+    if(stage<1){hubs();await sleep(500);}
+    const t=R.start();base(true);const path=[5,0,1,2,3,4,6];cls(G.N[5],'g-node n-ok');
+    for(let i=0;i<path.length-1;i++){await sleep(650);if(!R.alive(t))return;
+      cls(G.E[eidx[path[i]+','+path[i+1]]],'g-edge e-path');cls(G.N[path[i+1]],'g-node n-ok');
+      $('p3b-status').innerHTML=`Edges so far: <b>${i+1}</b>`;}
+    $('p3b-status').innerHTML='s → v₁ → v₂ → v₃ → v₄ → v₅ → t has <b>6 = n + 1</b> edges and visits all 7 vertices. Remove s and t, and <b>v₁ → v₂ → v₃ → v₄ → v₅</b> is a Hamiltonian path of G. Backward works too: an s→t path with 6 edges must use every vertex.';
+  };
+  $('p3b-reset').onclick=reset;reset();
+})();
+
+/* ---------- P4: bendy stick ---------- */
+(function(){
+  const EX=[[3,1,2,2],[5,1,2]];let ex=0,dirs=[];const svg=$('p4-svg');
+  function setEx(i){ex=i;dirs=EX[i].map(()=>1);$('p4-ex0').className='btn '+(i===0?'sel':'ghost');$('p4-ex1').className='btn '+(i===1?'sel':'ghost');render();}
+  function layout(){
+    const a=EX[ex],A=a.reduce((x,y)=>x+y,0),B=2*A,segs=[];let p=0;
+    const push=(len,dir,kind,idx)=>{segs.push({len,dir,kind,idx,from:p,to:p+dir*len});p+=dir*len;};
+    push(B,1,'fixed');push(A,-1,'fixed');a.forEach((v,i)=>push(v,dirs[i],'a',i));
+    const over=(x,y)=>Math.max(0,-Math.min(x,y))+Math.max(0,Math.max(x,y)-B);
+    let best=null;for(const d1 of [1,-1])for(const d2 of [1,-1]){const q1=p+d1*A,q2=q1+d2*B;const o=over(p,q1)+over(q1,q2);if(!best||o<best.o)best={o,d1,d2};}
+    push(A,best.d1,'auto');push(B,best.d2,'auto');
+    const pos=[0,...segs.map(s=>s.to)];return{a,A,B,segs,min:Math.min(...pos),max:Math.max(...pos)};
+  }
+  function render(){
+    const Lo=layout(),{A,B,segs}=Lo;clear(svg);
+    const lo=Math.min(0,Lo.min)-A*0.25,hi=Math.max(B,Lo.max)+A*0.25;const X=v=>40+(v-lo)/(hi-lo)*640;
+    const rowH=30,top=44,Ht=top+(segs.length-1)*rowH+52;svg.setAttribute('viewBox',`0 0 720 ${Ht}`);
+    S('rect',{x:X(0),y:12,width:X(B)-X(0),height:Ht-40,fill:'#fefce8',stroke:'#1f2433','stroke-width':3,rx:4},svg);
+    S('line',{x1:X(A),y1:14,x2:X(A),y2:Ht-28,stroke:'#a3a3a3','stroke-dasharray':'5 5'},svg);
+    T('text',{x:X(0)+6,y:28,style:'font-size:12px;fill:#854d0e;font-weight:700'},'box',svg);
+    T('text',{x:X(0),y:Ht-8,class:'psub',style:'font-weight:700'},'0',svg);
+    T('text',{x:X(A),y:Ht-8,class:'psub'},`center = A = ${A}`,svg);
+    T('text',{x:X(B),y:Ht-8,class:'psub',style:'font-weight:700'},`2A = ${B}`,svg);
+    segs.forEach((s,i)=>{if(i<segs.length-1)S('line',{x1:X(s.to),y1:top+i*rowH,x2:X(s.to),y2:top+(i+1)*rowH,stroke:'#94a3b8','stroke-width':2},svg);});
+    segs.forEach((s,i)=>{
+      const y=top+i*rowH,out=Math.min(s.from,s.to)<0||Math.max(s.from,s.to)>B;
+      const col=out?'#dc2626':(s.kind==='a'?(s.dir>0?'#2563eb':'#ea580c'):'#64748b');
+      const g=S('g',{},svg);
+      S('line',{x1:X(s.from),y1:y,x2:X(s.to),y2:y,stroke:col,'stroke-width':9,'stroke-linecap':'round'},g);
+      T('text',{x:(X(s.from)+X(s.to))/2,y:y-8,class:'psub',style:`font-weight:800;fill:${col}`},`${s.len} ${s.dir>0?'→':'←'}`,g);
+      if(s.kind==='a'){S('line',{x1:X(s.from),y1:y-12,x2:X(s.to),y2:y-12,stroke:'transparent','stroke-width':30},g);g.style.cursor='pointer';g.addEventListener('click',()=>{dirs[s.idx]*=-1;render();});}
+      if(i<segs.length-1){S('circle',{cx:X(s.to),cy:y,r:3.5,fill:'#1f2433'},svg);S('circle',{cx:X(s.to),cy:y+rowH,r:3.5,fill:'#1f2433'},svg);}
+    });
+    const Rr=Lo.a.filter((v,i)=>dirs[i]>0),Ll=Lo.a.filter((v,i)=>dirs[i]<0);
+    const sr=Rr.reduce((x,y)=>x+y,0),sl=Ll.reduce((x,y)=>x+y,0),span=Lo.max-Lo.min,fits=span<=B;
+    $('p4-status').innerHTML=`A = ${A}, box = 2A = ${B}. Right: ${Rr.length?Rr.join(' + ')+' = '+sr:'0'} · Left: ${Ll.length?Ll.join(' + ')+' = '+sl:'0'} · The a-pieces end at ${A+sr-sl}${sr===sl?' (the center)':''}.<br>Span = ${span} ${fits?'≤':'&gt;'} ${B} → `+(fits?'<span class="yes">Fits!</span> Right total = left total, which is a partition.':'<span class="no">Doesn\'t fit.</span> The a-pieces must end at the center, which needs right total = left total.');
+  }
+  $('p4-ex0').onclick=()=>setEx(0);$('p4-ex1').onclick=()=>setEx(1);$('p4-reset').onclick=()=>setEx(ex);
+  $('p4-solve').onclick=()=>{
+    const a=EX[ex],n=a.length;
+    for(let m=0;m<(1<<n);m++){let s=0;for(let i=0;i<n;i++)s+=(m>>i&1)?a[i]:-a[i];if(s===0){dirs=a.map((v,i)=>(m>>i&1)?1:-1);render();return;}}
+    render();$('p4-status').innerHTML+=`<br><b>No partition exists</b> for {${a.join(', ')}}: no group sums to ${a.reduce((x,y)=>x+y,0)/2}. So no folding fits. Try flipping pieces anyway.`;
+  };
+  setEx(0);
+})();
+
+/* ---------- P5: binary search factoring ---------- */
+(function(){
+  const svg=$('p5-svg');let n=null,lo,hi,calls,done,mid=null,facs=[],busy=false;const R=Runner();
+  const fmt=v=>v.toLocaleString('en-US');
+  function smallest(v){for(let p=2;p*p<=v;p++)if(v%p===0)return p;return v;}
+  function F(n,a,b){for(let p=Math.max(2,a);p<=Math.min(b,n-1);p++)if(n%p===0)return true;return false;}
+  function factors(v){const f=[];for(let p=2;p*p<=v;p++)if(v%p===0){f.push(p);if(p*p!==v)f.push(v/p);}return f.sort((x,y)=>x-y);}
+  function upd(){const dis=busy||!n||done;$('p5-step').disabled=dis;$('p5-run').disabled=dis;}
+  function log(s){const lg=$('p5-log');lg.textContent+=s+'\n';lg.scrollTop=lg.scrollHeight;}
+  function draw(){
+    clear(svg);if(!n)return;
+    const X1=v=>40+(v-2)/Math.max(1,n-3)*640;
+    T('text',{x:40,y:24,style:'font-size:12.5px;font-weight:700;fill:#475069'},'Full range [2, n − 1]',svg);
+    S('line',{x1:40,y1:48,x2:680,y2:48,stroke:'#cbd5e1','stroke-width':6,'stroke-linecap':'round'},svg);
+    S('rect',{x:X1(lo)-1.5,y:41,width:Math.max(3,X1(hi)-X1(lo)+3),height:14,rx:4,fill:'#a78bfa'},svg);
+    facs.forEach(f=>S('circle',{cx:X1(f),cy:48,r:4,fill:'#16a34a'},svg));
+    T('text',{x:40,y:72,class:'psub',style:'text-anchor:start'},'2',svg);T('text',{x:680,y:72,class:'psub',style:'text-anchor:end'},fmt(n-1),svg);
+    T('text',{x:40,y:108,style:'font-size:12.5px;font-weight:700;fill:#475069'},`Zoomed into [lo, hi] = [${fmt(lo)}, ${fmt(hi)}]`,svg);
+    const span=Math.max(1,hi-lo),X2=v=>40+(v-lo)/span*640;
+    S('rect',{x:40,y:132,width:640,height:14,rx:4,fill:'#a78bfa'},svg);
+    facs.filter(f=>f>=lo&&f<=hi).forEach(f=>S('circle',{cx:X2(f),cy:139,r:5.5,fill:'#16a34a'},svg));
+    if(mid!==null){S('line',{x1:X2(mid),y1:122,x2:X2(mid),y2:156,stroke:'#ea580c','stroke-width':3},svg);T('text',{x:X2(mid),y:172,class:'psub',style:'fill:#ea580c;font-weight:800'},'mid = '+fmt(mid),svg);}
+    T('text',{x:40,y:196,class:'psub',style:'text-anchor:start'},'lo = '+fmt(lo),svg);T('text',{x:680,y:196,class:'psub',style:'text-anchor:end'},'hi = '+fmt(hi),svg);
+  }
+  function init(){
+    R.stop();busy=false;$('p5-log').textContent='';const v=Math.floor(+$('p5-n').value);
+    if(!(v>=4&&v<=10000000)){n=null;draw();upd();$('p5-status').innerHTML='<span class="no">Pick n between 4 and 10,000,000.</span>';return;}
+    if(smallest(v)===v){n=null;draw();upd();$('p5-status').innerHTML=`<span class="no">${fmt(v)} is prime.</span> The problem says n is composite. Try 221, 391, 1517, or 6999881.`;return;}
+    n=v;lo=2;hi=n-1;calls=0;done=false;mid=null;facs=factors(n);draw();upd();
+    $('p5-status').innerHTML=`n = ${fmt(n)}, which is ${n.toString(2).length} bits. Search range [2, ${fmt(n-1)}]. Press Step.`;
+  }
+  async function step(t){
+    if(done||!n)return;mid=Math.floor((lo+hi)/2);draw();
+    $('p5-status').innerHTML=`Ask the box: F(${n}, ${lo}, ${mid}). Is there a factor between ${fmt(lo)} and ${fmt(mid)}?`;
+    await sleep(750);if(!R.alive(t))return;
+    const q=mid,oldlo=lo,ans=F(n,lo,q);calls++;if(ans)hi=q;else lo=q+1;mid=null;
+    log(`F(${n}, ${oldlo}, ${q}) = ${ans?'YES':'NO '} → keep [${lo}, ${hi}]`);
+    if(lo===hi){done=true;const p=lo,q=n/p;
+      $('p5-status').innerHTML=`<span class="yes">Found it.</span> p = ${fmt(p)}, q = ${fmt(q)}, and ${fmt(p)} × ${fmt(q)} = ${fmt(n)}. Box calls: <b>${calls}</b>. Compare log₂ n ≈ ${Math.log2(n).toFixed(1)}.`;}
+    else $('p5-status').innerHTML=`F said ${ans?'<span class="yes">YES</span>, so a factor is in the left half':'<span class="no">NO</span>, so a factor is in the right half'}. New range [${fmt(lo)}, ${fmt(hi)}] has ${fmt(hi-lo+1)} numbers. Calls so far: ${calls}.`;
+    draw();
+  }
+  $('p5-set').onclick=init;
+  $('p5-step').onclick=async()=>{if(busy)return;busy=true;upd();const t=R.start();await step(t);if(!R.alive(t))return;busy=false;upd();};
+  $('p5-run').onclick=async()=>{if(busy)return;busy=true;upd();const t=R.start();while(!done){await step(t);if(!R.alive(t))return;await sleep(350);if(!R.alive(t))return;}busy=false;upd();};
+  init();
+})();
+
+/* ---------- P6: greedy coloring ---------- */
+(function(){
+  const nodes=[{x:80,y:70,label:'A'},{x:220,y:45,label:'B'},{x:365,y:70,label:'C'},{x:470,y:160,label:'D'},{x:375,y:255,label:'E'},{x:225,y:275,label:'F'},{x:85,y:215,label:'G'},{x:265,y:160,label:'H'}];
+  const edges=[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,0],[7,1],[7,3],[7,5],[2,4]];
+  const G=drawGraph($('p6-svg'),nodes,edges,{r:20});const n=nodes.length;const eidx=edgeIndex(edges);
+  const adj=Array.from({length:n},()=>[]);edges.forEach(([u,v])=>{adj[u].push(v);adj[v].push(u);});
+  const d=Math.max(...adj.map(a=>a.length));const PAL=['#ef4444','#3b82f6','#22c55e','#eab308','#a855f7','#14b8a6'].slice(0,d+1);
+  let order=[...Array(n).keys()],idx,color,busy=false;const R=Runner();
+  function pal(blocked,pick){const box=$('p6-pal');box.innerHTML='';PAL.forEach((c,i)=>{const s=H('div','sw'+(blocked&&blocked.has(i)?' blocked':'')+(pick===i?' pick':''),String(i+1));s.style.background=c;box.appendChild(s);});}
+  function chips(){const box=$('p6-order');box.innerHTML='';order.forEach((v,i)=>{if(i)box.appendChild(H('span','sep','→'));const c=H('span','v'+(i===idx?' cur':''),nodes[v].label);if(color[v]>=0){c.style.background=PAL[color[v]];c.style.color='#fff';c.style.borderColor=PAL[color[v]];}box.appendChild(c);});}
+  function paint(){G.N.forEach((g,v)=>{g.querySelector('circle').style.fill=color[v]>=0?PAL[color[v]]:'';g.querySelector('text').style.fill=color[v]>=0?'#fff':'';});}
+  function upd(){const dis=busy||idx>=n;$('p6-step').disabled=dis;$('p6-run').disabled=dis;}
+  function reset(){R.stop();busy=false;idx=0;color=new Array(n).fill(-1);G.N.forEach(g=>cls(g,'g-node'));G.E.forEach(e=>cls(e,'g-edge'));paint();chips();pal(null,null);
+    $('p6-status').innerHTML=`Max degree d = ${d}, so we get d + 1 = ${d+1} colors. Press Step.`;upd();}
+  async function step(t){
+    const v=order[idx];cls(G.N[v],'g-node n-cur');adj[v].forEach(w=>cls(G.E[eidx[v+','+w]],'g-edge e-check'));
+    const blocked=new Set(adj[v].filter(w=>color[w]>=0).map(w=>color[w]));chips();pal(blocked,null);
+    const bl=[...blocked].sort((x,y)=>x-y).map(c=>c+1);
+    $('p6-status').innerHTML=`<b>${nodes[v].label}</b> has ${adj[v].length} neighbors. Its colored neighbors use ${bl.length?'colors {'+bl.join(', ')+'}':'no colors yet'}.`;
+    await sleep(950);if(!R.alive(t))return;
+    let c=0;while(blocked.has(c))c++;color[v]=c;pal(blocked,c);paint();cls(G.N[v],'g-node');adj[v].forEach(w=>cls(G.E[eidx[v+','+w]],'g-edge'));
+    $('p6-status').innerHTML+=` Smallest free color: <b>${c+1}</b>.`;idx++;chips();
+    if(idx>=n){const used=new Set(color).size;$('p6-status').innerHTML=`<span class="yes">Done.</span> Used ${used} colors, never more than d + 1 = ${d+1}. Check any edge: its two ends have different colors.`;}
+  }
+  $('p6-step').onclick=async()=>{if(busy)return;busy=true;upd();const t=R.start();await step(t);if(!R.alive(t))return;busy=false;upd();};
+  $('p6-run').onclick=async()=>{if(busy)return;busy=true;upd();const t=R.start();while(idx<n){await step(t);if(!R.alive(t))return;await sleep(400);if(!R.alive(t))return;}busy=false;upd();};
+  $('p6-shuffle').onclick=()=>{for(let i=n-1;i>0;i-=1){const j=Math.floor(Math.random()*(i+1));[order[i],order[j]]=[order[j],order[i]];}reset();};
+  $('p6-reset').onclick=reset;reset();
+})();
+</script>
+</body>
+</html>
